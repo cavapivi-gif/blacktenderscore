@@ -1,0 +1,37 @@
+.bt-regiondo-widget { margin: 24px 0; }
+
+/* ── Tabs nav ─────────────────────────────────────────────── */
+.bt-tabs-nav {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.bt-tab-btn {
+    padding: 10px 22px;
+    border: 2px solid #1a1a2e;
+    border-radius: 40px;
+    background: transparent;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .2s, color .2s;
+    font-size: 14px;
+}
+
+.bt-tab-btn:hover,
+.bt-tab-btn.is-active {
+    background: #1a1a2e;
+    color: #fff;
+}
+
+/* ── Panels ───────────────────────────────────────────────── */
+.bt-tab-panel.is-hidden { display: none; }
+
+.bt-widget-error {
+    color: #cc0000;
+    font-size: 13px;
+    padding: 12px;
+    border: 1px dashed #cc0000;
+    border-radius: 4px;
+}

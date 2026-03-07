@@ -1,0 +1,37 @@
+.bt-meta-box { font-size: 13px; }
+
+.bt-product-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    margin-bottom: 3px;
+}
+.bt-product-row:hover  { background: #f0f6ff; }
+.bt-product-row.is-active { background: #e8f4e8; border-color: #4caf50; }
+
+.bt-product-name  { flex: 1; font-weight: 500; }
+.bt-product-price { color: #666; font-size: 11px; }
+
+.bt-ticket-row {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    position: relative;
+}
+.bt-ticket-label   { font-weight: 600; display: block; margin-bottom: 6px; }
+.bt-widget-id-row  { display: flex; flex-direction: column; gap: 3px; }
+.bt-widget-id-row label { font-size: 11px; color: #777; }
+.bt-widget-id-input { font-family: monospace; font-size: 11px; }
+
+.bt-remove-ticket {
+    position: absolute;
+    top: 6px; right: 8px;
+    color: #cc0000 !important;
+    font-size: 11px;
+}
