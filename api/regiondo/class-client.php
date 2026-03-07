@@ -27,11 +27,21 @@ class Client {
         if (empty($data['data'])) return [];
 
         $products = array_map(fn($p) => [
-            'product_id'  => $p['product_id'],
-            'name'        => $p['name'],
-            'base_price'  => $p['base_price'] ?? 0,
-            'currency'    => $p['currency_code'] ?? 'EUR',
-            'category_id' => $p['category_id'] ?? null,
+            'product_id'       => $p['product_id'],
+            'name'             => $p['name'],
+            'short_description'=> $p['short_description'] ?? $p['teaser'] ?? '',
+            'base_price'       => $p['base_price'] ?? 0,
+            'currency'         => $p['currency_code'] ?? 'EUR',
+            'category_id'      => $p['category_id'] ?? null,
+            'category_name'    => $p['category_name'] ?? null,
+            'duration'         => $p['duration'] ?? null,
+            'duration_unit'    => $p['duration_unit'] ?? null,
+            'capacity'         => $p['capacity'] ?? null,
+            'thumbnail_url'    => $p['thumbnail_url'] ?? $p['image_url'] ?? $p['images'][0]['url'] ?? null,
+            'location'         => $p['location'] ?? $p['city'] ?? null,
+            'status'           => $p['status'] ?? null,
+            'rating'           => $p['rating'] ?? null,
+            'reviews_count'    => $p['reviews_count'] ?? null,
         ], $data['data']);
 
         $this->cache->set($cache_key, $products);
@@ -65,9 +75,29 @@ class Client {
     }
 
     public function get_crossselling(int $product_id, string $locale = 'fr-FR'): array {
-        $url  = self::BASE_URL . 'products/crossselling/' . $product_id . '?store_locale=' . $locale;
-        $data = $this->request($url);
-        return $data['data'] ?? [];
+        $cache_key = 'bt_regiondo_crossselling_' . $product_id . '_' . $locale;
+        $cached    = $this->cache->get($cache_key);
+        if ($cached !== false) return $cached;
+
+        $url    = self::BASE_URL . 'products/crossselling/' . $product_id . '?store_locale=' . $locale;
+        $data   = $this->request($url);
+        $result = $data['data'] ?? [];
+
+        $this->cache->set($cache_key, $result);
+        return $result;
+    }
+
+    public function get_navigation_attributes(string $locale = 'fr-FR'): array {
+        $cache_key = 'bt_regiondo_nav_attrs_' . $locale;
+        $cached    = $this->cache->get($cache_key);
+        if ($cached !== false) return $cached;
+
+        $url    = self::BASE_URL . 'products/navigationattributes?store_locale=' . $locale;
+        $data   = $this->request($url);
+        $result = $data['data'] ?? (is_array($data) ? $data : []);
+
+        $this->cache->set($cache_key, $result);
+        return $result;
     }
 
     // ─── CATALOGUE ───────────────────────────────────────────────────────────

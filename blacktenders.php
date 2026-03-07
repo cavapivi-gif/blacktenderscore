@@ -10,7 +10,7 @@
 
 defined('ABSPATH') || exit;
 
-define('BT_REGIONDO_VERSION',  '1.0.0');
+define('BT_REGIONDO_VERSION',  '1.0.1');
 define('BT_REGIONDO_DIR',      plugin_dir_path(__FILE__));
 define('BT_REGIONDO_URL',      plugin_dir_url(__FILE__));
 
