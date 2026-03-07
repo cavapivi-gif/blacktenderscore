@@ -6,6 +6,7 @@ use BT_Regiondo\Admin\Backoffice\Backoffice;
 use BT_Regiondo\Admin\Backoffice\RestApi;
 use BT_Regiondo\Admin\Backoffice\Sync;
 use BT_Regiondo\Frontend\Shortcode\Shortcode;
+use BT_Regiondo\Elementor\ElementorManager;
 
 defined('ABSPATH') || exit;
 
@@ -22,6 +23,9 @@ class Plugin {
 
         // Shortcode dispo partout
         (new Shortcode())->init();
+
+        // Widgets Elementor (se branche sur elementor/loaded)
+        (new ElementorManager())->init();
 
         // Cron : intervalle personnalisé + hook de sync
         add_filter('cron_schedules', [$this, 'add_cron_intervals']);

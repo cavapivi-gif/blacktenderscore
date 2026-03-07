@@ -1,0 +1,294 @@
+/* ─────────────────────────────────────────────────────────
+   BlackTenders — Elementor Widgets
+   ───────────────────────────────────────────────────────── */
+
+/* ── Placeholder éditeur ─────────────────────────────────── */
+.bt-widget-placeholder {
+  padding: 16px;
+  border: 2px dashed #d0d0d0;
+  color: #888;
+  font-size: 13px;
+  text-align: center;
+  background: #fafafa;
+  border-radius: 4px;
+}
+
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Taxonomy List
+   ══════════════════════════════════════════════════════════ */
+.bt-taxlist__title {
+  margin: 0 0 16px;
+}
+
+.bt-taxlist__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 12px;
+}
+
+/* Verticale (défaut) */
+.bt-taxlist__list--list {
+  flex-direction: column;
+}
+
+/* Grille */
+.bt-taxlist__list--grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* Inline */
+.bt-taxlist__list--inline {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.bt-taxlist__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.bt-taxlist__item-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.bt-taxlist__item-icon img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.bt-taxlist__item-icon-fallback {
+  color: currentColor;
+  opacity: .6;
+  font-size: .85em;
+}
+
+.bt-taxlist__item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bt-taxlist__item-name {
+  font-weight: 500;
+}
+
+.bt-taxlist__item-desc--inline {
+  display: inline;
+  margin-left: .4em;
+  opacity: .7;
+}
+
+.bt-taxlist__item-desc--below {
+  display: block;
+  font-size: .875em;
+  opacity: .7;
+}
+
+/* Inline layout : affichage "chips" */
+.bt-taxlist__list--inline .bt-taxlist__item {
+  background: rgba(0, 0, 0, .05);
+  border-radius: 999px;
+  padding: 4px 12px;
+  align-items: center;
+}
+
+
+/* ══════════════════════════════════════════════════════════
+   WIDGET : FAQ Accordion
+   ══════════════════════════════════════════════════════════ */
+.bt-faq__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Accordéon ────────────────────────────────────────────── */
+.bt-faq--accordion .bt-faq__item {
+  border: 1px solid #e0e0e0;
+  overflow: hidden;
+}
+
+.bt-faq__question {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  font-weight: 600;
+  transition: background .15s, color .15s;
+}
+
+.bt-faq__question:hover {
+  background: rgba(0, 0, 0, .03);
+}
+
+.bt-faq__icon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  position: relative;
+  transition: transform .25s;
+}
+
+.bt-faq__icon::before,
+.bt-faq__icon::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  background: currentColor;
+  transform: translate(-50%, -50%);
+  transition: opacity .25s, transform .25s;
+}
+
+/* "+" icon */
+.bt-faq__icon::before { width: 2px; height: 14px; }
+.bt-faq__icon::after  { width: 14px; height: 2px; }
+
+/* "×" → rotate en "-" quand ouvert */
+.bt-faq__item--open .bt-faq__icon::before {
+  transform: translate(-50%, -50%) rotate(90deg);
+  opacity: 0;
+}
+
+.bt-faq__answer {
+  overflow: hidden;
+  /* animation hauteur gérée par JS */
+}
+
+.bt-faq__answer-inner {
+  padding: 0 20px 20px;
+  line-height: 1.7;
+}
+
+/* ── Tabs (FAQ) ───────────────────────────────────────────── */
+.bt-faq--tabs .bt-faq__tablist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  border-bottom: 2px solid #e0e0e0;
+  margin-bottom: 0;
+}
+
+.bt-faq--tabs .bt-faq__tab {
+  padding: 10px 20px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 500;
+  color: #666;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color .15s, border-color .15s;
+}
+
+.bt-faq--tabs .bt-faq__tab:hover {
+  color: #000;
+}
+
+.bt-faq--tabs .bt-faq__tab--active {
+  color: #000;
+  border-bottom-color: #000;
+}
+
+.bt-faq--tabs .bt-faq__tabpanel {
+  padding: 20px 0 0;
+}
+
+.bt-faq--tabs .bt-faq__answer-inner {
+  padding: 0;
+  line-height: 1.7;
+}
+
+
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Pricing Tabs
+   ══════════════════════════════════════════════════════════ */
+.bt-pricing__tablist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  border-bottom: 2px solid #e0e0e0;
+  margin-bottom: 0;
+}
+
+.bt-pricing__tab {
+  padding: 12px 24px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  color: #666;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: color .15s, border-color .15s, background .15s;
+}
+
+.bt-pricing__tab:hover {
+  color: #000;
+  background: rgba(0, 0, 0, .03);
+}
+
+.bt-pricing__tab--active {
+  color: #000;
+  border-bottom-color: #000;
+}
+
+.bt-pricing__panel {
+  padding: 24px 0 0;
+}
+
+.bt-pricing__price-block {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.bt-pricing__note {
+  font-size: .875em;
+  color: #888;
+}
+
+.bt-pricing__price {
+  font-size: 2.25em;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.bt-pricing__per {
+  font-size: .875em;
+  color: #888;
+}
+
+.bt-pricing__deposit {
+  font-size: .875em;
+  color: #666;
+  margin: 4px 0 0;
+}
+
+.bt-pricing__booking {
+  margin-top: 24px;
+}
