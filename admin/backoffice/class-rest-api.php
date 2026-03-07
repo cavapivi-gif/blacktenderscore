@@ -36,6 +36,18 @@ class RestApi {
             'permission_callback' => $auth,
         ]);
 
+        register_rest_route(self::NS, '/products/(?P<id>\d+)/crossselling', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'get_crossselling'],
+            'permission_callback' => $auth,
+        ]);
+
+        register_rest_route(self::NS, '/products/navigationattributes', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'get_navigation_attributes'],
+            'permission_callback' => $auth,
+        ]);
+
         // Catégories
         register_rest_route(self::NS, '/categories', [
             'methods'             => 'GET',
@@ -130,6 +142,18 @@ class RestApi {
     public function get_variations(\WP_REST_Request $req): \WP_REST_Response {
         $client = new Client();
         $data   = $client->get_variations((int) $req['id'], $req->get_param('locale') ?: 'fr-FR');
+        return rest_ensure_response(['data' => $data]);
+    }
+
+    public function get_crossselling(\WP_REST_Request $req): \WP_REST_Response {
+        $client = new Client();
+        $data   = $client->get_crossselling((int) $req['id'], $req->get_param('locale') ?: 'fr-FR');
+        return rest_ensure_response(['data' => $data]);
+    }
+
+    public function get_navigation_attributes(\WP_REST_Request $req): \WP_REST_Response {
+        $client = new Client();
+        $data   = $client->get_navigation_attributes($req->get_param('locale') ?: 'fr-FR');
         return rest_ensure_response(['data' => $data]);
     }
 
