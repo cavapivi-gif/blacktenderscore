@@ -3,7 +3,7 @@
  * Plugin Name: BlackTenders Regiondo
  * Plugin URI:  https://studiojae.fr
  * Description: Liaison Regiondo ↔ CPT Excursion — meta box backoffice + shortcode front
- * Version:     1.0.0
+ * Version:     1.0.1
  * Author:      StudioJae
  * Text Domain: bt-regiondo
  */
