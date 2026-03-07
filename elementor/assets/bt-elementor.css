@@ -289,3 +289,606 @@
 .bt-pricing__booking {
   margin-top: 24px;
 }
+
+
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Boat Specs
+   ══════════════════════════════════════════════════════════ */
+.bt-bspecs__title {
+  margin: 0 0 20px;
+}
+
+.bt-bspecs__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.bt-bspecs__list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bt-bspecs__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+}
+
+.bt-bspecs__item-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.bt-bspecs__item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bt-bspecs__item-label {
+  font-size: .8em;
+  opacity: .65;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.bt-bspecs__item-value {
+  font-weight: 600;
+  font-size: 1.05em;
+}
+
+
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Boat Pricing
+   ══════════════════════════════════════════════════════════ */
+.bt-bprice__title {
+  margin: 0 0 20px;
+}
+
+.bt-bprice__cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.bt-bprice__card {
+  flex: 1 1 200px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bt-bprice__card-label {
+  font-size: .85em;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  opacity: .7;
+}
+
+.bt-bprice__note {
+  font-size: .8em;
+  opacity: .6;
+}
+
+.bt-bprice__amount-block {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.bt-bprice__amount {
+  font-size: 2em;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.bt-bprice__duration {
+  font-size: .875em;
+  opacity: .65;
+}
+
+.bt-bprice__deposit {
+  font-size: .875em;
+  opacity: .75;
+  margin: 0;
+}
+
+.bt-bprice__fuel {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: .8em;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.bt-bprice__fuel--yes {
+  background: #e6f4ea;
+  color: #2d7a3a;
+}
+
+.bt-bprice__fuel--no {
+  background: #fff3e0;
+  color: #8a5300;
+}
+
+.bt-bprice__table-wrap {
+  overflow-x: auto;
+}
+
+.bt-bprice__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .95em;
+}
+
+.bt-bprice__table th,
+.bt-bprice__table td {
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid rgba(0,0,0,.08);
+}
+
+.bt-bprice__table thead th {
+  font-weight: 600;
+  font-size: .8em;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  opacity: .65;
+}
+
+.bt-bprice__zones {
+  margin-top: 32px;
+}
+
+.bt-bprice__zones-title {
+  margin: 0 0 12px;
+  font-size: 1em;
+  font-weight: 600;
+}
+
+
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Related Boats
+   ══════════════════════════════════════════════════════════ */
+.bt-relboats__title {
+  margin: 0 0 20px;
+}
+
+.bt-relboats__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.bt-relboats__card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.bt-relboats__img-wrap {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  padding-bottom: 60%;
+  background: #f0f0f0;
+}
+
+.bt-relboats__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .3s ease;
+}
+
+.bt-relboats__img-wrap:hover .bt-relboats__img {
+  transform: scale(1.04);
+}
+
+.bt-relboats__body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.bt-relboats__card-title {
+  margin: 0;
+  font-size: 1.1em;
+  font-weight: 700;
+}
+
+.bt-relboats__card-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.bt-relboats__tagline {
+  margin: 0;
+  opacity: .7;
+  font-size: .9em;
+}
+
+.bt-relboats__specs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: .85em;
+}
+
+.bt-relboats__btn {
+  display: inline-block;
+  margin-top: auto;
+  text-decoration: none;
+  font-weight: 600;
+  transition: opacity .15s;
+}
+
+.bt-relboats__btn:hover { opacity: .75; }
+
+
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Related Excursions
+   ══════════════════════════════════════════════════════════ */
+.bt-relexp__title {
+  margin: 0 0 20px;
+}
+
+.bt-relexp__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.bt-relexp__card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.bt-relexp__img-wrap {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  padding-bottom: 56%;
+  background: #f0f0f0;
+}
+
+.bt-relexp__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .3s ease;
+}
+
+.bt-relexp__img-wrap:hover .bt-relexp__img {
+  transform: scale(1.04);
+}
+
+.bt-relexp__body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.bt-relexp__card-title {
+  margin: 0;
+  font-size: 1.05em;
+  font-weight: 700;
+}
+
+.bt-relexp__card-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.bt-relexp__tagline {
+  margin: 0;
+  opacity: .7;
+  font-size: .9em;
+}
+
+.bt-relexp__price {
+  margin: 0;
+  font-size: .95em;
+}
+
+.bt-relexp__btn {
+  display: inline-block;
+  margin-top: auto;
+  text-decoration: none;
+  font-weight: 600;
+  transition: opacity .15s;
+}
+
+.bt-relexp__btn:hover { opacity: .75; }
+
+
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Itinerary
+   ══════════════════════════════════════════════════════════ */
+.bt-itin__title {
+  margin: 0 0 24px;
+}
+
+.bt-itin__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.bt-itin__step {
+  display: flex;
+  gap: 20px;
+  position: relative;
+}
+
+/* Ligne verticale reliant les étapes */
+.bt-itin:not(.bt-itin--no-connector) .bt-itin__step:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 6px;               /* centré sur le dot de 14px */
+  top: 20px;
+  bottom: -32px;
+  width: 2px;
+  background: #d0d0d0;
+}
+
+.bt-itin__dot {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: currentColor;
+  margin-top: 4px;
+  position: relative;
+  z-index: 1;
+}
+
+.bt-itin__step-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bt-itin__time {
+  font-size: .8em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  opacity: .6;
+}
+
+.bt-itin__step-title {
+  font-size: 1em;
+  font-weight: 700;
+  display: block;
+}
+
+.bt-itin__step-desc {
+  margin: 0;
+  font-size: .9em;
+  line-height: 1.6;
+  opacity: .75;
+}
+
+
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Departure Times
+   ══════════════════════════════════════════════════════════ */
+.bt-deptimes__title {
+  margin: 0 0 16px;
+}
+
+.bt-deptimes__departure-info {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: .95em;
+}
+
+.bt-deptimes__map-link {
+  font-size: .85em;
+  text-decoration: underline;
+  opacity: .7;
+}
+
+.bt-deptimes__map-link:hover { opacity: 1; }
+
+.bt-deptimes__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.bt-deptimes__inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bt-deptimes__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bt-deptimes__badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(0,0,0,.04);
+  text-align: center;
+}
+
+.bt-deptimes__time {
+  font-weight: 700;
+  font-size: 1.1em;
+}
+
+.bt-deptimes__season-badge {
+  font-size: .7em;
+  padding: 2px 6px;
+  border-radius: 12px;
+  background: rgba(0,0,0,.08);
+  white-space: nowrap;
+}
+
+.bt-deptimes__season--summer   { background: #fff3cd; color: #7a5500; }
+.bt-deptimes__season--offseason { background: #e8f4fd; color: #1a5276; }
+.bt-deptimes__season--all      { background: #e8f5e9; color: #2d5a27; }
+
+
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Reviews
+   ══════════════════════════════════════════════════════════ */
+.bt-reviews__section-title {
+  margin: 0 0 24px;
+}
+
+.bt-reviews__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.bt-reviews__list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bt-reviews__card {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bt-reviews__stars {
+  font-size: 18px;
+  color: #f4a900;
+  letter-spacing: 2px;
+}
+
+.bt-reviews__text {
+  margin: 0;
+  font-style: italic;
+  line-height: 1.7;
+}
+
+.bt-reviews__quote {
+  font-size: 1.6em;
+  line-height: .5;
+  vertical-align: -0.3em;
+  margin-right: 2px;
+  opacity: .3;
+}
+
+.bt-reviews__name {
+  font-size: .85em;
+  font-weight: 600;
+  opacity: .65;
+  margin-top: auto;
+}
+
+
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Gallery
+   ══════════════════════════════════════════════════════════ */
+.bt-gallery__title {
+  margin: 0 0 16px;
+}
+
+.bt-gallery__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.bt-gallery__item {
+  margin: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Ratios */
+.bt-gallery--square   .bt-gallery__item { aspect-ratio: 1 / 1; }
+.bt-gallery--landscape .bt-gallery__item { aspect-ratio: 4 / 3; }
+.bt-gallery--wide     .bt-gallery__item { aspect-ratio: 16 / 9; }
+.bt-gallery--portrait .bt-gallery__item { aspect-ratio: 3 / 4; }
+.bt-gallery--auto     .bt-gallery__item { aspect-ratio: auto; }
+
+.bt-gallery__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .3s ease;
+}
+
+.bt-gallery__link {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.bt-gallery__link:hover .bt-gallery__img {
+  transform: scale(1.05);
+}
+
+.bt-gallery__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.3);
+  opacity: 0;
+  transition: opacity .2s;
+}
+
+.bt-gallery__link:hover .bt-gallery__overlay {
+  opacity: 1;
+}
+
+.bt-gallery__overlay-icon {
+  font-size: 1.8em;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.4));
+}
+
+.bt-gallery__caption {
+  font-size: .8em;
+  text-align: center;
+  padding: 4px 8px;
+  opacity: .7;
+}
