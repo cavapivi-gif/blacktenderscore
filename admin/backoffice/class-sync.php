@@ -24,6 +24,11 @@ class Sync {
         $this->post_types = get_option('bt_regiondo_post_types', ['excursion']);
     }
 
+    /** Callback WP cron → appelle run() silencieusement */
+    public static function cron_run(): void {
+        (new self())->run();
+    }
+
     /**
      * Lance la synchronisation.
      *

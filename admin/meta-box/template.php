@@ -23,7 +23,7 @@ $map = get_option('bt_regiondo_widget_map', []);
                     <?php else: ?>
                         <span class="bt-widget-missing">
                             Widget manquant —
-                            <a href="<?= esc_url(admin_url('options-general.php?page=bt-regiondo-settings')) ?>" target="_blank">Configurer</a>
+                            <a href="<?= esc_url(admin_url('admin.php?page=bt-regiondo#/settings')) ?>" target="_blank">Configurer</a>
                         </span>
                     <?php endif; ?>
                     <button type="button" class="bt-remove-ticket button-link-delete">Retirer</button>

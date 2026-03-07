@@ -39,6 +39,14 @@
   font-size: 13px;
 }
 
+/* Force SVG visibility — WP admin sometimes hides/resets SVGs */
+#bt-backoffice-root svg {
+  display: inline-block !important;
+  overflow: visible !important;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
 /* Scrollbar minimal */
 #bt-backoffice-root ::-webkit-scrollbar       { width: 4px; height: 4px; }
 #bt-backoffice-root ::-webkit-scrollbar-track { background: transparent; }

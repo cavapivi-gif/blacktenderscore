@@ -194,16 +194,23 @@ class RestApi {
     }
 
     public function get_settings(): \WP_REST_Response {
-        $map      = get_option('bt_regiondo_widget_map', []);
-        $products = (new Client())->get_products('fr-FR');
+        try {
+            $products = (new Client())->get_products('fr-FR');
+        } catch (\Throwable $e) {
+            $products = [];
+        }
+
+        $next = wp_next_scheduled('bt_regiondo_auto_sync');
 
         return rest_ensure_response([
-            'public_key'  => get_option('bt_regiondo_public_key', ''),
-            'secret_key'  => get_option('bt_regiondo_secret_key', ''),
-            'cache_ttl'   => (int) get_option('bt_regiondo_cache_ttl', 3600),
-            'post_types'  => get_option('bt_regiondo_post_types', ['excursion']),
-            'widget_map'  => $map,
-            'products'    => $products,
+            'public_key'     => get_option('bt_regiondo_public_key', ''),
+            'secret_key'     => get_option('bt_regiondo_secret_key', ''),
+            'cache_ttl'      => (int) get_option('bt_regiondo_cache_ttl', 3600),
+            'post_types'     => get_option('bt_regiondo_post_types', ['excursion']),
+            'sync_interval'  => (int) get_option('bt_regiondo_sync_interval', 0),
+            'sync_next_run'  => $next ?: null,
+            'widget_map'     => get_option('bt_regiondo_widget_map', []),
+            'products'       => $products,
             'all_post_types' => array_map(fn($pt) => [
                 'name'  => $pt->name,
                 'label' => $pt->label,
@@ -233,8 +240,31 @@ class RestApi {
             }
             update_option('bt_regiondo_widget_map', $clean);
         }
+        if (isset($body['sync_interval'])) {
+            $interval = absint($body['sync_interval']);
+            update_option('bt_regiondo_sync_interval', $interval);
+            $this->reschedule_cron($interval);
+        }
 
         return rest_ensure_response(['success' => true]);
+    }
+
+    private function reschedule_cron(int $interval_minutes): void {
+        wp_clear_scheduled_hook('bt_regiondo_auto_sync');
+        if ($interval_minutes <= 0) return;
+
+        $recurrence = match ($interval_minutes) {
+            30   => 'bt_30min',
+            60   => 'hourly',
+            360  => 'bt_6hours',
+            720  => 'twicedaily',
+            1440 => 'daily',
+            default => null,
+        };
+
+        if ($recurrence) {
+            wp_schedule_event(time(), $recurrence, 'bt_regiondo_auto_sync');
+        }
     }
 
     public function flush_cache(): \WP_REST_Response {
