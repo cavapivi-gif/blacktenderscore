@@ -31,10 +31,12 @@ class PricingTabs extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('acf_field', [
-            'label'       => __('Champ ACF repeater', 'bt-regiondo'),
-            'type'        => \Elementor\Controls_Manager::TEXT,
-            'default'     => 'tarification_par_forfait',
-            'description' => __('Repeater ACF contenant exp_price, exp_time, exp_pricing_note, exp_deposit.', 'bt-regiondo'),
+            'label'   => __('Champ ACF repeater', 'bt-regiondo'),
+            'type'    => \Elementor\Controls_Manager::SELECT,
+            'options' => [
+                'tarification_par_forfait' => __('Tarification par forfait (tarification_par_forfait)', 'bt-regiondo'),
+            ],
+            'default' => 'tarification_par_forfait',
         ]);
 
         $this->add_control('show_deposit', [

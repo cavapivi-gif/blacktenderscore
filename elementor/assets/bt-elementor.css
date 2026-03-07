@@ -94,11 +94,8 @@
   opacity: .7;
 }
 
-/* Inline layout : affichage "chips" */
+/* Inline layout : centrage vertical */
 .bt-taxlist__list--inline .bt-taxlist__item {
-  background: rgba(0, 0, 0, .05);
-  border-radius: 999px;
-  padding: 4px 12px;
   align-items: center;
 }
 
