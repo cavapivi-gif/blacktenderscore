@@ -5,7 +5,6 @@ use BT_Regiondo\Admin\MetaBox\MetaBox;
 use BT_Regiondo\Admin\Backoffice\Backoffice;
 use BT_Regiondo\Admin\Backoffice\RestApi;
 use BT_Regiondo\Admin\Backoffice\Sync;
-use BT_Regiondo\Frontend\Shortcode\Shortcode;
 use BT_Regiondo\Elementor\ElementorManager;
 
 defined('ABSPATH') || exit;
@@ -20,9 +19,6 @@ class Plugin {
             (new Backoffice())->init();
             (new MetaBox())->init();
         }
-
-        // Shortcode dispo partout
-        (new Shortcode())->init();
 
         // Widgets Elementor (se branche sur elementor/loaded)
         (new ElementorManager())->init();
