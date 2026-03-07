@@ -235,10 +235,10 @@ class RestApi {
             'sync_next_run'  => $next ?: null,
             'widget_map'     => get_option('bt_regiondo_widget_map', []),
             'products'       => $products,
-            'all_post_types' => array_map(fn($pt) => [
+            'all_post_types' => array_values(array_map(fn($pt) => [
                 'name'  => $pt->name,
                 'label' => $pt->label,
-            ], get_post_types(['public' => true], 'objects')),
+            ], get_post_types(['public' => true], 'objects'))),
         ]);
     }
 

@@ -8,19 +8,23 @@ const STATUS_LABELS = {
   pending:   'En attente',
 }
 
+function offsetDate(days) {
+  const d = new Date()
+  d.setDate(d.getDate() - days)
+  return d.toISOString().slice(0, 10)
+}
+function today() { return new Date().toISOString().slice(0, 10) }
+
 const PRESETS = [
-  { label: 'Tout', from: '', to: '' },
-  { label: 'Ce mois', from: getDate('month-start'), to: getDate('today') },
-  { label: 'Cette année', from: getDate('year-start'), to: getDate('today') },
+  { label: '1j',     from: offsetDate(1),   to: today() },
+  { label: '7j',     from: offsetDate(7),   to: today() },
+  { label: '30j',    from: offsetDate(30),  to: today() },
+  { label: '3 mois', from: offsetDate(90),  to: today() },
+  { label: '12 mois',from: offsetDate(365), to: today() },
+  { label: 'Tout',   from: '',              to: '' },
 ]
 
-function getDate(type) {
-  const d = new Date()
-  if (type === 'today')       return d.toISOString().slice(0, 10)
-  if (type === 'month-start') return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
-  if (type === 'year-start')  return `${d.getFullYear()}-01-01`
-  return ''
-}
+const DEFAULT_PRESET = 2  // 30j
 
 export default function Bookings() {
   const [data, setData]         = useState([])
@@ -29,9 +33,9 @@ export default function Bookings() {
   const [error, setError]       = useState(null)
   const [page, setPage]         = useState(1)
   const [search, setSearch]     = useState('')
-  const [preset, setPreset]     = useState(0)          // index in PRESETS
-  const [from, setFrom]         = useState('')
-  const [to, setTo]             = useState('')
+  const [preset, setPreset]     = useState(DEFAULT_PRESET)
+  const [from, setFrom]         = useState(PRESETS[DEFAULT_PRESET].from)
+  const [to, setTo]             = useState(PRESETS[DEFAULT_PRESET].to)
 
   const perPage = 50
 
