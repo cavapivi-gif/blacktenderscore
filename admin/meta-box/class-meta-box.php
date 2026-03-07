@@ -82,8 +82,10 @@ class MetaBox {
         );
 
         wp_localize_script('bt-regiondo-meta-box', 'btRegionado', [
-            'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce'    => wp_create_nonce('bt_regiondo_fetch'),
+            'ajax_url'    => admin_url('admin-ajax.php'),
+            'nonce'       => wp_create_nonce('bt_regiondo_fetch'),
+            'widgetMap'   => (object) get_option('bt_regiondo_widget_map', []),
+            'settingsUrl' => admin_url('options-general.php?page=bt-regiondo-settings'),
         ]);
     }
 

@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+#bt-backoffice-root {
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #000;
+  background: #fff;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+#bt-backoffice-root * {
+  box-sizing: border-box;
+}
+
+/* Reset WP admin interference */
+#bt-backoffice-root h1,
+#bt-backoffice-root h2,
+#bt-backoffice-root h3,
+#bt-backoffice-root p {
+  margin: 0;
+  padding: 0;
+  font-weight: 400;
+}
+
+#bt-backoffice-root button {
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+}
+
+#bt-backoffice-root input,
+#bt-backoffice-root select,
+#bt-backoffice-root textarea {
+  font-family: inherit;
+  font-size: 13px;
+}
+
+/* Scrollbar minimal */
+#bt-backoffice-root ::-webkit-scrollbar       { width: 4px; height: 4px; }
+#bt-backoffice-root ::-webkit-scrollbar-track { background: transparent; }
+#bt-backoffice-root ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
