@@ -281,21 +281,36 @@ class RelatedExcursions extends \Elementor\Widget_Base {
             return;
         }
 
-        $meta_key   = sanitize_key($s['acf_relation_field'] ?: 'exp_boats');
-        $max        = max(1, (int) ($s['max_results'] ?: 6));
+        $meta_key = sanitize_key($s['acf_relation_field'] ?: 'exp_boats');
+        $max      = max(1, (int) ($s['max_results'] ?: 6));
 
-        // Reverse query: excursions qui contiennent ce post dans leur champ relationship
+        // Reverse query avec cache transient
+        $cache_key = 'bt_relexp_' . $post_id . '_' . $meta_key;
+        $ids       = get_transient($cache_key);
+
+        if ($ids === false) {
+            $id_query = new \WP_Query([
+                'post_type'      => 'excursion',
+                'posts_per_page' => -1,
+                'post_status'    => 'publish',
+                'fields'         => 'ids',
+                'no_found_rows'  => true,
+                'meta_query'     => [[
+                    'key'     => $meta_key,
+                    'value'   => '"' . $post_id . '"',
+                    'compare' => 'LIKE',
+                ]],
+            ]);
+            $ids = $id_query->posts ?: [];
+            set_transient($cache_key, $ids, HOUR_IN_SECONDS * 6);
+        }
+
         $query = new \WP_Query([
             'post_type'      => 'excursion',
             'posts_per_page' => $max,
             'post_status'    => 'publish',
-            'meta_query'     => [
-                [
-                    'key'     => $meta_key,
-                    'value'   => '"' . $post_id . '"',
-                    'compare' => 'LIKE',
-                ],
-            ],
+            'post__in'       => $ids ?: [0],
+            'orderby'        => 'post__in',
         ]);
 
         if (!$query->have_posts()) {

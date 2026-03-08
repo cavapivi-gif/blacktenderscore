@@ -16,9 +16,23 @@ use BT_Regiondo\Elementor\Widgets\ExcursionSchema;
 
 defined('ABSPATH') || exit;
 
+// ── Sous-systèmes ─────────────────────────────────────────────────────────────
+require_once __DIR__ . '/dynamic-tags/class-dynamic-tags-manager.php';
+require_once __DIR__ . '/loop-queries/class-loop-queries.php';
+
 class ElementorManager {
 
     public function init(): void {
+        // Dynamic Tags (pas besoin d'attendre elementor/loaded)
+        (new DynamicTags\Dynamic_Tags_Manager())->init();
+
+        // Loop Builder Query Sources
+        (new LoopQueries\Loop_Queries())->init();
+
+        // Invalidation transients RelatedExcursions lors de la sauvegarde
+        add_action('save_post_excursion', [$this, 'invalidate_relexp_transients'], 10, 2);
+        add_action('save_post_boat',      [$this, 'invalidate_relboat_transients'], 10, 1);
+
         add_action('elementor/loaded', [$this, 'setup']);
     }
 
@@ -28,6 +42,25 @@ class ElementorManager {
         add_action('elementor/frontend/after_enqueue_styles',  [$this, 'enqueue_assets']);
         add_action('elementor/editor/after_enqueue_styles',    [$this, 'enqueue_assets']);
         add_action('elementor/editor/after_enqueue_styles',    [$this, 'enqueue_editor_extras']);
+    }
+
+    // ── Invalidation transients ───────────────────────────────────────────────
+
+    public function invalidate_relexp_transients(int $post_id, \WP_Post $post): void {
+        // Quand on sauve une excursion, invalider le cache des bateaux liés
+        if (!function_exists('get_field')) return;
+        $boats = get_field('exp_boats', $post_id);
+        if (!is_array($boats)) return;
+        foreach ($boats as $boat) {
+            $bid = $boat instanceof \WP_Post ? $boat->ID : (int) $boat;
+            if ($bid) delete_transient('bt_relexp_' . $bid . '_exp_boats');
+        }
+    }
+
+    public function invalidate_relboat_transients(int $post_id): void {
+        // Quand on sauve un bateau, ses excursions liées peuvent changer
+        delete_transient('bt_exc_by_boat_' . $post_id);
+        delete_transient('bt_rel_count_'   . $post_id);
     }
 
     public function register_category(\Elementor\Elements_Manager $manager): void {
