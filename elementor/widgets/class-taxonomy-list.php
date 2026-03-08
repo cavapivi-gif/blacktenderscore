@@ -29,10 +29,17 @@ class TaxonomyList extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('acf_field', [
-            'label'       => __('Champ ACF (taxonomy)', 'bt-regiondo'),
-            'type'        => \Elementor\Controls_Manager::TEXT,
-            'default'     => 'exp_included',
-            'description' => __('Nom du champ ACF. Ex : exp_included, exp_to_excluded, exp_to_bring, boat_equipment_included', 'bt-regiondo'),
+            'label'   => __('Champ ACF (taxonomy)', 'bt-regiondo'),
+            'type'    => \Elementor\Controls_Manager::SELECT,
+            'options' => [
+                'exp_included'            => __('Ce qui est inclus (exp_included)', 'bt-regiondo'),
+                'exp_to_excluded'         => __('Ce qui est exclu (exp_to_excluded)', 'bt-regiondo'),
+                'exp_to_bring'            => __('Ce qu\'il faut apporter (exp_to_bring)', 'bt-regiondo'),
+                'boat_equipment_included' => __('Équipements bateau inclus (boat_equipment_included)', 'bt-regiondo'),
+                'boat_services_included'  => __('Services bateau inclus (boat_services_included)', 'bt-regiondo'),
+                'boat_option_on_demand'   => __('Options sur demande (boat_option_on_demand)', 'bt-regiondo'),
+            ],
+            'default' => 'exp_included',
         ]);
 
         $this->add_control('section_title', [
@@ -151,6 +158,27 @@ class TaxonomyList extends \Elementor\Widget_Base {
             'label'     => __('Couleur texte', 'bt-regiondo'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-taxlist__item-name' => 'color: {{VALUE}}'],
+        ]);
+
+        $this->add_control('item_bg', [
+            'label'     => __('Fond des éléments', 'bt-regiondo'),
+            'type'      => \Elementor\Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-taxlist__item' => 'background-color: {{VALUE}}'],
+        ]);
+
+        $this->add_responsive_control('item_border_radius', [
+            'label'      => __('Border radius', 'bt-regiondo'),
+            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'size_units' => ['px', '%'],
+            'range'      => ['px' => ['min' => 0, 'max' => 100]],
+            'selectors'  => ['{{WRAPPER}} .bt-taxlist__item' => 'border-radius: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        $this->add_responsive_control('item_padding', [
+            'label'      => __('Padding des éléments', 'bt-regiondo'),
+            'type'       => \Elementor\Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', 'em'],
+            'selectors'  => ['{{WRAPPER}} .bt-taxlist__item' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
         ]);
 
         $this->add_responsive_control('icon_size', [

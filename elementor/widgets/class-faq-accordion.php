@@ -30,10 +30,12 @@ class FaqAccordion extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('acf_field', [
-            'label'       => __('Champ ACF repeater', 'bt-regiondo'),
-            'type'        => \Elementor\Controls_Manager::TEXT,
-            'default'     => 'exp_faq',
-            'description' => __("Nom du champ repeater ACF. Par défaut : exp_faq (faq_question + faq_answer)", 'bt-regiondo'),
+            'label'   => __('Champ ACF repeater', 'bt-regiondo'),
+            'type'    => \Elementor\Controls_Manager::SELECT,
+            'options' => [
+                'exp_faq' => __('FAQ (exp_faq)', 'bt-regiondo'),
+            ],
+            'default' => 'exp_faq',
         ]);
 
         $this->add_control('layout', [
