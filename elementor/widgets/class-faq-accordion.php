@@ -208,13 +208,30 @@ class FaqAccordion extends \Elementor\Widget_Base {
         }
     }
 
+    // ── Normalise une ligne : repeater array OU WP_Post (relationship CPT faq) ──
+    private function resolve_qa($row): array {
+        if ($row instanceof \WP_Post) {
+            // Champ relationship → CPT faq : titre = question, faq_description = réponse
+            $q = $row->post_title;
+            $a = function_exists('get_field')
+                ? (string) get_field('faq_description', $row->ID)
+                : wp_strip_all_tags($row->post_content);
+            return [$q, $a];
+        }
+        if (is_array($row)) {
+            $q = $row['faq_question'] ?? ($row['question'] ?? '');
+            $a = $row['faq_answer']   ?? ($row['answer']   ?? '');
+            return [$q, $a];
+        }
+        return ['', ''];
+    }
+
     private function render_accordion(array $rows, string $uid, bool $open_first): void {
         echo "<div class=\"bt-faq bt-faq--accordion\" id=\"{$uid}\" data-bt-accordion>";
         echo '<ul class="bt-faq__list" role="list">';
 
         foreach ($rows as $i => $row) {
-            $q        = $row['faq_question'] ?? ($row['question'] ?? '');
-            $a        = $row['faq_answer']   ?? ($row['answer']   ?? '');
+            [$q, $a]  = $this->resolve_qa($row);
             $item_id  = "{$uid}-item-{$i}";
             $panel_id = "{$uid}-panel-{$i}";
             $is_open  = ($open_first && $i === 0);
@@ -226,7 +243,7 @@ class FaqAccordion extends \Elementor\Widget_Base {
             echo '<span class="bt-faq__icon" aria-hidden="true"></span>';
             echo '</button>';
             echo "<div class=\"bt-faq__answer\" id=\"{$panel_id}\" role=\"region\" aria-labelledby=\"{$item_id}\"" . ($is_open ? '' : ' hidden') . '>';
-            echo '<div class="bt-faq__answer-inner">' . wp_kses_post(nl2br(esc_html($a))) . '</div>';
+            echo '<div class="bt-faq__answer-inner">' . wp_kses_post(nl2br($a)) . '</div>';
             echo '</div>';
             echo '</li>';
         }
@@ -240,7 +257,8 @@ class FaqAccordion extends \Elementor\Widget_Base {
         // Tab bar
         echo '<div class="bt-faq__tablist" role="tablist">';
         foreach ($rows as $i => $row) {
-            $q      = $row['faq_question'] ?? ($row['question'] ?? "Question " . ($i + 1));
+            [$q] = $this->resolve_qa($row);
+            $q   = $q ?: "Question " . ($i + 1);
             $tab_id = "{$uid}-tab-{$i}";
             $pan_id = "{$uid}-tabpanel-{$i}";
             $active = $i === 0 ? ' bt-faq__tab--active' : '';
@@ -252,12 +270,12 @@ class FaqAccordion extends \Elementor\Widget_Base {
 
         // Panels
         foreach ($rows as $i => $row) {
-            $a      = $row['faq_answer'] ?? ($row['answer'] ?? '');
+            [, $a] = $this->resolve_qa($row);
             $tab_id = "{$uid}-tab-{$i}";
             $pan_id = "{$uid}-tabpanel-{$i}";
             $hidden = $i === 0 ? '' : ' hidden';
             echo "<div class=\"bt-faq__tabpanel\" id=\"{$pan_id}\" role=\"tabpanel\" aria-labelledby=\"{$tab_id}\"{$hidden}>";
-            echo '<div class="bt-faq__answer-inner">' . wp_kses_post(nl2br(esc_html($a))) . '</div>';
+            echo '<div class="bt-faq__answer-inner">' . wp_kses_post(nl2br($a)) . '</div>';
             echo '</div>';
         }
 
@@ -267,8 +285,7 @@ class FaqAccordion extends \Elementor\Widget_Base {
     private function render_schema(array $rows): void {
         $items = [];
         foreach ($rows as $row) {
-            $q = $row['faq_question'] ?? ($row['question'] ?? '');
-            $a = $row['faq_answer']   ?? ($row['answer']   ?? '');
+            [$q, $a] = $this->resolve_qa($row);
             if ($q && $a) {
                 $items[] = [
                     '@type'          => 'Question',
