@@ -1,5 +1,5 @@
 <?php
-namespace BT_Regiondo\Elementor\DynamicTags;
+namespace BlackTenders\Elementor\DynamicTags;
 
 defined('ABSPATH') || exit;
 
@@ -23,25 +23,25 @@ class Tag_Exp_Duration extends Abstract_BT_Tag {
     protected function register_controls(): void {
 
         $this->add_control('mode', [
-            'label'   => __('Mode', 'bt-regiondo'),
+            'label'   => __('Mode', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => [
-                'min' => __('La plus courte', 'bt-regiondo'),
-                'max' => __('La plus longue', 'bt-regiondo'),
-                'all' => __('Toutes les durées', 'bt-regiondo'),
+                'min' => __('La plus courte', 'blacktenderscore'),
+                'max' => __('La plus longue', 'blacktenderscore'),
+                'all' => __('Toutes les durées', 'blacktenderscore'),
             ],
             'default' => 'min',
         ]);
 
         $this->add_control('separator', [
-            'label'     => __('Séparateur (mode "toutes")', 'bt-regiondo'),
+            'label'     => __('Séparateur (mode "toutes")', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::TEXT,
             'default'   => ' · ',
             'condition' => ['mode' => 'all'],
         ]);
 
         $this->add_control('fallback', [
-            'label'   => __('Texte si aucune durée', 'bt-regiondo'),
+            'label'   => __('Texte si aucune durée', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::TEXT,
             'default' => '',
         ]);

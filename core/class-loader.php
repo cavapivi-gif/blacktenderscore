@@ -1,14 +1,14 @@
 <?php
-namespace BT_Regiondo\Core;
+namespace BlackTenders\Core;
 
 defined('ABSPATH') || exit;
 
 class Loader {
 
     public static function autoload(string $class): void {
-        if (strpos($class, 'BT_Regiondo\\') !== 0) return;
+        if (strpos($class, 'BlackTenders\\') !== 0) return;
 
-        $relative = substr($class, strlen('BT_Regiondo\\'));
+        $relative = substr($class, strlen('BlackTenders\\'));
         $parts    = explode('\\', $relative);
 
         // Dernier segment = nom de classe
@@ -21,7 +21,7 @@ class Loader {
         $folders   = array_map($to_kebab, $parts);
         $file_name = 'class-' . $to_kebab($class_name) . '.php';
 
-        $path = BT_REGIONDO_DIR . implode('/', $folders) . '/' . $file_name;
+        $path = BT_DIR . implode('/', $folders) . '/' . $file_name;
 
         if (file_exists($path)) {
             require_once $path;

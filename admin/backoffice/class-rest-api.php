@@ -1,8 +1,8 @@
 <?php
-namespace BT_Regiondo\Admin\Backoffice;
+namespace BlackTenders\Admin\Backoffice;
 
-use BT_Regiondo\Api\Regiondo\Client;
-use BT_Regiondo\Api\Regiondo\Cache;
+use BlackTenders\Api\Regiondo\Client;
+use BlackTenders\Api\Regiondo\Cache;
 
 defined('ABSPATH') || exit;
 
@@ -120,7 +120,7 @@ class RestApi {
         // Enrichit avec le post WP lié (si sync déjà fait)
         foreach ($products as &$p) {
             $posts = get_posts([
-                'post_type'  => get_option('bt_regiondo_post_types', ['excursion']),
+                'post_type'  => get_option('bt_post_types', ['excursion']),
                 'meta_key'   => '_bt_regiondo_product_id',
                 'meta_value' => $p['product_id'],
                 'numberposts'=> 1,
@@ -224,16 +224,16 @@ class RestApi {
             $products = [];
         }
 
-        $next = wp_next_scheduled('bt_regiondo_auto_sync');
+        $next = wp_next_scheduled('bt_auto_sync');
 
         return rest_ensure_response([
-            'public_key'     => get_option('bt_regiondo_public_key', ''),
-            'secret_key'     => get_option('bt_regiondo_secret_key', ''),
-            'cache_ttl'      => (int) get_option('bt_regiondo_cache_ttl', 3600),
-            'post_types'     => get_option('bt_regiondo_post_types', ['excursion']),
+            'public_key'     => get_option('bt_public_key', ''),
+            'secret_key'     => get_option('bt_secret_key', ''),
+            'cache_ttl'      => (int) get_option('bt_cache_ttl', 3600),
+            'post_types'     => get_option('bt_post_types', ['excursion']),
             'sync_interval'  => (int) get_option('bt_regiondo_sync_interval', 0),
             'sync_next_run'  => $next ?: null,
-            'widget_map'     => get_option('bt_regiondo_widget_map', []),
+            'widget_map'     => get_option('bt_widget_map', []),
             'products'       => $products,
             'all_post_types' => array_values(array_map(fn($pt) => [
                 'name'  => $pt->name,
@@ -246,23 +246,23 @@ class RestApi {
         $body = $req->get_json_params();
 
         if (isset($body['public_key'])) {
-            update_option('bt_regiondo_public_key', sanitize_text_field($body['public_key']));
+            update_option('bt_public_key', sanitize_text_field($body['public_key']));
         }
         if (isset($body['secret_key'])) {
-            update_option('bt_regiondo_secret_key', sanitize_text_field($body['secret_key']));
+            update_option('bt_secret_key', sanitize_text_field($body['secret_key']));
         }
         if (isset($body['cache_ttl'])) {
-            update_option('bt_regiondo_cache_ttl', absint($body['cache_ttl']));
+            update_option('bt_cache_ttl', absint($body['cache_ttl']));
         }
         if (isset($body['post_types']) && is_array($body['post_types'])) {
-            update_option('bt_regiondo_post_types', array_map('sanitize_text_field', $body['post_types']));
+            update_option('bt_post_types', array_map('sanitize_text_field', $body['post_types']));
         }
         if (isset($body['widget_map']) && is_array($body['widget_map'])) {
             $clean = [];
             foreach ($body['widget_map'] as $pid => $wid) {
                 $clean[absint($pid)] = sanitize_text_field($wid);
             }
-            update_option('bt_regiondo_widget_map', $clean);
+            update_option('bt_widget_map', $clean);
         }
         if (isset($body['sync_interval'])) {
             $interval = absint($body['sync_interval']);
@@ -274,7 +274,7 @@ class RestApi {
     }
 
     private function reschedule_cron(int $interval_minutes): void {
-        wp_clear_scheduled_hook('bt_regiondo_auto_sync');
+        wp_clear_scheduled_hook('bt_auto_sync');
         if ($interval_minutes <= 0) return;
 
         $recurrence = match ($interval_minutes) {
@@ -287,7 +287,7 @@ class RestApi {
         };
 
         if ($recurrence) {
-            wp_schedule_event(time(), $recurrence, 'bt_regiondo_auto_sync');
+            wp_schedule_event(time(), $recurrence, 'bt_auto_sync');
         }
     }
 

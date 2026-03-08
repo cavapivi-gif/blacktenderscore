@@ -1,5 +1,5 @@
 <?php
-namespace BT_Regiondo\Elementor\Widgets;
+namespace BlackTenders\Elementor\Widgets;
 
 defined('ABSPATH') || exit;
 
@@ -17,7 +17,7 @@ class ExcursionSchema extends \Elementor\Widget_Base {
     public function get_name():       string { return 'bt-excursion-schema'; }
     public function get_title():      string { return 'BT — Schema TouristTrip (SEO)'; }
     public function get_icon():       string { return 'eicon-code'; }
-    public function get_categories(): array  { return ['bt-regiondo']; }
+    public function get_categories(): array  { return ['blacktenderscore']; }
     public function get_keywords():   array  { return ['schema', 'seo', 'json-ld', 'touristtrip', 'structured data', 'bt']; }
 
     // ── Controls ─────────────────────────────────────────────────────────────
@@ -26,7 +26,7 @@ class ExcursionSchema extends \Elementor\Widget_Base {
 
         // ── Source données ────────────────────────────────────────────────
         $this->start_controls_section('section_schema', [
-            'label' => __('Configuration Schema.org', 'bt-regiondo'),
+            'label' => __('Configuration Schema.org', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
         ]);
 
@@ -41,52 +41,52 @@ class ExcursionSchema extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('provider_name', [
-            'label'       => __('Nom du prestataire', 'bt-regiondo'),
+            'label'       => __('Nom du prestataire', 'blacktenderscore'),
             'type'        => \Elementor\Controls_Manager::TEXT,
             'default'     => '',
-            'description' => __('Vide = nom du site WordPress automatiquement.', 'bt-regiondo'),
+            'description' => __('Vide = nom du site WordPress automatiquement.', 'blacktenderscore'),
             'dynamic'     => ['active' => true],
         ]);
 
         $this->add_control('provider_url', [
-            'label'       => __('URL du prestataire', 'bt-regiondo'),
+            'label'       => __('URL du prestataire', 'blacktenderscore'),
             'type'        => \Elementor\Controls_Manager::TEXT,
             'default'     => '',
-            'description' => __('Vide = URL du site WordPress automatiquement.', 'bt-regiondo'),
+            'description' => __('Vide = URL du site WordPress automatiquement.', 'blacktenderscore'),
         ]);
 
         $this->add_control('currency', [
-            'label'   => __('Devise (ISO 4217)', 'bt-regiondo'),
+            'label'   => __('Devise (ISO 4217)', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::TEXT,
             'default' => 'EUR',
         ]);
 
         $this->add_control('audience_type', [
-            'label'   => __('Type d\'audience', 'bt-regiondo'),
+            'label'   => __('Type d\'audience', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::TEXT,
-            'default' => __('Touristes, familles, groupes', 'bt-regiondo'),
+            'default' => __('Touristes, familles, groupes', 'blacktenderscore'),
         ]);
 
         $this->end_controls_section();
 
         // ── Prix ──────────────────────────────────────────────────────────
         $this->start_controls_section('section_price', [
-            'label' => __('Prix', 'bt-regiondo'),
+            'label' => __('Prix', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('price_source', [
-            'label'       => __('Source du prix', 'bt-regiondo'),
+            'label'       => __('Source du prix', 'blacktenderscore'),
             'type'        => \Elementor\Controls_Manager::SELECT,
             'options'     => [
-                'auto'   => __('Auto (depuis tarification_par_forfait)', 'bt-regiondo'),
-                'manual' => __('Manuel (saisir les valeurs)', 'bt-regiondo'),
+                'auto'   => __('Auto (depuis tarification_par_forfait)', 'blacktenderscore'),
+                'manual' => __('Manuel (saisir les valeurs)', 'blacktenderscore'),
             ],
             'default'     => 'auto',
         ]);
 
         $this->add_control('manual_min_price', [
-            'label'     => __('Prix minimum', 'bt-regiondo'),
+            'label'     => __('Prix minimum', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::NUMBER,
             'min'       => 0,
             'step'      => 1,
@@ -96,7 +96,7 @@ class ExcursionSchema extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('manual_max_price', [
-            'label'     => __('Prix maximum', 'bt-regiondo'),
+            'label'     => __('Prix maximum', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::NUMBER,
             'min'       => 0,
             'step'      => 1,
@@ -106,55 +106,55 @@ class ExcursionSchema extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('price_note_in_schema', [
-            'label'       => __('Description offre (optionnel)', 'bt-regiondo'),
+            'label'       => __('Description offre (optionnel)', 'blacktenderscore'),
             'type'        => \Elementor\Controls_Manager::TEXT,
-            'default'     => __('Par personne', 'bt-regiondo'),
-            'description' => __('Texte affiché dans le champ description de l\'Offer.', 'bt-regiondo'),
+            'default'     => __('Par personne', 'blacktenderscore'),
+            'description' => __('Texte affiché dans le champ description de l\'Offer.', 'blacktenderscore'),
         ]);
 
         $this->end_controls_section();
 
         // ── Données additionnelles ────────────────────────────────────────
         $this->start_controls_section('section_extra', [
-            'label' => __('Données additionnelles', 'bt-regiondo'),
+            'label' => __('Données additionnelles', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('include_languages', [
-            'label'        => __('Inclure les langues parlées', 'bt-regiondo'),
+            'label'        => __('Inclure les langues parlées', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
-            'description'  => __('Lit le champ ACF exp_languages.', 'bt-regiondo'),
+            'description'  => __('Lit le champ ACF exp_languages.', 'blacktenderscore'),
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('include_capacity', [
-            'label'        => __('Inclure capacité (pax min/max)', 'bt-regiondo'),
+            'label'        => __('Inclure capacité (pax min/max)', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('include_departure', [
-            'label'        => __('Inclure le point de départ', 'bt-regiondo'),
+            'label'        => __('Inclure le point de départ', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
-            'description'  => __('Lit exp_departure_point (city taxonomy).', 'bt-regiondo'),
+            'description'  => __('Lit exp_departure_point (city taxonomy).', 'blacktenderscore'),
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('include_image', [
-            'label'        => __('Inclure l\'image', 'bt-regiondo'),
+            'label'        => __('Inclure l\'image', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
-            'description'  => __('Lit exp_cover ou la featured image.', 'bt-regiondo'),
+            'description'  => __('Lit exp_cover ou la featured image.', 'blacktenderscore'),
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('include_boats', [
-            'label'        => __('Inclure les bateaux (isPartOf / vehicle)', 'bt-regiondo'),
+            'label'        => __('Inclure les bateaux (isPartOf / vehicle)', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
-            'description'  => __('Liste les bateaux liés via exp_boats dans subjectOf.', 'bt-regiondo'),
+            'description'  => __('Liste les bateaux liés via exp_boats dans subjectOf.', 'blacktenderscore'),
             'return_value' => 'yes',
             'default'      => '',
         ]);

@@ -1,5 +1,5 @@
 <?php
-namespace BT_Regiondo\Elementor\Widgets;
+namespace BlackTenders\Elementor\Widgets;
 
 defined('ABSPATH') || exit;
 
@@ -15,7 +15,7 @@ class Reviews extends \Elementor\Widget_Base {
     public function get_name():       string { return 'bt-reviews'; }
     public function get_title():      string { return 'BT — Avis clients'; }
     public function get_icon():       string { return 'eicon-rating'; }
-    public function get_categories(): array  { return ['bt-regiondo']; }
+    public function get_categories(): array  { return ['blacktenderscore']; }
     public function get_keywords():   array  { return ['avis', 'reviews', 'rating', 'étoiles', 'bt']; }
 
     // ── Controls ─────────────────────────────────────────────────────────────
@@ -24,32 +24,32 @@ class Reviews extends \Elementor\Widget_Base {
 
         // ── Contenu ───────────────────────────────────────────────────────
         $this->start_controls_section('section_content', [
-            'label' => __('Contenu', 'bt-regiondo'),
+            'label' => __('Contenu', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('acf_field', [
-            'label'   => __('Champ ACF repeater', 'bt-regiondo'),
+            'label'   => __('Champ ACF repeater', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::TEXT,
             'default' => 'exp_reviews_highlight',
         ]);
 
         $this->add_control('section_title', [
-            'label'   => __('Titre de section', 'bt-regiondo'),
+            'label'   => __('Titre de section', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::TEXT,
-            'default' => __('Avis clients', 'bt-regiondo'),
+            'default' => __('Avis clients', 'blacktenderscore'),
             'dynamic' => ['active' => true],
         ]);
 
         $this->add_control('title_tag', [
-            'label'   => __('Balise du titre', 'bt-regiondo'),
+            'label'   => __('Balise du titre', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => ['h2' => 'H2', 'h3' => 'H3', 'h4' => 'H4', 'p' => 'p'],
             'default' => 'h3',
         ]);
 
         $this->add_control('max_reviews', [
-            'label'   => __('Nombre max d\'avis', 'bt-regiondo'),
+            'label'   => __('Nombre max d\'avis', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::NUMBER,
             'min'     => 1,
             'max'     => 20,
@@ -60,22 +60,22 @@ class Reviews extends \Elementor\Widget_Base {
 
         // ── Affichage ─────────────────────────────────────────────────────
         $this->start_controls_section('section_display', [
-            'label' => __('Affichage', 'bt-regiondo'),
+            'label' => __('Affichage', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('layout', [
-            'label'   => __('Disposition', 'bt-regiondo'),
+            'label'   => __('Disposition', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => [
-                'grid' => __('Grille', 'bt-regiondo'),
-                'list' => __('Liste', 'bt-regiondo'),
+                'grid' => __('Grille', 'blacktenderscore'),
+                'list' => __('Liste', 'blacktenderscore'),
             ],
             'default' => 'grid',
         ]);
 
         $this->add_responsive_control('columns', [
-            'label'          => __('Colonnes', 'bt-regiondo'),
+            'label'          => __('Colonnes', 'blacktenderscore'),
             'type'           => \Elementor\Controls_Manager::NUMBER,
             'min'            => 1,
             'max'            => 4,
@@ -87,28 +87,28 @@ class Reviews extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('show_stars', [
-            'label'        => __('Afficher les étoiles', 'bt-regiondo'),
+            'label'        => __('Afficher les étoiles', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('star_filled', [
-            'label'     => __('Étoile pleine', 'bt-regiondo'),
+            'label'     => __('Étoile pleine', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::TEXT,
             'default'   => '★',
             'condition' => ['show_stars' => 'yes'],
         ]);
 
         $this->add_control('star_empty', [
-            'label'     => __('Étoile vide', 'bt-regiondo'),
+            'label'     => __('Étoile vide', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::TEXT,
             'default'   => '☆',
             'condition' => ['show_stars' => 'yes'],
         ]);
 
         $this->add_control('max_stars', [
-            'label'     => __('Note max', 'bt-regiondo'),
+            'label'     => __('Note max', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::NUMBER,
             'min'       => 3,
             'max'       => 10,
@@ -117,21 +117,21 @@ class Reviews extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('show_name', [
-            'label'        => __('Afficher le prénom', 'bt-regiondo'),
+            'label'        => __('Afficher le prénom', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('show_text', [
-            'label'        => __('Afficher le texte de l\'avis', 'bt-regiondo'),
+            'label'        => __('Afficher le texte de l\'avis', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('quote_char', [
-            'label'     => __('Caractère de citation', 'bt-regiondo'),
+            'label'     => __('Caractère de citation', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::TEXT,
             'default'   => '"',
             'condition' => ['show_text' => 'yes'],
@@ -141,20 +141,20 @@ class Reviews extends \Elementor\Widget_Base {
 
         // ── Schema.org ────────────────────────────────────────────────────
         $this->start_controls_section('section_schema', [
-            'label' => __('Schema.org', 'bt-regiondo'),
+            'label' => __('Schema.org', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('schema_reviews', [
-            'label'        => __('Injecter le schema AggregateRating (SEO)', 'bt-regiondo'),
+            'label'        => __('Injecter le schema AggregateRating (SEO)', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
-            'description'  => __('Injecte un JSON-LD AggregateRating + Review calculé depuis les avis ACF.', 'bt-regiondo'),
+            'description'  => __('Injecte un JSON-LD AggregateRating + Review calculé depuis les avis ACF.', 'blacktenderscore'),
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('schema_item_type', [
-            'label'     => __('@type de l\'entité', 'bt-regiondo'),
+            'label'     => __('@type de l\'entité', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::SELECT,
             'options'   => [
                 'Product'     => 'Product',
@@ -167,10 +167,10 @@ class Reviews extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('schema_item_name', [
-            'label'       => __('Nom de l\'entité (vide = titre du post)', 'bt-regiondo'),
+            'label'       => __('Nom de l\'entité (vide = titre du post)', 'blacktenderscore'),
             'type'        => \Elementor\Controls_Manager::TEXT,
             'default'     => '',
-            'description' => __('Laissez vide pour utiliser automatiquement le titre du post.', 'bt-regiondo'),
+            'description' => __('Laissez vide pour utiliser automatiquement le titre du post.', 'blacktenderscore'),
             'condition'   => ['schema_reviews' => 'yes'],
             'dynamic'     => ['active' => true],
         ]);
@@ -179,24 +179,24 @@ class Reviews extends \Elementor\Widget_Base {
 
         // ── Style — Cartes ────────────────────────────────────────────────
         $this->start_controls_section('style_cards', [
-            'label' => __('Style — Cartes', 'bt-regiondo'),
+            'label' => __('Style — Cartes', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
         ]);
 
         $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
             'name'     => 'section_title_typo',
-            'label'    => __('Typographie titre section', 'bt-regiondo'),
+            'label'    => __('Typographie titre section', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-reviews__section-title',
         ]);
 
         $this->add_control('section_title_color', [
-            'label'     => __('Couleur titre section', 'bt-regiondo'),
+            'label'     => __('Couleur titre section', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-reviews__section-title' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_responsive_control('cards_gap', [
-            'label'      => __('Espacement', 'bt-regiondo'),
+            'label'      => __('Espacement', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'default'    => ['size' => 24, 'unit' => 'px'],
@@ -207,7 +207,7 @@ class Reviews extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('card_bg', [
-            'label'     => __('Fond de la carte', 'bt-regiondo'),
+            'label'     => __('Fond de la carte', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-reviews__card' => 'background-color: {{VALUE}}'],
         ]);
@@ -218,14 +218,14 @@ class Reviews extends \Elementor\Widget_Base {
         ]);
 
         $this->add_responsive_control('card_radius', [
-            'label'      => __('Border radius', 'bt-regiondo'),
+            'label'      => __('Border radius', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'selectors'  => ['{{WRAPPER}} .bt-reviews__card' => 'border-radius: {{SIZE}}{{UNIT}}'],
         ]);
 
         $this->add_responsive_control('card_padding', [
-            'label'      => __('Padding', 'bt-regiondo'),
+            'label'      => __('Padding', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::DIMENSIONS,
             'size_units' => ['px', 'em'],
             'default'    => ['top' => '24', 'right' => '24', 'bottom' => '24', 'left' => '24', 'unit' => 'px', 'isLinked' => true],
@@ -241,18 +241,18 @@ class Reviews extends \Elementor\Widget_Base {
 
         // ── Style — Texte ─────────────────────────────────────────────────
         $this->start_controls_section('style_text', [
-            'label' => __('Style — Texte', 'bt-regiondo'),
+            'label' => __('Style — Texte', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
         ]);
 
         $this->add_control('star_color', [
-            'label'     => __('Couleur étoiles', 'bt-regiondo'),
+            'label'     => __('Couleur étoiles', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-reviews__stars' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_responsive_control('star_size', [
-            'label'      => __('Taille étoiles', 'bt-regiondo'),
+            'label'      => __('Taille étoiles', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px', 'em'],
             'default'    => ['size' => 18, 'unit' => 'px'],
@@ -261,30 +261,30 @@ class Reviews extends \Elementor\Widget_Base {
 
         $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
             'name'     => 'review_text_typo',
-            'label'    => __('Typographie avis', 'bt-regiondo'),
+            'label'    => __('Typographie avis', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-reviews__text',
         ]);
 
         $this->add_control('review_text_color', [
-            'label'     => __('Couleur avis', 'bt-regiondo'),
+            'label'     => __('Couleur avis', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-reviews__text' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
             'name'     => 'name_typo',
-            'label'    => __('Typographie prénom', 'bt-regiondo'),
+            'label'    => __('Typographie prénom', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-reviews__name',
         ]);
 
         $this->add_control('name_color', [
-            'label'     => __('Couleur prénom', 'bt-regiondo'),
+            'label'     => __('Couleur prénom', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-reviews__name' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_control('quote_color', [
-            'label'     => __('Couleur guillemet', 'bt-regiondo'),
+            'label'     => __('Couleur guillemet', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-reviews__quote' => 'color: {{VALUE}}'],
         ]);

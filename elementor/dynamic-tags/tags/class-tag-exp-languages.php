@@ -1,5 +1,5 @@
 <?php
-namespace BT_Regiondo\Elementor\DynamicTags;
+namespace BlackTenders\Elementor\DynamicTags;
 
 defined('ABSPATH') || exit;
 
@@ -37,20 +37,20 @@ class Tag_Exp_Languages extends Abstract_BT_Tag {
     protected function register_controls(): void {
 
         $this->add_control('format', [
-            'label'   => __('Format', 'bt-regiondo'),
+            'label'   => __('Format', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => [
-                'code'        => __('Code (fr, en…)', 'bt-regiondo'),
-                'name'        => __('Nom complet (Français…)', 'bt-regiondo'),
-                'flag'        => __('Drapeau seul (🇫🇷…)', 'bt-regiondo'),
-                'flag_code'   => __('Drapeau + code (🇫🇷 fr)', 'bt-regiondo'),
-                'flag_name'   => __('Drapeau + nom (🇫🇷 Français)', 'bt-regiondo'),
+                'code'        => __('Code (fr, en…)', 'blacktenderscore'),
+                'name'        => __('Nom complet (Français…)', 'blacktenderscore'),
+                'flag'        => __('Drapeau seul (🇫🇷…)', 'blacktenderscore'),
+                'flag_code'   => __('Drapeau + code (🇫🇷 fr)', 'blacktenderscore'),
+                'flag_name'   => __('Drapeau + nom (🇫🇷 Français)', 'blacktenderscore'),
             ],
             'default' => 'flag_name',
         ]);
 
         $this->add_control('separator', [
-            'label'   => __('Séparateur', 'bt-regiondo'),
+            'label'   => __('Séparateur', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => [
                 ' · ' => '·  (point médian)',
@@ -63,7 +63,7 @@ class Tag_Exp_Languages extends Abstract_BT_Tag {
         ]);
 
         $this->add_control('uppercase', [
-            'label'        => __('Code en majuscules', 'bt-regiondo'),
+            'label'        => __('Code en majuscules', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => '',

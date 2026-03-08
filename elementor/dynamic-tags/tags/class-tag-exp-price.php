@@ -1,5 +1,5 @@
 <?php
-namespace BT_Regiondo\Elementor\DynamicTags;
+namespace BlackTenders\Elementor\DynamicTags;
 
 defined('ABSPATH') || exit;
 
@@ -27,40 +27,40 @@ abstract class Abstract_Price_Tag extends Abstract_BT_Tag {
     protected function register_controls(): void {
 
         $this->add_control('prefix', [
-            'label'   => __('Préfixe', 'bt-regiondo'),
+            'label'   => __('Préfixe', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::TEXT,
             'default' => '',
             'dynamic' => ['active' => false],
         ]);
 
         $this->add_control('devise', [
-            'label'   => __('Symbole devise', 'bt-regiondo'),
+            'label'   => __('Symbole devise', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::TEXT,
             'default' => '€',
         ]);
 
         $this->add_control('suffix', [
-            'label'   => __('Suffixe', 'bt-regiondo'),
+            'label'   => __('Suffixe', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::TEXT,
             'default' => '',
         ]);
 
         $this->add_control('format', [
-            'label'   => __('Format', 'bt-regiondo'),
+            'label'   => __('Format', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => [
-                'integer' => __('Entier (45)', 'bt-regiondo'),
-                'decimal' => __('Décimal (45,00)', 'bt-regiondo'),
-                'raw'     => __('Brut (pas de formatage)', 'bt-regiondo'),
+                'integer' => __('Entier (45)', 'blacktenderscore'),
+                'decimal' => __('Décimal (45,00)', 'blacktenderscore'),
+                'raw'     => __('Brut (pas de formatage)', 'blacktenderscore'),
             ],
             'default' => 'integer',
         ]);
 
         $this->add_control('fallback', [
-            'label'       => __('Texte si aucun prix', 'bt-regiondo'),
+            'label'       => __('Texte si aucun prix', 'blacktenderscore'),
             'type'        => \Elementor\Controls_Manager::TEXT,
             'default'     => '',
-            'description' => __('Laissez vide pour n\'afficher rien.', 'bt-regiondo'),
+            'description' => __('Laissez vide pour n\'afficher rien.', 'blacktenderscore'),
         ]);
     }
 

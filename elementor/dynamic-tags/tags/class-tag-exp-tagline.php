@@ -1,5 +1,5 @@
 <?php
-namespace BT_Regiondo\Elementor\DynamicTags;
+namespace BlackTenders\Elementor\DynamicTags;
 
 defined('ABSPATH') || exit;
 

@@ -1,5 +1,5 @@
 <?php
-namespace BT_Regiondo\Elementor\DynamicTags;
+namespace BlackTenders\Elementor\DynamicTags;
 
 defined('ABSPATH') || exit;
 
@@ -21,18 +21,18 @@ class Tag_Exp_Departure extends Abstract_BT_Tag {
     protected function register_controls(): void {
 
         $this->add_control('source', [
-            'label'   => __('Source', 'bt-regiondo'),
+            'label'   => __('Source', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => [
-                'city_name'  => __('Nom de la ville (taxonomie city)', 'bt-regiondo'),
-                'gps_coords' => __('Coordonnées GPS (exp_departure_coords)', 'bt-regiondo'),
-                'maps_url'   => __('URL Google Maps (depuis GPS)', 'bt-regiondo'),
+                'city_name'  => __('Nom de la ville (taxonomie city)', 'blacktenderscore'),
+                'gps_coords' => __('Coordonnées GPS (exp_departure_coords)', 'blacktenderscore'),
+                'maps_url'   => __('URL Google Maps (depuis GPS)', 'blacktenderscore'),
             ],
             'default' => 'city_name',
         ]);
 
         $this->add_control('separator', [
-            'label'     => __('Séparateur si plusieurs villes', 'bt-regiondo'),
+            'label'     => __('Séparateur si plusieurs villes', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::TEXT,
             'default'   => ', ',
             'condition' => ['source' => 'city_name'],

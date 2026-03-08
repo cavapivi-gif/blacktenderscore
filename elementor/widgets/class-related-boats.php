@@ -1,5 +1,5 @@
 <?php
-namespace BT_Regiondo\Elementor\Widgets;
+namespace BlackTenders\Elementor\Widgets;
 
 defined('ABSPATH') || exit;
 
@@ -14,7 +14,7 @@ class RelatedBoats extends \Elementor\Widget_Base {
     public function get_name():       string { return 'bt-related-boats'; }
     public function get_title():      string { return 'BT — Bateaux de l\'excursion'; }
     public function get_icon():       string { return 'eicon-posts-grid'; }
-    public function get_categories(): array  { return ['bt-regiondo']; }
+    public function get_categories(): array  { return ['blacktenderscore']; }
     public function get_keywords():   array  { return ['bateau', 'related', 'excursion', 'relation', 'bt']; }
 
     // ── Controls ─────────────────────────────────────────────────────────────
@@ -23,26 +23,26 @@ class RelatedBoats extends \Elementor\Widget_Base {
 
         // ── Contenu ───────────────────────────────────────────────────────
         $this->start_controls_section('section_content', [
-            'label' => __('Contenu', 'bt-regiondo'),
+            'label' => __('Contenu', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('acf_field', [
-            'label'       => __('Champ ACF relationship', 'bt-regiondo'),
+            'label'       => __('Champ ACF relationship', 'blacktenderscore'),
             'type'        => \Elementor\Controls_Manager::TEXT,
             'default'     => 'exp_boats',
-            'description' => __('Nom du champ ACF de type relationship pointant vers boat.', 'bt-regiondo'),
+            'description' => __('Nom du champ ACF de type relationship pointant vers boat.', 'blacktenderscore'),
         ]);
 
         $this->add_control('section_title', [
-            'label'   => __('Titre de section', 'bt-regiondo'),
+            'label'   => __('Titre de section', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::TEXT,
-            'default' => __('Bateaux utilisés', 'bt-regiondo'),
+            'default' => __('Bateaux utilisés', 'blacktenderscore'),
             'dynamic' => ['active' => true],
         ]);
 
         $this->add_control('title_tag', [
-            'label'   => __('Balise du titre', 'bt-regiondo'),
+            'label'   => __('Balise du titre', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => ['h2' => 'H2', 'h3' => 'H3', 'h4' => 'H4', 'p' => 'p'],
             'default' => 'h3',
@@ -52,12 +52,12 @@ class RelatedBoats extends \Elementor\Widget_Base {
 
         // ── Affichage ─────────────────────────────────────────────────────
         $this->start_controls_section('section_display', [
-            'label' => __('Affichage des cartes', 'bt-regiondo'),
+            'label' => __('Affichage des cartes', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_responsive_control('columns', [
-            'label'          => __('Colonnes', 'bt-regiondo'),
+            'label'          => __('Colonnes', 'blacktenderscore'),
             'type'           => \Elementor\Controls_Manager::NUMBER,
             'min'            => 1,
             'max'            => 4,
@@ -68,7 +68,7 @@ class RelatedBoats extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('image_size', [
-            'label'   => __('Taille d\'image', 'bt-regiondo'),
+            'label'   => __('Taille d\'image', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => [
                 'thumbnail' => 'Miniature',
@@ -80,7 +80,7 @@ class RelatedBoats extends \Elementor\Widget_Base {
         ]);
 
         $this->add_responsive_control('image_ratio', [
-            'label'      => __('Ratio image (%)', 'bt-regiondo'),
+            'label'      => __('Ratio image (%)', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'range'      => ['px' => ['min' => 30, 'max' => 120]],
             'default'    => ['size' => 60],
@@ -88,51 +88,51 @@ class RelatedBoats extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('show_image', [
-            'label'        => __('Afficher l\'image', 'bt-regiondo'),
+            'label'        => __('Afficher l\'image', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('show_tagline', [
-            'label'        => __('Afficher l\'accroche (boat_tagline)', 'bt-regiondo'),
+            'label'        => __('Afficher l\'accroche (boat_tagline)', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('show_specs', [
-            'label'        => __('Afficher passagers + motorisation', 'bt-regiondo'),
+            'label'        => __('Afficher passagers + motorisation', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('spec_pax_label', [
-            'label'     => __('Icône / Label passagers', 'bt-regiondo'),
+            'label'     => __('Icône / Label passagers', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::TEXT,
             'default'   => '👥',
             'condition' => ['show_specs' => 'yes'],
         ]);
 
         $this->add_control('spec_engine_label', [
-            'label'     => __('Icône / Label motorisation', 'bt-regiondo'),
+            'label'     => __('Icône / Label motorisation', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::TEXT,
             'default'   => '⚡',
             'condition' => ['show_specs' => 'yes'],
         ]);
 
         $this->add_control('show_link', [
-            'label'        => __('Afficher le bouton lien', 'bt-regiondo'),
+            'label'        => __('Afficher le bouton lien', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('link_label', [
-            'label'     => __('Texte du bouton', 'bt-regiondo'),
+            'label'     => __('Texte du bouton', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::TEXT,
-            'default'   => __('Voir le bateau', 'bt-regiondo'),
+            'default'   => __('Voir le bateau', 'blacktenderscore'),
             'condition' => ['show_link' => 'yes'],
         ]);
 
@@ -140,12 +140,12 @@ class RelatedBoats extends \Elementor\Widget_Base {
 
         // ── Style — Cartes ────────────────────────────────────────────────
         $this->start_controls_section('style_cards', [
-            'label' => __('Style — Cartes', 'bt-regiondo'),
+            'label' => __('Style — Cartes', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
         ]);
 
         $this->add_responsive_control('cards_gap', [
-            'label'      => __('Espacement', 'bt-regiondo'),
+            'label'      => __('Espacement', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'default'    => ['size' => 24, 'unit' => 'px'],
@@ -153,7 +153,7 @@ class RelatedBoats extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('card_bg', [
-            'label'     => __('Fond des cartes', 'bt-regiondo'),
+            'label'     => __('Fond des cartes', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-relboats__card' => 'background-color: {{VALUE}}'],
         ]);
@@ -164,7 +164,7 @@ class RelatedBoats extends \Elementor\Widget_Base {
         ]);
 
         $this->add_responsive_control('card_radius', [
-            'label'      => __('Border radius', 'bt-regiondo'),
+            'label'      => __('Border radius', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'selectors'  => ['{{WRAPPER}} .bt-relboats__card' => 'border-radius: {{SIZE}}{{UNIT}}; overflow: hidden'],
@@ -179,12 +179,12 @@ class RelatedBoats extends \Elementor\Widget_Base {
 
         // ── Style — Texte ─────────────────────────────────────────────────
         $this->start_controls_section('style_text', [
-            'label' => __('Style — Texte', 'bt-regiondo'),
+            'label' => __('Style — Texte', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
         ]);
 
         $this->add_responsive_control('body_padding', [
-            'label'      => __('Padding contenu', 'bt-regiondo'),
+            'label'      => __('Padding contenu', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::DIMENSIONS,
             'size_units' => ['px', 'em'],
             'default'    => ['top' => '16', 'right' => '16', 'bottom' => '16', 'left' => '16', 'unit' => 'px', 'isLinked' => true],
@@ -193,54 +193,54 @@ class RelatedBoats extends \Elementor\Widget_Base {
 
         $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
             'name'     => 'title_typo',
-            'label'    => __('Typographie titre bateau', 'bt-regiondo'),
+            'label'    => __('Typographie titre bateau', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-relboats__card-title',
         ]);
 
         $this->add_control('title_color', [
-            'label'     => __('Couleur titre', 'bt-regiondo'),
+            'label'     => __('Couleur titre', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-relboats__card-title' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
             'name'     => 'tagline_typo',
-            'label'    => __('Typographie accroche', 'bt-regiondo'),
+            'label'    => __('Typographie accroche', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-relboats__tagline',
         ]);
 
         $this->add_control('tagline_color', [
-            'label'     => __('Couleur accroche', 'bt-regiondo'),
+            'label'     => __('Couleur accroche', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-relboats__tagline' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
             'name'     => 'specs_typo',
-            'label'    => __('Typographie specs', 'bt-regiondo'),
+            'label'    => __('Typographie specs', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-relboats__specs',
         ]);
 
         $this->add_control('specs_color', [
-            'label'     => __('Couleur specs', 'bt-regiondo'),
+            'label'     => __('Couleur specs', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-relboats__specs' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
             'name'     => 'btn_typo',
-            'label'    => __('Typographie bouton', 'bt-regiondo'),
+            'label'    => __('Typographie bouton', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-relboats__btn',
         ]);
 
         $this->add_control('btn_color', [
-            'label'     => __('Couleur bouton', 'bt-regiondo'),
+            'label'     => __('Couleur bouton', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-relboats__btn' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_control('btn_bg', [
-            'label'     => __('Fond bouton', 'bt-regiondo'),
+            'label'     => __('Fond bouton', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-relboats__btn' => 'background-color: {{VALUE}}'],
         ]);
@@ -251,14 +251,14 @@ class RelatedBoats extends \Elementor\Widget_Base {
         ]);
 
         $this->add_responsive_control('btn_radius', [
-            'label'      => __('Border radius bouton', 'bt-regiondo'),
+            'label'      => __('Border radius bouton', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px', '%'],
             'selectors'  => ['{{WRAPPER}} .bt-relboats__btn' => 'border-radius: {{SIZE}}{{UNIT}}'],
         ]);
 
         $this->add_responsive_control('btn_padding', [
-            'label'      => __('Padding bouton', 'bt-regiondo'),
+            'label'      => __('Padding bouton', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::DIMENSIONS,
             'size_units' => ['px', 'em'],
             'selectors'  => ['{{WRAPPER}} .bt-relboats__btn' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
@@ -358,7 +358,7 @@ class RelatedBoats extends \Elementor\Widget_Base {
             }
 
             if ($s['show_link'] === 'yes') {
-                $lbl = $s['link_label'] ?: __('Voir le bateau', 'bt-regiondo');
+                $lbl = $s['link_label'] ?: __('Voir le bateau', 'blacktenderscore');
                 echo '<a href="' . esc_url($boat_url) . '" class="bt-relboats__btn">' . esc_html($lbl) . '</a>';
             }
 

@@ -1,5 +1,5 @@
 <?php
-namespace BT_Regiondo\Api\Regiondo;
+namespace BlackTenders\Api\Regiondo;
 
 defined('ABSPATH') || exit;
 

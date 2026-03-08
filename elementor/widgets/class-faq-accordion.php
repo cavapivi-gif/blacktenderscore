@@ -1,5 +1,5 @@
 <?php
-namespace BT_Regiondo\Elementor\Widgets;
+namespace BlackTenders\Elementor\Widgets;
 
 defined('ABSPATH') || exit;
 
@@ -15,7 +15,7 @@ class FaqAccordion extends \Elementor\Widget_Base {
     public function get_name():       string { return 'bt-faq-accordion'; }
     public function get_title():      string { return 'BT — FAQ'; }
     public function get_icon():       string { return 'eicon-toggle'; }
-    public function get_categories(): array  { return ['bt-regiondo']; }
+    public function get_categories(): array  { return ['blacktenderscore']; }
     public function get_keywords():   array  { return ['faq', 'accordéon', 'accordion', 'tabs', 'question', 'bt']; }
     public function get_script_depends(): array { return ['bt-elementor']; }
 
@@ -25,44 +25,44 @@ class FaqAccordion extends \Elementor\Widget_Base {
 
         // ── Content ───────────────────────────────────────────────────────
         $this->start_controls_section('section_content', [
-            'label' => __('Contenu', 'bt-regiondo'),
+            'label' => __('Contenu', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('acf_field', [
-            'label'   => __('Champ ACF repeater', 'bt-regiondo'),
+            'label'   => __('Champ ACF repeater', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => [
-                'exp_faq' => __('FAQ (exp_faq)', 'bt-regiondo'),
+                'exp_faq' => __('FAQ (exp_faq)', 'blacktenderscore'),
             ],
             'default' => 'exp_faq',
         ]);
 
         $this->add_control('layout', [
-            'label'   => __('Disposition', 'bt-regiondo'),
+            'label'   => __('Disposition', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => [
-                'accordion' => __('Accordéon', 'bt-regiondo'),
-                'tabs'      => __('Tabs', 'bt-regiondo'),
+                'accordion' => __('Accordéon', 'blacktenderscore'),
+                'tabs'      => __('Tabs', 'blacktenderscore'),
             ],
             'default' => 'accordion',
         ]);
 
         $this->add_control('open_first', [
-            'label'        => __('Ouvrir le premier élément', 'bt-regiondo'),
+            'label'        => __('Ouvrir le premier élément', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
-            'label_on'     => __('Oui', 'bt-regiondo'),
-            'label_off'    => __('Non', 'bt-regiondo'),
+            'label_on'     => __('Oui', 'blacktenderscore'),
+            'label_off'    => __('Non', 'blacktenderscore'),
             'return_value' => 'yes',
             'default'      => 'yes',
             'condition'    => ['layout' => 'accordion'],
         ]);
 
         $this->add_control('schema_faq', [
-            'label'        => __('Injecter le Schema FAQPage (SEO)', 'bt-regiondo'),
+            'label'        => __('Injecter le Schema FAQPage (SEO)', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
-            'label_on'     => __('Oui', 'bt-regiondo'),
-            'label_off'    => __('Non', 'bt-regiondo'),
+            'label_on'     => __('Oui', 'blacktenderscore'),
+            'label_off'    => __('Non', 'blacktenderscore'),
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
@@ -71,7 +71,7 @@ class FaqAccordion extends \Elementor\Widget_Base {
 
         // ── Style — Questions ─────────────────────────────────────────────
         $this->start_controls_section('style_question', [
-            'label' => __('Style — Questions', 'bt-regiondo'),
+            'label' => __('Style — Questions', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
         ]);
 
@@ -81,26 +81,26 @@ class FaqAccordion extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('question_color', [
-            'label'     => __('Couleur', 'bt-regiondo'),
+            'label'     => __('Couleur', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-faq__question' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_control('question_bg', [
-            'label'     => __('Fond', 'bt-regiondo'),
+            'label'     => __('Fond', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-faq__question' => 'background-color: {{VALUE}}'],
         ]);
 
         $this->add_responsive_control('question_padding', [
-            'label'      => __('Padding', 'bt-regiondo'),
+            'label'      => __('Padding', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::DIMENSIONS,
             'size_units' => ['px', 'em'],
             'selectors'  => ['{{WRAPPER}} .bt-faq__question' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
         ]);
 
         $this->add_control('question_active_color', [
-            'label'     => __('Couleur (actif)', 'bt-regiondo'),
+            'label'     => __('Couleur (actif)', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => [
                 '{{WRAPPER}} .bt-faq__item--open .bt-faq__question' => 'color: {{VALUE}}',
@@ -109,7 +109,7 @@ class FaqAccordion extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('question_active_bg', [
-            'label'     => __('Fond (actif)', 'bt-regiondo'),
+            'label'     => __('Fond (actif)', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => [
                 '{{WRAPPER}} .bt-faq__item--open .bt-faq__question' => 'background-color: {{VALUE}}',
@@ -123,14 +123,14 @@ class FaqAccordion extends \Elementor\Widget_Base {
         ]);
 
         $this->add_responsive_control('border_radius', [
-            'label'      => __('Border radius', 'bt-regiondo'),
+            'label'      => __('Border radius', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'selectors'  => ['{{WRAPPER}} .bt-faq__item' => 'border-radius: {{SIZE}}{{UNIT}}; overflow: hidden'],
         ]);
 
         $this->add_responsive_control('items_gap', [
-            'label'      => __('Espacement entre éléments', 'bt-regiondo'),
+            'label'      => __('Espacement entre éléments', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'default'    => ['size' => 8, 'unit' => 'px'],
@@ -141,7 +141,7 @@ class FaqAccordion extends \Elementor\Widget_Base {
 
         // ── Style — Réponses ──────────────────────────────────────────────
         $this->start_controls_section('style_answer', [
-            'label' => __('Style — Réponses', 'bt-regiondo'),
+            'label' => __('Style — Réponses', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
         ]);
 
@@ -151,19 +151,19 @@ class FaqAccordion extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('answer_color', [
-            'label'     => __('Couleur', 'bt-regiondo'),
+            'label'     => __('Couleur', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-faq__answer' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_control('answer_bg', [
-            'label'     => __('Fond', 'bt-regiondo'),
+            'label'     => __('Fond', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-faq__answer-inner' => 'background-color: {{VALUE}}'],
         ]);
 
         $this->add_responsive_control('answer_padding', [
-            'label'      => __('Padding', 'bt-regiondo'),
+            'label'      => __('Padding', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::DIMENSIONS,
             'size_units' => ['px', 'em'],
             'selectors'  => ['{{WRAPPER}} .bt-faq__answer-inner' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],

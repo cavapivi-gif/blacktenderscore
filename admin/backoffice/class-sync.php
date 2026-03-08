@@ -1,7 +1,7 @@
 <?php
-namespace BT_Regiondo\Admin\Backoffice;
+namespace BlackTenders\Admin\Backoffice;
 
-use BT_Regiondo\Api\Regiondo\Client;
+use BlackTenders\Api\Regiondo\Client;
 
 defined('ABSPATH') || exit;
 
@@ -21,7 +21,7 @@ class Sync {
 
     public function __construct() {
         $this->client     = new Client();
-        $this->post_types = get_option('bt_regiondo_post_types', ['excursion']);
+        $this->post_types = get_option('bt_post_types', ['excursion']);
     }
 
     /** Callback WP cron → appelle run() silencieusement */
@@ -49,7 +49,7 @@ class Sync {
             $products = array_filter($products, fn($p) => in_array($p['product_id'], $product_ids));
         }
 
-        $widget_map = get_option('bt_regiondo_widget_map', []);
+        $widget_map = get_option('bt_widget_map', []);
 
         foreach ($products as $product) {
             try {

@@ -1,7 +1,7 @@
 <?php
-namespace BT_Regiondo\Admin\MetaBox;
+namespace BlackTenders\Admin\MetaBox;
 
-use BT_Regiondo\Api\Regiondo\Client;
+use BlackTenders\Api\Regiondo\Client;
 
 defined('ABSPATH') || exit;
 
@@ -15,7 +15,7 @@ class MetaBox {
     }
 
     public function register(): void {
-        $post_types = get_option('bt_regiondo_post_types', ['excursion']);
+        $post_types = get_option('bt_post_types', ['excursion']);
 
         foreach ($post_types as $pt) {
             add_meta_box(
@@ -32,7 +32,7 @@ class MetaBox {
     public function render(\WP_Post $post): void {
         wp_nonce_field('bt_regiondo_save', 'bt_regiondo_nonce');
         $saved = get_post_meta($post->ID, '_bt_regiondo_tickets', true) ?: [];
-        require BT_REGIONDO_DIR . 'admin/meta-box/template.php';
+        require BT_DIR . 'admin/meta-box/template.php';
     }
 
     public function save(int $post_id): void {
@@ -42,7 +42,7 @@ class MetaBox {
         if (!current_user_can('edit_post', $post_id)) return;
 
         $tickets = [];
-        $map     = get_option('bt_regiondo_widget_map', []);
+        $map     = get_option('bt_widget_map', []);
 
         if (!empty($_POST['bt_regiondo_tickets']) && is_array($_POST['bt_regiondo_tickets'])) {
             foreach ($_POST['bt_regiondo_tickets'] as $ticket) {
@@ -63,28 +63,28 @@ class MetaBox {
         if (!in_array($hook, ['post.php', 'post-new.php'])) return;
 
         $screen = get_current_screen();
-        $types  = get_option('bt_regiondo_post_types', ['excursion']);
+        $types  = get_option('bt_post_types', ['excursion']);
         if (!in_array($screen->post_type, $types)) return;
 
         wp_enqueue_style(
             'bt-regiondo-meta-box',
-            BT_REGIONDO_URL . 'admin/meta-box/meta-box.css',
+            BT_URL . 'admin/meta-box/meta-box.css',
             [],
-            BT_REGIONDO_VERSION
+            BT_VERSION
         );
 
         wp_enqueue_script(
             'bt-regiondo-meta-box',
-            BT_REGIONDO_URL . 'admin/meta-box/meta-box.js',
+            BT_URL . 'admin/meta-box/meta-box.js',
             ['jquery'],
-            BT_REGIONDO_VERSION,
+            BT_VERSION,
             true
         );
 
         wp_localize_script('bt-regiondo-meta-box', 'btRegionado', [
             'ajax_url'    => admin_url('admin-ajax.php'),
             'nonce'       => wp_create_nonce('bt_regiondo_fetch'),
-            'widgetMap'   => (object) get_option('bt_regiondo_widget_map', []),
+            'widgetMap'   => (object) get_option('bt_widget_map', []),
             'settingsUrl' => admin_url('admin.php?page=bt-regiondo#/settings'),
         ]);
     }

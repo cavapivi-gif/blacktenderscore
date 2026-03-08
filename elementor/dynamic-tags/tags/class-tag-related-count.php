@@ -1,5 +1,5 @@
 <?php
-namespace BT_Regiondo\Elementor\DynamicTags;
+namespace BlackTenders\Elementor\DynamicTags;
 
 defined('ABSPATH') || exit;
 
@@ -19,18 +19,18 @@ class Tag_Related_Count extends Abstract_BT_Tag {
     protected function register_controls(): void {
 
         $this->add_control('mode', [
-            'label'   => __('Ce que je compte', 'bt-regiondo'),
+            'label'   => __('Ce que je compte', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => [
-                'auto'            => __('Auto (détecte le type de post)', 'bt-regiondo'),
-                'boats_on_exp'    => __('Bateaux liés à cette excursion', 'bt-regiondo'),
-                'excursions_on_boat' => __('Excursions liées à ce bateau', 'bt-regiondo'),
+                'auto'            => __('Auto (détecte le type de post)', 'blacktenderscore'),
+                'boats_on_exp'    => __('Bateaux liés à cette excursion', 'blacktenderscore'),
+                'excursions_on_boat' => __('Excursions liées à ce bateau', 'blacktenderscore'),
             ],
             'default' => 'auto',
         ]);
 
         $this->add_control('fallback', [
-            'label'   => __('Valeur si 0', 'bt-regiondo'),
+            'label'   => __('Valeur si 0', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::TEXT,
             'default' => '0',
         ]);

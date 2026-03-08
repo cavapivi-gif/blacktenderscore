@@ -1,5 +1,5 @@
 <?php
-namespace BT_Regiondo\Admin\Backoffice;
+namespace BlackTenders\Admin\Backoffice;
 
 defined('ABSPATH') || exit;
 
@@ -15,7 +15,7 @@ class Backoffice {
             'BlackTenders',
             'BlackTenders',
             'manage_options',
-            'bt-regiondo',
+            'blacktenderscore',
             [$this, 'render'],
             'dashicons-anchor',
             30
@@ -32,8 +32,8 @@ class Backoffice {
     public function enqueue(string $hook): void {
         if ($hook !== 'toplevel_page_bt-regiondo') return;
 
-        $build_dir = BT_REGIONDO_DIR . 'admin/backoffice/build/assets/';
-        $build_url = BT_REGIONDO_URL . 'admin/backoffice/build/assets/';
+        $build_dir = BT_DIR . 'admin/backoffice/build/assets/';
+        $build_url = BT_URL . 'admin/backoffice/build/assets/';
 
         if (!is_dir($build_dir)) return;
 
@@ -42,21 +42,21 @@ class Backoffice {
             'bt-backoffice',
             $build_url . 'index.css',
             [],
-            BT_REGIONDO_VERSION
+            BT_VERSION
         );
 
         wp_enqueue_script(
             'bt-backoffice',
             $build_url . 'index.js',
             [],
-            BT_REGIONDO_VERSION,
+            BT_VERSION,
             true
         );
 
         wp_localize_script('bt-backoffice', 'btBackoffice', [
             'rest_url' => rest_url('bt-regiondo/v1'),
             'nonce'    => wp_create_nonce('wp_rest'),
-            'version'  => BT_REGIONDO_VERSION,
+            'version'  => BT_VERSION,
         ]);
 
         // Supprime la barre d'admin WP pour avoir la page en plein écran

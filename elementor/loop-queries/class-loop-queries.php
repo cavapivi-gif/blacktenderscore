@@ -1,5 +1,5 @@
 <?php
-namespace BT_Regiondo\Elementor\LoopQueries;
+namespace BlackTenders\Elementor\LoopQueries;
 
 defined('ABSPATH') || exit;
 

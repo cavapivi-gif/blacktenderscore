@@ -1,5 +1,5 @@
 <?php
-namespace BT_Regiondo\Elementor\Widgets;
+namespace BlackTenders\Elementor\Widgets;
 
 defined('ABSPATH') || exit;
 
@@ -14,7 +14,7 @@ class BoatSpecs extends \Elementor\Widget_Base {
     public function get_name():       string { return 'bt-boat-specs'; }
     public function get_title():      string { return 'BT — Fiche technique bateau'; }
     public function get_icon():       string { return 'eicon-info-box'; }
-    public function get_categories(): array  { return ['bt-regiondo']; }
+    public function get_categories(): array  { return ['blacktenderscore']; }
     public function get_keywords():   array  { return ['bateau', 'specs', 'technique', 'caractéristiques', 'bt']; }
 
     // ── Définition des specs disponibles ─────────────────────────────────────
@@ -47,36 +47,36 @@ class BoatSpecs extends \Elementor\Widget_Base {
 
         // ── Contenu ───────────────────────────────────────────────────────
         $this->start_controls_section('section_content', [
-            'label' => __('Contenu', 'bt-regiondo'),
+            'label' => __('Contenu', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('section_title', [
-            'label'   => __('Titre de section', 'bt-regiondo'),
+            'label'   => __('Titre de section', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::TEXT,
-            'default' => __('Caractéristiques techniques', 'bt-regiondo'),
+            'default' => __('Caractéristiques techniques', 'blacktenderscore'),
             'dynamic' => ['active' => true],
         ]);
 
         $this->add_control('title_tag', [
-            'label'   => __('Balise du titre', 'bt-regiondo'),
+            'label'   => __('Balise du titre', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => ['h2' => 'H2', 'h3' => 'H3', 'h4' => 'H4', 'p' => 'p', 'span' => 'span'],
             'default' => 'h3',
         ]);
 
         $this->add_control('layout', [
-            'label'   => __('Disposition', 'bt-regiondo'),
+            'label'   => __('Disposition', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => [
-                'grid' => __('Grille', 'bt-regiondo'),
-                'list' => __('Liste', 'bt-regiondo'),
+                'grid' => __('Grille', 'blacktenderscore'),
+                'list' => __('Liste', 'blacktenderscore'),
             ],
             'default' => 'grid',
         ]);
 
         $this->add_responsive_control('columns', [
-            'label'     => __('Colonnes', 'bt-regiondo'),
+            'label'     => __('Colonnes', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::NUMBER,
             'min'       => 1,
             'max'       => 6,
@@ -88,22 +88,22 @@ class BoatSpecs extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('bool_yes_label', [
-            'label'   => __('Label "Oui"', 'bt-regiondo'),
+            'label'   => __('Label "Oui"', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::TEXT,
-            'default' => __('Oui', 'bt-regiondo'),
+            'default' => __('Oui', 'blacktenderscore'),
         ]);
 
         $this->add_control('bool_no_label', [
-            'label'   => __('Label "Non"', 'bt-regiondo'),
+            'label'   => __('Label "Non"', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::TEXT,
-            'default' => __('Non', 'bt-regiondo'),
+            'default' => __('Non', 'blacktenderscore'),
         ]);
 
         $this->end_controls_section();
 
         // ── Section par spec ──────────────────────────────────────────────
         $this->start_controls_section('section_specs', [
-            'label' => __('Spécifications à afficher', 'bt-regiondo'),
+            'label' => __('Spécifications à afficher', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
         ]);
 
@@ -116,21 +116,21 @@ class BoatSpecs extends \Elementor\Widget_Base {
             ]);
 
             $this->add_control("icon_{$key}", [
-                'label'     => __('Icône (emoji ou texte)', 'bt-regiondo'),
+                'label'     => __('Icône (emoji ou texte)', 'blacktenderscore'),
                 'type'      => \Elementor\Controls_Manager::TEXT,
                 'default'   => $def['default_icon'],
                 'condition' => ["show_{$key}" => 'yes'],
             ]);
 
             $this->add_control("label_{$key}", [
-                'label'     => __('Label', 'bt-regiondo'),
+                'label'     => __('Label', 'blacktenderscore'),
                 'type'      => \Elementor\Controls_Manager::TEXT,
                 'default'   => $def['default_label'],
                 'condition' => ["show_{$key}" => 'yes'],
             ]);
 
             $this->add_control("suffix_{$key}", [
-                'label'     => __('Suffixe unité', 'bt-regiondo'),
+                'label'     => __('Suffixe unité', 'blacktenderscore'),
                 'type'      => \Elementor\Controls_Manager::TEXT,
                 'default'   => $def['suffix'],
                 'condition' => ["show_{$key}" => 'yes'],
@@ -141,7 +141,7 @@ class BoatSpecs extends \Elementor\Widget_Base {
 
         // ── Style — Wrapper ───────────────────────────────────────────────
         $this->start_controls_section('style_wrapper', [
-            'label' => __('Style — Titre', 'bt-regiondo'),
+            'label' => __('Style — Titre', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
         ]);
 
@@ -151,13 +151,13 @@ class BoatSpecs extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('title_color', [
-            'label'     => __('Couleur titre', 'bt-regiondo'),
+            'label'     => __('Couleur titre', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-bspecs__title' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_responsive_control('title_spacing', [
-            'label'      => __('Marge basse titre', 'bt-regiondo'),
+            'label'      => __('Marge basse titre', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px', 'em'],
             'selectors'  => ['{{WRAPPER}} .bt-bspecs__title' => 'margin-bottom: {{SIZE}}{{UNIT}}'],
@@ -167,12 +167,12 @@ class BoatSpecs extends \Elementor\Widget_Base {
 
         // ── Style — Items ─────────────────────────────────────────────────
         $this->start_controls_section('style_items', [
-            'label' => __('Style — Éléments', 'bt-regiondo'),
+            'label' => __('Style — Éléments', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
         ]);
 
         $this->add_responsive_control('grid_gap', [
-            'label'      => __('Espacement', 'bt-regiondo'),
+            'label'      => __('Espacement', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px', 'em'],
             'range'      => ['px' => ['min' => 0, 'max' => 64]],
@@ -184,7 +184,7 @@ class BoatSpecs extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('item_bg', [
-            'label'     => __('Fond des éléments', 'bt-regiondo'),
+            'label'     => __('Fond des éléments', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-bspecs__item' => 'background-color: {{VALUE}}'],
         ]);
@@ -195,14 +195,14 @@ class BoatSpecs extends \Elementor\Widget_Base {
         ]);
 
         $this->add_responsive_control('item_radius', [
-            'label'      => __('Border radius', 'bt-regiondo'),
+            'label'      => __('Border radius', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px', '%'],
             'selectors'  => ['{{WRAPPER}} .bt-bspecs__item' => 'border-radius: {{SIZE}}{{UNIT}}'],
         ]);
 
         $this->add_responsive_control('item_padding', [
-            'label'      => __('Padding', 'bt-regiondo'),
+            'label'      => __('Padding', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::DIMENSIONS,
             'size_units' => ['px', 'em'],
             'default'    => ['top' => '16', 'right' => '16', 'bottom' => '16', 'left' => '16', 'unit' => 'px', 'isLinked' => true],
@@ -215,7 +215,7 @@ class BoatSpecs extends \Elementor\Widget_Base {
         ]);
 
         $this->add_responsive_control('icon_size', [
-            'label'      => __('Taille icône', 'bt-regiondo'),
+            'label'      => __('Taille icône', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px', 'em'],
             'range'      => ['px' => ['min' => 12, 'max' => 60]],
@@ -225,24 +225,24 @@ class BoatSpecs extends \Elementor\Widget_Base {
 
         $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
             'name'     => 'label_typography',
-            'label'    => __('Typographie label', 'bt-regiondo'),
+            'label'    => __('Typographie label', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-bspecs__item-label',
         ]);
 
         $this->add_control('label_color', [
-            'label'     => __('Couleur label', 'bt-regiondo'),
+            'label'     => __('Couleur label', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-bspecs__item-label' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
             'name'     => 'value_typography',
-            'label'    => __('Typographie valeur', 'bt-regiondo'),
+            'label'    => __('Typographie valeur', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-bspecs__item-value',
         ]);
 
         $this->add_control('value_color', [
-            'label'     => __('Couleur valeur', 'bt-regiondo'),
+            'label'     => __('Couleur valeur', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-bspecs__item-value' => 'color: {{VALUE}}'],
         ]);
@@ -263,8 +263,8 @@ class BoatSpecs extends \Elementor\Widget_Base {
 
         $specs   = $this->specs_definition();
         $items   = [];
-        $yes_lbl = esc_html($s['bool_yes_label'] ?: __('Oui', 'bt-regiondo'));
-        $no_lbl  = esc_html($s['bool_no_label']  ?: __('Non', 'bt-regiondo'));
+        $yes_lbl = esc_html($s['bool_yes_label'] ?: __('Oui', 'blacktenderscore'));
+        $no_lbl  = esc_html($s['bool_no_label']  ?: __('Non', 'blacktenderscore'));
 
         foreach ($specs as $key => $def) {
             if ($s["show_{$key}"] !== 'yes') continue;
