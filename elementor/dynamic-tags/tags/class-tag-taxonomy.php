@@ -9,12 +9,16 @@ defined('ABSPATH') || exit;
  * Résolution en deux temps :
  *  1. Taxonomie WP native  → get_the_terms( $post_id, $key )
  *  2. Champ ACF en fallback → get_field( $key, $post_id )
- *     (ACF taxonomy field retourne des WP_Term, des IDs entiers, ou des tableaux assoc)
+ *     Gère tous les formats de retour ACF :
+ *       - WP_Term object
+ *       - int / string-digit  (ID)
+ *       - string              (slug → get_term_by)
+ *       - array assoc         (['term_id' => …])
+ *       - tableau de l'un des types ci-dessus (champ multiple)
  *
  * Utilisations typiques :
  *  - boat_skipper  (taxonomie WP sur le CPT bateau)
- *  - exp_skipper   (champ ACF sur le CPT excursion)
- *  - n'importe quelle taxonomie enregistrée sur le post courant
+ *  - exp_skipper   (champ ACF sur le CPT excursion, lié à la taxo exp_skipper)
  */
 class Tag_Taxonomy extends Abstract_BT_Tag {
 
@@ -27,11 +31,10 @@ class Tag_Taxonomy extends Abstract_BT_Tag {
     protected function register_controls(): void {
 
         $this->add_control('taxonomy', [
-            'label'       => __('Clé taxonomie / champ ACF', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::TEXT,
-            'default'     => 'boat_skipper',
-            'placeholder' => 'boat_skipper, exp_skipper…',
-            'label_block' => true,
+            'label'   => __('Taxonomie', 'blacktenderscore'),
+            'type'    => \Elementor\Controls_Manager::SELECT,
+            'options' => $this->taxonomy_options(),
+            'default' => 'boat_skipper',
         ]);
 
         $this->add_control('format', [
@@ -62,7 +65,7 @@ class Tag_Taxonomy extends Abstract_BT_Tag {
     // ── Render ────────────────────────────────────────────────────────────────
 
     public function render(): void {
-        $key       = trim((string) $this->get_settings('taxonomy'));
+        $key       = (string) $this->get_settings('taxonomy');
         $format    = $this->get_settings('format')    ?: 'name';
         $separator = $this->get_settings('separator') ?: ' · ';
 
@@ -90,40 +93,85 @@ class Tag_Taxonomy extends Abstract_BT_Tag {
      */
     private function resolve_terms(string $key, int $post_id): array {
 
-        // 1. Taxonomie WP native
+        // 1. Taxonomie WP native (termes assignés via l'interface standard)
         $terms = get_the_terms($post_id, $key);
         if (is_array($terms) && !empty($terms)) {
             return $terms;
         }
 
-        // 2. Champ ACF (taxonomy field)
+        // 2. Champ ACF (taxonomy field — stocké en postmeta, pas en term_relationships)
         if (!function_exists('get_field')) return [];
 
         $raw = get_field($key, $post_id);
         if (empty($raw)) return [];
 
-        // ACF taxonomy field peut retourner un seul terme ou un tableau
-        $items = is_array($raw) && !isset($raw['term_id']) ? $raw : [$raw];
+        // Normalise : scalaire → tableau d'un élément ; tableau assoc (un seul terme) → tableau
+        if (!is_array($raw) || isset($raw['term_id'])) {
+            $raw = [$raw];
+        }
 
         $out = [];
-        foreach ($items as $item) {
-            if ($item instanceof \WP_Term) {
-                $out[] = $item;
-                continue;
-            }
-            // ID entier
-            if (is_int($item) || (is_string($item) && ctype_digit((string) $item))) {
-                $t = get_term((int) $item);
-                if ($t instanceof \WP_Term) $out[] = $t;
-                continue;
-            }
-            // Tableau associatif (ACF "return format: array")
-            if (is_array($item) && isset($item['term_id'])) {
-                $t = get_term((int) $item['term_id']);
-                if ($t instanceof \WP_Term) $out[] = $t;
+        foreach ($raw as $item) {
+            $term = $this->coerce_term($item, $key);
+            if ($term instanceof \WP_Term) {
+                $out[] = $term;
             }
         }
 
         return $out;
+    }
+
+    /**
+     * Convertit n'importe quel format de retour ACF en WP_Term.
+     *
+     * @param mixed  $item  WP_Term | int | string (slug) | array assoc
+     * @param string $tax   slug de taxonomie, utilisé pour get_term_by('slug')
+     */
+    private function coerce_term(mixed $item, string $tax): ?\WP_Term {
+
+        if ($item instanceof \WP_Term) {
+            return $item;
+        }
+
+        // ID entier ou chaîne numérique
+        if (is_int($item) || (is_string($item) && ctype_digit((string) $item))) {
+            $t = get_term((int) $item);
+            return $t instanceof \WP_Term ? $t : null;
+        }
+
+        // Slug (ACF "Return format: Slug")
+        if (is_string($item) && $item !== '') {
+            $t = get_term_by('slug', $item, $tax);
+            return $t instanceof \WP_Term ? $t : null;
+        }
+
+        // Tableau associatif (ACF "Return format: Array")
+        if (is_array($item) && isset($item['term_id'])) {
+            $t = get_term((int) $item['term_id']);
+            return $t instanceof \WP_Term ? $t : null;
+        }
+
+        return null;
+    }
+
+    // ── Options de la liste déroulante ────────────────────────────────────────
+
+    /**
+     * Retourne toutes les taxonomies enregistrées formatées pour un SELECT.
+     * Appelé une seule fois à l'enregistrement du tag.
+     *
+     * @return array<string, string>
+     */
+    private function taxonomy_options(): array {
+        $all  = get_taxonomies([], 'objects');
+        $opts = [];
+
+        foreach ($all as $tax) {
+            $label        = $tax->label ?: $tax->name;
+            $opts[$tax->name] = $label . '  (' . $tax->name . ')';
+        }
+
+        asort($opts);
+        return $opts;
     }
 }
