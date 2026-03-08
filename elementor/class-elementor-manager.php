@@ -16,27 +16,25 @@ use BT_Regiondo\Elementor\Widgets\ExcursionSchema;
 
 defined('ABSPATH') || exit;
 
-// ── Sous-systèmes ─────────────────────────────────────────────────────────────
-require_once __DIR__ . '/dynamic-tags/class-dynamic-tags-manager.php';
-require_once __DIR__ . '/loop-queries/class-loop-queries.php';
-
 class ElementorManager {
 
     public function init(): void {
-        // Dynamic Tags (pas besoin d'attendre elementor/loaded)
-        (new DynamicTags\Dynamic_Tags_Manager())->init();
-
-        // Loop Builder Query Sources
-        (new LoopQueries\Loop_Queries())->init();
-
-        // Invalidation transients RelatedExcursions lors de la sauvegarde
+        // Invalidation transients (pas besoin d'Elementor)
         add_action('save_post_excursion', [$this, 'invalidate_relexp_transients'], 10, 2);
         add_action('save_post_boat',      [$this, 'invalidate_relboat_transients'], 10, 1);
 
+        // Tout le reste attend qu'Elementor soit chargé
         add_action('elementor/loaded', [$this, 'setup']);
     }
 
     public function setup(): void {
+        // Chargé ici pour que \Elementor\Core\DynamicTags\Tag existe déjà
+        require_once __DIR__ . '/dynamic-tags/class-dynamic-tags-manager.php';
+        require_once __DIR__ . '/loop-queries/class-loop-queries.php';
+
+        (new DynamicTags\Dynamic_Tags_Manager())->init();
+        (new LoopQueries\Loop_Queries())->init();
+
         add_action('elementor/elements/categories_registered', [$this, 'register_category']);
         add_action('elementor/widgets/register',               [$this, 'register_widgets']);
         add_action('elementor/frontend/after_enqueue_styles',  [$this, 'enqueue_assets']);
