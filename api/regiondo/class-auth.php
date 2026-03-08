@@ -1,5 +1,5 @@
 <?php
-namespace BT_Regiondo\Api\Regiondo;
+namespace BlackTenders\Api\Regiondo;
 
 defined('ABSPATH') || exit;
 
@@ -9,8 +9,8 @@ class Auth {
     private string $secret_key;
 
     public function __construct() {
-        $this->public_key = get_option('bt_regiondo_public_key', '');
-        $this->secret_key = get_option('bt_regiondo_secret_key', '');
+        $this->public_key = get_option('bt_public_key', '');
+        $this->secret_key = get_option('bt_secret_key', '');
     }
 
     /**

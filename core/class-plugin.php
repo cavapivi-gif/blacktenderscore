@@ -1,11 +1,11 @@
 <?php
-namespace BT_Regiondo\Core;
+namespace BlackTenders\Core;
 
-use BT_Regiondo\Admin\MetaBox\MetaBox;
-use BT_Regiondo\Admin\Backoffice\Backoffice;
-use BT_Regiondo\Admin\Backoffice\RestApi;
-use BT_Regiondo\Admin\Backoffice\Sync;
-use BT_Regiondo\Elementor\ElementorManager;
+use BlackTenders\Admin\MetaBox\MetaBox;
+use BlackTenders\Admin\Backoffice\Backoffice;
+use BlackTenders\Admin\Backoffice\RestApi;
+use BlackTenders\Admin\Backoffice\Sync;
+use BlackTenders\Elementor\ElementorManager;
 
 defined('ABSPATH') || exit;
 
@@ -25,7 +25,7 @@ class Plugin {
 
         // Cron : intervalle personnalisé + hook de sync
         add_filter('cron_schedules', [$this, 'add_cron_intervals']);
-        add_action('bt_regiondo_auto_sync', [Sync::class, 'cron_run']);
+        add_action('bt_auto_sync', [Sync::class, 'cron_run']);
     }
 
     public function add_cron_intervals(array $schedules): array {

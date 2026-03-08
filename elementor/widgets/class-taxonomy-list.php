@@ -1,5 +1,5 @@
 <?php
-namespace BT_Regiondo\Elementor\Widgets;
+namespace BlackTenders\Elementor\Widgets;
 
 defined('ABSPATH') || exit;
 
@@ -15,7 +15,7 @@ class TaxonomyList extends \Elementor\Widget_Base {
     public function get_name():       string { return 'bt-taxonomy-list'; }
     public function get_title():      string { return 'BT — Taxonomie'; }
     public function get_icon():       string { return 'eicon-tags'; }
-    public function get_categories(): array  { return ['bt-regiondo']; }
+    public function get_categories(): array  { return ['blacktenderscore']; }
     public function get_keywords():   array  { return ['taxonomie', 'inclus', 'liste', 'terme', 'bt']; }
 
     // ── Controls ─────────────────────────────────────────────────────────────
@@ -24,73 +24,73 @@ class TaxonomyList extends \Elementor\Widget_Base {
 
         // ── Section Content ───────────────────────────────────────────────
         $this->start_controls_section('section_content', [
-            'label' => __('Contenu', 'bt-regiondo'),
+            'label' => __('Contenu', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('acf_field', [
-            'label'   => __('Champ ACF (taxonomy)', 'bt-regiondo'),
+            'label'   => __('Champ ACF (taxonomy)', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => [
-                'exp_included'            => __('Ce qui est inclus (exp_included)', 'bt-regiondo'),
-                'exp_to_excluded'         => __('Ce qui est exclu (exp_to_excluded)', 'bt-regiondo'),
-                'exp_to_bring'            => __('Ce qu\'il faut apporter (exp_to_bring)', 'bt-regiondo'),
-                'boat_equipment_included' => __('Équipements bateau inclus (boat_equipment_included)', 'bt-regiondo'),
-                'boat_services_included'  => __('Services bateau inclus (boat_services_included)', 'bt-regiondo'),
-                'boat_option_on_demand'   => __('Options sur demande (boat_option_on_demand)', 'bt-regiondo'),
+                'exp_included'            => __('Ce qui est inclus (exp_included)', 'blacktenderscore'),
+                'exp_to_excluded'         => __('Ce qui est exclu (exp_to_excluded)', 'blacktenderscore'),
+                'exp_to_bring'            => __('Ce qu\'il faut apporter (exp_to_bring)', 'blacktenderscore'),
+                'boat_equipment_included' => __('Équipements bateau inclus (boat_equipment_included)', 'blacktenderscore'),
+                'boat_services_included'  => __('Services bateau inclus (boat_services_included)', 'blacktenderscore'),
+                'boat_option_on_demand'   => __('Options sur demande (boat_option_on_demand)', 'blacktenderscore'),
             ],
             'default' => 'exp_included',
         ]);
 
         $this->add_control('section_title', [
-            'label'   => __('Titre de la section', 'bt-regiondo'),
+            'label'   => __('Titre de la section', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::TEXT,
-            'default' => __('Ce qui est inclus', 'bt-regiondo'),
+            'default' => __('Ce qui est inclus', 'blacktenderscore'),
             'dynamic' => ['active' => true],
         ]);
 
         $this->add_control('title_tag', [
-            'label'   => __('Balise du titre', 'bt-regiondo'),
+            'label'   => __('Balise du titre', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => ['h2' => 'H2', 'h3' => 'H3', 'h4' => 'H4', 'p' => 'p', 'span' => 'span'],
             'default' => 'h3',
         ]);
 
         $this->add_control('layout', [
-            'label'   => __('Disposition', 'bt-regiondo'),
+            'label'   => __('Disposition', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => [
-                'list'   => __('Liste verticale', 'bt-regiondo'),
-                'grid'   => __('Grille', 'bt-regiondo'),
-                'inline' => __('Inline (puces)', 'bt-regiondo'),
+                'list'   => __('Liste verticale', 'blacktenderscore'),
+                'grid'   => __('Grille', 'blacktenderscore'),
+                'inline' => __('Inline (puces)', 'blacktenderscore'),
             ],
             'default' => 'list',
         ]);
 
         $this->add_control('show_icon', [
-            'label'        => __("Afficher l'icône du terme", 'bt-regiondo'),
+            'label'        => __("Afficher l'icône du terme", 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
-            'label_on'     => __('Oui', 'bt-regiondo'),
-            'label_off'    => __('Non', 'bt-regiondo'),
+            'label_on'     => __('Oui', 'blacktenderscore'),
+            'label_off'    => __('Non', 'blacktenderscore'),
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('show_description', [
-            'label'        => __('Afficher la description', 'bt-regiondo'),
+            'label'        => __('Afficher la description', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
-            'label_on'     => __('Oui', 'bt-regiondo'),
-            'label_off'    => __('Non', 'bt-regiondo'),
+            'label_on'     => __('Oui', 'blacktenderscore'),
+            'label_off'    => __('Non', 'blacktenderscore'),
             'return_value' => 'yes',
             'default'      => '',
         ]);
 
         $this->add_control('description_position', [
-            'label'     => __('Position de la description', 'bt-regiondo'),
+            'label'     => __('Position de la description', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::SELECT,
             'options'   => [
-                'inline' => __('En ligne (après le nom)', 'bt-regiondo'),
-                'below'  => __('En dessous', 'bt-regiondo'),
+                'inline' => __('En ligne (après le nom)', 'blacktenderscore'),
+                'below'  => __('En dessous', 'blacktenderscore'),
             ],
             'default'   => 'below',
             'condition' => ['show_description' => 'yes'],
@@ -100,7 +100,7 @@ class TaxonomyList extends \Elementor\Widget_Base {
 
         // ── Section Style — Titre ─────────────────────────────────────────
         $this->start_controls_section('style_title', [
-            'label' => __('Style — Titre', 'bt-regiondo'),
+            'label' => __('Style — Titre', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
         ]);
 
@@ -110,13 +110,13 @@ class TaxonomyList extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('title_color', [
-            'label'     => __('Couleur', 'bt-regiondo'),
+            'label'     => __('Couleur', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-taxlist__title' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_responsive_control('title_spacing', [
-            'label'      => __('Marge basse', 'bt-regiondo'),
+            'label'      => __('Marge basse', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px', 'em', 'rem'],
             'selectors'  => ['{{WRAPPER}} .bt-taxlist__title' => 'margin-bottom: {{SIZE}}{{UNIT}}'],
@@ -126,12 +126,12 @@ class TaxonomyList extends \Elementor\Widget_Base {
 
         // ── Section Style — Éléments ──────────────────────────────────────
         $this->start_controls_section('style_items', [
-            'label' => __('Style — Éléments', 'bt-regiondo'),
+            'label' => __('Style — Éléments', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
         ]);
 
         $this->add_responsive_control('item_gap', [
-            'label'      => __('Espacement entre éléments', 'bt-regiondo'),
+            'label'      => __('Espacement entre éléments', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'range'      => ['px' => ['min' => 0, 'max' => 48]],
@@ -140,7 +140,7 @@ class TaxonomyList extends \Elementor\Widget_Base {
         ]);
 
         $this->add_responsive_control('grid_columns', [
-            'label'     => __('Colonnes (grille)', 'bt-regiondo'),
+            'label'     => __('Colonnes (grille)', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::NUMBER,
             'min'       => 1,
             'max'       => 6,
@@ -155,19 +155,19 @@ class TaxonomyList extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('item_color', [
-            'label'     => __('Couleur texte', 'bt-regiondo'),
+            'label'     => __('Couleur texte', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-taxlist__item-name' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_control('item_bg', [
-            'label'     => __('Fond des éléments', 'bt-regiondo'),
+            'label'     => __('Fond des éléments', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-taxlist__item' => 'background-color: {{VALUE}}'],
         ]);
 
         $this->add_responsive_control('item_border_radius', [
-            'label'      => __('Border radius', 'bt-regiondo'),
+            'label'      => __('Border radius', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px', '%'],
             'range'      => ['px' => ['min' => 0, 'max' => 100]],
@@ -175,14 +175,14 @@ class TaxonomyList extends \Elementor\Widget_Base {
         ]);
 
         $this->add_responsive_control('item_padding', [
-            'label'      => __('Padding des éléments', 'bt-regiondo'),
+            'label'      => __('Padding des éléments', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::DIMENSIONS,
             'size_units' => ['px', 'em'],
             'selectors'  => ['{{WRAPPER}} .bt-taxlist__item' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
         ]);
 
         $this->add_responsive_control('icon_size', [
-            'label'      => __('Taille icône', 'bt-regiondo'),
+            'label'      => __('Taille icône', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'range'      => ['px' => ['min' => 12, 'max' => 80]],
@@ -195,13 +195,13 @@ class TaxonomyList extends \Elementor\Widget_Base {
 
         $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
             'name'      => 'desc_typography',
-            'label'     => __('Typographie description', 'bt-regiondo'),
+            'label'     => __('Typographie description', 'blacktenderscore'),
             'selector'  => '{{WRAPPER}} .bt-taxlist__item-desc',
             'condition' => ['show_description' => 'yes'],
         ]);
 
         $this->add_control('desc_color', [
-            'label'     => __('Couleur description', 'bt-regiondo'),
+            'label'     => __('Couleur description', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-taxlist__item-desc' => 'color: {{VALUE}}'],
             'condition' => ['show_description' => 'yes'],

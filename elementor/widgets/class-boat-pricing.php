@@ -1,5 +1,5 @@
 <?php
-namespace BT_Regiondo\Elementor\Widgets;
+namespace BlackTenders\Elementor\Widgets;
 
 defined('ABSPATH') || exit;
 
@@ -15,7 +15,7 @@ class BoatPricing extends \Elementor\Widget_Base {
     public function get_name():       string { return 'bt-boat-pricing'; }
     public function get_title():      string { return 'BT — Tarifs bateau'; }
     public function get_icon():       string { return 'eicon-price-list'; }
-    public function get_categories(): array  { return ['bt-regiondo']; }
+    public function get_categories(): array  { return ['blacktenderscore']; }
     public function get_keywords():   array  { return ['tarif', 'prix', 'bateau', 'demi-journée', 'journée', 'bt']; }
 
     // ── Controls ─────────────────────────────────────────────────────────────
@@ -24,36 +24,36 @@ class BoatPricing extends \Elementor\Widget_Base {
 
         // ── Contenu ───────────────────────────────────────────────────────
         $this->start_controls_section('section_content', [
-            'label' => __('Contenu', 'bt-regiondo'),
+            'label' => __('Contenu', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('section_title', [
-            'label'   => __('Titre de section', 'bt-regiondo'),
+            'label'   => __('Titre de section', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::TEXT,
-            'default' => __('Tarifs', 'bt-regiondo'),
+            'default' => __('Tarifs', 'blacktenderscore'),
             'dynamic' => ['active' => true],
         ]);
 
         $this->add_control('title_tag', [
-            'label'   => __('Balise du titre', 'bt-regiondo'),
+            'label'   => __('Balise du titre', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => ['h2' => 'H2', 'h3' => 'H3', 'h4' => 'H4', 'p' => 'p', 'span' => 'span'],
             'default' => 'h3',
         ]);
 
         $this->add_control('currency', [
-            'label'   => __('Symbole monnaie', 'bt-regiondo'),
+            'label'   => __('Symbole monnaie', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::TEXT,
             'default' => '€',
         ]);
 
         $this->add_control('layout', [
-            'label'   => __('Disposition', 'bt-regiondo'),
+            'label'   => __('Disposition', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => [
-                'cards' => __('Cartes côte à côte', 'bt-regiondo'),
-                'table' => __('Tableau', 'bt-regiondo'),
+                'cards' => __('Cartes côte à côte', 'blacktenderscore'),
+                'table' => __('Tableau', 'blacktenderscore'),
             ],
             'default' => 'cards',
         ]);
@@ -62,75 +62,75 @@ class BoatPricing extends \Elementor\Widget_Base {
 
         // ── Options d'affichage ───────────────────────────────────────────
         $this->start_controls_section('section_options', [
-            'label' => __('Forfaits à afficher', 'bt-regiondo'),
+            'label' => __('Forfaits à afficher', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('show_half', [
-            'label'        => __('Demi-journée', 'bt-regiondo'),
+            'label'        => __('Demi-journée', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('label_half', [
-            'label'     => __('Label demi-journée', 'bt-regiondo'),
+            'label'     => __('Label demi-journée', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::TEXT,
-            'default'   => __('Demi-journée', 'bt-regiondo'),
+            'default'   => __('Demi-journée', 'blacktenderscore'),
             'condition' => ['show_half' => 'yes'],
         ]);
 
         $this->add_control('show_full', [
-            'label'        => __('Journée complète', 'bt-regiondo'),
+            'label'        => __('Journée complète', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('label_full', [
-            'label'     => __('Label journée', 'bt-regiondo'),
+            'label'     => __('Label journée', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::TEXT,
-            'default'   => __('Journée complète', 'bt-regiondo'),
+            'default'   => __('Journée complète', 'blacktenderscore'),
             'condition' => ['show_full' => 'yes'],
         ]);
 
         $this->add_control('show_deposit', [
-            'label'        => __('Caution', 'bt-regiondo'),
+            'label'        => __('Caution', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('label_deposit', [
-            'label'     => __('Label caution', 'bt-regiondo'),
+            'label'     => __('Label caution', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::TEXT,
-            'default'   => __('Caution', 'bt-regiondo'),
+            'default'   => __('Caution', 'blacktenderscore'),
             'condition' => ['show_deposit' => 'yes'],
         ]);
 
         $this->add_control('show_fuel_badge', [
-            'label'        => __('Badge carburant inclus', 'bt-regiondo'),
+            'label'        => __('Badge carburant inclus', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('label_fuel_yes', [
-            'label'     => __('Label carburant inclus', 'bt-regiondo'),
+            'label'     => __('Label carburant inclus', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::TEXT,
-            'default'   => __('Carburant inclus', 'bt-regiondo'),
+            'default'   => __('Carburant inclus', 'blacktenderscore'),
             'condition' => ['show_fuel_badge' => 'yes'],
         ]);
 
         $this->add_control('label_fuel_no', [
-            'label'     => __('Label carburant non inclus', 'bt-regiondo'),
+            'label'     => __('Label carburant non inclus', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::TEXT,
-            'default'   => __('Carburant en sus', 'bt-regiondo'),
+            'default'   => __('Carburant en sus', 'blacktenderscore'),
             'condition' => ['show_fuel_badge' => 'yes'],
         ]);
 
         $this->add_control('show_price_note', [
-            'label'        => __('Note tarifaire', 'bt-regiondo'),
+            'label'        => __('Note tarifaire', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
@@ -140,43 +140,43 @@ class BoatPricing extends \Elementor\Widget_Base {
 
         // ── Tarifs par zone ───────────────────────────────────────────────
         $this->start_controls_section('section_zones', [
-            'label' => __('Tarifs par zone de navigation', 'bt-regiondo'),
+            'label' => __('Tarifs par zone de navigation', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('show_zones', [
-            'label'        => __('Afficher les tarifs par zone', 'bt-regiondo'),
+            'label'        => __('Afficher les tarifs par zone', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
-            'description'  => __('Lit le repeater ACF boat_custom_price_by_departure.', 'bt-regiondo'),
+            'description'  => __('Lit le repeater ACF boat_custom_price_by_departure.', 'blacktenderscore'),
             'return_value' => 'yes',
             'default'      => '',
         ]);
 
         $this->add_control('zones_title', [
-            'label'     => __('Titre du tableau par zone', 'bt-regiondo'),
+            'label'     => __('Titre du tableau par zone', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::TEXT,
-            'default'   => __('Tarifs par zone de départ', 'bt-regiondo'),
+            'default'   => __('Tarifs par zone de départ', 'blacktenderscore'),
             'condition' => ['show_zones' => 'yes'],
         ]);
 
         $this->add_control('zones_col_zone', [
-            'label'     => __('En-tête colonne Zone', 'bt-regiondo'),
+            'label'     => __('En-tête colonne Zone', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::TEXT,
-            'default'   => __('Zone de navigation', 'bt-regiondo'),
+            'default'   => __('Zone de navigation', 'blacktenderscore'),
             'condition' => ['show_zones' => 'yes'],
         ]);
 
         $this->add_control('zones_col_half', [
-            'label'     => __('En-tête colonne ½ journée', 'bt-regiondo'),
+            'label'     => __('En-tête colonne ½ journée', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::TEXT,
-            'default'   => __('Demi-journée', 'bt-regiondo'),
+            'default'   => __('Demi-journée', 'blacktenderscore'),
             'condition' => ['show_zones' => 'yes'],
         ]);
 
         $this->add_control('zones_col_full', [
-            'label'     => __('En-tête colonne journée', 'bt-regiondo'),
+            'label'     => __('En-tête colonne journée', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::TEXT,
-            'default'   => __('Journée', 'bt-regiondo'),
+            'default'   => __('Journée', 'blacktenderscore'),
             'condition' => ['show_zones' => 'yes'],
         ]);
 
@@ -184,24 +184,24 @@ class BoatPricing extends \Elementor\Widget_Base {
 
         // ── Style — Cartes ────────────────────────────────────────────────
         $this->start_controls_section('style_cards', [
-            'label' => __('Style — Cartes / Tableau', 'bt-regiondo'),
+            'label' => __('Style — Cartes / Tableau', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
         ]);
 
         $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
             'name'     => 'title_typography',
-            'label'    => __('Typographie titre section', 'bt-regiondo'),
+            'label'    => __('Typographie titre section', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-bprice__title',
         ]);
 
         $this->add_control('title_color', [
-            'label'     => __('Couleur titre', 'bt-regiondo'),
+            'label'     => __('Couleur titre', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-bprice__title' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_responsive_control('cards_gap', [
-            'label'      => __('Espacement cartes', 'bt-regiondo'),
+            'label'      => __('Espacement cartes', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'default'    => ['size' => 16, 'unit' => 'px'],
@@ -209,7 +209,7 @@ class BoatPricing extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('card_bg', [
-            'label'     => __('Fond des cartes', 'bt-regiondo'),
+            'label'     => __('Fond des cartes', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-bprice__card' => 'background-color: {{VALUE}}'],
         ]);
@@ -220,14 +220,14 @@ class BoatPricing extends \Elementor\Widget_Base {
         ]);
 
         $this->add_responsive_control('card_radius', [
-            'label'      => __('Border radius', 'bt-regiondo'),
+            'label'      => __('Border radius', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px', '%'],
             'selectors'  => ['{{WRAPPER}} .bt-bprice__card' => 'border-radius: {{SIZE}}{{UNIT}}'],
         ]);
 
         $this->add_responsive_control('card_padding', [
-            'label'      => __('Padding carte', 'bt-regiondo'),
+            'label'      => __('Padding carte', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::DIMENSIONS,
             'size_units' => ['px', 'em'],
             'default'    => ['top' => '24', 'right' => '24', 'bottom' => '24', 'left' => '24', 'unit' => 'px', 'isLinked' => true],
@@ -243,66 +243,66 @@ class BoatPricing extends \Elementor\Widget_Base {
 
         // ── Style — Prix ──────────────────────────────────────────────────
         $this->start_controls_section('style_price', [
-            'label' => __('Style — Prix', 'bt-regiondo'),
+            'label' => __('Style — Prix', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
         ]);
 
         $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
             'name'     => 'card_label_typo',
-            'label'    => __('Typographie label', 'bt-regiondo'),
+            'label'    => __('Typographie label', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-bprice__card-label',
         ]);
 
         $this->add_control('card_label_color', [
-            'label'     => __('Couleur label', 'bt-regiondo'),
+            'label'     => __('Couleur label', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-bprice__card-label' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
             'name'     => 'price_typo',
-            'label'    => __('Typographie prix', 'bt-regiondo'),
+            'label'    => __('Typographie prix', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-bprice__amount',
         ]);
 
         $this->add_control('price_color', [
-            'label'     => __('Couleur prix', 'bt-regiondo'),
+            'label'     => __('Couleur prix', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-bprice__amount' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
             'name'     => 'duration_typo',
-            'label'    => __('Typographie durée', 'bt-regiondo'),
+            'label'    => __('Typographie durée', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-bprice__duration',
         ]);
 
         $this->add_control('duration_color', [
-            'label'     => __('Couleur durée', 'bt-regiondo'),
+            'label'     => __('Couleur durée', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-bprice__duration' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_control('deposit_color', [
-            'label'     => __('Couleur caution', 'bt-regiondo'),
+            'label'     => __('Couleur caution', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-bprice__deposit' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_control('fuel_yes_bg', [
-            'label'     => __('Fond badge carburant inclus', 'bt-regiondo'),
+            'label'     => __('Fond badge carburant inclus', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-bprice__fuel--yes' => 'background-color: {{VALUE}}'],
         ]);
 
         $this->add_control('fuel_yes_color', [
-            'label'     => __('Couleur texte badge inclus', 'bt-regiondo'),
+            'label'     => __('Couleur texte badge inclus', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-bprice__fuel--yes' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_control('fuel_no_bg', [
-            'label'     => __('Fond badge carburant en sus', 'bt-regiondo'),
+            'label'     => __('Fond badge carburant en sus', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-bprice__fuel--no' => 'background-color: {{VALUE}}'],
         ]);
@@ -356,14 +356,14 @@ class BoatPricing extends \Elementor\Widget_Base {
         $cards = [];
         if ($s['show_half'] === 'yes' && $price_half) {
             $cards[] = [
-                'label'    => $s['label_half'] ?: __('Demi-journée', 'bt-regiondo'),
+                'label'    => $s['label_half'] ?: __('Demi-journée', 'blacktenderscore'),
                 'price'    => $price_half,
                 'duration' => $half_time ? "{$half_time} h" : '',
             ];
         }
         if ($s['show_full'] === 'yes' && $price_full) {
             $cards[] = [
-                'label'    => $s['label_full'] ?: __('Journée complète', 'bt-regiondo'),
+                'label'    => $s['label_full'] ?: __('Journée complète', 'blacktenderscore'),
                 'price'    => $price_full,
                 'duration' => $full_time ? "{$full_time} h" : '',
             ];
@@ -403,7 +403,7 @@ class BoatPricing extends \Elementor\Widget_Base {
             }
             echo '</div>';
             if ($s['show_deposit'] === 'yes' && $deposit) {
-                $dep_lbl = esc_html($s['label_deposit'] ?: __('Caution', 'bt-regiondo'));
+                $dep_lbl = esc_html($s['label_deposit'] ?: __('Caution', 'blacktenderscore'));
                 echo '<p class="bt-bprice__deposit">' . $dep_lbl . ' : <strong>' . esc_html(number_format((float) $deposit, 0, ',', ' ') . ' ' . $currency) . '</strong></p>';
             }
             echo '</div>';
@@ -412,8 +412,8 @@ class BoatPricing extends \Elementor\Widget_Base {
         if ($s['show_fuel_badge'] === 'yes') {
             $cls     = $fuel_incl ? 'bt-bprice__fuel--yes' : 'bt-bprice__fuel--no';
             $lbl     = $fuel_incl
-                ? esc_html($s['label_fuel_yes'] ?: __('Carburant inclus', 'bt-regiondo'))
-                : esc_html($s['label_fuel_no']  ?: __('Carburant en sus', 'bt-regiondo'));
+                ? esc_html($s['label_fuel_yes'] ?: __('Carburant inclus', 'blacktenderscore'))
+                : esc_html($s['label_fuel_no']  ?: __('Carburant en sus', 'blacktenderscore'));
             echo '<span class="bt-bprice__fuel ' . $cls . '">' . $lbl . '</span>';
         }
 
@@ -422,7 +422,7 @@ class BoatPricing extends \Elementor\Widget_Base {
 
     private function render_table(array $cards, array $s, string $currency, string $note, $deposit, bool $fuel_incl): void {
         echo '<div class="bt-bprice__table-wrap"><table class="bt-bprice__table">';
-        echo '<thead><tr><th>' . esc_html(__('Forfait', 'bt-regiondo')) . '</th><th>' . esc_html(__('Durée', 'bt-regiondo')) . '</th><th>' . esc_html(__('Prix', 'bt-regiondo')) . '</th></tr></thead><tbody>';
+        echo '<thead><tr><th>' . esc_html(__('Forfait', 'blacktenderscore')) . '</th><th>' . esc_html(__('Durée', 'blacktenderscore')) . '</th><th>' . esc_html(__('Prix', 'blacktenderscore')) . '</th></tr></thead><tbody>';
         foreach ($cards as $card) {
             echo '<tr>';
             echo '<td class="bt-bprice__card-label">' . esc_html($card['label']) . '</td>';
@@ -433,27 +433,27 @@ class BoatPricing extends \Elementor\Widget_Base {
         echo '</tbody></table></div>';
 
         if ($s['show_deposit'] === 'yes' && $deposit) {
-            $dep_lbl = esc_html($s['label_deposit'] ?: __('Caution', 'bt-regiondo'));
+            $dep_lbl = esc_html($s['label_deposit'] ?: __('Caution', 'blacktenderscore'));
             echo '<p class="bt-bprice__deposit">' . $dep_lbl . ' : <strong>' . esc_html(number_format((float) $deposit, 0, ',', ' ') . ' ' . $currency) . '</strong></p>';
         }
         if ($s['show_fuel_badge'] === 'yes') {
             $cls = $fuel_incl ? 'bt-bprice__fuel--yes' : 'bt-bprice__fuel--no';
             $lbl = $fuel_incl
-                ? esc_html($s['label_fuel_yes'] ?: __('Carburant inclus', 'bt-regiondo'))
-                : esc_html($s['label_fuel_no']  ?: __('Carburant en sus', 'bt-regiondo'));
+                ? esc_html($s['label_fuel_yes'] ?: __('Carburant inclus', 'blacktenderscore'))
+                : esc_html($s['label_fuel_no']  ?: __('Carburant en sus', 'blacktenderscore'));
             echo '<span class="bt-bprice__fuel ' . $cls . '">' . $lbl . '</span>';
         }
     }
 
     private function render_zones(array $zones, array $s, string $currency): void {
-        $zones_title = $s['zones_title'] ?: __('Tarifs par zone de départ', 'bt-regiondo');
+        $zones_title = $s['zones_title'] ?: __('Tarifs par zone de départ', 'blacktenderscore');
         echo '<div class="bt-bprice__zones">';
         echo '<h4 class="bt-bprice__zones-title">' . esc_html($zones_title) . '</h4>';
         echo '<div class="bt-bprice__table-wrap"><table class="bt-bprice__table">';
         echo '<thead><tr>';
-        echo '<th>' . esc_html($s['zones_col_zone'] ?: __('Zone', 'bt-regiondo')) . '</th>';
-        echo '<th>' . esc_html($s['zones_col_half'] ?: __('½ journée', 'bt-regiondo')) . '</th>';
-        echo '<th>' . esc_html($s['zones_col_full'] ?: __('Journée', 'bt-regiondo')) . '</th>';
+        echo '<th>' . esc_html($s['zones_col_zone'] ?: __('Zone', 'blacktenderscore')) . '</th>';
+        echo '<th>' . esc_html($s['zones_col_half'] ?: __('½ journée', 'blacktenderscore')) . '</th>';
+        echo '<th>' . esc_html($s['zones_col_full'] ?: __('Journée', 'blacktenderscore')) . '</th>';
         echo '</tr></thead><tbody>';
 
         foreach ($zones as $row) {

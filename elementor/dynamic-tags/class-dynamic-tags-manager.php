@@ -1,5 +1,5 @@
 <?php
-namespace BT_Regiondo\Elementor\DynamicTags;
+namespace BlackTenders\Elementor\DynamicTags;
 
 defined('ABSPATH') || exit;
 
@@ -35,8 +35,8 @@ class Dynamic_Tags_Manager {
     // ── Groupe ────────────────────────────────────────────────────────────────
 
     public function register_group(\Elementor\Core\DynamicTags\Manager $manager): void {
-        $manager->register_group('bt-regiondo', [
-            'title' => __('BT Regiondo', 'bt-regiondo'),
+        $manager->register_group('blacktenderscore', [
+            'title' => __('BT Regiondo', 'blacktenderscore'),
         ]);
     }
 

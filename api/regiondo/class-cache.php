@@ -1,5 +1,5 @@
 <?php
-namespace BT_Regiondo\Api\Regiondo;
+namespace BlackTenders\Api\Regiondo;
 
 defined('ABSPATH') || exit;
 
@@ -9,7 +9,7 @@ class Cache {
 
     public function __construct() {
         // TTL configurable dans les settings (défaut : 1h)
-        $this->ttl = (int) get_option('bt_regiondo_cache_ttl', 3600);
+        $this->ttl = (int) get_option('bt_cache_ttl', 3600);
     }
 
     public function get(string $key): mixed {

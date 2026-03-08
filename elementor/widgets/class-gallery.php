@@ -1,5 +1,5 @@
 <?php
-namespace BT_Regiondo\Elementor\Widgets;
+namespace BlackTenders\Elementor\Widgets;
 
 defined('ABSPATH') || exit;
 
@@ -14,7 +14,7 @@ class Gallery extends \Elementor\Widget_Base {
     public function get_name():       string { return 'bt-gallery'; }
     public function get_title():      string { return 'BT — Galerie photos'; }
     public function get_icon():       string { return 'eicon-gallery-grid'; }
-    public function get_categories(): array  { return ['bt-regiondo']; }
+    public function get_categories(): array  { return ['blacktenderscore']; }
     public function get_keywords():   array  { return ['galerie', 'photos', 'images', 'lightbox', 'bt']; }
 
     // ── Controls ─────────────────────────────────────────────────────────────
@@ -23,36 +23,36 @@ class Gallery extends \Elementor\Widget_Base {
 
         // ── Contenu ───────────────────────────────────────────────────────
         $this->start_controls_section('section_content', [
-            'label' => __('Contenu', 'bt-regiondo'),
+            'label' => __('Contenu', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('acf_field', [
-            'label'   => __('Champ ACF gallery', 'bt-regiondo'),
+            'label'   => __('Champ ACF gallery', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => [
-                'boat_gallery' => __('Galerie bateau (boat_gallery)', 'bt-regiondo'),
-                'exp_gallery'  => __('Galerie excursion (exp_gallery)', 'bt-regiondo'),
+                'boat_gallery' => __('Galerie bateau (boat_gallery)', 'blacktenderscore'),
+                'exp_gallery'  => __('Galerie excursion (exp_gallery)', 'blacktenderscore'),
             ],
             'default' => 'boat_gallery',
         ]);
 
         $this->add_control('section_title', [
-            'label'   => __('Titre de section', 'bt-regiondo'),
+            'label'   => __('Titre de section', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::TEXT,
             'default' => '',
             'dynamic' => ['active' => true],
         ]);
 
         $this->add_control('title_tag', [
-            'label'   => __('Balise du titre', 'bt-regiondo'),
+            'label'   => __('Balise du titre', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => ['h2' => 'H2', 'h3' => 'H3', 'h4' => 'H4', 'p' => 'p'],
             'default' => 'h3',
         ]);
 
         $this->add_control('max_images', [
-            'label'       => __('Nombre max d\'images (0 = toutes)', 'bt-regiondo'),
+            'label'       => __('Nombre max d\'images (0 = toutes)', 'blacktenderscore'),
             'type'        => \Elementor\Controls_Manager::NUMBER,
             'min'         => 0,
             'max'         => 100,
@@ -60,7 +60,7 @@ class Gallery extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('thumb_size', [
-            'label'   => __('Taille miniature', 'bt-regiondo'),
+            'label'   => __('Taille miniature', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => [
                 'thumbnail' => 'Miniature (150px)',
@@ -72,7 +72,7 @@ class Gallery extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('enable_lightbox', [
-            'label'        => __('Lightbox Elementor', 'bt-regiondo'),
+            'label'        => __('Lightbox Elementor', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
@@ -82,12 +82,12 @@ class Gallery extends \Elementor\Widget_Base {
 
         // ── Grille ────────────────────────────────────────────────────────
         $this->start_controls_section('section_grid', [
-            'label' => __('Grille', 'bt-regiondo'),
+            'label' => __('Grille', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_responsive_control('columns', [
-            'label'          => __('Colonnes', 'bt-regiondo'),
+            'label'          => __('Colonnes', 'blacktenderscore'),
             'type'           => \Elementor\Controls_Manager::NUMBER,
             'min'            => 1,
             'max'            => 8,
@@ -98,14 +98,14 @@ class Gallery extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('aspect_ratio', [
-            'label'   => __('Ratio des images', 'bt-regiondo'),
+            'label'   => __('Ratio des images', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => [
-                'square'   => __('Carré (1:1)', 'bt-regiondo'),
-                'landscape' => __('Paysage (4:3)', 'bt-regiondo'),
-                'wide'     => __('Cinémascope (16:9)', 'bt-regiondo'),
-                'portrait' => __('Portrait (3:4)', 'bt-regiondo'),
-                'auto'     => __('Auto (original)', 'bt-regiondo'),
+                'square'   => __('Carré (1:1)', 'blacktenderscore'),
+                'landscape' => __('Paysage (4:3)', 'blacktenderscore'),
+                'wide'     => __('Cinémascope (16:9)', 'blacktenderscore'),
+                'portrait' => __('Portrait (3:4)', 'blacktenderscore'),
+                'auto'     => __('Auto (original)', 'blacktenderscore'),
             ],
             'default' => 'landscape',
         ]);
@@ -114,24 +114,24 @@ class Gallery extends \Elementor\Widget_Base {
 
         // ── Style ─────────────────────────────────────────────────────────
         $this->start_controls_section('style_gallery', [
-            'label' => __('Style', 'bt-regiondo'),
+            'label' => __('Style', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
         ]);
 
         $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
             'name'     => 'title_typo',
-            'label'    => __('Typographie titre', 'bt-regiondo'),
+            'label'    => __('Typographie titre', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-gallery__title',
         ]);
 
         $this->add_control('title_color', [
-            'label'     => __('Couleur titre', 'bt-regiondo'),
+            'label'     => __('Couleur titre', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-gallery__title' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_responsive_control('gap', [
-            'label'      => __('Espacement', 'bt-regiondo'),
+            'label'      => __('Espacement', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'range'      => ['px' => ['min' => 0, 'max' => 40]],
@@ -140,20 +140,20 @@ class Gallery extends \Elementor\Widget_Base {
         ]);
 
         $this->add_responsive_control('border_radius', [
-            'label'      => __('Border radius images', 'bt-regiondo'),
+            'label'      => __('Border radius images', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px', '%'],
             'selectors'  => ['{{WRAPPER}} .bt-gallery__item img' => 'border-radius: {{SIZE}}{{UNIT}}'],
         ]);
 
         $this->add_control('overlay_color', [
-            'label'     => __('Couleur overlay au survol', 'bt-regiondo'),
+            'label'     => __('Couleur overlay au survol', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-gallery__item::after' => 'background-color: {{VALUE}}'],
         ]);
 
         $this->add_control('overlay_icon', [
-            'label'   => __('Icône overlay survol', 'bt-regiondo'),
+            'label'   => __('Icône overlay survol', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::TEXT,
             'default' => '🔍',
         ]);

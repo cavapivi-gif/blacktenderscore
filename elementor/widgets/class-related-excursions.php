@@ -1,5 +1,5 @@
 <?php
-namespace BT_Regiondo\Elementor\Widgets;
+namespace BlackTenders\Elementor\Widgets;
 
 defined('ABSPATH') || exit;
 
@@ -14,7 +14,7 @@ class RelatedExcursions extends \Elementor\Widget_Base {
     public function get_name():       string { return 'bt-related-excursions'; }
     public function get_title():      string { return 'BT — Excursions de ce bateau'; }
     public function get_icon():       string { return 'eicon-post-list'; }
-    public function get_categories(): array  { return ['bt-regiondo']; }
+    public function get_categories(): array  { return ['blacktenderscore']; }
     public function get_keywords():   array  { return ['excursion', 'bateau', 'related', 'relation', 'bt']; }
 
     // ── Controls ─────────────────────────────────────────────────────────────
@@ -23,33 +23,33 @@ class RelatedExcursions extends \Elementor\Widget_Base {
 
         // ── Contenu ───────────────────────────────────────────────────────
         $this->start_controls_section('section_content', [
-            'label' => __('Contenu', 'bt-regiondo'),
+            'label' => __('Contenu', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('acf_relation_field', [
-            'label'       => __('Champ ACF relation (sur excursion)', 'bt-regiondo'),
+            'label'       => __('Champ ACF relation (sur excursion)', 'blacktenderscore'),
             'type'        => \Elementor\Controls_Manager::TEXT,
             'default'     => 'exp_boats',
-            'description' => __('Nom du champ ACF relationship utilisé sur les excursions pour pointer vers les bateaux.', 'bt-regiondo'),
+            'description' => __('Nom du champ ACF relationship utilisé sur les excursions pour pointer vers les bateaux.', 'blacktenderscore'),
         ]);
 
         $this->add_control('section_title', [
-            'label'   => __('Titre de section', 'bt-regiondo'),
+            'label'   => __('Titre de section', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::TEXT,
-            'default' => __('Excursions avec ce bateau', 'bt-regiondo'),
+            'default' => __('Excursions avec ce bateau', 'blacktenderscore'),
             'dynamic' => ['active' => true],
         ]);
 
         $this->add_control('title_tag', [
-            'label'   => __('Balise du titre', 'bt-regiondo'),
+            'label'   => __('Balise du titre', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => ['h2' => 'H2', 'h3' => 'H3', 'h4' => 'H4', 'p' => 'p'],
             'default' => 'h3',
         ]);
 
         $this->add_control('max_results', [
-            'label'   => __('Nombre max d\'excursions', 'bt-regiondo'),
+            'label'   => __('Nombre max d\'excursions', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::NUMBER,
             'min'     => 1,
             'max'     => 24,
@@ -60,12 +60,12 @@ class RelatedExcursions extends \Elementor\Widget_Base {
 
         // ── Affichage cartes ──────────────────────────────────────────────
         $this->start_controls_section('section_display', [
-            'label' => __('Affichage des cartes', 'bt-regiondo'),
+            'label' => __('Affichage des cartes', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_responsive_control('columns', [
-            'label'          => __('Colonnes', 'bt-regiondo'),
+            'label'          => __('Colonnes', 'blacktenderscore'),
             'type'           => \Elementor\Controls_Manager::NUMBER,
             'min'            => 1,
             'max'            => 4,
@@ -76,14 +76,14 @@ class RelatedExcursions extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('image_size', [
-            'label'   => __('Taille d\'image', 'bt-regiondo'),
+            'label'   => __('Taille d\'image', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => ['thumbnail' => 'Miniature', 'medium' => 'Moyenne', 'large' => 'Grande', 'full' => 'Originale'],
             'default' => 'medium',
         ]);
 
         $this->add_responsive_control('image_ratio', [
-            'label'     => __('Ratio image (%)', 'bt-regiondo'),
+            'label'     => __('Ratio image (%)', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::SLIDER,
             'range'     => ['px' => ['min' => 30, 'max' => 120]],
             'default'   => ['size' => 56],
@@ -91,51 +91,51 @@ class RelatedExcursions extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('show_image', [
-            'label'        => __('Afficher l\'image', 'bt-regiondo'),
+            'label'        => __('Afficher l\'image', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('show_tagline', [
-            'label'        => __('Afficher l\'accroche', 'bt-regiondo'),
+            'label'        => __('Afficher l\'accroche', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('show_price', [
-            'label'        => __('Afficher le prix de départ', 'bt-regiondo'),
+            'label'        => __('Afficher le prix de départ', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('price_prefix', [
-            'label'     => __('Préfixe prix', 'bt-regiondo'),
+            'label'     => __('Préfixe prix', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::TEXT,
-            'default'   => __('Dès', 'bt-regiondo'),
+            'default'   => __('Dès', 'blacktenderscore'),
             'condition' => ['show_price' => 'yes'],
         ]);
 
         $this->add_control('currency', [
-            'label'     => __('Symbole monnaie', 'bt-regiondo'),
+            'label'     => __('Symbole monnaie', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::TEXT,
             'default'   => '€',
             'condition' => ['show_price' => 'yes'],
         ]);
 
         $this->add_control('show_link', [
-            'label'        => __('Afficher le bouton', 'bt-regiondo'),
+            'label'        => __('Afficher le bouton', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('link_label', [
-            'label'     => __('Texte du bouton', 'bt-regiondo'),
+            'label'     => __('Texte du bouton', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::TEXT,
-            'default'   => __('Voir l\'excursion', 'bt-regiondo'),
+            'default'   => __('Voir l\'excursion', 'blacktenderscore'),
             'condition' => ['show_link' => 'yes'],
         ]);
 
@@ -143,12 +143,12 @@ class RelatedExcursions extends \Elementor\Widget_Base {
 
         // ── Style — Cartes ────────────────────────────────────────────────
         $this->start_controls_section('style_cards', [
-            'label' => __('Style — Cartes', 'bt-regiondo'),
+            'label' => __('Style — Cartes', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
         ]);
 
         $this->add_responsive_control('cards_gap', [
-            'label'      => __('Espacement', 'bt-regiondo'),
+            'label'      => __('Espacement', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'default'    => ['size' => 24, 'unit' => 'px'],
@@ -156,7 +156,7 @@ class RelatedExcursions extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('card_bg', [
-            'label'     => __('Fond des cartes', 'bt-regiondo'),
+            'label'     => __('Fond des cartes', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-relexp__card' => 'background-color: {{VALUE}}'],
         ]);
@@ -167,7 +167,7 @@ class RelatedExcursions extends \Elementor\Widget_Base {
         ]);
 
         $this->add_responsive_control('card_radius', [
-            'label'      => __('Border radius', 'bt-regiondo'),
+            'label'      => __('Border radius', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'selectors'  => ['{{WRAPPER}} .bt-relexp__card' => 'border-radius: {{SIZE}}{{UNIT}}; overflow: hidden'],
@@ -182,12 +182,12 @@ class RelatedExcursions extends \Elementor\Widget_Base {
 
         // ── Style — Texte ─────────────────────────────────────────────────
         $this->start_controls_section('style_text', [
-            'label' => __('Style — Texte', 'bt-regiondo'),
+            'label' => __('Style — Texte', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
         ]);
 
         $this->add_responsive_control('body_padding', [
-            'label'      => __('Padding contenu', 'bt-regiondo'),
+            'label'      => __('Padding contenu', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::DIMENSIONS,
             'size_units' => ['px', 'em'],
             'default'    => ['top' => '16', 'right' => '16', 'bottom' => '16', 'left' => '16', 'unit' => 'px', 'isLinked' => true],
@@ -196,54 +196,54 @@ class RelatedExcursions extends \Elementor\Widget_Base {
 
         $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
             'name'     => 'title_typo',
-            'label'    => __('Typographie titre', 'bt-regiondo'),
+            'label'    => __('Typographie titre', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-relexp__card-title',
         ]);
 
         $this->add_control('title_color', [
-            'label'     => __('Couleur titre', 'bt-regiondo'),
+            'label'     => __('Couleur titre', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-relexp__card-title a, {{WRAPPER}} .bt-relexp__card-title' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
             'name'     => 'tagline_typo',
-            'label'    => __('Typographie accroche', 'bt-regiondo'),
+            'label'    => __('Typographie accroche', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-relexp__tagline',
         ]);
 
         $this->add_control('tagline_color', [
-            'label'     => __('Couleur accroche', 'bt-regiondo'),
+            'label'     => __('Couleur accroche', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-relexp__tagline' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
             'name'     => 'price_typo',
-            'label'    => __('Typographie prix', 'bt-regiondo'),
+            'label'    => __('Typographie prix', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-relexp__price',
         ]);
 
         $this->add_control('price_color', [
-            'label'     => __('Couleur prix', 'bt-regiondo'),
+            'label'     => __('Couleur prix', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-relexp__price' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
             'name'     => 'btn_typo',
-            'label'    => __('Typographie bouton', 'bt-regiondo'),
+            'label'    => __('Typographie bouton', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-relexp__btn',
         ]);
 
         $this->add_control('btn_color', [
-            'label'     => __('Couleur bouton', 'bt-regiondo'),
+            'label'     => __('Couleur bouton', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-relexp__btn' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_control('btn_bg', [
-            'label'     => __('Fond bouton', 'bt-regiondo'),
+            'label'     => __('Fond bouton', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-relexp__btn' => 'background-color: {{VALUE}}'],
         ]);
@@ -254,14 +254,14 @@ class RelatedExcursions extends \Elementor\Widget_Base {
         ]);
 
         $this->add_responsive_control('btn_radius', [
-            'label'      => __('Border radius bouton', 'bt-regiondo'),
+            'label'      => __('Border radius bouton', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px', '%'],
             'selectors'  => ['{{WRAPPER}} .bt-relexp__btn' => 'border-radius: {{SIZE}}{{UNIT}}'],
         ]);
 
         $this->add_responsive_control('btn_padding', [
-            'label'      => __('Padding bouton', 'bt-regiondo'),
+            'label'      => __('Padding bouton', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::DIMENSIONS,
             'size_units' => ['px', 'em'],
             'selectors'  => ['{{WRAPPER}} .bt-relexp__btn' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
@@ -386,12 +386,12 @@ class RelatedExcursions extends \Elementor\Widget_Base {
             }
 
             if ($s['show_price'] === 'yes' && $min_price !== null) {
-                $prefix = esc_html($s['price_prefix'] ?: __('Dès', 'bt-regiondo'));
+                $prefix = esc_html($s['price_prefix'] ?: __('Dès', 'blacktenderscore'));
                 echo '<p class="bt-relexp__price">' . $prefix . ' <strong>' . esc_html(number_format($min_price, 0, ',', ' ') . ' ' . $currency) . '</strong></p>';
             }
 
             if ($s['show_link'] === 'yes') {
-                $lbl = $s['link_label'] ?: __('Voir l\'excursion', 'bt-regiondo');
+                $lbl = $s['link_label'] ?: __('Voir l\'excursion', 'blacktenderscore');
                 echo '<a href="' . esc_url($url) . '" class="bt-relexp__btn">' . esc_html($lbl) . '</a>';
             }
 

@@ -1,18 +1,18 @@
 <?php
-namespace BT_Regiondo\Elementor;
+namespace BlackTenders\Elementor;
 
-use BT_Regiondo\Elementor\Widgets\TaxonomyList;
-use BT_Regiondo\Elementor\Widgets\FaqAccordion;
-use BT_Regiondo\Elementor\Widgets\PricingTabs;
-use BT_Regiondo\Elementor\Widgets\BoatSpecs;
-use BT_Regiondo\Elementor\Widgets\BoatPricing;
-use BT_Regiondo\Elementor\Widgets\RelatedBoats;
-use BT_Regiondo\Elementor\Widgets\RelatedExcursions;
-use BT_Regiondo\Elementor\Widgets\Itinerary;
-use BT_Regiondo\Elementor\Widgets\DepartureTimes;
-use BT_Regiondo\Elementor\Widgets\Reviews;
-use BT_Regiondo\Elementor\Widgets\Gallery;
-use BT_Regiondo\Elementor\Widgets\ExcursionSchema;
+use BlackTenders\Elementor\Widgets\TaxonomyList;
+use BlackTenders\Elementor\Widgets\FaqAccordion;
+use BlackTenders\Elementor\Widgets\PricingTabs;
+use BlackTenders\Elementor\Widgets\BoatSpecs;
+use BlackTenders\Elementor\Widgets\BoatPricing;
+use BlackTenders\Elementor\Widgets\RelatedBoats;
+use BlackTenders\Elementor\Widgets\RelatedExcursions;
+use BlackTenders\Elementor\Widgets\Itinerary;
+use BlackTenders\Elementor\Widgets\DepartureTimes;
+use BlackTenders\Elementor\Widgets\Reviews;
+use BlackTenders\Elementor\Widgets\Gallery;
+use BlackTenders\Elementor\Widgets\ExcursionSchema;
 
 defined('ABSPATH') || exit;
 
@@ -62,7 +62,7 @@ class ElementorManager {
     }
 
     public function register_category(\Elementor\Elements_Manager $manager): void {
-        $manager->add_category('bt-regiondo', [
+        $manager->add_category('blacktenderscore', [
             'title' => 'BlackTenders',
             'icon'  => 'eicon-anchor',
         ]);
@@ -136,15 +136,15 @@ class ElementorManager {
     public function enqueue_assets(): void {
         wp_enqueue_style(
             'bt-elementor',
-            BT_REGIONDO_URL . 'elementor/assets/bt-elementor.css',
+            BT_URL . 'elementor/assets/bt-elementor.css',
             [],
-            BT_REGIONDO_VERSION
+            BT_VERSION
         );
         wp_enqueue_script(
             'bt-elementor',
-            BT_REGIONDO_URL . 'elementor/assets/bt-elementor.js',
+            BT_URL . 'elementor/assets/bt-elementor.js',
             [],
-            BT_REGIONDO_VERSION,
+            BT_VERSION,
             true
         );
     }

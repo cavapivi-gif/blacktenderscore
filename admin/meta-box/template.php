@@ -1,5 +1,5 @@
 <?php defined('ABSPATH') || exit;
-$map = get_option('bt_regiondo_widget_map', []);
+$map = get_option('bt_widget_map', []);
 ?>
 <div class="bt-meta-box">
 

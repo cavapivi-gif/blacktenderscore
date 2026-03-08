@@ -1,5 +1,5 @@
 <?php
-namespace BT_Regiondo\Elementor\Widgets;
+namespace BlackTenders\Elementor\Widgets;
 
 defined('ABSPATH') || exit;
 
@@ -16,7 +16,7 @@ class PricingTabs extends \Elementor\Widget_Base {
     public function get_name():       string { return 'bt-pricing-tabs'; }
     public function get_title():      string { return 'BT — Tarification'; }
     public function get_icon():       string { return 'eicon-price-table'; }
-    public function get_categories(): array  { return ['bt-regiondo']; }
+    public function get_categories(): array  { return ['blacktenderscore']; }
     public function get_keywords():   array  { return ['tarif', 'prix', 'forfait', 'réservation', 'booking', 'bt']; }
     public function get_script_depends(): array { return ['bt-elementor']; }
 
@@ -26,28 +26,28 @@ class PricingTabs extends \Elementor\Widget_Base {
 
         // ── Content ───────────────────────────────────────────────────────
         $this->start_controls_section('section_content', [
-            'label' => __('Contenu', 'bt-regiondo'),
+            'label' => __('Contenu', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('acf_field', [
-            'label'   => __('Champ ACF repeater', 'bt-regiondo'),
+            'label'   => __('Champ ACF repeater', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => [
-                'tarification_par_forfait' => __('Tarification par forfait (tarification_par_forfait)', 'bt-regiondo'),
+                'tarification_par_forfait' => __('Tarification par forfait (tarification_par_forfait)', 'blacktenderscore'),
             ],
             'default' => 'tarification_par_forfait',
         ]);
 
         $this->add_control('show_deposit', [
-            'label'        => __('Afficher l\'acompte', 'bt-regiondo'),
+            'label'        => __('Afficher l\'acompte', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('show_note', [
-            'label'        => __('Afficher la note tarifaire', 'bt-regiondo'),
+            'label'        => __('Afficher la note tarifaire', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
@@ -57,40 +57,40 @@ class PricingTabs extends \Elementor\Widget_Base {
 
         // ── Réservation ───────────────────────────────────────────────────
         $this->start_controls_section('section_booking', [
-            'label' => __('Réservation Regiondo', 'bt-regiondo'),
+            'label' => __('Réservation Regiondo', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('show_booking', [
-            'label'        => __('Afficher le widget de réservation', 'bt-regiondo'),
+            'label'        => __('Afficher le widget de réservation', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
-            'description'  => __('Intègre le calendrier Regiondo via le UUID stocké dans le champ ACF.', 'bt-regiondo'),
+            'description'  => __('Intègre le calendrier Regiondo via le UUID stocké dans le champ ACF.', 'blacktenderscore'),
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('booking_field', [
-            'label'     => __('Champ UUID Regiondo', 'bt-regiondo'),
+            'label'     => __('Champ UUID Regiondo', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::SELECT,
             'options'   => [
-                'exp_booking_short_url' => __('Forfait court (exp_booking_short_url)', 'bt-regiondo'),
-                'exp_booking_long_url'  => __('Forfait long (exp_booking_long_url)', 'bt-regiondo'),
+                'exp_booking_short_url' => __('Forfait court (exp_booking_short_url)', 'blacktenderscore'),
+                'exp_booking_long_url'  => __('Forfait long (exp_booking_long_url)', 'blacktenderscore'),
             ],
             'default'   => 'exp_booking_short_url',
             'condition' => ['show_booking' => 'yes'],
         ]);
 
         $this->add_control('booking_per_tab', [
-            'label'       => __('UUID par tab (champ sous-repeater)', 'bt-regiondo'),
+            'label'       => __('UUID par tab (champ sous-repeater)', 'blacktenderscore'),
             'type'        => \Elementor\Controls_Manager::SWITCHER,
-            'description' => __('Si chaque forfait a son propre UUID dans le repeater (champ exp_booking_uuid), activez cette option.', 'bt-regiondo'),
+            'description' => __('Si chaque forfait a son propre UUID dans le repeater (champ exp_booking_uuid), activez cette option.', 'blacktenderscore'),
             'return_value'=> 'yes',
             'default'     => '',
             'condition'   => ['show_booking' => 'yes'],
         ]);
 
         $this->add_control('booking_uuid_subfield', [
-            'label'     => __('Nom du sous-champ UUID', 'bt-regiondo'),
+            'label'     => __('Nom du sous-champ UUID', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::TEXT,
             'default'   => 'exp_booking_uuid',
             'condition' => ['show_booking' => 'yes', 'booking_per_tab' => 'yes'],
@@ -100,7 +100,7 @@ class PricingTabs extends \Elementor\Widget_Base {
 
         // ── Style — Tabs ──────────────────────────────────────────────────
         $this->start_controls_section('style_tabs', [
-            'label' => __('Style — Tabs', 'bt-regiondo'),
+            'label' => __('Style — Tabs', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
         ]);
 
@@ -110,31 +110,31 @@ class PricingTabs extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('tab_color', [
-            'label'     => __('Couleur', 'bt-regiondo'),
+            'label'     => __('Couleur', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-pricing__tab' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_control('tab_bg', [
-            'label'     => __('Fond', 'bt-regiondo'),
+            'label'     => __('Fond', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-pricing__tab' => 'background-color: {{VALUE}}'],
         ]);
 
         $this->add_control('tab_active_color', [
-            'label'     => __('Couleur (actif)', 'bt-regiondo'),
+            'label'     => __('Couleur (actif)', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-pricing__tab--active' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_control('tab_active_bg', [
-            'label'     => __('Fond (actif)', 'bt-regiondo'),
+            'label'     => __('Fond (actif)', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-pricing__tab--active' => 'background-color: {{VALUE}}'],
         ]);
 
         $this->add_responsive_control('tab_padding', [
-            'label'      => __('Padding tab', 'bt-regiondo'),
+            'label'      => __('Padding tab', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::DIMENSIONS,
             'size_units' => ['px', 'em'],
             'selectors'  => ['{{WRAPPER}} .bt-pricing__tab' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
@@ -149,36 +149,36 @@ class PricingTabs extends \Elementor\Widget_Base {
 
         // ── Style — Contenu ───────────────────────────────────────────────
         $this->start_controls_section('style_panel', [
-            'label' => __('Style — Panneau', 'bt-regiondo'),
+            'label' => __('Style — Panneau', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
         ]);
 
         $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
             'name'     => 'price_typography',
-            'label'    => __('Typographie prix', 'bt-regiondo'),
+            'label'    => __('Typographie prix', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-pricing__price',
         ]);
 
         $this->add_control('price_color', [
-            'label'     => __('Couleur prix', 'bt-regiondo'),
+            'label'     => __('Couleur prix', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-pricing__price' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
             'name'     => 'note_typography',
-            'label'    => __('Typographie note', 'bt-regiondo'),
+            'label'    => __('Typographie note', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-pricing__note, {{WRAPPER}} .bt-pricing__deposit',
         ]);
 
         $this->add_control('panel_bg', [
-            'label'     => __('Fond du panneau', 'bt-regiondo'),
+            'label'     => __('Fond du panneau', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-pricing__panel' => 'background-color: {{VALUE}}'],
         ]);
 
         $this->add_responsive_control('panel_padding', [
-            'label'      => __('Padding panneau', 'bt-regiondo'),
+            'label'      => __('Padding panneau', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::DIMENSIONS,
             'size_units' => ['px', 'em'],
             'selectors'  => ['{{WRAPPER}} .bt-pricing__panel' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],

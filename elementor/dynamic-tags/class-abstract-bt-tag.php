@@ -1,5 +1,5 @@
 <?php
-namespace BT_Regiondo\Elementor\DynamicTags;
+namespace BlackTenders\Elementor\DynamicTags;
 
 defined('ABSPATH') || exit;
 
@@ -10,7 +10,7 @@ defined('ABSPATH') || exit;
 abstract class Abstract_BT_Tag extends \Elementor\Core\DynamicTags\Tag {
 
     final public function get_group(): string {
-        return 'bt-regiondo';
+        return 'blacktenderscore';
     }
 
     /**

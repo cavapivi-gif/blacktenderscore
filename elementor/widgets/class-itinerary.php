@@ -1,5 +1,5 @@
 <?php
-namespace BT_Regiondo\Elementor\Widgets;
+namespace BlackTenders\Elementor\Widgets;
 
 defined('ABSPATH') || exit;
 
@@ -14,7 +14,7 @@ class Itinerary extends \Elementor\Widget_Base {
     public function get_name():       string { return 'bt-itinerary'; }
     public function get_title():      string { return 'BT — Programme / Itinéraire'; }
     public function get_icon():       string { return 'eicon-time-line'; }
-    public function get_categories(): array  { return ['bt-regiondo']; }
+    public function get_categories(): array  { return ['blacktenderscore']; }
     public function get_keywords():   array  { return ['itinéraire', 'programme', 'timeline', 'étapes', 'bt']; }
 
     // ── Controls ─────────────────────────────────────────────────────────────
@@ -23,50 +23,50 @@ class Itinerary extends \Elementor\Widget_Base {
 
         // ── Contenu ───────────────────────────────────────────────────────
         $this->start_controls_section('section_content', [
-            'label' => __('Contenu', 'bt-regiondo'),
+            'label' => __('Contenu', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('acf_field', [
-            'label'   => __('Champ ACF repeater', 'bt-regiondo'),
+            'label'   => __('Champ ACF repeater', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::TEXT,
             'default' => 'exp_itinerary',
         ]);
 
         $this->add_control('section_title', [
-            'label'   => __('Titre de section', 'bt-regiondo'),
+            'label'   => __('Titre de section', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::TEXT,
-            'default' => __('Programme', 'bt-regiondo'),
+            'default' => __('Programme', 'blacktenderscore'),
             'dynamic' => ['active' => true],
         ]);
 
         $this->add_control('title_tag', [
-            'label'   => __('Balise du titre', 'bt-regiondo'),
+            'label'   => __('Balise du titre', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => ['h2' => 'H2', 'h3' => 'H3', 'h4' => 'H4', 'p' => 'p'],
             'default' => 'h3',
         ]);
 
         $this->add_control('show_time', [
-            'label'        => __('Afficher l\'heure / moment', 'bt-regiondo'),
+            'label'        => __('Afficher l\'heure / moment', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('show_description', [
-            'label'        => __('Afficher la description', 'bt-regiondo'),
+            'label'        => __('Afficher la description', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('connector', [
-            'label'   => __('Connecteur timeline', 'bt-regiondo'),
+            'label'   => __('Connecteur timeline', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => [
-                'line' => __('Ligne verticale', 'bt-regiondo'),
-                'none' => __('Aucun', 'bt-regiondo'),
+                'line' => __('Ligne verticale', 'blacktenderscore'),
+                'none' => __('Aucun', 'blacktenderscore'),
             ],
             'default' => 'line',
         ]);
@@ -75,24 +75,24 @@ class Itinerary extends \Elementor\Widget_Base {
 
         // ── Style — Timeline ──────────────────────────────────────────────
         $this->start_controls_section('style_timeline', [
-            'label' => __('Style — Timeline', 'bt-regiondo'),
+            'label' => __('Style — Timeline', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
         ]);
 
         $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
             'name'     => 'section_title_typo',
-            'label'    => __('Typographie titre section', 'bt-regiondo'),
+            'label'    => __('Typographie titre section', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-itin__title',
         ]);
 
         $this->add_control('section_title_color', [
-            'label'     => __('Couleur titre section', 'bt-regiondo'),
+            'label'     => __('Couleur titre section', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-itin__title' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_responsive_control('steps_gap', [
-            'label'      => __('Espacement entre étapes', 'bt-regiondo'),
+            'label'      => __('Espacement entre étapes', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px', 'em'],
             'range'      => ['px' => ['min' => 8, 'max' => 80]],
@@ -101,14 +101,14 @@ class Itinerary extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('line_color', [
-            'label'     => __('Couleur de la ligne', 'bt-regiondo'),
+            'label'     => __('Couleur de la ligne', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-itin__step::before' => 'background-color: {{VALUE}}'],
             'condition' => ['connector' => 'line'],
         ]);
 
         $this->add_responsive_control('line_width', [
-            'label'      => __('Épaisseur de la ligne', 'bt-regiondo'),
+            'label'      => __('Épaisseur de la ligne', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'range'      => ['px' => ['min' => 1, 'max' => 8]],
@@ -118,13 +118,13 @@ class Itinerary extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('dot_color', [
-            'label'     => __('Couleur du point', 'bt-regiondo'),
+            'label'     => __('Couleur du point', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-itin__dot' => 'background-color: {{VALUE}}; border-color: {{VALUE}}'],
         ]);
 
         $this->add_responsive_control('dot_size', [
-            'label'      => __('Taille du point', 'bt-regiondo'),
+            'label'      => __('Taille du point', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'range'      => ['px' => ['min' => 8, 'max' => 32]],
@@ -138,55 +138,55 @@ class Itinerary extends \Elementor\Widget_Base {
 
         // ── Style — Texte ─────────────────────────────────────────────────
         $this->start_controls_section('style_text', [
-            'label' => __('Style — Texte des étapes', 'bt-regiondo'),
+            'label' => __('Style — Texte des étapes', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
         ]);
 
         $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
             'name'     => 'time_typo',
-            'label'    => __('Typographie heure', 'bt-regiondo'),
+            'label'    => __('Typographie heure', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-itin__time',
         ]);
 
         $this->add_control('time_color', [
-            'label'     => __('Couleur heure', 'bt-regiondo'),
+            'label'     => __('Couleur heure', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-itin__time' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
             'name'     => 'step_title_typo',
-            'label'    => __('Typographie titre étape', 'bt-regiondo'),
+            'label'    => __('Typographie titre étape', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-itin__step-title',
         ]);
 
         $this->add_control('step_title_color', [
-            'label'     => __('Couleur titre étape', 'bt-regiondo'),
+            'label'     => __('Couleur titre étape', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-itin__step-title' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
             'name'     => 'desc_typo',
-            'label'    => __('Typographie description', 'bt-regiondo'),
+            'label'    => __('Typographie description', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-itin__step-desc',
         ]);
 
         $this->add_control('desc_color', [
-            'label'     => __('Couleur description', 'bt-regiondo'),
+            'label'     => __('Couleur description', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-itin__step-desc' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_responsive_control('content_padding', [
-            'label'      => __('Padding contenu étape', 'bt-regiondo'),
+            'label'      => __('Padding contenu étape', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::DIMENSIONS,
             'size_units' => ['px', 'em'],
             'selectors'  => ['{{WRAPPER}} .bt-itin__step-body' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
         ]);
 
         $this->add_control('step_bg', [
-            'label'     => __('Fond de l\'étape', 'bt-regiondo'),
+            'label'     => __('Fond de l\'étape', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-itin__step-body' => 'background-color: {{VALUE}}'],
         ]);
@@ -197,7 +197,7 @@ class Itinerary extends \Elementor\Widget_Base {
         ]);
 
         $this->add_responsive_control('step_radius', [
-            'label'      => __('Border radius étape', 'bt-regiondo'),
+            'label'      => __('Border radius étape', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'selectors'  => ['{{WRAPPER}} .bt-itin__step-body' => 'border-radius: {{SIZE}}{{UNIT}}'],

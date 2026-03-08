@@ -1,5 +1,5 @@
 <?php
-namespace BT_Regiondo\Admin\Settings;
+namespace BlackTenders\Admin\Settings;
 
 defined('ABSPATH') || exit;
 
@@ -16,17 +16,17 @@ class Settings {
             'Regiondo — BlackTenders',
             '🎫 Regiondo',
             'manage_options',
-            'bt-regiondo-settings',
+            'bt-settings',
             [$this, 'render']
         );
     }
 
     public function register_fields(): void {
-        register_setting('bt_regiondo_settings', 'bt_regiondo_public_key',  ['sanitize_callback' => 'sanitize_text_field']);
-        register_setting('bt_regiondo_settings', 'bt_regiondo_secret_key',  ['sanitize_callback' => 'sanitize_text_field']);
-        register_setting('bt_regiondo_settings', 'bt_regiondo_cache_ttl',   ['sanitize_callback' => 'absint']);
-        register_setting('bt_regiondo_settings', 'bt_regiondo_post_types',  ['sanitize_callback' => [$this, 'sanitize_post_types']]);
-        register_setting('bt_regiondo_settings', 'bt_regiondo_widget_map', ['sanitize_callback' => [$this, 'sanitize_widget_map']]);
+        register_setting('bt_settings', 'bt_public_key',  ['sanitize_callback' => 'sanitize_text_field']);
+        register_setting('bt_settings', 'bt_secret_key',  ['sanitize_callback' => 'sanitize_text_field']);
+        register_setting('bt_settings', 'bt_cache_ttl',   ['sanitize_callback' => 'absint']);
+        register_setting('bt_settings', 'bt_post_types',  ['sanitize_callback' => [$this, 'sanitize_post_types']]);
+        register_setting('bt_settings', 'bt_widget_map', ['sanitize_callback' => [$this, 'sanitize_widget_map']]);
     }
 
     public function sanitize_widget_map(mixed $value): array {
@@ -48,7 +48,7 @@ class Settings {
 
     public function enqueue(string $hook): void {
         if ($hook !== 'settings_page_bt-regiondo-settings') return;
-        wp_enqueue_style('bt-regiondo-settings', BT_REGIONDO_URL . 'admin/settings/settings.css', [], BT_REGIONDO_VERSION);
+        wp_enqueue_style('bt-settings', BT_URL . 'admin/settings/settings.css', [], BT_VERSION);
     }
 
     public function render(): void {
@@ -56,7 +56,7 @@ class Settings {
 
         // Flush cache si demandé
         if (isset($_POST['bt_flush_cache'])) {
-            (new \BT_Regiondo\Api\Regiondo\Cache())->flush();
+            (new \BlackTenders\Api\Regiondo\Cache())->flush();
             echo '<div class="notice notice-success"><p>Cache Regiondo vidé.</p></div>';
         }
         ?>
@@ -64,30 +64,30 @@ class Settings {
             <h1>🎫 Regiondo — Configuration</h1>
 
             <form method="post" action="options.php">
-                <?php settings_fields('bt_regiondo_settings'); ?>
+                <?php settings_fields('bt_settings'); ?>
 
                 <table class="form-table">
                     <tr>
                         <th>Clé publique (Public Key)</th>
                         <td>
-                            <input type="text" name="bt_regiondo_public_key"
-                                   value="<?= esc_attr(get_option('bt_regiondo_public_key')) ?>"
+                            <input type="text" name="bt_public_key"
+                                   value="<?= esc_attr(get_option('bt_public_key')) ?>"
                                    class="regular-text" />
                         </td>
                     </tr>
                     <tr>
                         <th>Clé secrète (Secret Key)</th>
                         <td>
-                            <input type="password" name="bt_regiondo_secret_key"
-                                   value="<?= esc_attr(get_option('bt_regiondo_secret_key')) ?>"
+                            <input type="password" name="bt_secret_key"
+                                   value="<?= esc_attr(get_option('bt_secret_key')) ?>"
                                    class="regular-text" />
                         </td>
                     </tr>
                     <tr>
                         <th>Durée du cache (secondes)</th>
                         <td>
-                            <input type="number" name="bt_regiondo_cache_ttl"
-                                   value="<?= esc_attr(get_option('bt_regiondo_cache_ttl', 3600)) ?>"
+                            <input type="number" name="bt_cache_ttl"
+                                   value="<?= esc_attr(get_option('bt_cache_ttl', 3600)) ?>"
                                    class="small-text" min="60" />
                             <p class="description">3600 = 1h recommandé</p>
                         </td>
@@ -96,11 +96,11 @@ class Settings {
                         <th>Post types actifs</th>
                         <td>
                             <?php
-                            $saved = get_option('bt_regiondo_post_types', ['excursion']);
+                            $saved = get_option('bt_post_types', ['excursion']);
                             $all   = get_post_types(['public' => true], 'objects');
                             foreach ($all as $pt): ?>
                                 <label style="display:block; margin-bottom:4px">
-                                    <input type="checkbox" name="bt_regiondo_post_types[]"
+                                    <input type="checkbox" name="bt_post_types[]"
                                            value="<?= esc_attr($pt->name) ?>"
                                            <?= in_array($pt->name, $saved) ? 'checked' : '' ?>>
                                     <?= esc_html($pt->label) ?> <code><?= esc_html($pt->name) ?></code>
@@ -120,8 +120,8 @@ class Settings {
 
                 <div id="bt-widget-map-table" style="margin-top:16px">
                     <?php
-                    $map      = get_option('bt_regiondo_widget_map', []);
-                    $products = (new \BT_Regiondo\Api\Regiondo\Client())->get_products('fr-FR');
+                    $map      = get_option('bt_widget_map', []);
+                    $products = (new \BlackTenders\Api\Regiondo\Client())->get_products('fr-FR');
                     foreach ($products as $p):
                         $wid = $map[$p['product_id']] ?? '';
                     ?>
@@ -129,7 +129,7 @@ class Settings {
                         <span style="flex:1; font-weight:500"><?= esc_html($p['name']) ?></span>
                         <code style="color:#999">#<?= $p['product_id'] ?></code>
                         <input type="text"
-                               name="bt_regiondo_widget_map[<?= $p['product_id'] ?>]"
+                               name="bt_widget_map[<?= $p['product_id'] ?>]"
                                value="<?= esc_attr($wid) ?>"
                                placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
                                style="font-family:monospace; font-size:11px; width:320px"
