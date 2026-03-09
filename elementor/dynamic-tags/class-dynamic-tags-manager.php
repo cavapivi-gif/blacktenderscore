@@ -37,7 +37,7 @@ class Dynamic_Tags_Manager {
 
     public function register_group(\Elementor\Core\DynamicTags\Manager $manager): void {
         $manager->register_group('blacktenderscore', [
-            'title' => __('BT Regiondo', 'blacktenderscore'),
+            'title' => __('BlackTenders', 'blacktenderscore'),
         ]);
     }
 
