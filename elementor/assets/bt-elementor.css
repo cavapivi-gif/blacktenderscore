@@ -703,13 +703,21 @@
   opacity: .75;
 }
 
-/* Dot avec icône FA — taille pilotée par le control dot_icon_size (défaut 12px) */
+/* Dot avec icône FA ou image — taille pilotée par le control dot_icon_size (défaut 12px) */
 .bt-itin__dot--icon {
   background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 12px;
+}
+
+.bt-itin__dot-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+  display: block;
 }
 
 /* Ligne méta : heure + durée */
@@ -735,6 +743,17 @@
   border-radius: 8px;
   background: rgba(0, 0, 0, .04);
   font-size: .9em;
+}
+
+/* Layout bloc : chaque info sur sa propre ligne */
+.bt-itin__transport--block {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.bt-itin__transport--block .bt-itin__transport-sep {
+  display: none;
 }
 
 .bt-itin__transport--departure {
