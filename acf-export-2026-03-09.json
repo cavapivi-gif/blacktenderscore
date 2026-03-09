@@ -748,8 +748,155 @@
                         "maxlength": "",
                         "placeholder": "",
                         "parent_repeater": "field_bt_exp_itinerary"
+                    },
+                    {
+                        "key": "field_bt_exp_itin_duration",
+                        "label": "Durée (minutes)",
+                        "name": "step_timethezone",
+                        "aria-label": "",
+                        "type": "number",
+                        "instructions": "Durée de cette étape. Affiché \"(X minutes)\".",
+                        "required": 0,
+                        "conditional_logic": 0,
+                        "wrapper": {
+                            "width": "15",
+                            "class": "",
+                            "id": ""
+                        },
+                        "min": 0,
+                        "max": "",
+                        "step": 1,
+                        "default_value": "",
+                        "placeholder": "30",
+                        "prepend": "",
+                        "append": "min",
+                        "parent_repeater": "field_bt_exp_itinerary"
+                    },
+                    {
+                        "key": "field_bt_exp_itin_icon",
+                        "label": "Icône CSS (optionnel)",
+                        "name": "step_icon",
+                        "aria-label": "",
+                        "type": "text",
+                        "instructions": "Classe Font Awesome ex: fas fa-anchor. Laissez vide → dot par défaut.",
+                        "required": 0,
+                        "conditional_logic": 0,
+                        "wrapper": {
+                            "width": "20",
+                            "class": "",
+                            "id": ""
+                        },
+                        "placeholder": "fas fa-anchor",
+                        "default_value": "",
+                        "maxlength": "",
+                        "prepend": "",
+                        "append": "",
+                        "parent_repeater": "field_bt_exp_itinerary"
+                    },
+                    {
+                        "key": "field_bt_exp_itin_is_return",
+                        "label": "Étape retour",
+                        "name": "step_is_return",
+                        "aria-label": "",
+                        "type": "true_false",
+                        "instructions": "Activer = style visuel \"retour au port\" (couleur différente).",
+                        "required": 0,
+                        "conditional_logic": 0,
+                        "wrapper": {
+                            "width": "15",
+                            "class": "",
+                            "id": ""
+                        },
+                        "message": "Retour au port",
+                        "default_value": 0,
+                        "ui": 1,
+                        "ui_on_text": "Retour",
+                        "ui_off_text": "Aller",
+                        "parent_repeater": "field_bt_exp_itinerary"
                     }
                 ]
+            },
+            {
+                "key": "field_bt_exp_departure_zone",
+                "label": "Zone de départ",
+                "name": "exp_departure_zone",
+                "aria-label": "",
+                "type": "text",
+                "instructions": "Affiché : «Lieu de départ : {valeur}»",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "50",
+                    "class": "",
+                    "id": ""
+                },
+                "placeholder": "Baie de Cannes",
+                "default_value": "",
+                "maxlength": "",
+                "prepend": "",
+                "append": ""
+            },
+            {
+                "key": "field_bt_exp_outboard",
+                "label": "Durée hors-bord (minutes)",
+                "name": "exp_outboard",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "Affiché 2 fois : «Hors-bord (X min)» à l'aller + «Retour Hors-bord (X min)» au retour.",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "50",
+                    "class": "",
+                    "id": ""
+                },
+                "min": 0,
+                "max": "",
+                "step": 1,
+                "default_value": "",
+                "placeholder": "30",
+                "prepend": "",
+                "append": "min"
+            },
+            {
+                "key": "field_bt_exp_returning_zone",
+                "label": "Zone d'arrivée finale",
+                "name": "exp_returning_zone",
+                "aria-label": "",
+                "type": "text",
+                "instructions": "Affiché : «Arrivée à : {valeur}»",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "50",
+                    "class": "",
+                    "id": ""
+                },
+                "placeholder": "LEO BOAT — Cannes",
+                "default_value": "",
+                "maxlength": "",
+                "prepend": "",
+                "append": ""
+            },
+            {
+                "key": "field_bt_exp_returning_description",
+                "label": "Description arrivée (optionnel)",
+                "name": "exp_returning_description",
+                "aria-label": "",
+                "type": "textarea",
+                "instructions": "Texte optionnel affiché sous la zone d'arrivée.",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "50",
+                    "class": "",
+                    "id": ""
+                },
+                "rows": 2,
+                "default_value": "",
+                "new_lines": "",
+                "maxlength": "",
+                "placeholder": ""
             },
             {
                 "key": "field_bt_exp_tab_relations",
