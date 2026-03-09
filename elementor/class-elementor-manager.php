@@ -13,6 +13,7 @@ use BlackTenders\Elementor\Widgets\DepartureTimes;
 use BlackTenders\Elementor\Widgets\Reviews;
 use BlackTenders\Elementor\Widgets\Gallery;
 use BlackTenders\Elementor\Widgets\ExcursionSchema;
+use BlackTenders\Elementor\Widgets\RepeaterSection;
 
 defined('ABSPATH') || exit;
 
@@ -78,6 +79,7 @@ class ElementorManager {
         $manager->register(new Reviews());
         $manager->register(new Gallery());
         $manager->register(new ExcursionSchema());
+        $manager->register(new RepeaterSection());
         // ── Relations excursion <-> bateau ────────────────────────────────
         $manager->register(new RelatedBoats());
         $manager->register(new RelatedExcursions());
