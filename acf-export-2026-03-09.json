@@ -1,0 +1,1093 @@
+[
+    {
+        "key": "group_bt_experience_details",
+        "title": "Expérience — Détails",
+        "fields": [
+            {
+                "key": "field_bt_exp_tab_identity",
+                "label": "Identité",
+                "name": "",
+                "aria-label": "",
+                "type": "tab",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": false,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "placement": "top",
+                "endpoint": 0,
+                "selected": 0
+            },
+            {
+                "key": "field_69ad438567b41",
+                "label": "Forte demande ?",
+                "name": "best_seller",
+                "aria-label": "",
+                "type": "true_false",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "message": "",
+                "default_value": 0,
+                "allow_in_bindings": 1,
+                "ui_on_text": "Yes",
+                "ui_off_text": "No",
+                "ui": 1
+            },
+            {
+                "key": "field_bt_exp_tagline",
+                "label": "Accroche courte",
+                "name": "exp_tagline",
+                "aria-label": "",
+                "type": "text",
+                "instructions": "Ex: Explorez les calanques de l'Estérel en 3h",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "default_value": "",
+                "maxlength": 120,
+                "placeholder": "",
+                "prepend": "",
+                "append": ""
+            },
+            {
+                "key": "field_bt_exp_description",
+                "label": "Description",
+                "name": "exp_description",
+                "aria-label": "",
+                "type": "wysiwyg",
+                "instructions": "Description complète de l'expérience",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "default_value": "",
+                "tabs": "all",
+                "toolbar": "full",
+                "media_upload": 1,
+                "delay": 0
+            },
+            {
+                "key": "field_bt_exp_cover",
+                "label": "Photo principale",
+                "name": "exp_cover",
+                "aria-label": "",
+                "type": "image",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "50",
+                    "class": "",
+                    "id": ""
+                },
+                "return_format": "array",
+                "library": "all",
+                "min_width": "",
+                "min_height": "",
+                "min_size": "",
+                "max_width": "",
+                "max_height": "",
+                "max_size": "",
+                "mime_types": "",
+                "preview_size": "medium"
+            },
+            {
+                "key": "field_bt_exp_gallery",
+                "label": "Galerie photos",
+                "name": "exp_gallery",
+                "aria-label": "",
+                "type": "gallery",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "50",
+                    "class": "",
+                    "id": ""
+                },
+                "return_format": "array",
+                "library": "all",
+                "min": "",
+                "max": "",
+                "mime_types": "",
+                "insert": "append",
+                "preview_size": "medium",
+                "min_width": 0,
+                "min_height": 0,
+                "min_size": 0,
+                "max_width": 0,
+                "max_height": 0,
+                "max_size": 0
+            },
+            {
+                "key": "field_bt_exp_tab_logistics",
+                "label": "Logistique",
+                "name": "",
+                "aria-label": "",
+                "type": "tab",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": false,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "placement": "top",
+                "endpoint": 0,
+                "selected": 0
+            },
+            {
+                "key": "field_bt_exp_departure_point",
+                "label": "Point de départ \/ arrivé",
+                "name": "exp_departure_point",
+                "aria-label": "",
+                "type": "taxonomy",
+                "instructions": "Ex: Port de la Napoule, Quai B",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "50",
+                    "class": "",
+                    "id": ""
+                },
+                "taxonomy": "city",
+                "add_term": 1,
+                "save_terms": 0,
+                "load_terms": 0,
+                "return_format": "id",
+                "field_type": "checkbox",
+                "allow_in_bindings": 0,
+                "bidirectional": 0,
+                "multiple": 0,
+                "allow_null": 0,
+                "bidirectional_target": []
+            },
+            {
+                "key": "field_bt_exp_departure_coords",
+                "label": "Coordonnées GPS départ (port)",
+                "name": "exp_departure_coords",
+                "aria-label": "",
+                "type": "text",
+                "instructions": "Ex: 43.5125, 6.9487",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "25",
+                    "class": "",
+                    "id": ""
+                },
+                "default_value": "",
+                "maxlength": "",
+                "allow_in_bindings": 1,
+                "placeholder": "43.5125, 6.9487",
+                "prepend": "",
+                "append": ""
+            },
+            {
+                "key": "field_bt_exp_departure_times",
+                "label": "Horaires de départ",
+                "name": "exp_departure_times",
+                "aria-label": "",
+                "type": "repeater",
+                "instructions": "Ajouter chaque horaire disponible",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "layout": "table",
+                "button_label": "Ajouter un horaire",
+                "min": 0,
+                "max": 0,
+                "rows_per_page": 20,
+                "collapsed": "",
+                "sub_fields": [
+                    {
+                        "key": "field_bt_exp_dep_time",
+                        "label": "Heure",
+                        "name": "time",
+                        "aria-label": "",
+                        "type": "text",
+                        "instructions": "",
+                        "required": false,
+                        "conditional_logic": false,
+                        "wrapper": {
+                            "width": "",
+                            "class": "",
+                            "id": ""
+                        },
+                        "placeholder": "09:00",
+                        "default_value": "",
+                        "maxlength": "",
+                        "prepend": "",
+                        "append": "",
+                        "parent_repeater": "field_bt_exp_departure_times"
+                    },
+                    {
+                        "key": "field_bt_exp_dep_season",
+                        "label": "Saison",
+                        "name": "season",
+                        "aria-label": "",
+                        "type": "select",
+                        "instructions": "",
+                        "required": false,
+                        "conditional_logic": false,
+                        "wrapper": {
+                            "width": "",
+                            "class": "",
+                            "id": ""
+                        },
+                        "choices": {
+                            "all": "Toute l'année",
+                            "summer": "Été (juin–sept)",
+                            "offseason": "Hors saison"
+                        },
+                        "default_value": "all",
+                        "return_format": "value",
+                        "allow_null": 0,
+                        "multiple": 0,
+                        "ui": 0,
+                        "ajax": 0,
+                        "placeholder": "",
+                        "create_options": 0,
+                        "save_options": 0,
+                        "parent_repeater": "field_bt_exp_departure_times"
+                    }
+                ]
+            },
+            {
+                "key": "field_bt_exp_pax_min",
+                "label": "Participants minimum",
+                "name": "exp_pax_min",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "Nombre minimum pour confirmer la sortie",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "33",
+                    "class": "",
+                    "id": ""
+                },
+                "default_value": 1,
+                "min": 1,
+                "max": 100,
+                "step": 1,
+                "placeholder": "",
+                "prepend": "",
+                "append": "pax"
+            },
+            {
+                "key": "field_bt_exp_pax_max",
+                "label": "Participants maximum",
+                "name": "exp_pax_max",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "33",
+                    "class": "",
+                    "id": ""
+                },
+                "default_value": "",
+                "min": 1,
+                "max": 200,
+                "step": 1,
+                "placeholder": "",
+                "prepend": "",
+                "append": "pax"
+            },
+            {
+                "key": "field_bt_exp_languages",
+                "label": "Langues parlées",
+                "name": "exp_languages",
+                "aria-label": "",
+                "type": "checkbox",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "33",
+                    "class": "",
+                    "id": ""
+                },
+                "choices": {
+                    "fr": "Français",
+                    "en": "English",
+                    "it": "Italiano"
+                },
+                "default_value": [
+                    "fr"
+                ],
+                "return_format": "value",
+                "layout": "horizontal",
+                "toggle": 0,
+                "allow_custom": 0,
+                "save_custom": 0,
+                "custom_choice_button_text": "Add new choice"
+            },
+            {
+                "key": "field_bt_exp_tab_pricing",
+                "label": "Tarification",
+                "name": "",
+                "aria-label": "",
+                "type": "tab",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": false,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "placement": "top",
+                "endpoint": 0,
+                "selected": 0
+            },
+            {
+                "key": "field_69aeae540b1b3",
+                "label": "Prix à partir de (par pers.)",
+                "name": "exp_price_per_person",
+                "aria-label": "",
+                "type": "text",
+                "instructions": "Mettre un chiffre entiers, sans virgule ni symbole (€ \/ $).",
+                "required": 1,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "15",
+                    "class": "",
+                    "id": ""
+                },
+                "default_value": "",
+                "maxlength": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "prepend": "",
+                "append": "€ par personne"
+            },
+            {
+                "key": "field_69ac75e91c7d3",
+                "label": "Tarification par forfait",
+                "name": "tarification_par_forfait",
+                "aria-label": "",
+                "type": "repeater",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "layout": "table",
+                "pagination": 0,
+                "min": 0,
+                "max": 0,
+                "collapsed": "",
+                "button_label": "Add Row",
+                "rows_per_page": 20,
+                "sub_fields": [
+                    {
+                        "key": "field_bt_exp_price_adult",
+                        "label": "Prix excursion par pers.",
+                        "name": "exp_price",
+                        "aria-label": "",
+                        "type": "number",
+                        "instructions": "Prix exact affiché sur la fiche",
+                        "required": 0,
+                        "conditional_logic": 0,
+                        "wrapper": {
+                            "width": "25",
+                            "class": "",
+                            "id": ""
+                        },
+                        "default_value": "",
+                        "min": 0,
+                        "max": "",
+                        "allow_in_bindings": 1,
+                        "placeholder": "",
+                        "step": 1,
+                        "prepend": "",
+                        "append": "€",
+                        "parent_repeater": "field_69ac75e91c7d3"
+                    },
+                    {
+                        "key": "field_69ac76361c7d4",
+                        "label": "Durée de l'excursion",
+                        "name": "exp_time",
+                        "aria-label": "",
+                        "type": "text",
+                        "instructions": "",
+                        "required": 0,
+                        "conditional_logic": 0,
+                        "wrapper": {
+                            "width": "25",
+                            "class": "",
+                            "id": ""
+                        },
+                        "default_value": "",
+                        "maxlength": "",
+                        "allow_in_bindings": 0,
+                        "placeholder": "",
+                        "prepend": "",
+                        "append": "",
+                        "parent_repeater": "field_69ac75e91c7d3"
+                    },
+                    {
+                        "key": "field_bt_exp_pricing_note",
+                        "label": "Note tarifaire",
+                        "name": "exp_pricing_note",
+                        "aria-label": "",
+                        "type": "text",
+                        "instructions": "",
+                        "required": 0,
+                        "conditional_logic": 0,
+                        "wrapper": {
+                            "width": "",
+                            "class": "",
+                            "id": ""
+                        },
+                        "default_value": "",
+                        "maxlength": "",
+                        "allow_in_bindings": 1,
+                        "placeholder": "",
+                        "prepend": "",
+                        "append": "",
+                        "parent_repeater": "field_69ac75e91c7d3"
+                    },
+                    {
+                        "key": "field_bt_exp_deposit",
+                        "label": "Acompte (€)",
+                        "name": "exp_deposit",
+                        "aria-label": "",
+                        "type": "number",
+                        "instructions": "",
+                        "required": 0,
+                        "conditional_logic": 0,
+                        "wrapper": {
+                            "width": "25",
+                            "class": "",
+                            "id": ""
+                        },
+                        "default_value": "",
+                        "min": 0,
+                        "step": 1,
+                        "placeholder": "",
+                        "prepend": "",
+                        "append": "€",
+                        "max": "",
+                        "parent_repeater": "field_69ac75e91c7d3"
+                    }
+                ]
+            },
+            {
+                "key": "field_bt_exp_tab_content",
+                "label": "Contenu & Inclus",
+                "name": "",
+                "aria-label": "",
+                "type": "tab",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": false,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "placement": "top",
+                "endpoint": 0,
+                "selected": 0
+            },
+            {
+                "key": "field_bt_exp_included",
+                "label": "Ce qui est inclus",
+                "name": "exp_included",
+                "aria-label": "",
+                "type": "taxonomy",
+                "instructions": "Liste de ce qui est fourni : équipement, boissons, skipper…",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "33",
+                    "class": "",
+                    "id": ""
+                },
+                "taxonomy": "exp-whats-included",
+                "add_term": 1,
+                "save_terms": 0,
+                "load_terms": 0,
+                "return_format": "id",
+                "field_type": "checkbox",
+                "allow_in_bindings": 0,
+                "bidirectional": 0,
+                "multiple": 0,
+                "allow_null": 0,
+                "bidirectional_target": []
+            },
+            {
+                "key": "field_69ad74e337bb2",
+                "label": "Skipper",
+                "name": "exp_skipper",
+                "aria-label": "",
+                "type": "taxonomy",
+                "instructions": "Liste de ce qui est fourni : équipement, boissons, skipper…",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "33",
+                    "class": "",
+                    "id": ""
+                },
+                "taxonomy": "boat_skipper",
+                "add_term": 1,
+                "save_terms": 0,
+                "load_terms": 0,
+                "return_format": "id",
+                "field_type": "checkbox",
+                "allow_in_bindings": 0,
+                "bidirectional": 0,
+                "multiple": 0,
+                "allow_null": 0,
+                "bidirectional_target": []
+            },
+            {
+                "key": "field_bt_exp_to_bring",
+                "label": "Ce qui est exclus",
+                "name": "exp_to_excluded",
+                "aria-label": "",
+                "type": "taxonomy",
+                "instructions": "Ce que le client doit apporter",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "33",
+                    "class": "",
+                    "id": ""
+                },
+                "taxonomy": "whats-excluded",
+                "add_term": 1,
+                "save_terms": 1,
+                "load_terms": 0,
+                "return_format": "id",
+                "field_type": "checkbox",
+                "allow_in_bindings": 0,
+                "bidirectional": 0,
+                "multiple": 0,
+                "allow_null": 0,
+                "bidirectional_target": []
+            },
+            {
+                "key": "field_69ac6fc043735",
+                "label": "A apporter",
+                "name": "exp_to_bring",
+                "aria-label": "",
+                "type": "taxonomy",
+                "instructions": "Ce que le client doit apporter",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "33",
+                    "class": "",
+                    "id": ""
+                },
+                "taxonomy": "exp-material-to-bring",
+                "add_term": 1,
+                "save_terms": 1,
+                "load_terms": 0,
+                "return_format": "id",
+                "field_type": "checkbox",
+                "allow_in_bindings": 0,
+                "bidirectional": 0,
+                "multiple": 0,
+                "allow_null": 0,
+                "bidirectional_target": []
+            },
+            {
+                "key": "field_69ac73f04a902",
+                "label": "Informations supplémentaires",
+                "name": "exp_complementary_informations",
+                "aria-label": "",
+                "type": "wysiwyg",
+                "instructions": "Ce que le client doit apporter",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "50",
+                    "class": "",
+                    "id": ""
+                },
+                "default_value": "",
+                "allow_in_bindings": 0,
+                "tabs": "all",
+                "toolbar": "full",
+                "media_upload": 1,
+                "delay": 0
+            },
+            {
+                "key": "field_69ac741e4a903",
+                "label": "Conseils et conditions",
+                "name": "exp_advices_conditions",
+                "aria-label": "",
+                "type": "wysiwyg",
+                "instructions": "Ce que le client doit apporter",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "50",
+                    "class": "",
+                    "id": ""
+                },
+                "default_value": "",
+                "allow_in_bindings": 0,
+                "tabs": "all",
+                "toolbar": "full",
+                "media_upload": 1,
+                "delay": 0
+            },
+            {
+                "key": "field_bt_exp_itinerary",
+                "label": "Programme \/ Itinéraire",
+                "name": "exp_itinerary",
+                "aria-label": "",
+                "type": "repeater",
+                "instructions": "Déroulé de l'excursion étape par étape",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "layout": "block",
+                "button_label": "Ajouter une étape",
+                "min": 0,
+                "max": 0,
+                "rows_per_page": 20,
+                "collapsed": "",
+                "sub_fields": [
+                    {
+                        "key": "field_bt_exp_itin_time",
+                        "label": "Heure \/ Moment",
+                        "name": "step_time",
+                        "aria-label": "",
+                        "type": "text",
+                        "instructions": "",
+                        "required": false,
+                        "conditional_logic": false,
+                        "wrapper": {
+                            "width": "20",
+                            "class": "",
+                            "id": ""
+                        },
+                        "placeholder": "09:00",
+                        "default_value": "",
+                        "maxlength": "",
+                        "prepend": "",
+                        "append": "",
+                        "parent_repeater": "field_bt_exp_itinerary"
+                    },
+                    {
+                        "key": "field_bt_exp_itin_title",
+                        "label": "Titre étape",
+                        "name": "step_title",
+                        "aria-label": "",
+                        "type": "text",
+                        "instructions": "",
+                        "required": false,
+                        "conditional_logic": false,
+                        "wrapper": {
+                            "width": "30",
+                            "class": "",
+                            "id": ""
+                        },
+                        "placeholder": "Départ du port",
+                        "default_value": "",
+                        "maxlength": "",
+                        "prepend": "",
+                        "append": "",
+                        "parent_repeater": "field_bt_exp_itinerary"
+                    },
+                    {
+                        "key": "field_bt_exp_itin_desc",
+                        "label": "Description",
+                        "name": "step_desc",
+                        "aria-label": "",
+                        "type": "textarea",
+                        "instructions": "",
+                        "required": false,
+                        "conditional_logic": false,
+                        "wrapper": {
+                            "width": "50",
+                            "class": "",
+                            "id": ""
+                        },
+                        "rows": 2,
+                        "default_value": "",
+                        "new_lines": "",
+                        "maxlength": "",
+                        "placeholder": "",
+                        "parent_repeater": "field_bt_exp_itinerary"
+                    }
+                ]
+            },
+            {
+                "key": "field_bt_exp_tab_relations",
+                "label": "Relations",
+                "name": "",
+                "aria-label": "",
+                "type": "tab",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": false,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "placement": "top",
+                "endpoint": 0,
+                "selected": 0
+            },
+            {
+                "key": "field_bt_exp_boats",
+                "label": "Bateau(x) utilisé(s)",
+                "name": "exp_boats",
+                "aria-label": "",
+                "type": "relationship",
+                "instructions": "Lier un ou plusieurs bateaux à cette expérience",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "50",
+                    "class": "",
+                    "id": ""
+                },
+                "post_type": [
+                    "boat"
+                ],
+                "taxonomy": [],
+                "filters": [
+                    "search"
+                ],
+                "return_format": "object",
+                "min": 0,
+                "max": 0,
+                "elements": [
+                    "featured_image"
+                ],
+                "bidirectional_target": []
+            },
+            {
+                "key": "field_bt_exp_destinations_rel",
+                "label": "Destination et départ",
+                "name": "exp_destinations",
+                "aria-label": "",
+                "type": "taxonomy",
+                "instructions": "Lier aux pages destination (post type destination)",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "50",
+                    "class": "",
+                    "id": ""
+                },
+                "taxonomy": "city",
+                "add_term": 1,
+                "save_terms": 0,
+                "load_terms": 0,
+                "return_format": "id",
+                "field_type": "checkbox",
+                "allow_in_bindings": 0,
+                "bidirectional": 0,
+                "multiple": 0,
+                "allow_null": 0,
+                "bidirectional_target": []
+            },
+            {
+                "key": "field_bt_exp_tab_seo",
+                "label": "SEO & Conversion",
+                "name": "",
+                "aria-label": "",
+                "type": "tab",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": false,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "placement": "top",
+                "endpoint": 0,
+                "selected": 0
+            },
+            {
+                "key": "field_bt_exp_faq",
+                "label": "FAQ (Schema FAQPage)",
+                "name": "exp_faq",
+                "aria-label": "",
+                "type": "repeater",
+                "instructions": "Questions fréquentes — utilisées pour le Schema.org FAQPage",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "layout": "block",
+                "button_label": "Ajouter une question",
+                "min": 0,
+                "max": 0,
+                "rows_per_page": 20,
+                "collapsed": "",
+                "sub_fields": [
+                    {
+                        "key": "field_bt_exp_faq_q",
+                        "label": "Question",
+                        "name": "faq_question",
+                        "aria-label": "",
+                        "type": "text",
+                        "instructions": "",
+                        "required": false,
+                        "conditional_logic": false,
+                        "wrapper": {
+                            "width": "40",
+                            "class": "",
+                            "id": ""
+                        },
+                        "default_value": "",
+                        "maxlength": "",
+                        "placeholder": "",
+                        "prepend": "",
+                        "append": "",
+                        "parent_repeater": "field_bt_exp_faq"
+                    },
+                    {
+                        "key": "field_bt_exp_faq_a",
+                        "label": "Réponse",
+                        "name": "faq_answer",
+                        "aria-label": "",
+                        "type": "textarea",
+                        "instructions": "",
+                        "required": false,
+                        "conditional_logic": false,
+                        "wrapper": {
+                            "width": "60",
+                            "class": "",
+                            "id": ""
+                        },
+                        "rows": 3,
+                        "default_value": "",
+                        "new_lines": "",
+                        "maxlength": "",
+                        "placeholder": "",
+                        "parent_repeater": "field_bt_exp_faq"
+                    }
+                ]
+            },
+            {
+                "key": "field_69ac6ddaf1af2",
+                "label": "FAQ (Schema FAQPage) (RelationPage)",
+                "name": "exp_faq",
+                "aria-label": "",
+                "type": "relationship",
+                "instructions": "Questions fréquentes — utilisées pour le Schema.org FAQPage",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "post_type": [
+                    "faq"
+                ],
+                "post_status": [
+                    "publish"
+                ],
+                "taxonomy": "",
+                "filters": [
+                    "search",
+                    "post_type",
+                    "taxonomy"
+                ],
+                "return_format": "object",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "elements": "",
+                "bidirectional": 0,
+                "bidirectional_target": []
+            },
+            {
+                "key": "field_bt_exp_reviews",
+                "label": "Avis mis en avant",
+                "name": "exp_reviews_highlight",
+                "aria-label": "",
+                "type": "repeater",
+                "instructions": "Avis clients à afficher sur la page",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "layout": "table",
+                "button_label": "Ajouter un avis",
+                "min": 0,
+                "max": 5,
+                "rows_per_page": 20,
+                "collapsed": "",
+                "sub_fields": [
+                    {
+                        "key": "field_bt_exp_rev_name",
+                        "label": "Prénom",
+                        "name": "rev_name",
+                        "aria-label": "",
+                        "type": "text",
+                        "instructions": "",
+                        "required": false,
+                        "conditional_logic": false,
+                        "wrapper": {
+                            "width": "20",
+                            "class": "",
+                            "id": ""
+                        },
+                        "default_value": "",
+                        "maxlength": "",
+                        "placeholder": "",
+                        "prepend": "",
+                        "append": "",
+                        "parent_repeater": "field_bt_exp_reviews"
+                    },
+                    {
+                        "key": "field_bt_exp_rev_rating",
+                        "label": "Note \/5",
+                        "name": "rev_rating",
+                        "aria-label": "",
+                        "type": "number",
+                        "instructions": "",
+                        "required": false,
+                        "conditional_logic": false,
+                        "wrapper": {
+                            "width": "15",
+                            "class": "",
+                            "id": ""
+                        },
+                        "min": 1,
+                        "max": 5,
+                        "step": 1,
+                        "default_value": "",
+                        "placeholder": "",
+                        "prepend": "",
+                        "append": "",
+                        "parent_repeater": "field_bt_exp_reviews"
+                    },
+                    {
+                        "key": "field_bt_exp_rev_text",
+                        "label": "Texte",
+                        "name": "rev_text",
+                        "aria-label": "",
+                        "type": "textarea",
+                        "instructions": "",
+                        "required": false,
+                        "conditional_logic": false,
+                        "wrapper": {
+                            "width": "65",
+                            "class": "",
+                            "id": ""
+                        },
+                        "rows": 2,
+                        "default_value": "",
+                        "new_lines": "",
+                        "maxlength": "",
+                        "placeholder": "",
+                        "parent_repeater": "field_bt_exp_reviews"
+                    }
+                ]
+            },
+            {
+                "key": "field_bt_exp_booking_url",
+                "label": "UUID Système de réservation Forfait Trajet court",
+                "name": "exp_booking_short_url",
+                "aria-label": "",
+                "type": "text",
+                "instructions": "Lien vers Fareharbor, Checkfront ou autre",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "default_value": "",
+                "maxlength": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "prepend": "",
+                "append": ""
+            },
+            {
+                "key": "field_69ac6dc6f1af1",
+                "label": "UUID Système de réservation Forfait Trajet Long",
+                "name": "exp_booking_long_url",
+                "aria-label": "",
+                "type": "text",
+                "instructions": "Lien vers Fareharbor, Checkfront ou autre",
+                "required": false,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "default_value": "",
+                "maxlength": "",
+                "placeholder": "",
+                "prepend": "",
+                "append": ""
+            }
+        ],
+        "location": [
+            [
+                {
+                    "param": "post_type",
+                    "operator": "==",
+                    "value": "excursion"
+                }
+            ]
+        ],
+        "menu_order": 0,
+        "position": "normal",
+        "style": "default",
+        "label_placement": "top",
+        "instruction_placement": "label",
+        "hide_on_screen": "",
+        "active": true,
+        "description": "",
+        "show_in_rest": 1
+    }
+]
