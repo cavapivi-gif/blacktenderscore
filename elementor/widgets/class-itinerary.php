@@ -234,11 +234,30 @@ class Itinerary extends \Elementor\Widget_Base {
             'label'     => __('Position de la carte', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::SELECT,
             'options'   => [
-                'below' => __('Sous la timeline', 'blacktenderscore'),
-                'above' => __('Au-dessus de la timeline', 'blacktenderscore'),
+                'below'      => __('Sous la timeline', 'blacktenderscore'),
+                'above'      => __('Au-dessus de la timeline', 'blacktenderscore'),
+                'side-right' => __('À droite (50/50)', 'blacktenderscore'),
+                'side-left'  => __('À gauche (50/50)', 'blacktenderscore'),
             ],
             'default'   => 'below',
             'condition' => ['show_map' => 'yes'],
+        ]);
+
+        $this->add_responsive_control('map_col_ratio', [
+            'label'       => __('Largeur carte (%)', 'blacktenderscore'),
+            'description' => __('Uniquement en mode côte-à-côte. Sur mobile → pleine largeur.', 'blacktenderscore'),
+            'type'        => \Elementor\Controls_Manager::SLIDER,
+            'size_units'  => ['%'],
+            'range'       => ['%' => ['min' => 25, 'max' => 75]],
+            'default'     => ['size' => 50, 'unit' => '%'],
+            'selectors'   => [
+                '{{WRAPPER}} .bt-itin__layout--side' =>
+                    '--bt-itin-map-col: {{SIZE}}{{UNIT}}',
+            ],
+            'condition' => [
+                'show_map'     => 'yes',
+                'map_position' => ['side-right', 'side-left'],
+            ],
         ]);
 
         $this->add_responsive_control('map_height', [
@@ -249,6 +268,21 @@ class Itinerary extends \Elementor\Widget_Base {
             'default'    => ['size' => 400, 'unit' => 'px'],
             'selectors'  => ['{{WRAPPER}} .bt-itin__map' => 'height: {{SIZE}}{{UNIT}}'],
             'condition'  => ['show_map' => 'yes'],
+        ]);
+
+        $this->add_responsive_control('map_gap', [
+            'label'      => __('Espace timeline ↔ carte', 'blacktenderscore'),
+            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'size_units' => ['px', 'em'],
+            'range'      => ['px' => ['min' => 0, 'max' => 60]],
+            'default'    => ['size' => 24, 'unit' => 'px'],
+            'selectors'  => [
+                '{{WRAPPER}} .bt-itin__layout--side' => 'gap: {{SIZE}}{{UNIT}}',
+            ],
+            'condition' => [
+                'show_map'     => 'yes',
+                'map_position' => ['side-right', 'side-left'],
+            ],
         ]);
 
         $this->add_control('map_show_path', [
@@ -718,18 +752,30 @@ class Itinerary extends \Elementor\Widget_Base {
         $returning_zone = $show_transport ? (string) get_field('exp_returning_zone',       $post_id) : '';
         $returning_desc = $show_transport ? (string) get_field('exp_returning_description', $post_id) : '';
 
+        $is_side = str_starts_with($map_position, 'side-');
+
         echo '<div class="bt-itin' . esc_attr($connector_cls) . '">';
 
         if (!empty($s['section_title'])) {
             echo "<{$tag} class=\"bt-itin__title\">" . esc_html($s['section_title']) . "</{$tag}>";
         }
 
-        // Carte au-dessus (optionnel)
+        // Carte au-dessus (stacked)
         if ($show_map && $map_position === 'above') {
             $this->render_map($rows, $departure_zone, $returning_zone, $s, $post_id);
         }
 
-        // ── Timeline unifiée ──────────────────────────────────────────────────
+        // Layout côte-à-côte : wrapper grid
+        if ($show_map && $is_side) {
+            $side_cls = $map_position === 'side-left' ? ' bt-itin__layout--map-left' : '';
+            echo '<div class="bt-itin__layout bt-itin__layout--side' . esc_attr($side_cls) . '">';
+        }
+
+        // ── Colonne timeline ──────────────────────────────────────────────────
+        if ($show_map && $is_side) {
+            echo '<div class="bt-itin__col-timeline">';
+        }
+
         echo '<ol class="bt-itin__list">';
 
         // [1] Zone de départ
@@ -828,12 +874,28 @@ class Itinerary extends \Elementor\Widget_Base {
 
         echo '</ol>';
 
-        // Carte en dessous (défaut)
-        if ($show_map && $map_position === 'below') {
-            $this->render_map($rows, $departure_zone, $returning_zone, $s, $post_id);
+        // Ferme la colonne timeline (mode side)
+        if ($show_map && $is_side) {
+            echo '</div>'; // .bt-itin__col-timeline
         }
 
-        echo '</div>';
+        // Carte côte-à-côte ou en dessous
+        if ($show_map && ($is_side || $map_position === 'below')) {
+            if ($show_map && $is_side) {
+                echo '<div class="bt-itin__col-map">';
+            }
+            $this->render_map($rows, $departure_zone, $returning_zone, $s, $post_id);
+            if ($show_map && $is_side) {
+                echo '</div>'; // .bt-itin__col-map
+            }
+        }
+
+        // Ferme le layout grid (mode side)
+        if ($show_map && $is_side) {
+            echo '</div>'; // .bt-itin__layout
+        }
+
+        echo '</div>'; // .bt-itin
     }
 
     // ── Helpers privés ────────────────────────────────────────────────────────

@@ -792,6 +792,53 @@
   margin-bottom: 2px;
 }
 
+/* ── Layout côte-à-côte (timeline | carte) ────────────────── */
+.bt-itin__layout--side {
+  display: grid;
+  grid-template-columns: 1fr var(--bt-itin-map-col, 50%);
+  gap: 24px; /* override par Elementor map_gap */
+  align-items: start;
+}
+
+/* Carte à gauche → on inverse l'ordre des colonnes */
+.bt-itin__layout--side.bt-itin__layout--map-left {
+  grid-template-columns: var(--bt-itin-map-col, 50%) 1fr;
+}
+
+/* La colonne timeline doit dépasser la carte ? non, scroll natif. */
+.bt-itin__col-timeline {
+  min-width: 0; /* évite overflow flex/grid */
+}
+
+/* Map sticky en mode side → suit le scroll */
+.bt-itin__col-map {
+  position: sticky;
+  top: 24px;
+  min-width: 0;
+}
+
+/* En mode side, la map prend 100% de sa colonne */
+.bt-itin__layout--side .bt-itin__map {
+  height: 100%;
+  min-height: 300px;
+}
+
+/* ── Responsive : mobile = stacked ────────────────────────── */
+@media (max-width: 767px) {
+  .bt-itin__layout--side {
+    grid-template-columns: 1fr !important;
+  }
+
+  .bt-itin__col-map {
+    position: static;
+  }
+
+  /* Carte à gauche : en mobile, on remet timeline en premier */
+  .bt-itin__layout--map-left .bt-itin__col-timeline {
+    order: -1;
+  }
+}
+
 /* ── Carte Leaflet ────────────────────────────────────────── */
 .bt-itin__map-wrap {
   position: relative;
