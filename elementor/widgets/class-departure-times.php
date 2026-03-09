@@ -150,9 +150,26 @@ class DepartureTimes extends \Elementor\Widget_Base {
 
         $this->add_control('departure_icon', [
             'label'     => __('Icône départ', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
-            'default'   => '📍',
+            'type'      => \Elementor\Controls_Manager::ICONS,
+            'default'   => ['value' => 'fas fa-map-marker-alt', 'library' => 'fa-solid'],
             'condition' => ['show_departure_point' => 'yes'],
+        ]);
+
+        $this->add_responsive_control('departure_icon_size', [
+            'label'      => __('Taille icône', 'blacktenderscore'),
+            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'size_units' => ['px', 'em'],
+            'range'      => ['px' => ['min' => 10, 'max' => 40]],
+            'default'    => ['size' => 16, 'unit' => 'px'],
+            'selectors'  => ['{{WRAPPER}} .bt-deptimes__departure-icon' => 'font-size: {{SIZE}}{{UNIT}}'],
+            'condition'  => ['show_departure_point' => 'yes'],
+        ]);
+
+        $this->add_control('departure_icon_color', [
+            'label'      => __('Couleur icône', 'blacktenderscore'),
+            'type'       => \Elementor\Controls_Manager::COLOR,
+            'selectors'  => ['{{WRAPPER}} .bt-deptimes__departure-icon' => 'color: {{VALUE}}'],
+            'condition'  => ['show_departure_point' => 'yes'],
         ]);
 
         $this->add_control('show_map_link', [
@@ -349,9 +366,16 @@ class DepartureTimes extends \Elementor\Widget_Base {
 
         // Point de départ
         if ($has_depart) {
-            $icon = esc_html($s['departure_icon'] ?: '📍');
             echo '<div class="bt-deptimes__departure-info">';
-            echo '<span class="bt-deptimes__point">' . $icon . ' ' . esc_html($departure_name) . '</span>';
+
+            $icon_html = '';
+            if (!empty($s['departure_icon']['value'])) {
+                ob_start();
+                \Elementor\Icons_Manager::render_icon($s['departure_icon'], ['aria-hidden' => 'true', 'class' => 'bt-deptimes__departure-icon']);
+                $icon_html = ob_get_clean();
+            }
+
+            echo '<span class="bt-deptimes__point">' . $icon_html . ' ' . esc_html($departure_name) . '</span>';
 
             if ($s['show_map_link'] === 'yes' && $departure_coords) {
                 // Convertir "43.5125, 6.9487" en lien Google Maps

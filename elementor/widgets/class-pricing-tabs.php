@@ -20,6 +20,9 @@ class PricingTabs extends \Elementor\Widget_Base {
     public function get_keywords():   array  { return ['tarif', 'prix', 'forfait', 'réservation', 'booking', 'bt']; }
     public function get_script_depends(): array { return ['bt-elementor']; }
 
+    /** Évite d'injecter le script Regiondo plusieurs fois sur la même page. */
+    private static bool $regiondo_script_printed = false;
+
     // ── Controls ─────────────────────────────────────────────────────────────
 
     protected function register_controls(): void {
@@ -51,6 +54,19 @@ class PricingTabs extends \Elementor\Widget_Base {
             'type'         => \Elementor\Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
+        ]);
+
+        $this->add_control('per_label', [
+            'label'   => __('Libellé "par pers."', 'blacktenderscore'),
+            'type'    => \Elementor\Controls_Manager::TEXT,
+            'default' => __('/ pers.', 'blacktenderscore'),
+        ]);
+
+        $this->add_control('deposit_label', [
+            'label'     => __('Libellé "Acompte"', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::TEXT,
+            'default'   => __('Acompte :', 'blacktenderscore'),
+            'condition' => ['show_deposit' => 'yes'],
         ]);
 
         $this->end_controls_section();
@@ -254,13 +270,15 @@ class PricingTabs extends \Elementor\Widget_Base {
                     echo '<span class="bt-pricing__note">' . esc_html($note) . ' </span>';
                 }
                 echo '<span class="bt-pricing__price">' . esc_html(number_format((float) $price, 0, ',', ' ')) . ' €</span>';
-                echo '<span class="bt-pricing__per"> / pers.</span>';
+                $per_lbl = esc_html($s['per_label'] ?: __('/ pers.', 'blacktenderscore'));
+                echo '<span class="bt-pricing__per"> ' . $per_lbl . '</span>';
                 echo '</div>';
             }
 
             // Acompte
             if ($deposit && $s['show_deposit'] === 'yes') {
-                echo '<p class="bt-pricing__deposit">Acompte : <strong>' . esc_html($deposit) . ' €</strong></p>';
+                $dep_lbl = esc_html($s['deposit_label'] ?: __('Acompte :', 'blacktenderscore'));
+                echo '<p class="bt-pricing__deposit">' . $dep_lbl . ' <strong>' . esc_html($deposit) . ' €</strong></p>';
             }
 
             // Booking widget Regiondo
@@ -279,7 +297,6 @@ class PricingTabs extends \Elementor\Widget_Base {
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private function get_tab_label(array $row, int $i): string {
-        // exp_time est un champ taxonomy ACF — retourne un ID de terme
         $term_val = $row['exp_time'] ?? null;
 
         if ($term_val) {
@@ -289,7 +306,6 @@ class PricingTabs extends \Elementor\Widget_Base {
                 if ($t && !is_wp_error($t)) return $t->name;
             }
             if (is_array($term_val)) {
-                // checkbox peut retourner tableau
                 $first = reset($term_val);
                 if ($first instanceof \WP_Term) return $first->name;
                 if (is_numeric($first)) {
@@ -297,9 +313,11 @@ class PricingTabs extends \Elementor\Widget_Base {
                     if ($t && !is_wp_error($t)) return $t->name;
                 }
             }
+            // exp_time est un champ texte libre (ex : "1h30") — l'utiliser directement
+            if (is_string($term_val) && $term_val !== '') return $term_val;
         }
 
-        // Fallback : durée sous forme de texte + prix
+        // Fallback : numérotation + prix
         $price = $row['exp_price'] ?? '';
         return $price ? "Forfait " . ($i + 1) . " — {$price} €" : "Forfait " . ($i + 1);
     }
@@ -307,6 +325,13 @@ class PricingTabs extends \Elementor\Widget_Base {
     private function render_booking_widget(string $uuid, int $post_id, int $index): string {
         $widget_id = esc_attr($uuid);
         $style_id  = "bt-booking-styles-{$post_id}-{$index}";
+
+        // Script chargé une seule fois par page, peu importe le nombre de forfaits
+        $script = '';
+        if (!self::$regiondo_script_printed) {
+            $script = '<script src="https://widgets.regiondo.net/booking/v1/booking-widget.min.js" async></script>';
+            self::$regiondo_script_printed = true;
+        }
 
         ob_start(); ?>
         <div class="bt-pricing__booking">
@@ -323,7 +348,7 @@ class PricingTabs extends \Elementor\Widget_Base {
                 data-wid="1"
                 tabindex="0">
             </booking-widget>
-            <script src="https://widgets.regiondo.net/booking/v1/booking-widget.min.js" async></script>
+            <?= $script ?>
         </div>
         <?php
         return ob_get_clean();

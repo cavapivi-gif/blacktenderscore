@@ -473,15 +473,15 @@ class RepeaterSection extends \Elementor\Widget_Base {
 
             $key_class = 'bt-rsection__item-field--' . esc_attr(sanitize_html_class($key));
 
-            // Image ACF (array avec 'url')
-            if (is_array($value) && isset($value['url'])) {
+            // Image ACF : contient 'sizes' ou 'filename' (jamais un champ link)
+            if (is_array($value) && (isset($value['sizes']) || isset($value['filename']))) {
                 echo '<span class="bt-rsection__item-field ' . $key_class . '">';
-                echo '<img src="' . esc_url($value['url']) . '" alt="' . esc_attr($value['alt'] ?? '') . '" loading="lazy">';
+                echo '<img src="' . esc_url($value['url'] ?? '') . '" alt="' . esc_attr($value['alt'] ?? '') . '" loading="lazy">';
                 echo '</span>';
                 continue;
             }
 
-            // Lien ACF (array avec 'url' + 'title')
+            // Lien ACF (array avec 'url' + 'title', sans 'sizes'/'filename')
             if (is_array($value) && isset($value['url'], $value['title'])) {
                 echo '<span class="bt-rsection__item-field ' . $key_class . '">';
                 echo '<a href="' . esc_url($value['url']) . '"' . (!empty($value['target']) ? ' target="' . esc_attr($value['target']) . '"' : '') . '>' . esc_html($value['title']) . '</a>';

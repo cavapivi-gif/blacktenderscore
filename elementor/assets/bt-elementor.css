@@ -657,7 +657,7 @@
 .bt-itin:not(.bt-itin--no-connector) .bt-itin__step:not(:last-child)::before {
   content: '';
   position: absolute;
-  left: 6px;               /* centré sur le dot de 14px */
+  left: 6px;               /* fallback dot 14px — remplacé dynamiquement par Elementor (dot_size) */
   top: 20px;
   bottom: -32px;
   width: 2px;
@@ -703,13 +703,13 @@
   opacity: .75;
 }
 
-/* Dot avec icône FA */
+/* Dot avec icône FA — taille pilotée par le control dot_icon_size (défaut 12px) */
 .bt-itin__dot--icon {
   background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1em;
+  font-size: 12px;
 }
 
 /* Ligne méta : heure + durée */

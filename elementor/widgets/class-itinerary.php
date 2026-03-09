@@ -147,8 +147,19 @@ class Itinerary extends \Elementor\Widget_Base {
             'range'      => ['px' => ['min' => 8, 'max' => 32]],
             'default'    => ['size' => 14, 'unit' => 'px'],
             'selectors'  => [
-                '{{WRAPPER}} .bt-itin__dot' => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}}',
+                '{{WRAPPER}} .bt-itin__dot'          => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}}',
+                // Centre la ligne sur le dot quelle que soit sa taille
+                '{{WRAPPER}} .bt-itin__step::before' => 'left: calc({{SIZE}}{{UNIT}} / 2 - 1px)',
             ],
+        ]);
+
+        $this->add_responsive_control('dot_icon_size', [
+            'label'      => __('Taille de l\'icône dans le point', 'blacktenderscore'),
+            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'size_units' => ['px', 'em'],
+            'range'      => ['px' => ['min' => 8, 'max' => 28]],
+            'default'    => ['size' => 12, 'unit' => 'px'],
+            'selectors'  => ['{{WRAPPER}} .bt-itin__dot--icon' => 'font-size: {{SIZE}}{{UNIT}}'],
         ]);
 
         $this->add_control('return_dot_color', [
