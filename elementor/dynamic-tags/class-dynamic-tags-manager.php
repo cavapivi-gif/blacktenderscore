@@ -17,6 +17,7 @@ require_once __DIR__ . '/tags/class-tag-boat-specs.php';
 require_once __DIR__ . '/tags/class-tag-exp-booking-url.php';
 require_once __DIR__ . '/tags/class-tag-related-count.php';
 require_once __DIR__ . '/tags/class-tag-taxonomy.php';
+require_once __DIR__ . '/tags/class-tag-acf-range.php';
 
 /**
  * Dynamic Tags Manager — BT Regiondo.
@@ -64,8 +65,11 @@ class Dynamic_Tags_Manager {
         $manager->register(new Tag_Boat_Pax());
         $manager->register(new Tag_Boat_Engine());
 
-        // Taxonomies (skipper, type, etc.)
+        // Champ ACF générique (texte, nombre, taxonomie…)
         $manager->register(new Tag_Taxonomy());
+
+        // Plage de deux champs ACF (min - max, De X€ à Y€…)
+        $manager->register(new Tag_Acf_Range());
 
         // URL
         $manager->register(new Tag_Exp_Booking_Url());
