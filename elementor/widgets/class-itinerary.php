@@ -78,6 +78,31 @@ class Itinerary extends \Elementor\Widget_Base {
             'default'      => 'yes',
         ]);
 
+        $this->add_control('transport_layout', [
+            'label'     => __('Disposition du bloc transport', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::SELECT,
+            'options'   => [
+                'inline' => __('Inline (horizontal)', 'blacktenderscore'),
+                'block'  => __('Bloc (vertical)', 'blacktenderscore'),
+            ],
+            'default'   => 'inline',
+            'condition' => ['show_transport' => 'yes'],
+        ]);
+
+        $this->add_control('label_departure', [
+            'label'     => __('Label départ', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::TEXT,
+            'default'   => __('Départ', 'blacktenderscore'),
+            'condition' => ['show_transport' => 'yes'],
+        ]);
+
+        $this->add_control('label_return', [
+            'label'     => __('Label arrivée', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::TEXT,
+            'default'   => __('Arrivée', 'blacktenderscore'),
+            'condition' => ['show_transport' => 'yes'],
+        ]);
+
         $this->add_control('connector', [
             'label'   => __('Connecteur timeline', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
@@ -147,8 +172,19 @@ class Itinerary extends \Elementor\Widget_Base {
             'range'      => ['px' => ['min' => 8, 'max' => 32]],
             'default'    => ['size' => 14, 'unit' => 'px'],
             'selectors'  => [
-                '{{WRAPPER}} .bt-itin__dot' => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}}',
+                '{{WRAPPER}} .bt-itin__dot'          => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}}',
+                // Centre la ligne sur le dot quelle que soit sa taille
+                '{{WRAPPER}} .bt-itin__step::before' => 'left: calc({{SIZE}}{{UNIT}} / 2 - 1px)',
             ],
+        ]);
+
+        $this->add_responsive_control('dot_icon_size', [
+            'label'      => __('Taille de l\'icône dans le point', 'blacktenderscore'),
+            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'size_units' => ['px', 'em'],
+            'range'      => ['px' => ['min' => 8, 'max' => 28]],
+            'default'    => ['size' => 12, 'unit' => 'px'],
+            'selectors'  => ['{{WRAPPER}} .bt-itin__dot--icon' => 'font-size: {{SIZE}}{{UNIT}}'],
         ]);
 
         $this->add_control('return_dot_color', [
@@ -258,6 +294,25 @@ class Itinerary extends \Elementor\Widget_Base {
             'selectors' => ['{{WRAPPER}} .bt-itin__transport' => 'color: {{VALUE}}'],
         ]);
 
+        $this->add_responsive_control('transport_padding', [
+            'label'      => __('Padding', 'blacktenderscore'),
+            'type'       => \Elementor\Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', 'em'],
+            'selectors'  => ['{{WRAPPER}} .bt-itin__transport' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+
+        $this->add_responsive_control('transport_radius', [
+            'label'      => __('Border radius', 'blacktenderscore'),
+            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'size_units' => ['px', '%'],
+            'selectors'  => ['{{WRAPPER}} .bt-itin__transport' => 'border-radius: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
+            'name'     => 'transport_border',
+            'selector' => '{{WRAPPER}} .bt-itin__transport',
+        ]);
+
         $this->end_controls_section();
     }
 
@@ -286,9 +341,13 @@ class Itinerary extends \Elementor\Widget_Base {
         $show_time      = $s['show_time']        === 'yes';
         $show_duration  = $s['show_duration']    === 'yes';
         $show_desc      = $s['show_description'] === 'yes';
-        $show_transport = $s['show_transport']   === 'yes';
-        $connector      = $s['connector'] ?: 'line';
-        $connector_cls  = $connector === 'none' ? ' bt-itin--no-connector' : '';
+        $show_transport   = $s['show_transport']   === 'yes';
+        $connector        = $s['connector'] ?: 'line';
+        $connector_cls    = $connector === 'none' ? ' bt-itin--no-connector' : '';
+        $transport_block  = ($s['transport_layout'] ?? 'inline') === 'block';
+        $transport_cls    = 'bt-itin__transport' . ($transport_block ? ' bt-itin__transport--block' : '');
+        $lbl_dep          = esc_html($s['label_departure'] ?: __('Départ', 'blacktenderscore'));
+        $lbl_ret          = esc_html($s['label_return']    ?: __('Arrivée', 'blacktenderscore'));
 
         // Champs directs de transport
         $departure_zone = $show_transport ? get_field('exp_departure_zone', $post_id)       : '';
@@ -304,13 +363,16 @@ class Itinerary extends \Elementor\Widget_Base {
 
         // ── Bloc départ ──────────────────────────────────────────────────
         if ($show_transport && ($departure_zone || $outboard)) {
-            echo '<div class="bt-itin__transport bt-itin__transport--departure">';
+            echo '<div class="' . $transport_cls . ' bt-itin__transport--departure">';
             if ($departure_zone) {
-                echo '<span class="bt-itin__transport-label">' . esc_html__('Départ', 'blacktenderscore') . '</span>';
-                echo '<span class="bt-itin__transport-zone">' . esc_html($departure_zone) . '</span>';
+                echo '<span class="bt-itin__transport-label">' . $lbl_dep . '</span>';
                 echo '<span class="bt-itin__transport-sep" aria-hidden="true">·</span>';
+                echo '<span class="bt-itin__transport-zone">' . esc_html($departure_zone) . '</span>';
             }
             if ($outboard) {
+                if ($departure_zone) {
+                    echo '<span class="bt-itin__transport-sep" aria-hidden="true">·</span>';
+                }
                 /* translators: %d = durée en minutes */
                 echo '<span class="bt-itin__transport-outboard">' . esc_html(sprintf(__('Hors-bord (%d min)', 'blacktenderscore'), $outboard)) . '</span>';
             }
@@ -325,16 +387,20 @@ class Itinerary extends \Elementor\Widget_Base {
             $title     = $row['step_title']       ?? '';
             $desc      = $row['step_desc']        ?? '';
             $duration  = isset($row['step_timethezone']) ? (int) $row['step_timethezone'] : 0;
-            $icon_cls  = trim($row['step_icon']   ?? '');
+            $icon_raw  = $row['step_icon']        ?? null;
             $is_return = !empty($row['step_is_return']);
 
             $step_cls = 'bt-itin__step' . ($is_return ? ' bt-itin__step--return' : '');
 
             echo '<li class="' . esc_attr($step_cls) . '">';
 
-            // Point ou icône personnalisée
-            if ($icon_cls) {
-                echo '<span class="bt-itin__dot bt-itin__dot--icon" aria-hidden="true"><i class="' . esc_attr($icon_cls) . '"></i></span>';
+            // Point : image ACF, classe FA, ou dot par défaut
+            if (is_array($icon_raw) && !empty($icon_raw['url'])) {
+                echo '<span class="bt-itin__dot bt-itin__dot--icon" aria-hidden="true">';
+                echo '<img src="' . esc_url($icon_raw['url']) . '" alt="' . esc_attr($icon_raw['alt'] ?? '') . '" loading="lazy" class="bt-itin__dot-img">';
+                echo '</span>';
+            } elseif (is_string($icon_raw) && trim($icon_raw) !== '') {
+                echo '<span class="bt-itin__dot bt-itin__dot--icon" aria-hidden="true"><i class="' . esc_attr(trim($icon_raw)) . '"></i></span>';
             } else {
                 echo '<span class="bt-itin__dot" aria-hidden="true"></span>';
             }
@@ -369,16 +435,17 @@ class Itinerary extends \Elementor\Widget_Base {
 
         // ── Bloc retour ──────────────────────────────────────────────────
         if ($show_transport && ($outboard || $returning_zone || $returning_desc)) {
-            echo '<div class="bt-itin__transport bt-itin__transport--return">';
+            echo '<div class="' . $transport_cls . ' bt-itin__transport--return">';
             if ($outboard) {
                 /* translators: %d = durée en minutes */
                 echo '<span class="bt-itin__transport-outboard">' . esc_html(sprintf(__('Retour hors-bord (%d min)', 'blacktenderscore'), $outboard)) . '</span>';
-                if ($returning_zone) {
-                    echo '<span class="bt-itin__transport-sep" aria-hidden="true">·</span>';
-                }
             }
             if ($returning_zone) {
-                echo '<span class="bt-itin__transport-label">' . esc_html__('Arrivée', 'blacktenderscore') . '</span>';
+                if ($outboard) {
+                    echo '<span class="bt-itin__transport-sep" aria-hidden="true">·</span>';
+                }
+                echo '<span class="bt-itin__transport-label">' . $lbl_ret . '</span>';
+                echo '<span class="bt-itin__transport-sep" aria-hidden="true">·</span>';
                 echo '<span class="bt-itin__transport-zone">' . esc_html($returning_zone) . '</span>';
             }
             if ($returning_desc) {
