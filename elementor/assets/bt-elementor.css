@@ -56,14 +56,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Taille pilotée par le control Elementor icon_size (défaut 24px) */
   width: 24px;
   height: 24px;
+  font-size: 24px; /* hérité par <i> FA */
 }
 
 .bt-taxlist__item-icon img {
-  width: 24px;
-  height: 24px;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
+}
+
+.bt-taxlist__item-icon i {
+  font-size: 1em; /* suit font-size du conteneur */
+  line-height: 1;
 }
 
 .bt-taxlist__item-icon-fallback {
@@ -694,6 +701,75 @@
   font-size: .9em;
   line-height: 1.6;
   opacity: .75;
+}
+
+/* Dot avec icône FA */
+.bt-itin__dot--icon {
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1em;
+}
+
+/* Ligne méta : heure + durée */
+.bt-itin__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.bt-itin__duration {
+  font-size: .8em;
+  opacity: .55;
+}
+
+/* Transport / zones */
+.bt-itin__transport {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, .04);
+  font-size: .9em;
+}
+
+.bt-itin__transport--departure {
+  margin-bottom: 16px;
+}
+
+.bt-itin__transport--return {
+  margin-top: 16px;
+}
+
+.bt-itin__transport-label {
+  font-weight: 600;
+  font-size: .8em;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  opacity: .6;
+}
+
+.bt-itin__transport-zone {
+  font-weight: 600;
+}
+
+.bt-itin__transport-sep {
+  opacity: .35;
+}
+
+.bt-itin__transport-outboard {
+  opacity: .75;
+}
+
+.bt-itin__transport-desc {
+  width: 100%;
+  margin: 4px 0 0;
+  font-size: .875em;
+  opacity: .7;
 }
 
 

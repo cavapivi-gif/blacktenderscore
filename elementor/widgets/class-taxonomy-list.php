@@ -188,9 +188,28 @@ class TaxonomyList extends \Elementor\Widget_Base {
             'range'      => ['px' => ['min' => 12, 'max' => 80]],
             'default'    => ['size' => 24, 'unit' => 'px'],
             'selectors'  => [
+                // Bug fix : le conteneur ET l'img/i doivent suivre la taille
+                '{{WRAPPER}} .bt-taxlist__item-icon'     => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}}; font-size: {{SIZE}}{{UNIT}}',
                 '{{WRAPPER}} .bt-taxlist__item-icon img' => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}}; object-fit: contain',
             ],
             'condition'  => ['show_icon' => 'yes'],
+        ]);
+
+        $this->add_control('icon_color', [
+            'label'     => __('Couleur icône (FA / fallback)', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::COLOR,
+            'selectors' => [
+                '{{WRAPPER}} .bt-taxlist__item-icon i'                     => 'color: {{VALUE}}',
+                '{{WRAPPER}} .bt-taxlist__item-icon-fallback'              => 'color: {{VALUE}}; opacity: 1',
+            ],
+            'condition' => ['show_icon' => 'yes'],
+        ]);
+
+        $this->add_control('fallback_icon', [
+            'label'     => __('Icône de remplacement (si aucune sur le terme)', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::ICONS,
+            'default'   => ['value' => '', 'library' => ''],
+            'condition' => ['show_icon' => 'yes'],
         ]);
 
         $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
@@ -225,11 +244,12 @@ class TaxonomyList extends \Elementor\Widget_Base {
             return;
         }
 
-        $tag       = esc_attr($s['title_tag'] ?: 'h3');
-        $layout    = $s['layout'] ?: 'list';
-        $show_icon = $s['show_icon'] === 'yes';
-        $show_desc = $s['show_description'] === 'yes';
-        $desc_pos  = $s['description_position'] ?: 'below';
+        $tag           = esc_attr($s['title_tag'] ?: 'h3');
+        $layout        = $s['layout'] ?: 'list';
+        $show_icon     = $s['show_icon'] === 'yes';
+        $show_desc     = $s['show_description'] === 'yes';
+        $desc_pos      = $s['description_position'] ?: 'below';
+        $fallback_icon = $s['fallback_icon'] ?? [];
 
         echo '<div class="bt-taxlist">';
 
@@ -243,11 +263,19 @@ class TaxonomyList extends \Elementor\Widget_Base {
         foreach ($terms as $term) {
             if (!($term instanceof \WP_Term)) continue;
 
-            $icon_url = '';
+            $icon_url  = '';
+            $icon_fa   = '';
             if ($show_icon && function_exists('get_field')) {
+                // Image icon (champ ACF image sur le terme)
                 $icon_data = get_field('taxomonies_icons', $term);
-                if (is_array($icon_data))  $icon_url = $icon_data['url'] ?? '';
-                elseif (is_string($icon_data)) $icon_url = $icon_data;
+                if (is_array($icon_data))       $icon_url = $icon_data['url'] ?? '';
+                elseif (is_string($icon_data))  $icon_url = $icon_data;
+
+                // FA class icon (champ ACF texte sur le terme, optionnel)
+                if (!$icon_url) {
+                    $fa_raw = get_field('term_icon_class', $term);
+                    if ($fa_raw && is_string($fa_raw)) $icon_fa = trim($fa_raw);
+                }
             }
 
             echo '<li class="bt-taxlist__item">';
@@ -256,6 +284,11 @@ class TaxonomyList extends \Elementor\Widget_Base {
                 echo '<span class="bt-taxlist__item-icon">';
                 if ($icon_url) {
                     echo '<img src="' . esc_url($icon_url) . '" alt="' . esc_attr($term->name) . '" loading="lazy" />';
+                } elseif ($icon_fa) {
+                    echo '<i class="' . esc_attr($icon_fa) . '" aria-hidden="true"></i>';
+                } elseif (!empty($fallback_icon['value'])) {
+                    // Icône Elementor choisie dans le contrôle
+                    \Elementor\Icons_Manager::render_icon($fallback_icon, ['aria-hidden' => 'true']);
                 } else {
                     echo '<span class="bt-taxlist__item-icon-fallback" aria-hidden="true">✓</span>';
                 }
