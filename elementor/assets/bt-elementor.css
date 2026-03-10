@@ -1173,6 +1173,166 @@
 
 
 /* ══════════════════════════════════════════════════════════
+   WIDGET : Gallery Preview (Airbnb style)
+   ══════════════════════════════════════════════════════════ */
+
+/*
+ * Grille — taille et espacement pilotés par les controls Elementor.
+ * Layout par défaut : 3 colonnes (2fr 1fr 1fr), 2 rangées.
+ * La première image (--main) couvre toujours les 2 rangées.
+ */
+.bt-gprev__grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 8px;
+  height: 420px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* 1 image : pleine largeur */
+.bt-gprev__grid--1 {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+
+/* 2 images : grande + 1 petite */
+.bt-gprev__grid--2 {
+  grid-template-columns: 2fr 1fr;
+  grid-template-rows: 1fr;
+}
+
+/* 3 images : grande (2 rangées) + 2 petites empilées */
+.bt-gprev__grid--3 {
+  grid-template-columns: 2fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+/* 4 images : grande (2 rangées) + 3 petites — 3e petite en pleine largeur */
+.bt-gprev__grid--4 {
+  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+.bt-gprev__grid--4 .bt-gprev__item:nth-child(4) {
+  grid-column: span 2;
+}
+
+/* 5 images : layout Airbnb standard */
+.bt-gprev__grid--5,
+.bt-gprev__grid--6,
+.bt-gprev__grid--7,
+.bt-gprev__grid--8,
+.bt-gprev__grid--9 {
+  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+/* Grande image : couvre les 2 rangées */
+.bt-gprev__item--main {
+  grid-row: span 2;
+}
+
+/* Item */
+.bt-gprev__item {
+  position: relative;
+  overflow: hidden;
+  margin: 0;
+}
+
+/* Lien/wrapper */
+.bt-gprev__link {
+  display: block;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+/* Image */
+.bt-gprev__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+
+.bt-gprev__link:hover .bt-gprev__img {
+  transform: scale(1.04);
+}
+
+/* Overlay sur la dernière image visible */
+.bt-gprev__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45); /* override par Elementor overlay_bg */
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.bt-gprev__link:hover .bt-gprev__overlay {
+  background: rgba(0, 0, 0, 0.55);
+}
+
+/* Compteur / texte overlay */
+.bt-gprev__count {
+  color: #fff;
+  font-size: 1.1em;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+}
+
+/* Flou — la valeur est aussi pilotée par le control Elementor (override inline) */
+.bt-gprev__item--blur .bt-gprev__img {
+  filter: blur(4px);
+  transform: scale(1.06); /* évite les bords blancs du blur */
+}
+
+/* Éléments cachés (hors grille) — en DOM pour la lightbox Elementor */
+.bt-gprev__lightbox-hidden {
+  display: none !important;
+}
+
+/* ── Mobile ──────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .bt-gprev__grid {
+    grid-template-columns: 1fr 1fr !important;
+    grid-template-rows: auto auto !important;
+    height: auto !important;
+    border-radius: 8px;
+  }
+
+  /* Grande image : pleine largeur */
+  .bt-gprev__item--main {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    aspect-ratio: 16 / 9;
+  }
+
+  /* Petites images : ratio carré */
+  .bt-gprev__item:not(.bt-gprev__item--main) {
+    aspect-ratio: 1 / 1;
+  }
+
+  /* Masquer images 4+ sur mobile (grande + 2 petites) */
+  .bt-gprev__item:nth-child(n+4) {
+    display: none;
+  }
+
+  /* Reset du span-2 du layout 4-images */
+  .bt-gprev__grid--4 .bt-gprev__item:nth-child(4) {
+    grid-column: auto;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════
    WIDGET : Repeater Section
    ══════════════════════════════════════════════════════════ */
 

@@ -12,6 +12,7 @@ use BlackTenders\Elementor\Widgets\Itinerary;
 use BlackTenders\Elementor\Widgets\DepartureTimes;
 use BlackTenders\Elementor\Widgets\Reviews;
 use BlackTenders\Elementor\Widgets\Gallery;
+use BlackTenders\Elementor\Widgets\GalleryPreview;
 use BlackTenders\Elementor\Widgets\ExcursionSchema;
 use BlackTenders\Elementor\Widgets\RepeaterSection;
 
@@ -78,6 +79,7 @@ class ElementorManager {
         $manager->register(new DepartureTimes());
         $manager->register(new Reviews());
         $manager->register(new Gallery());
+        $manager->register(new GalleryPreview());
         $manager->register(new ExcursionSchema());
         $manager->register(new RepeaterSection());
         // ── Relations excursion <-> bateau ────────────────────────────────
