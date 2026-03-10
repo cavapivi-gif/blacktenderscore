@@ -182,6 +182,44 @@ class BoatPricing extends \Elementor\Widget_Base {
 
         $this->end_controls_section();
 
+        // ── Style — Section ───────────────────────────────────────────────
+        $this->start_controls_section('style_section', [
+            'label' => __('Style — Section', 'blacktenderscore'),
+            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+        ]);
+
+        $this->add_group_control(\Elementor\Group_Control_Background::get_type(), [
+            'name'     => 'section_bg',
+            'types'    => ['classic', 'gradient'],
+            'selector' => '{{WRAPPER}} .bt-bprice',
+        ]);
+
+        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
+            'name'     => 'section_border',
+            'selector' => '{{WRAPPER}} .bt-bprice',
+        ]);
+
+        $this->add_responsive_control('section_radius', [
+            'label'      => __('Border radius section', 'blacktenderscore'),
+            'type'       => \Elementor\Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', '%', 'em'],
+            'selectors'  => ['{{WRAPPER}} .bt-bprice' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+
+        $this->add_responsive_control('section_padding', [
+            'label'      => __('Padding section', 'blacktenderscore'),
+            'type'       => \Elementor\Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', 'em'],
+            'selectors'  => ['{{WRAPPER}} .bt-bprice' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+
+        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), [
+            'name'     => 'section_shadow',
+            'selector' => '{{WRAPPER}} .bt-bprice',
+        ]);
+
+        $this->end_controls_section();
+
         // ── Style — Cartes ────────────────────────────────────────────────
         $this->start_controls_section('style_cards', [
             'label' => __('Style — Cartes / Tableau', 'blacktenderscore'),
@@ -198,6 +236,24 @@ class BoatPricing extends \Elementor\Widget_Base {
             'label'     => __('Couleur titre', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-bprice__title' => 'color: {{VALUE}}'],
+        ]);
+
+        $this->add_responsive_control('title_align', [
+            'label'     => __('Alignement titre', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::CHOOSE,
+            'options'   => [
+                'left'   => ['title' => __('Gauche', 'blacktenderscore'),  'icon' => 'eicon-text-align-left'],
+                'center' => ['title' => __('Centre', 'blacktenderscore'),  'icon' => 'eicon-text-align-center'],
+                'right'  => ['title' => __('Droite', 'blacktenderscore'),  'icon' => 'eicon-text-align-right'],
+            ],
+            'selectors' => ['{{WRAPPER}} .bt-bprice__title' => 'text-align: {{VALUE}}'],
+        ]);
+
+        $this->add_responsive_control('title_spacing', [
+            'label'      => __('Espacement sous le titre', 'blacktenderscore'),
+            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'size_units' => ['px', 'em'],
+            'selectors'  => ['{{WRAPPER}} .bt-bprice__title' => 'margin-bottom: {{SIZE}}{{UNIT}}'],
         ]);
 
         $this->add_responsive_control('cards_gap', [
@@ -220,10 +276,10 @@ class BoatPricing extends \Elementor\Widget_Base {
         ]);
 
         $this->add_responsive_control('card_radius', [
-            'label'      => __('Border radius', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
-            'size_units' => ['px', '%'],
-            'selectors'  => ['{{WRAPPER}} .bt-bprice__card' => 'border-radius: {{SIZE}}{{UNIT}}'],
+            'label'      => __('Border radius cartes', 'blacktenderscore'),
+            'type'       => \Elementor\Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', '%', 'em'],
+            'selectors'  => ['{{WRAPPER}} .bt-bprice__card' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
         ]);
 
         $this->add_responsive_control('card_padding', [
