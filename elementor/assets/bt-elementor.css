@@ -2,6 +2,12 @@
    BlackTenders — Elementor Widgets
    ───────────────────────────────────────────────────────── */
 
+/* ── Variables globales ──────────────────────────────────── */
+:root {
+  --bt-tab-active-color: #000; /* couleur onglet actif (FAQ, Pricing, BoatPricing) */
+  --bt-star-color: #f4a900;    /* couleur étoiles par défaut (Reviews) */
+}
+
 /* ── Placeholder éditeur ─────────────────────────────────── */
 .bt-widget-placeholder {
   padding: 16px;
@@ -243,12 +249,12 @@
 }
 
 .bt-faq--tabs .bt-faq__tab:hover {
-  color: #000;
+  color: var(--bt-tab-active-color);
 }
 
 .bt-faq--tabs .bt-faq__tab--active {
-  color: #000;
-  border-bottom-color: #000;
+  color: var(--bt-tab-active-color);
+  border-bottom-color: var(--bt-tab-active-color);
 }
 
 /* Panels tabs : masqués par défaut via classe CSS (pas [hidden]) */
@@ -296,8 +302,8 @@
 .bt-pricing__tab:hover { color: #333; }
 
 .bt-pricing__tab--active {
-  color: #000;
-  border-bottom-color: #000;
+  color: var(--bt-tab-active-color);
+  border-bottom-color: var(--bt-tab-active-color);
 }
 
 /* Panneaux — masqués par défaut via CSS (pas d'attribut [hidden]) */
@@ -389,8 +395,8 @@
 }
 
 .bt-bprice__tab--active {
-  color: #000;
-  border-bottom-color: #000;
+  color: var(--bt-tab-active-color);
+  border-bottom-color: var(--bt-tab-active-color);
 }
 
 /* Panneau de contenu */
@@ -947,7 +953,7 @@
 /* ── Responsive : mobile = stacked ────────────────────────── */
 @media (max-width: 767px) {
   .bt-itin__layout--side {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: 1fr;
   }
 
   .bt-itin__col-map {
@@ -1074,7 +1080,7 @@
 
 .bt-reviews__stars {
   font-size: 18px;
-  color: #f4a900;
+  color: var(--bt-star-color);
   letter-spacing: 2px;
 }
 
@@ -1339,14 +1345,14 @@
 
 /* Éléments cachés pour la lightbox */
 .bt-gprev__lightbox-hidden {
-  display: none !important;
+  display: none;
 }
 
 /* ── Mobile ──────────────────────────────────────────────── */
 @media (max-width: 767px) {
   .bt-gprev__grid {
     grid-template-columns: 1fr 1fr !important;
-    grid-template-rows: auto auto !important;
+    grid-template-rows: auto auto;
     height: auto !important;
     border-radius: 8px;
   }
