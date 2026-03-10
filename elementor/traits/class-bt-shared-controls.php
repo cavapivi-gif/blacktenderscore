@@ -3,6 +3,14 @@ namespace BlackTenders\Elementor\Traits;
 
 defined('ABSPATH') || exit;
 
+// Les sous-traits sont nommés trait-bt-*.php (pas class-bt-*) donc l'autoloader
+// ne peut pas les résoudre automatiquement — on les charge explicitement ici.
+require_once __DIR__ . '/trait-bt-heading-controls.php';
+require_once __DIR__ . '/trait-bt-layout-controls.php';
+require_once __DIR__ . '/trait-bt-nav-controls.php';
+require_once __DIR__ . '/trait-bt-typography-controls.php';
+require_once __DIR__ . '/trait-bt-content-controls.php';
+
 /**
  * BtSharedControls — Agrège tous les sous-traits de controls Elementor.
  *
