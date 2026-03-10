@@ -342,8 +342,8 @@ class Itinerary extends \Elementor\Widget_Base {
             'label'     => __('Couleur', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => [
-                '{{WRAPPER}} .bt-itin:not(.bt-itin--no-connector) .bt-itin__list > li:not(:last-child)::before' =>
-                    'background-color: {{VALUE}}',
+                // CSS var consommée par repeating-linear-gradient dans le CSS
+                '{{WRAPPER}} .bt-itin' => '--bt-itin-line-color: {{VALUE}}',
             ],
             'condition' => ['connector' => 'line'],
         ]);
