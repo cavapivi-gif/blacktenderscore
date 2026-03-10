@@ -1,50 +1,19 @@
 /**
  * BlackTenders — Elementor Widgets JS
- * Accordion + Tabs — vanilla JS, compatible Elementor frontend + editor preview.
+ *
+ * Pattern officiel Elementor :
+ *   elementorModules.frontend.handlers.Base
+ *   elementorFrontend.elementsHandler.attachHandler()
  *
  * Accordion : toggle classe bt-faq__item--active + aria-expanded
- * Tabs      : toggle classe bt-faq__tabpanel--active + aria-selected
- * Aucun attribut [hidden] utilisé (trop facilement surchargé par les thèmes).
- * Animation accordion : CSS grid-template-rows 0fr → 1fr (voir bt-elementor.css).
+ * Tabs      : toggle bt-faq__tabpanel--active / bt-bprice__panel--active
+ * Pas d'attribut [hidden] (surchargé par les thèmes).
+ * Animation accordion : CSS grid-template-rows 0fr → 1fr.
  */
 (function () {
   'use strict';
 
   /* ── Accordéon ──────────────────────────────────────────────────────────── */
-
-  function initAccordion(root) {
-    var isFaqMode = root.hasAttribute('data-bt-faq-mode');
-
-    root.querySelectorAll('.bt-faq__header').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var item = btn.closest('.bt-faq__item');
-        if (!item) return;
-
-        var isActive = item.classList.contains('bt-faq__item--active');
-
-        // FAQ mode : fermer les autres items ouverts avant d'ouvrir le courant
-        if (isFaqMode && !isActive) {
-          root.querySelectorAll('.bt-faq__item--active').forEach(function (openItem) {
-            closeItem(openItem);
-          });
-        }
-
-        if (isActive) {
-          closeItem(item);
-        } else {
-          openItem(item);
-        }
-      });
-
-      // Keyboard: Space & Enter (button natif gère déjà Enter, mais sécurité)
-      btn.addEventListener('keydown', function (e) {
-        if (e.key === ' ' || e.key === 'Enter') {
-          e.preventDefault();
-          btn.click();
-        }
-      });
-    });
-  }
 
   function openItem(item) {
     item.classList.add('bt-faq__item--active');
@@ -58,7 +27,46 @@
     if (btn) btn.setAttribute('aria-expanded', 'false');
   }
 
+  function initAccordion(root) {
+    var isFaqMode = root.hasAttribute('data-bt-faq-mode');
+
+    root.querySelectorAll('.bt-faq__header').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var item = btn.closest('.bt-faq__item');
+        if (!item) return;
+        var isActive = item.classList.contains('bt-faq__item--active');
+        if (isFaqMode && !isActive) {
+          root.querySelectorAll('.bt-faq__item--active').forEach(closeItem);
+        }
+        isActive ? closeItem(item) : openItem(item);
+      });
+    });
+  }
+
   /* ── Tabs ────────────────────────────────────────────────────────────────── */
+
+  function activateTab(root, tabs, activeTab) {
+    tabs.forEach(function (tab) {
+      var isActive = tab === activeTab;
+
+      // FAQ tabs
+      tab.classList.toggle('bt-faq__tab--active',    isActive);
+      // Pricing tabs
+      tab.classList.toggle('bt-bprice__tab--active', isActive);
+
+      tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      tab.setAttribute('tabindex',      isActive ? '0'    : '-1');
+
+      var panelId = tab.getAttribute('aria-controls');
+      var panel   = panelId ? document.getElementById(panelId) : null;
+      if (panel) {
+        panel.classList.toggle('bt-faq__tabpanel--active',  isActive);
+        panel.classList.toggle('bt-bprice__panel--active',  isActive);
+      }
+    });
+
+    activeTab.focus();
+  }
 
   function initTabs(root) {
     var tablist = root.querySelector('[role="tablist"]');
@@ -71,7 +79,6 @@
         activateTab(root, tabs, tab);
       });
 
-      // Keyboard navigation ARIA APG pattern
       tab.addEventListener('keydown', function (e) {
         var next;
         if (e.key === 'ArrowRight') next = tabs[(idx + 1) % tabs.length];
@@ -87,60 +94,44 @@
     });
   }
 
-  function activateTab(root, tabs, activeTab) {
-    tabs.forEach(function (tab) {
-      var isActive = tab === activeTab;
-
-      // Tabs FAQ
-      tab.classList.toggle('bt-faq__tab--active', isActive);
-      // Tabs Pricing (widget séparé)
-      tab.classList.toggle('bt-pricing__tab--active', isActive);
-
-      tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
-      tab.setAttribute('tabindex',      isActive ? '0'    : '-1');
-
-      var panelId = tab.getAttribute('aria-controls');
-      var panel   = panelId ? document.getElementById(panelId) : null;
-      if (panel) {
-        // Utilise une classe CSS (pas l'attribut hidden, trop souvent surchargé)
-        panel.classList.toggle('bt-faq__tabpanel--active',    isActive);
-        panel.classList.toggle('bt-pricing__panel--active',   isActive);
-      }
-    });
-
-    activeTab.focus();
-  }
-
   /* ── Bootstrap ───────────────────────────────────────────────────────────── */
 
   function boot(scope) {
     var el = (scope && scope !== document) ? scope : document;
 
-    el.querySelectorAll('[data-bt-accordion]').forEach(initAccordion);
-    el.querySelectorAll('[data-bt-tabs]').forEach(initTabs);
+    // data-bt-init évite la double initialisation (DOMContentLoaded + handler)
+    el.querySelectorAll('[data-bt-accordion]:not([data-bt-init])').forEach(function (root) {
+      root.setAttribute('data-bt-init', '1');
+      initAccordion(root);
+    });
+    el.querySelectorAll('[data-bt-tabs]:not([data-bt-init])').forEach(function (root) {
+      root.setAttribute('data-bt-init', '1');
+      initTabs(root);
+    });
   }
 
-  // Standard frontend
+  /* ── Elementor Handler — pattern officiel ────────────────────────────────── */
+  //
+  //  elementorModules.frontend.handlers.Base est disponible après
+  //  l'événement 'elementor/frontend/init'.
+  //  elementsHandler.attachHandler() remplace hooks.addAction() et gère
+  //  automatiquement le re-rendu dans l'éditeur.
+
+  window.addEventListener('elementor/frontend/init', function () {
+    var BtWidgetHandler = elementorModules.frontend.handlers.Base.extend({
+      onInit: function () {
+        elementorModules.frontend.handlers.Base.prototype.onInit.apply(this, arguments);
+        boot(this.$element[0]);
+      },
+    });
+
+    elementorFrontend.elementsHandler.attachHandler('bt-faq-accordion', BtWidgetHandler);
+    elementorFrontend.elementsHandler.attachHandler('bt-boat-pricing',  BtWidgetHandler);
+  });
+
+  // Fallback : pages sans Elementor JS (ex. thème sans Elementor)
   document.addEventListener('DOMContentLoaded', function () { boot(document); });
 
-  // Elementor editor live preview
-  function registerElementorHooks() {
-    window.elementorFrontend.hooks.addAction(
-      'frontend/element_ready/bt-faq-accordion.default',
-      function ($scope) { boot($scope[0]); }
-    );
-    window.elementorFrontend.hooks.addAction(
-      'frontend/element_ready/bt-pricing-tabs.default',
-      function ($scope) { boot($scope[0]); }
-    );
-  }
-
-  if (window.elementorFrontend && window.elementorFrontend.hooks) {
-    registerElementorHooks();
-  } else {
-    window.addEventListener('elementor/frontend/init', registerElementorHooks);
-  }
-
-  // Expose globalement pour réutilisation
+  // API publique (réutilisable par d'autres scripts)
   window.btWidgets = { boot: boot };
-})();
+}());
