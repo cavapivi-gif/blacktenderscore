@@ -122,14 +122,19 @@
   // Standard frontend
   document.addEventListener('DOMContentLoaded', function () { boot(); });
 
-  // Elementor editor live preview
-  if (window.elementorFrontend) {
+  // Elementor editor live preview — hooks aren't ready until 'elementor/frontend/init' fires
+  function registerElementorHooks() {
     window.elementorFrontend.hooks.addAction('frontend/element_ready/bt-faq-accordion.default', function ($scope) {
       boot($scope[0]);
     });
     window.elementorFrontend.hooks.addAction('frontend/element_ready/bt-pricing-tabs.default', function ($scope) {
       boot($scope[0]);
     });
+  }
+  if (window.elementorFrontend && window.elementorFrontend.hooks) {
+    registerElementorHooks();
+  } else {
+    window.addEventListener('elementor/frontend/init', registerElementorHooks);
   }
 
   // Expose globally pour réutilisation éventuelle

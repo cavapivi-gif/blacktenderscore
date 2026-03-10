@@ -852,6 +852,42 @@
   z-index: 0;
 }
 
+/* ── Markers personnalisés ─────────────────────────────────── */
+.bt-map-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* ── Popups Leaflet ────────────────────────────────────────── */
+.bt-itin__map .leaflet-popup-content-wrapper {
+  border-radius: 8px;
+  box-shadow: 0 3px 16px rgba(0, 0, 0, .15);
+  padding: 0;
+  overflow: hidden;
+}
+.bt-itin__map .leaflet-popup-content {
+  margin: 0;
+  padding: 0;
+}
+.bt-map-popup {
+  padding: 10px 14px;
+  min-width: 100px;
+  max-width: 220px;
+}
+.bt-map-popup .info-window__title {
+  display: block;
+  font-size: .85em;
+  font-weight: 600;
+  margin: 0 0 4px;
+  color: #111;
+}
+.bt-map-popup .info-window__body {
+  margin: 0;
+  font-size: .8em;
+  color: #555;
+  line-height: 1.45;
+}
+
 
 /* ══════════════════════════════════════════════════════════
    WIDGET : Departure Times
