@@ -689,10 +689,15 @@
 .bt-itin__list {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 0 0 0 20px; /* +20px indent → dots + connecteur décalés ensemble à droite */
   display: flex;
   flex-direction: column;
   gap: 32px; /* override par Elementor steps_gap */
+}
+
+/* li doit être positionné pour que ::before soit relatif à lui (pas à un ancêtre lointain) */
+.bt-itin__list > li {
+  position: relative;
 }
 
 /* Chaque item : dot + corps côte à côte */
@@ -700,28 +705,30 @@
   display: flex;
   align-items: flex-start;
   gap: 20px; /* override par Elementor dot_gap */
-  position: relative;
 }
 
-/* ── Ligne verticale reliant TOUS les <li> ────────────────────
-   left  = var(--bt-itin-dot-center) + 20px (décalé à droite du dot)
-   pointillé via repeating-linear-gradient
-   bottom = calc(-gap) → comble l'espace entre deux <li>
-           (injecté par steps_gap, défaut 32px)                  */
-.bt-itin:not(.bt-itin--no-connector) .bt-itin__list > li:not(:last-child)::before {
+/* ── Ligne verticale reliant uniquement les étapes ACF ────────
+   Exclut les items transport (départ, hors-bord, arrivée) :
+     - pas de connecteur SUR un item transport
+     - pas de connecteur VERS un item transport suivant
+   left  = var(--bt-itin-dot-center) → centré sur le dot de l'étape
+   bottom = calc(-gap) → comble le gap entre deux <li>            */
+.bt-itin:not(.bt-itin--no-connector)
+  .bt-itin__list > li:not(:last-child):not(.bt-itin__step--transport):not(:has(+ .bt-itin__step--transport))::before {
   content: '';
   position: absolute;
-  left: calc(var(--bt-itin-dot-center, 10px) + 20px);
+  left: var(--bt-itin-dot-center, 10px);
   top: 22px;
   bottom: calc(-1 * var(--bt-itin-gap, 32px));
   width: 2px;
-  background: repeating-linear-gradient(
+  background-image: repeating-linear-gradient(
     to bottom,
-    #d0d0d0 0,
-    #d0d0d0 5px,
+    var(--bt-itin-line-color, #d0d0d0) 0,
+    var(--bt-itin-line-color, #d0d0d0) 5px,
     transparent 5px,
     transparent 10px
   );
+  background-color: transparent; /* évite le conflit avec background-color Elementor */
   z-index: 0;
 }
 

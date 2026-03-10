@@ -342,8 +342,8 @@ class Itinerary extends \Elementor\Widget_Base {
             'label'     => __('Couleur', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => [
-                '{{WRAPPER}} .bt-itin:not(.bt-itin--no-connector) .bt-itin__list > li:not(:last-child)::before' =>
-                    'background-color: {{VALUE}}',
+                // CSS var consommée par repeating-linear-gradient dans le CSS
+                '{{WRAPPER}} .bt-itin' => '--bt-itin-line-color: {{VALUE}}',
             ],
             'condition' => ['connector' => 'line'],
         ]);
@@ -913,13 +913,8 @@ class Itinerary extends \Elementor\Widget_Base {
     private function render_map(array $rows, string $departure_zone, string $returning_zone, array $s, int $post_id): void {
         $points = [];
 
-        // Départ
-        $dep = get_field('exp_departure_coords', $post_id);
-        if (is_array($dep) && !empty($dep['lat']) && !empty($dep['lng'])) {
-            $points[] = [(float) $dep['lat'], (float) $dep['lng']];
-        }
-
-        // Étapes
+        // Uniquement les étapes de visite (repeater ACF) — pas les zones départ/arrivée
+        // qui sont des points d'embarquement transport, pas des spots à visiter.
         foreach ($rows as $row) {
             $coords = $row['step_coords'] ?? null;
             if (is_array($coords) && !empty($coords['lat'])) {
@@ -929,16 +924,10 @@ class Itinerary extends \Elementor\Widget_Base {
             }
         }
 
-        // Arrivée
-        $arr = get_field('exp_arriving_coords', $post_id);
-        if (is_array($arr) && !empty($arr['lat']) && !empty($arr['lng'])) {
-            $points[] = [(float) $arr['lat'], (float) $arr['lng']];
-        }
-
         if (empty($points)) {
             if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
                 echo '<div class="bt-itin__map-wrap"><p class="bt-widget-placeholder">';
-                echo __('Carte : aucune coordonnée GPS trouvée. Créez les champs ACF : <code>step_coords</code> (repeater), <code>exp_departure_coords</code>, <code>exp_arriving_coords</code> (type : Google Map).', 'blacktenderscore');
+                echo __('Carte : aucune coordonnée GPS trouvée dans les étapes. Ajoutez un champ ACF <code>step_coords</code> (type : Google Map) ou <code>step_lat</code> + <code>step_lng</code> (Nombre) dans le repeater.', 'blacktenderscore');
                 echo '</p></div>';
             }
             return;
