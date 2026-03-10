@@ -12,7 +12,8 @@ defined('ABSPATH') || exit;
  * Icônes transport : ICONS control Elementor → Icons_Manager::render_icon()
  *   → supporte Font Awesome ET SVG uploadé (rendu inline, pas <img>).
  *
- * Carte interactive : Leaflet.js + OpenStreetMap (gratuit, sans API key).
+ * Carte interactive : Leaflet.js + CartoDB/OSM (gratuit, sans API key).
+ * Style des tuiles configurable dans elementor/config/bt-map.php.
  * Champs ACF nécessaires pour la carte :
  *   • Repeater sub-field : step_coords  (type ACF : Google Map)
  *                          OU step_lat + step_lng (type : Nombre)
@@ -22,6 +23,35 @@ class Itinerary extends \Elementor\Widget_Base {
 
     /** @var bool Évite de charger Leaflet plusieurs fois par requête. */
     private static bool $leaflet_loaded = false;
+
+    // ── Helpers config ────────────────────────────────────────────────────────
+
+    /**
+     * Charge la config de tuiles depuis elementor/config/bt-map.php
+     * et applique les filtres WP pour permettre les surcharges thème/mu-plugin.
+     *
+     * @return array{default: string, presets: array<string, array{label: string, url: string, attr: string, maxZoom: int}>}
+     */
+    private static function get_tile_config(): array {
+        static $config = null;
+        if ($config !== null) return $config;
+
+        $raw     = require __DIR__ . '/../config/bt-map.php';
+        $presets = apply_filters('bt_map_tile_presets', $raw['presets'] ?? []);
+        $default = apply_filters('bt_map_default_tile',  $raw['default'] ?? 'voyager');
+
+        $config = ['presets' => $presets, 'default' => $default];
+        return $config;
+    }
+
+    /** Retourne les options {clé => label} pour le SELECT Elementor. */
+    private static function tile_select_options(): array {
+        $out = [];
+        foreach (self::get_tile_config()['presets'] as $key => $p) {
+            $out[$key] = $p['label'];
+        }
+        return $out;
+    }
 
     public function get_name():       string { return 'bt-itinerary'; }
     public function get_title():      string { return 'BT — Programme / Itinéraire'; }
@@ -312,6 +342,17 @@ class Itinerary extends \Elementor\Widget_Base {
             'default'      => 'yes',
             'separator'    => 'before',
             'condition'    => ['show_map' => 'yes'],
+        ]);
+
+        $cfg = self::get_tile_config();
+        $this->add_control('map_tile_style', [
+            'label'       => __('Style de carte', 'blacktenderscore'),
+            'description' => __('Presets dans <code>elementor/config/bt-map.php</code>. Extensible via filtre <code>bt_map_tile_presets</code>.', 'blacktenderscore'),
+            'type'        => \Elementor\Controls_Manager::SELECT,
+            'options'     => self::tile_select_options(),
+            'default'     => $cfg['default'],
+            'separator'   => 'before',
+            'condition'   => ['show_map' => 'yes'],
         ]);
 
         $this->end_controls_section();
@@ -1024,6 +1065,14 @@ class Itinerary extends \Elementor\Widget_Base {
         $path_style  = $s['map_path_style']  ?? 'straight';
         $points_json = wp_json_encode($points);
 
+        // Résolution du preset de tuiles
+        $cfg         = self::get_tile_config();
+        $tile_key    = $s['map_tile_style'] ?? $cfg['default'];
+        $tile        = $cfg['presets'][$tile_key] ?? $cfg['presets'][$cfg['default']];
+        $tile_url    = $tile['url'];
+        $tile_attr   = $tile['attr'];
+        $tile_zoom   = (int) ($tile['maxZoom'] ?? 19);
+
         echo '<div class="bt-itin__map-wrap">';
         echo '<div id="' . esc_attr($map_id) . '" class="bt-itin__map"></div>';
         ?>
@@ -1034,10 +1083,11 @@ class Itinerary extends \Elementor\Widget_Base {
             var el=document.getElementById(<?php echo wp_json_encode($map_id); ?>);
             if(!el||el._btInit)return;
             el._btInit=true;
-            var map=L.map(el);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-                attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-                maxZoom:19
+            var map=L.map(el,{scrollWheelZoom:false});
+            L.tileLayer(<?php echo wp_json_encode($tile_url); ?>,{
+                attribution:<?php echo wp_json_encode($tile_attr); ?>,
+                maxZoom:<?php echo $tile_zoom; ?>,
+                subdomains:'abcd'
             }).addTo(map);
             var cs=getComputedStyle(el);
             var mc=(cs.getPropertyValue('--bt-map-marker-color')||'#0066cc').trim();
@@ -1079,6 +1129,9 @@ class Itinerary extends \Elementor\Widget_Base {
             <?php endif; ?>
             if(lls.length===1)map.setView(lls[0],13);
             else map.fitBounds(lls,{padding:[30,30]});
+            // invalidateSize : corrige le rendu en grille quand le container
+            // n'avait pas encore sa taille finale à l'init (tabs, transitions…)
+            setTimeout(function(){map.invalidateSize();},150);
         }
         if(document.readyState==='loading'){
             document.addEventListener('DOMContentLoaded',<?php echo $fn_id; ?>);

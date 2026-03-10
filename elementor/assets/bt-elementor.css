@@ -843,13 +843,32 @@
 .bt-itin__map-wrap {
   position: relative;
   width: 100%;
+  overflow: hidden; /* empêche la carte de déborder du container */
 }
 
 .bt-itin__map {
   width: 100%;
   height: 400px; /* override par Elementor map_height */
-  background: #f0f0f0; /* placeholder avant chargement Leaflet */
+  background: #e8e8e8; /* placeholder gris doux avant chargement des tuiles */
   z-index: 0;
+  isolation: isolate; /* évite conflits z-index Elementor */
+}
+
+/* Corrections Leaflet globales (certains thèmes cassent l'affichage) */
+.bt-itin__map .leaflet-pane,
+.bt-itin__map .leaflet-tile-pane,
+.bt-itin__map .leaflet-overlay-pane,
+.bt-itin__map .leaflet-shadow-pane,
+.bt-itin__map .leaflet-marker-pane,
+.bt-itin__map .leaflet-tooltip-pane,
+.bt-itin__map .leaflet-popup-pane {
+  position: absolute;
+}
+
+.bt-itin__map img.leaflet-tile {
+  display: block !important;
+  max-width: none !important;
+  box-shadow: none !important;
 }
 
 /* ── Markers personnalisés ─────────────────────────────────── */
