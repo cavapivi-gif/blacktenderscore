@@ -110,6 +110,13 @@
 /* ══════════════════════════════════════════════════════════
    WIDGET : FAQ Accordion
    ══════════════════════════════════════════════════════════ */
+
+/* Section title optionnel */
+.bt-faq__section-title {
+  margin: 0 0 20px;
+}
+
+/* Liste */
 .bt-faq__list {
   list-style: none;
   margin: 0;
@@ -119,18 +126,19 @@
   gap: 8px;
 }
 
-/* ── Accordéon ────────────────────────────────────────────── */
+/* ── Accordéon — Item ─────────────────────────────────────── */
 .bt-faq--accordion .bt-faq__item {
   border: 1px solid #e0e0e0;
-  overflow: hidden;
+  /* PAS de overflow:hidden sur l'item : la grille CSS a besoin de s'étendre */
 }
 
-.bt-faq__question {
+/* ── Header (bouton question) ─────────────────────────────── */
+.bt-faq__header {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   padding: 16px 20px;
   background: transparent;
   border: none;
@@ -141,16 +149,30 @@
   transition: background .15s, color .15s;
 }
 
-.bt-faq__question:hover {
+.bt-faq__header:hover {
   background: rgba(0, 0, 0, .03);
 }
 
+/* Icône à gauche → inverser l'ordre flex */
+.bt-faq--icon-left .bt-faq__header {
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+}
+
+/* Texte question */
+.bt-faq__title-text {
+  flex: 1;
+}
+
+/* ── Icône CSS (fallback si pas d'icône FA) ───────────────── */
 .bt-faq__icon {
   flex-shrink: 0;
   width: 16px;
   height: 16px;
   position: relative;
-  transition: transform .25s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .bt-faq__icon::before,
@@ -164,22 +186,36 @@
   transition: opacity .25s, transform .25s;
 }
 
-/* "+" icon */
-.bt-faq__icon::before { width: 2px; height: 14px; }
-.bt-faq__icon::after  { width: 14px; height: 2px; }
+/* "+" */
+.bt-faq__icon::before { width: 2px;  height: 14px; }
+.bt-faq__icon::after  { width: 14px; height: 2px;  }
 
-/* "×" → rotate en "-" quand ouvert */
-.bt-faq__item--open .bt-faq__icon::before {
+/* → "-" quand actif */
+.bt-faq__item--active .bt-faq__icon::before {
   transform: translate(-50%, -50%) rotate(90deg);
   opacity: 0;
 }
 
-.bt-faq__answer {
+/* ── Icônes FA (selected_icon / selected_active_icon) ─────── */
+.bt-faq__icon--open   { display: none; }
+
+.bt-faq__item--active .bt-faq__icon--closed { display: none; }
+.bt-faq__item--active .bt-faq__icon--open   { display: inline-flex; }
+
+/* ── Corps réponse ────────────────────────────────────────── */
+/*
+ * max-height: 0 masqué par CSS par défaut.
+ * Le JS pose body.style.maxHeight = scrollHeight+'px' sur les items actifs
+ * via un style inline → priorité absolue sur tout CSS thème.
+ * Transition CSS sur max-height pour l'animation.
+ */
+.bt-faq--accordion .bt-faq__body {
+  max-height: 0;
   overflow: hidden;
-  /* animation hauteur gérée par JS */
+  transition: max-height .3s ease;
 }
 
-.bt-faq__answer-inner {
+.bt-faq__body-inner {
   padding: 0 20px 20px;
   line-height: 1.7;
 }
@@ -215,86 +251,76 @@
   border-bottom-color: #000;
 }
 
+/* Panels tabs : masqués par défaut via classe CSS (pas [hidden]) */
 .bt-faq--tabs .bt-faq__tabpanel {
+  display: none;
+}
+
+.bt-faq--tabs .bt-faq__tabpanel--active {
+  display: block;
   padding: 20px 0 0;
 }
 
-.bt-faq--tabs .bt-faq__answer-inner {
+.bt-faq--tabs .bt-faq__body-inner {
   padding: 0;
-  line-height: 1.7;
 }
 
 
 /* ══════════════════════════════════════════════════════════
-   WIDGET : Pricing Tabs
+   WIDGET : Boat Pricing — layout tabs
    ══════════════════════════════════════════════════════════ */
-.bt-pricing__tablist {
+
+/* Wrapper d'alignement (justify-content piloté par le control Elementor) */
+.bt-bprice__tablist-wrap {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  border-bottom: 2px solid #e0e0e0;
+  justify-content: flex-start; /* override par tabs_align control */
   margin-bottom: 0;
 }
 
-.bt-pricing__tab {
-  padding: 12px 24px;
+/*
+ * Barre d'onglets — inline-flex = fit-content naturel.
+ * background / padding / radius / border = pilotés par Elementor.
+ * border-bottom par défaut comme séparateur (overridable).
+ */
+.bt-bprice__tablist {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+/* Onglet */
+.bt-bprice__tab {
+  padding: 10px 20px;
   border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px; /* chevauchement du border-bottom de la barre */
   background: transparent;
   cursor: pointer;
   font: inherit;
   font-weight: 600;
   color: #666;
-  border-bottom: 3px solid transparent;
-  margin-bottom: -2px;
-  transition: color .15s, border-color .15s, background .15s;
+  white-space: nowrap;
+  transition: color .15s, background-color .15s, border-color .15s;
 }
 
-.bt-pricing__tab:hover {
-  color: #000;
-  background: rgba(0, 0, 0, .03);
+.bt-bprice__tab:hover {
+  color: #333;
 }
 
-.bt-pricing__tab--active {
+.bt-bprice__tab--active {
   color: #000;
   border-bottom-color: #000;
 }
 
-.bt-pricing__panel {
-  padding: 24px 0 0;
+/* Panneau de contenu */
+.bt-bprice__panel {
+  display: none;
 }
 
-.bt-pricing__price-block {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-
-.bt-pricing__note {
-  font-size: .875em;
-  color: #888;
-}
-
-.bt-pricing__price {
-  font-size: 2.25em;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.bt-pricing__per {
-  font-size: .875em;
-  color: #888;
-}
-
-.bt-pricing__deposit {
-  font-size: .875em;
-  color: #666;
-  margin: 4px 0 0;
-}
-
-.bt-pricing__booking {
-  margin-top: 24px;
+.bt-bprice__panel--active {
+  display: block;
+  padding-top: 20px;
 }
 
 
