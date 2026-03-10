@@ -94,31 +94,7 @@ class TaxonomyList extends AbstractBtWidget {
 
         $this->end_controls_section();
 
-        // ── Section Style — Titre ─────────────────────────────────────────
-        $this->start_controls_section('style_title', [
-            'label' => __('Style — Titre', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
-        ]);
-
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
-            'name'     => 'title_typography',
-            'selector' => '{{WRAPPER}} .bt-taxlist__title',
-        ]);
-
-        $this->add_control('title_color', [
-            'label'     => __('Couleur', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-taxlist__title' => 'color: {{VALUE}}'],
-        ]);
-
-        $this->add_responsive_control('title_spacing', [
-            'label'      => __('Marge basse', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
-            'size_units' => ['px', 'em', 'rem'],
-            'selectors'  => ['{{WRAPPER}} .bt-taxlist__title' => 'margin-bottom: {{SIZE}}{{UNIT}}'],
-        ]);
-
-        $this->end_controls_section();
+        $this->register_section_title_style('{{WRAPPER}} .bt-taxlist__title');
 
         // ── Section Style — Éléments ──────────────────────────────────────
         $this->start_controls_section('style_items', [

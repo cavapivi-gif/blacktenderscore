@@ -173,22 +173,12 @@ class Reviews extends AbstractBtWidget {
 
         $this->end_controls_section();
 
-        // ── Style — Cartes ────────────────────────────────────────────────
+        $this->register_section_title_style('{{WRAPPER}} .bt-reviews__section-title');
+
+        // ── Style — Espacement & cartes ───────────────────────────────────
         $this->start_controls_section('style_cards', [
-            'label' => __('Style — Cartes', 'blacktenderscore'),
+            'label' => __('Style — Espacement & cartes', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
-        ]);
-
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
-            'name'     => 'section_title_typo',
-            'label'    => __('Typographie titre section', 'blacktenderscore'),
-            'selector' => '{{WRAPPER}} .bt-reviews__section-title',
-        ]);
-
-        $this->add_control('section_title_color', [
-            'label'     => __('Couleur titre section', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-reviews__section-title' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_responsive_control('cards_gap', [
@@ -202,38 +192,9 @@ class Reviews extends AbstractBtWidget {
             ],
         ]);
 
-        $this->add_control('card_bg', [
-            'label'     => __('Fond de la carte', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-reviews__card' => 'background-color: {{VALUE}}'],
-        ]);
-
-        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
-            'name'     => 'card_border',
-            'selector' => '{{WRAPPER}} .bt-reviews__card',
-        ]);
-
-        $this->add_responsive_control('card_radius', [
-            'label'      => __('Border radius', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
-            'size_units' => ['px'],
-            'selectors'  => ['{{WRAPPER}} .bt-reviews__card' => 'border-radius: {{SIZE}}{{UNIT}}'],
-        ]);
-
-        $this->add_responsive_control('card_padding', [
-            'label'      => __('Padding', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::DIMENSIONS,
-            'size_units' => ['px', 'em'],
-            'default'    => ['top' => '24', 'right' => '24', 'bottom' => '24', 'left' => '24', 'unit' => 'px', 'isLinked' => true],
-            'selectors'  => ['{{WRAPPER}} .bt-reviews__card' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
-        ]);
-
-        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), [
-            'name'     => 'card_shadow',
-            'selector' => '{{WRAPPER}} .bt-reviews__card',
-        ]);
-
         $this->end_controls_section();
+
+        $this->register_box_style('card', 'Style — Cartes', '{{WRAPPER}} .bt-reviews__card', ['padding' => 24]);
 
         // ── Style — Texte ─────────────────────────────────────────────────
         $this->start_controls_section('style_text', [

@@ -218,42 +218,7 @@ class BoatPricing extends AbstractBtWidget {
 
         $this->end_controls_section();
 
-        // ── Style — Titre ─────────────────────────────────────────────────
-        $this->start_controls_section('style_title', [
-            'label' => __('Style — Titre', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
-        ]);
-
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
-            'name'     => 'title_typography',
-            'selector' => '{{WRAPPER}} .bt-bprice__title',
-        ]);
-
-        $this->add_control('title_color', [
-            'label'     => __('Couleur', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-bprice__title' => 'color: {{VALUE}}'],
-        ]);
-
-        $this->add_responsive_control('title_align', [
-            'label'     => __('Alignement', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::CHOOSE,
-            'options'   => [
-                'left'   => ['title' => __('Gauche', 'blacktenderscore'),  'icon' => 'eicon-text-align-left'],
-                'center' => ['title' => __('Centre', 'blacktenderscore'),  'icon' => 'eicon-text-align-center'],
-                'right'  => ['title' => __('Droite', 'blacktenderscore'),  'icon' => 'eicon-text-align-right'],
-            ],
-            'selectors' => ['{{WRAPPER}} .bt-bprice__title' => 'text-align: {{VALUE}}'],
-        ]);
-
-        $this->add_responsive_control('title_spacing', [
-            'label'      => __('Espacement sous le titre', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
-            'size_units' => ['px', 'em'],
-            'selectors'  => ['{{WRAPPER}} .bt-bprice__title' => 'margin-bottom: {{SIZE}}{{UNIT}}'],
-        ]);
-
-        $this->end_controls_section();
+        $this->register_section_title_style('{{WRAPPER}} .bt-bprice__title');
 
         // ── Style — Onglets (tabs) ────────────────────────────────────────
         $this->start_controls_section('style_tabs', [

@@ -134,6 +134,8 @@ class RelatedBoats extends AbstractBtWidget {
 
         $this->end_controls_section();
 
+        $this->register_section_title_style('{{WRAPPER}} .bt-relboats__title');
+
         // ── Style — Cartes ────────────────────────────────────────────────
         $this->start_controls_section('style_cards', [
             'label' => __('Style — Cartes', 'blacktenderscore'),
@@ -148,30 +150,9 @@ class RelatedBoats extends AbstractBtWidget {
             'selectors'  => ['{{WRAPPER}} .bt-relboats__grid' => 'gap: {{SIZE}}{{UNIT}}'],
         ]);
 
-        $this->add_control('card_bg', [
-            'label'     => __('Fond des cartes', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-relboats__card' => 'background-color: {{VALUE}}'],
-        ]);
-
-        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
-            'name'     => 'card_border',
-            'selector' => '{{WRAPPER}} .bt-relboats__card',
-        ]);
-
-        $this->add_responsive_control('card_radius', [
-            'label'      => __('Border radius', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
-            'size_units' => ['px'],
-            'selectors'  => ['{{WRAPPER}} .bt-relboats__card' => 'border-radius: {{SIZE}}{{UNIT}}; overflow: hidden'],
-        ]);
-
-        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), [
-            'name'     => 'card_shadow',
-            'selector' => '{{WRAPPER}} .bt-relboats__card',
-        ]);
-
         $this->end_controls_section();
+
+        $this->register_box_style('card', 'Style — Cartes', '{{WRAPPER}} .bt-relboats__card');
 
         // ── Style — Texte ─────────────────────────────────────────────────
         $this->start_controls_section('style_text', [

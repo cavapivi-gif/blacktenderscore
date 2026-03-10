@@ -123,4 +123,70 @@ trait BtLayoutControls {
 
         $this->end_controls_section();
     }
+
+    /**
+     * Section Style pour un séparateur / diviseur visuel.
+     *
+     * Controls générés :
+     *   {prefix}_color     COLOR → background-color (or border-color)
+     *   {prefix}_width     SLIDER px → height (épaisseur)
+     *   {prefix}_length    SLIDER % → width
+     *   {prefix}_spacing   SLIDER px → margin (top+bottom)
+     *
+     * @param string $prefix   ex: 'separator'
+     * @param string $label    ex: 'Séparateur'
+     * @param string $selector ex: '{{WRAPPER}} .bt-widget__separator'
+     * @param array  $defaults 'color' (hex), 'width' (px int), 'length' (% int)
+     * @param array  $condition Elementor condition optionnelle
+     */
+    protected function register_separator_controls(
+        string $prefix,
+        string $label,
+        string $selector,
+        array  $defaults  = [],
+        array  $condition = []
+    ): void {
+        $section_args = ['label' => $label, 'tab' => Controls_Manager::TAB_STYLE];
+        if (!empty($condition)) {
+            $section_args['condition'] = $condition;
+        }
+        $this->start_controls_section("style_{$prefix}", $section_args);
+
+        $this->add_control("{$prefix}_color", [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'default'   => $defaults['color'] ?? '',
+            'selectors' => [$selector => 'background-color: {{VALUE}}'],
+        ]);
+
+        $w = $defaults['width'] ?? 1;
+        $this->add_responsive_control("{$prefix}_width", [
+            'label'      => __('Épaisseur', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 1, 'max' => 20]],
+            'default'    => ['size' => $w, 'unit' => 'px'],
+            'selectors'  => [$selector => 'height: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        $l = $defaults['length'] ?? 100;
+        $this->add_responsive_control("{$prefix}_length", [
+            'label'      => __('Longueur (%)', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['%', 'px'],
+            'range'      => ['%' => ['min' => 10, 'max' => 100], 'px' => ['min' => 10, 'max' => 800]],
+            'default'    => ['size' => $l, 'unit' => '%'],
+            'selectors'  => [$selector => 'width: {{SIZE}}{{UNIT}}; display: block'],
+        ]);
+
+        $this->add_responsive_control("{$prefix}_spacing", [
+            'label'      => __('Espacement (haut/bas)', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px', 'em'],
+            'default'    => ['size' => 16, 'unit' => 'px'],
+            'selectors'  => [$selector => 'margin-block: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        $this->end_controls_section();
+    }
 }

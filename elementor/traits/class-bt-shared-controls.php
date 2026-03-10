@@ -18,6 +18,7 @@ defined('ABSPATH') || exit;
  * BtLayoutControls (trait-bt-layout-controls.php)
  *   register_grid_layout_controls($sel, $defaults, $label) — section complète
  *   register_box_style($prefix, $label, $sel, $defaults, $condition)
+ *   register_separator_controls($prefix, $label, $sel, $defaults, $condition)
  *
  * BtNavControls (trait-bt-nav-controls.php)
  *   register_tabs_nav_style($prefix, $label, $tab_sel, $active_sel, ...)

@@ -135,31 +135,9 @@ class BoatSpecs extends AbstractBtWidget {
 
         $this->end_controls_section();
 
-        // ── Style — Wrapper ───────────────────────────────────────────────
-        $this->start_controls_section('style_wrapper', [
-            'label' => __('Style — Titre', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
-        ]);
+        $this->register_section_title_style('{{WRAPPER}} .bt-bspecs__title');
 
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
-            'name'     => 'title_typography',
-            'selector' => '{{WRAPPER}} .bt-bspecs__title',
-        ]);
-
-        $this->add_control('title_color', [
-            'label'     => __('Couleur titre', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-bspecs__title' => 'color: {{VALUE}}'],
-        ]);
-
-        $this->add_responsive_control('title_spacing', [
-            'label'      => __('Marge basse titre', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
-            'size_units' => ['px', 'em'],
-            'selectors'  => ['{{WRAPPER}} .bt-bspecs__title' => 'margin-bottom: {{SIZE}}{{UNIT}}'],
-        ]);
-
-        $this->end_controls_section();
+        $this->register_box_style('item', 'Style — Cartes éléments', '{{WRAPPER}} .bt-bspecs__item', ['padding' => 16]);
 
         // ── Style — Items ─────────────────────────────────────────────────
         $this->start_controls_section('style_items', [
@@ -177,37 +155,6 @@ class BoatSpecs extends AbstractBtWidget {
                 '{{WRAPPER}} .bt-bspecs__grid' => 'gap: {{SIZE}}{{UNIT}}',
                 '{{WRAPPER}} .bt-bspecs__list' => 'gap: {{SIZE}}{{UNIT}}',
             ],
-        ]);
-
-        $this->add_control('item_bg', [
-            'label'     => __('Fond des éléments', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-bspecs__item' => 'background-color: {{VALUE}}'],
-        ]);
-
-        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
-            'name'     => 'item_border',
-            'selector' => '{{WRAPPER}} .bt-bspecs__item',
-        ]);
-
-        $this->add_responsive_control('item_radius', [
-            'label'      => __('Border radius', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
-            'size_units' => ['px', '%'],
-            'selectors'  => ['{{WRAPPER}} .bt-bspecs__item' => 'border-radius: {{SIZE}}{{UNIT}}'],
-        ]);
-
-        $this->add_responsive_control('item_padding', [
-            'label'      => __('Padding', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::DIMENSIONS,
-            'size_units' => ['px', 'em'],
-            'default'    => ['top' => '16', 'right' => '16', 'bottom' => '16', 'left' => '16', 'unit' => 'px', 'isLinked' => true],
-            'selectors'  => ['{{WRAPPER}} .bt-bspecs__item' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
-        ]);
-
-        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), [
-            'name'     => 'item_shadow',
-            'selector' => '{{WRAPPER}} .bt-bspecs__item',
         ]);
 
         $this->add_responsive_control('icon_size', [
