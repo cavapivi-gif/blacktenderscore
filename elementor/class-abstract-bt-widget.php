@@ -185,6 +185,24 @@ abstract class AbstractBtWidget extends \Elementor\Widget_Base {
         return \Elementor\Plugin::$instance->editor->is_edit_mode();
     }
 
+    /**
+     * Capture le HTML généré par Icons_Manager::render_icon() et le retourne sous forme de chaîne.
+     * Retourne '' si l'icône n'a pas de valeur (évite d'appeler ob_start inutilement).
+     *
+     * Usage :
+     *   $icon_html = $this->capture_icon($s['my_icon']);
+     *   $icon_html = $this->capture_icon($s['my_icon'], ['aria-hidden' => 'true', 'class' => 'my-class']);
+     *
+     * @param array $icon_settings  Valeur d'un contrôle ICONS Elementor (['value' => ..., 'library' => ...])
+     * @param array $attributes     Attributs HTML supplémentaires passés à render_icon()
+     */
+    protected function capture_icon(array $icon_settings, array $attributes = ['aria-hidden' => 'true']): string {
+        if (empty($icon_settings['value'])) return '';
+        ob_start();
+        \Elementor\Icons_Manager::render_icon($icon_settings, $attributes);
+        return (string) ob_get_clean();
+    }
+
     // ── ACF field discovery ───────────────────────────────────────────────────
 
     /**

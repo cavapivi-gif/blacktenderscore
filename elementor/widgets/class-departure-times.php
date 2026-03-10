@@ -348,12 +348,7 @@ class DepartureTimes extends AbstractBtWidget {
         if ($has_depart) {
             echo '<div class="bt-deptimes__departure-info">';
 
-            $icon_html = '';
-            if (!empty($s['departure_icon']['value'])) {
-                ob_start();
-                \Elementor\Icons_Manager::render_icon($s['departure_icon'], ['aria-hidden' => 'true', 'class' => 'bt-deptimes__departure-icon']);
-                $icon_html = ob_get_clean();
-            }
+            $icon_html = $this->capture_icon($s['departure_icon'], ['aria-hidden' => 'true', 'class' => 'bt-deptimes__departure-icon']);
 
             echo '<span class="bt-deptimes__point">' . $icon_html . ' ' . esc_html($departure_name) . '</span>';
 

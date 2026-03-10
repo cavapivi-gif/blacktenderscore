@@ -4,8 +4,11 @@
 
 /* ── Variables globales ──────────────────────────────────── */
 :root {
-  --bt-tab-active-color: #000; /* couleur onglet actif (FAQ, Pricing, BoatPricing) */
-  --bt-star-color: #f4a900;    /* couleur étoiles par défaut (Reviews) */
+  --bt-tab-active-color:   #000;     /* couleur onglet actif   (FAQ, Pricing, BoatPricing) */
+  --bt-tab-hover-color:    #333;     /* couleur onglet survol  */
+  --bt-tab-inactive-color: #666;     /* couleur onglet inactif */
+  --bt-border-light:       #e0e0e0;  /* bordure légère         (tablists, accordéon) */
+  --bt-star-color:         #f4a900;  /* couleur étoiles        (Reviews) */
 }
 
 /* ── Placeholder éditeur ─────────────────────────────────── */
@@ -134,7 +137,7 @@
 
 /* ── Accordéon — Item ─────────────────────────────────────── */
 .bt-faq--accordion .bt-faq__item {
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--bt-border-light);
   /* PAS de overflow:hidden sur l'item : la grille CSS a besoin de s'étendre */
 }
 
@@ -226,36 +229,62 @@
   line-height: 1.7;
 }
 
-/* ── Tabs (FAQ) ───────────────────────────────────────────── */
-.bt-faq--tabs .bt-faq__tablist {
+/* ── Composant partagé : onglets (FAQ, Pricing, BoatPricing) ─
+   Les règles ci-dessous s'appliquent aux 3 widgets à la fois.
+   Les spécificités propres à chaque widget sont juste en dessous
+   de leur en-tête de section respective.
+   ──────────────────────────────────────────────────────────── */
+
+/* Tablists — display:flex commun (FAQ + Pricing) */
+.bt-faq--tabs .bt-faq__tablist,
+.bt-pricing__tablist {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  border-bottom: 2px solid #e0e0e0;
+  border-bottom: 2px solid var(--bt-border-light);
   margin-bottom: 0;
 }
 
-.bt-faq--tabs .bt-faq__tab {
+/* Bouton onglet — base commune aux 3 widgets */
+.bt-faq--tabs .bt-faq__tab,
+.bt-pricing__tab,
+.bt-bprice__tab {
   padding: 10px 20px;
   border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
   background: transparent;
   cursor: pointer;
   font: inherit;
   font-weight: 500;
-  color: #666;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
+  color: var(--bt-tab-inactive-color);
   transition: color .15s, border-color .15s;
 }
 
-.bt-faq--tabs .bt-faq__tab:hover {
-  color: var(--bt-tab-active-color);
+/* Pricing + BoatPricing : nowrap */
+.bt-pricing__tab,
+.bt-bprice__tab { white-space: nowrap; }
+
+/* BoatPricing : poids et transition supplémentaire */
+.bt-bprice__tab {
+  font-weight: 600;
+  transition: color .15s, background-color .15s, border-color .15s;
 }
 
-.bt-faq--tabs .bt-faq__tab--active {
+/* Hover — commun aux 3 widgets */
+.bt-faq--tabs .bt-faq__tab:hover,
+.bt-pricing__tab:hover,
+.bt-bprice__tab:hover { color: var(--bt-tab-hover-color); }
+
+/* Actif — commun aux 3 widgets */
+.bt-faq--tabs .bt-faq__tab--active,
+.bt-pricing__tab--active,
+.bt-bprice__tab--active {
   color: var(--bt-tab-active-color);
   border-bottom-color: var(--bt-tab-active-color);
 }
+
+/* ── Tabs (FAQ) — spécificités ───────────────────────────── */
 
 /* Panels tabs : masqués par défaut via classe CSS (pas [hidden]) */
 .bt-faq--tabs .bt-faq__tabpanel {
@@ -275,36 +304,6 @@
 /* ══════════════════════════════════════════════════════════
    WIDGET : Pricing Tabs (Tarification par forfait)
    ══════════════════════════════════════════════════════════ */
-
-/* Barre d'onglets */
-.bt-pricing__tablist {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  border-bottom: 2px solid #e0e0e0;
-}
-
-/* Onglet */
-.bt-pricing__tab {
-  padding: 10px 20px;
-  border: none;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
-  background: transparent;
-  cursor: pointer;
-  font: inherit;
-  font-weight: 500;
-  color: #666;
-  white-space: nowrap;
-  transition: color .15s, border-color .15s;
-}
-
-.bt-pricing__tab:hover { color: #333; }
-
-.bt-pricing__tab--active {
-  color: var(--bt-tab-active-color);
-  border-bottom-color: var(--bt-tab-active-color);
-}
 
 /* Panneaux — masqués par défaut via CSS (pas d'attribut [hidden]) */
 .bt-pricing__panel {
@@ -363,40 +362,12 @@
   margin-bottom: 0;
 }
 
-/*
- * Barre d'onglets — inline-flex = fit-content naturel.
- * background / padding / radius / border = pilotés par Elementor.
- * border-bottom par défaut comme séparateur (overridable).
- */
+/* display:inline-flex = fit-content naturel (spécificité BoatPricing) */
 .bt-bprice__tablist {
   display: inline-flex;
   flex-wrap: wrap;
   gap: 4px;
-  border-bottom: 2px solid #e0e0e0;
-}
-
-/* Onglet */
-.bt-bprice__tab {
-  padding: 10px 20px;
-  border: none;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -2px; /* chevauchement du border-bottom de la barre */
-  background: transparent;
-  cursor: pointer;
-  font: inherit;
-  font-weight: 600;
-  color: #666;
-  white-space: nowrap;
-  transition: color .15s, background-color .15s, border-color .15s;
-}
-
-.bt-bprice__tab:hover {
-  color: #333;
-}
-
-.bt-bprice__tab--active {
-  color: var(--bt-tab-active-color);
-  border-bottom-color: var(--bt-tab-active-color);
+  border-bottom: 2px solid var(--bt-border-light);
 }
 
 /* Panneau de contenu */
