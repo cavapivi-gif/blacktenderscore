@@ -211,6 +211,7 @@
 .bt-faq--accordion .bt-faq__body {
   display: grid;
   grid-template-rows: 0fr;
+  overflow: hidden; /* double sécurité : clip le contenu même si le thème surcharge overflow sur .bt-faq__body-inner */
   transition: grid-template-rows .3s ease;
 }
 
