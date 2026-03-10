@@ -841,7 +841,7 @@
   }
 }
 
-/* ── Carte Google Maps (iframe) ───────────────────────────── */
+/* ── Carte Google Maps Static API (<img>) ─────────────────── */
 .bt-itin__map-wrap {
   position: relative;
   width: 100%;
@@ -851,7 +851,8 @@
   display: block;
   width: 100%;
   height: 400px; /* override par le control Elementor map_height */
-  border: 0;
+  object-fit: cover; /* recadre l'image dans la hauteur choisie */
+  object-position: center;
 }
 
 
