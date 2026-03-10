@@ -902,12 +902,13 @@ class Itinerary extends \Elementor\Widget_Base {
     }
 
     /**
-     * Rend la carte Google Maps (iframe Embed API).
-     * Supporte deux formats de coordonnées ACF :
-     *   1. ACF Google Map field → $row['step_coords'] = ['lat' => ..., 'lng' => ...]
-     *   2. Deux champs Nombre   → $row['step_lat'] + $row['step_lng']
+     * Rend la carte via Google Maps Static API → simple <img>.
+     * Pins numérotés sur chaque stop + ligne droite entre eux (route maritime).
+     * Pas de calcul d'itinéraire routier — juste les coordonnées GPS brutes.
+     * Résultat mis en cache (WP transient, invalidé à la sauvegarde du post).
      *
      * Clé API : Elementor → Réglages → Intégrations → Google Maps.
+     * Activer "Maps Static API" dans Google Cloud Console.
      */
     private function render_map(array $rows, string $departure_zone, string $returning_zone, array $s, int $post_id): void {
         $points = [];
@@ -945,7 +946,6 @@ class Itinerary extends \Elementor\Widget_Base {
 
         // Clé API : Elementor → Réglages → Intégrations → Google Maps
         $api_key = (string) get_option('elementor_google_maps_api_key', '');
-        $maptype = $s['map_type'] ?? 'roadmap';
 
         if (empty($api_key)) {
             if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
@@ -956,32 +956,50 @@ class Itinerary extends \Elementor\Widget_Base {
             return;
         }
 
-        // Construction URL embed
-        $base_args = ['key' => $api_key, 'language' => 'fr', 'maptype' => $maptype];
+        // Cache : clé basée sur le post + les coordonnées + le style
+        $maptype   = $s['map_type'] ?? 'roadmap';
+        $cache_key = 'bt_map_' . md5($post_id . serialize($points) . $maptype);
+        $cached    = get_transient($cache_key);
 
-        if (count($points) === 1) {
-            $url = add_query_arg(
-                array_merge($base_args, ['q' => $points[0][0] . ',' . $points[0][1]]),
-                'https://www.google.com/maps/embed/v1/place'
-            );
-        } else {
-            $middle = array_slice($points, 1, -1);
-            $args   = array_merge($base_args, [
-                'origin'      => $points[0][0] . ',' . $points[0][1],
-                'destination' => end($points)[0] . ',' . end($points)[1],
-                'mode'        => 'driving',
-            ]);
-            if ($middle) {
-                $args['waypoints'] = implode('|', array_map(fn($p) => $p[0] . ',' . $p[1], $middle));
-            }
-            $url = add_query_arg($args, 'https://www.google.com/maps/embed/v1/directions');
+        if (false !== $cached) {
+            echo $cached; // phpcs:ignore WordPress.Security.EscapeOutput
+            return;
         }
 
-        echo '<div class="bt-itin__map-wrap">';
-        printf(
-            '<iframe class="bt-itin__map" src="%s" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>',
-            esc_url($url)
-        );
-        echo '</div>';
+        // Construction URL Static Maps
+        $total  = count($points);
+        $params = 'key=' . rawurlencode($api_key)
+                . '&size=1280x640&scale=2'
+                . '&maptype=' . rawurlencode($maptype)
+                . '&language=fr';
+
+        // Pins numérotés : vert (départ), bleu (étapes), rouge (arrivée)
+        foreach ($points as $i => [$lat, $lng]) {
+            $color = match(true) {
+                $i === 0          => 'green',
+                $i === $total - 1 => 'red',
+                default           => 'blue',
+            };
+            $label   = $i < 9 ? (string) ($i + 1) : chr(65 + $i - 9); // 1-9 puis A-Z
+            $params .= '&markers=' . rawurlencode("color:{$color}|size:mid|label:{$label}|{$lat},{$lng}");
+        }
+
+        // Ligne droite entre les stops (route maritime = pas de calcul routier)
+        if ($total > 1) {
+            $path    = implode('|', array_map(fn($p) => "{$p[0]},{$p[1]}", $points));
+            $params .= '&path=' . rawurlencode('color:0x0066cccc|weight:3|' . $path);
+        }
+
+        $url  = 'https://maps.googleapis.com/maps/api/staticmap?' . $params;
+        $html = '<div class="bt-itin__map-wrap">'
+              . '<img class="bt-itin__map" src="' . esc_url($url) . '" '
+              . 'alt="' . esc_attr__('Carte de l\'itinéraire', 'blacktenderscore') . '" '
+              . 'loading="lazy" decoding="async">'
+              . '</div>';
+
+        // Mise en cache 7 jours (invalidée par save_post via hook dans class-plugin.php)
+        set_transient($cache_key, $html, WEEK_IN_SECONDS);
+
+        echo $html; // phpcs:ignore WordPress.Security.EscapeOutput
     }
 }

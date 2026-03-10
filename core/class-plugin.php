@@ -23,6 +23,14 @@ class Plugin {
         // Widgets Elementor (se branche sur elementor/loaded)
         (new ElementorManager())->init();
 
+        // Invalide le cache carte Static Maps quand un post est sauvegardé
+        add_action('save_post', static function(int $post_id): void {
+            global $wpdb;
+            $wpdb->query(
+                "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_bt_map_%' OR option_name LIKE '_transient_timeout_bt_map_%'"
+            );
+        });
+
         // Cron : intervalle personnalisé + hook de sync
         add_filter('cron_schedules', [$this, 'add_cron_intervals']);
         add_action('bt_auto_sync', [Sync::class, 'cron_run']);
