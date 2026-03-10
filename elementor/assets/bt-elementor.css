@@ -202,26 +202,20 @@
 .bt-faq__item--active .bt-faq__icon--closed { display: none; }
 .bt-faq__item--active .bt-faq__icon--open   { display: inline-flex; }
 
-/* ── Corps réponse — animation CSS grid ───────────────────── */
+/* ── Corps réponse ────────────────────────────────────────── */
 /*
- * grid-template-rows: 0fr → 1fr
- * Nécessite que l'enfant direct ait overflow:hidden + min-height:0
- * Compatible Chrome 66+, Firefox 66+, Safari 12+
+ * max-height: 0 masqué par CSS par défaut.
+ * Le JS pose body.style.maxHeight = scrollHeight+'px' sur les items actifs
+ * via un style inline → priorité absolue sur tout CSS thème.
+ * Transition CSS sur max-height pour l'animation.
  */
 .bt-faq--accordion .bt-faq__body {
-  display: grid;
-  grid-template-rows: 0fr;
-  overflow: hidden; /* double sécurité : clip le contenu même si le thème surcharge overflow sur .bt-faq__body-inner */
-  transition: grid-template-rows .3s ease;
-}
-
-.bt-faq--accordion .bt-faq__item--active .bt-faq__body {
-  grid-template-rows: 1fr;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .3s ease;
 }
 
 .bt-faq__body-inner {
-  overflow: hidden;
-  min-height: 0;
   padding: 0 20px 20px;
   line-height: 1.7;
 }

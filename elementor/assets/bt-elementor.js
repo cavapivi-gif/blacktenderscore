@@ -15,20 +15,40 @@
 
   /* ── Accordéon ──────────────────────────────────────────────────────────── */
 
+  function getBody(item) {
+    return item.querySelector('.bt-faq__body');
+  }
+
   function openItem(item) {
     item.classList.add('bt-faq__item--active');
+    var body = getBody(item);
+    // Style inline : priorité absolue sur tout CSS thème
+    if (body) body.style.maxHeight = body.scrollHeight + 'px';
     var btn = item.querySelector('.bt-faq__header');
     if (btn) btn.setAttribute('aria-expanded', 'true');
   }
 
   function closeItem(item) {
     item.classList.remove('bt-faq__item--active');
+    var body = getBody(item);
+    if (body) body.style.maxHeight = '0px';
     var btn = item.querySelector('.bt-faq__header');
     if (btn) btn.setAttribute('aria-expanded', 'false');
   }
 
   function initAccordion(root) {
     var isFaqMode = root.hasAttribute('data-bt-faq-mode');
+
+    // Pose immédiatement les max-height inline pour éviter tout flash de contenu
+    root.querySelectorAll('.bt-faq__item').forEach(function (item) {
+      var body = getBody(item);
+      if (!body) return;
+      if (item.classList.contains('bt-faq__item--active')) {
+        body.style.maxHeight = body.scrollHeight + 'px';
+      } else {
+        body.style.maxHeight = '0px';
+      }
+    });
 
     root.querySelectorAll('.bt-faq__header').forEach(function (btn) {
       btn.addEventListener('click', function () {
