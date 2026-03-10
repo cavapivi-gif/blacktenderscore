@@ -186,22 +186,12 @@ class DepartureTimes extends AbstractBtWidget {
 
         $this->end_controls_section();
 
+        $this->register_section_title_style('{{WRAPPER}} .bt-deptimes__title');
+
         // ── Style — Badges horaires ───────────────────────────────────────
         $this->start_controls_section('style_badges', [
             'label' => __('Style — Badges horaires', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
-        ]);
-
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
-            'name'     => 'title_typo',
-            'label'    => __('Typographie titre', 'blacktenderscore'),
-            'selector' => '{{WRAPPER}} .bt-deptimes__title',
-        ]);
-
-        $this->add_control('title_color', [
-            'label'     => __('Couleur titre', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-deptimes__title' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_responsive_control('badges_gap', [
