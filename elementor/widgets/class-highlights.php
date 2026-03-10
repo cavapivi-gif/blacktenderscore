@@ -3,14 +3,17 @@ namespace BlackTenders\Elementor\Widgets;
 
 use BlackTenders\Elementor\AbstractBtWidget;
 use BlackTenders\Elementor\Traits\BtSharedControls;
+use Elementor\Controls_Manager;
+use Elementor\Icons_Manager;
 
 defined('ABSPATH') || exit;
 
 /**
  * Widget Elementor — Points forts.
  *
- * Affiche un repeater ACF (highlight_icon, highlight_title, highlight_desc)
- * sous forme de grille ou de liste avec icône + titre + description.
+ * Repeater ACF (highlight_icon, highlight_title, highlight_desc)
+ * en grille ou liste, avec Elementor Icons comme icône de fallback
+ * et styles via les méthodes partagées du trait.
  */
 class Highlights extends AbstractBtWidget {
 
@@ -32,12 +35,12 @@ class Highlights extends AbstractBtWidget {
         // ── Contenu ───────────────────────────────────────────────────────
         $this->start_controls_section('section_content', [
             'label' => __('Contenu', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('acf_field', [
             'label'   => __('Champ ACF repeater', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
+            'type'    => Controls_Manager::TEXT,
             'default' => 'exp_highlights',
         ]);
 
@@ -45,7 +48,7 @@ class Highlights extends AbstractBtWidget {
 
         $this->add_control('max_items', [
             'label'   => __('Nombre max d\'éléments', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::NUMBER,
+            'type'    => Controls_Manager::NUMBER,
             'min'     => 1,
             'max'     => 50,
             'default' => 12,
@@ -53,45 +56,59 @@ class Highlights extends AbstractBtWidget {
 
         $this->add_control('sf_icon', [
             'label'   => __('Sous-champ icône (emoji/texte)', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
+            'type'    => Controls_Manager::TEXT,
             'default' => 'highlight_icon',
         ]);
 
         $this->add_control('sf_title', [
             'label'   => __('Sous-champ titre', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
+            'type'    => Controls_Manager::TEXT,
             'default' => 'highlight_title',
         ]);
 
         $this->add_control('sf_desc', [
             'label'   => __('Sous-champ description', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
+            'type'    => Controls_Manager::TEXT,
             'default' => 'highlight_desc',
         ]);
 
+        $this->add_control('separator_icon_fallback', [
+            'label'     => __('─────── Icône de fallback ───────', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'separator' => 'before',
+        ]);
+
         $this->add_control('default_icon', [
-            'label'   => __('Icône par défaut', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
-            'default' => '✓',
+            'label'       => __('Icône par défaut (si champ ACF vide)', 'blacktenderscore'),
+            'description' => __('Utilisée quand le champ emoji/icône ACF est vide.', 'blacktenderscore'),
+            'type'        => Controls_Manager::ICONS,
+            'default'     => ['value' => 'fas fa-check', 'library' => 'fa-solid'],
+            'skin'        => 'inline',
+        ]);
+
+        $this->add_control('separator_visibility', [
+            'label'     => __('─────── Visibilité ───────', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'separator' => 'before',
         ]);
 
         $this->add_control('show_icon', [
             'label'        => __('Afficher l\'icône', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('show_title', [
             'label'        => __('Afficher le titre', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('show_desc', [
             'label'        => __('Afficher la description', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => '',
         ]);
@@ -101,12 +118,12 @@ class Highlights extends AbstractBtWidget {
         // ── Mise en page ──────────────────────────────────────────────────
         $this->start_controls_section('section_layout', [
             'label' => __('Mise en page', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('layout', [
             'label'   => __('Disposition', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
+            'type'    => Controls_Manager::SELECT,
             'options' => [
                 'grid' => __('Grille', 'blacktenderscore'),
                 'list' => __('Liste', 'blacktenderscore'),
@@ -116,7 +133,7 @@ class Highlights extends AbstractBtWidget {
 
         $this->add_responsive_control('columns', [
             'label'          => __('Colonnes', 'blacktenderscore'),
-            'type'           => \Elementor\Controls_Manager::NUMBER,
+            'type'           => Controls_Manager::NUMBER,
             'min'            => 1,
             'max'            => 6,
             'default'        => 3,
@@ -128,7 +145,7 @@ class Highlights extends AbstractBtWidget {
 
         $this->add_responsive_control('gap', [
             'label'      => __('Espacement', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'default'    => ['size' => 16, 'unit' => 'px'],
             'selectors'  => [
@@ -137,76 +154,91 @@ class Highlights extends AbstractBtWidget {
             ],
         ]);
 
+        $this->add_control('icon_position', [
+            'label'   => __('Position de l\'icône', 'blacktenderscore'),
+            'type'    => Controls_Manager::CHOOSE,
+            'options' => [
+                'row'    => ['title' => __('Gauche du texte', 'blacktenderscore'), 'icon' => 'eicon-h-align-left'],
+                'column' => ['title' => __('Au-dessus du texte', 'blacktenderscore'), 'icon' => 'eicon-v-align-top'],
+            ],
+            'default'   => 'row',
+            'condition' => ['show_icon' => 'yes'],
+            'selectors' => ['{{WRAPPER}} .bt-highlights__item' => 'flex-direction: {{VALUE}}'],
+        ]);
+
         $this->end_controls_section();
 
-        // ── Style ─────────────────────────────────────────────────────────
+        // ── Styles via traits ─────────────────────────────────────────────
         $this->register_section_title_style('{{WRAPPER}} .bt-highlights__section-title');
 
-        $this->register_box_style('item', 'Style — Item', '{{WRAPPER}} .bt-highlights__item', ['padding' => 16]);
+        $this->register_item_3state_style(
+            'item',
+            __('Style — Item', 'blacktenderscore'),
+            '{{WRAPPER}} .bt-highlights__item'
+        );
 
         // Style — Icône
         $this->start_controls_section('style_icon', [
-            'label' => __('Style — Icône', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+            'label'     => __('Style — Icône', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_STYLE,
+            'condition' => ['show_icon' => 'yes'],
         ]);
 
         $this->add_responsive_control('icon_size', [
             'label'      => __('Taille', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px', 'em'],
             'range'      => ['px' => ['min' => 12, 'max' => 80]],
-            'default'    => ['size' => 32, 'unit' => 'px'],
-            'selectors'  => ['{{WRAPPER}} .bt-highlights__icon' => 'font-size: {{SIZE}}{{UNIT}}'],
+            'default'    => ['size' => 28, 'unit' => 'px'],
+            'selectors'  => ['{{WRAPPER}} .bt-highlights__icon' => 'font-size: {{SIZE}}{{UNIT}}; width: {{SIZE}}{{UNIT}}'],
         ]);
 
         $this->add_control('icon_color', [
             'label'     => __('Couleur', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-highlights__icon' => 'color: {{VALUE}}'],
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-highlights__icon, {{WRAPPER}} .bt-highlights__icon i, {{WRAPPER}} .bt-highlights__icon svg' => 'color: {{VALUE}}; fill: {{VALUE}}'],
+        ]);
+
+        $this->add_control('icon_bg', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-highlights__icon' => 'background-color: {{VALUE}}'],
+        ]);
+
+        $this->add_responsive_control('icon_padding', [
+            'label'      => __('Padding', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', 'em'],
+            'selectors'  => ['{{WRAPPER}} .bt-highlights__icon' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+
+        $this->add_responsive_control('icon_radius', [
+            'label'      => __('Border radius', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px', '%'],
+            'selectors'  => ['{{WRAPPER}} .bt-highlights__icon' => 'border-radius: {{SIZE}}{{UNIT}}'],
         ]);
 
         $this->end_controls_section();
 
-        // Style — Titre item
-        $this->start_controls_section('style_item_title', [
-            'label' => __('Style — Titre item', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
-        ]);
+        // Typographies via trait
+        $this->register_typography_section(
+            'item_title',
+            __('Style — Titre item', 'blacktenderscore'),
+            '{{WRAPPER}} .bt-highlights__title',
+            [],
+            [],
+            ['show_title' => 'yes']
+        );
 
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
-            'name'     => 'item_title_typography',
-            'label'    => __('Typographie', 'blacktenderscore'),
-            'selector' => '{{WRAPPER}} .bt-highlights__title',
-        ]);
-
-        $this->add_control('item_title_color', [
-            'label'     => __('Couleur', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-highlights__title' => 'color: {{VALUE}}'],
-        ]);
-
-        $this->end_controls_section();
-
-        // Style — Description item
-        $this->start_controls_section('style_item_desc', [
-            'label'     => __('Style — Description item', 'blacktenderscore'),
-            'tab'       => \Elementor\Controls_Manager::TAB_STYLE,
-            'condition' => ['show_desc' => 'yes'],
-        ]);
-
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
-            'name'     => 'item_desc_typography',
-            'label'    => __('Typographie', 'blacktenderscore'),
-            'selector' => '{{WRAPPER}} .bt-highlights__desc',
-        ]);
-
-        $this->add_control('item_desc_color', [
-            'label'     => __('Couleur', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-highlights__desc' => 'color: {{VALUE}}'],
-        ]);
-
-        $this->end_controls_section();
+        $this->register_typography_section(
+            'item_desc',
+            __('Style — Description item', 'blacktenderscore'),
+            '{{WRAPPER}} .bt-highlights__desc',
+            [],
+            [],
+            ['show_desc' => 'yes']
+        );
     }
 
     // ── Render ───────────────────────────────────────────────────────────────
@@ -220,14 +252,13 @@ class Highlights extends AbstractBtWidget {
         $rows = $this->get_acf_rows($field_name, __('Aucun point fort trouvé.', 'blacktenderscore'));
         if (!$rows) return;
 
-        $max_items    = max(1, (int) ($s['max_items'] ?: 12));
-        $rows         = array_slice($rows, 0, $max_items);
-        $sf_icon      = sanitize_text_field($s['sf_icon']  ?: 'highlight_icon');
-        $sf_title     = sanitize_text_field($s['sf_title'] ?: 'highlight_title');
-        $sf_desc      = sanitize_text_field($s['sf_desc']  ?: 'highlight_desc');
-        $default_icon = $s['default_icon'] ?: '✓';
-        $layout       = $s['layout'] ?: 'grid';
-        $wrap_cls     = $layout === 'list' ? 'bt-highlights__list' : 'bt-highlights__grid';
+        $max_items = max(1, (int) ($s['max_items'] ?: 12));
+        $rows      = array_slice($rows, 0, $max_items);
+        $sf_icon   = sanitize_text_field($s['sf_icon']  ?: 'highlight_icon');
+        $sf_title  = sanitize_text_field($s['sf_title'] ?: 'highlight_title');
+        $sf_desc   = sanitize_text_field($s['sf_desc']  ?: 'highlight_desc');
+        $layout    = $s['layout'] ?: 'grid';
+        $wrap_cls  = $layout === 'list' ? 'bt-highlights__list' : 'bt-highlights__grid';
 
         echo '<div class="bt-highlights">';
 
@@ -240,12 +271,18 @@ class Highlights extends AbstractBtWidget {
             $title = $row[$sf_title] ?? '';
             $desc  = $row[$sf_desc]  ?? '';
 
-            if (!$icon) $icon = $default_icon;
-
             echo '<div class="bt-highlights__item">';
 
             if ($s['show_icon'] === 'yes') {
-                echo '<span class="bt-highlights__icon" aria-hidden="true">' . esc_html($icon) . '</span>';
+                echo '<span class="bt-highlights__icon" aria-hidden="true">';
+                if ($icon) {
+                    // Emoji ou texte depuis ACF
+                    echo esc_html($icon);
+                } elseif (!empty($s['default_icon']['value'])) {
+                    // Icône Elementor (fa, eicon...)
+                    Icons_Manager::render_icon($s['default_icon'], ['aria-hidden' => 'true']);
+                }
+                echo '</span>';
             }
 
             echo '<div class="bt-highlights__content">';

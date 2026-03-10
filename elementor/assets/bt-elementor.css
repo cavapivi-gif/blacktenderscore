@@ -1197,7 +1197,7 @@
   grid-template-rows: 1fr;
 }
 
-/* 2 images : grande + 1 petite */
+/* 2 images */
 .bt-gprev__grid--2 {
   grid-template-columns: 2fr 1fr;
   grid-template-rows: 1fr;
@@ -1209,7 +1209,7 @@
   grid-template-rows: 1fr 1fr;
 }
 
-/* 4 images : grande (2 rangées) + 3 petites — 3e petite en pleine largeur */
+/* 4 images */
 .bt-gprev__grid--4 {
   grid-template-columns: 2fr 1fr 1fr;
   grid-template-rows: 1fr 1fr;
@@ -1218,7 +1218,7 @@
   grid-column: span 2;
 }
 
-/* 5 images : layout Airbnb standard */
+/* 5–9 images : layout Airbnb standard */
 .bt-gprev__grid--5,
 .bt-gprev__grid--6,
 .bt-gprev__grid--7,
@@ -1231,13 +1231,17 @@
 /* Grande image : couvre les 2 rangées */
 .bt-gprev__item--main {
   grid-row: span 2;
+  position: relative; /* nécessaire pour le bouton "voir toutes" */
 }
 
-/* Item */
+/* Item — reset figure + garantit que height 100% fonctionne */
 .bt-gprev__item {
+  display: block;    /* reset figure default */
   position: relative;
   overflow: hidden;
   margin: 0;
+  padding: 0;
+  min-height: 0;     /* évite les débordements dans certains thèmes */
 }
 
 /* Lien/wrapper */
@@ -1248,22 +1252,25 @@
   position: relative;
   overflow: hidden;
   cursor: pointer;
+  text-decoration: none;
 }
 
-/* Image */
+/* Image — object-fit: cover garantit la même hauteur pour toutes les vignettes */
 .bt-gprev__img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center center; /* override par Elementor img_position */
   transition: transform 0.35s ease;
 }
 
-.bt-gprev__link:hover .bt-gprev__img {
-  transform: scale(1.04);
+/* Zoom au survol — activé via classe bt-gprev__grid--zoom (control Elementor) */
+.bt-gprev__grid--zoom .bt-gprev__link:hover .bt-gprev__img {
+  transform: scale(1.04); /* override par Elementor hover_zoom_scale */
 }
 
-/* Overlay sur la dernière image visible */
+/* Overlay sur la dernière vignette */
 .bt-gprev__overlay {
   position: absolute;
   inset: 0;
@@ -1273,6 +1280,7 @@
   background: rgba(0, 0, 0, 0.45); /* override par Elementor overlay_bg */
   cursor: pointer;
   transition: background 0.2s;
+  pointer-events: none; /* le clic passe au lien parent */
 }
 
 .bt-gprev__link:hover .bt-gprev__overlay {
@@ -1286,15 +1294,50 @@
   font-weight: 700;
   line-height: 1.2;
   text-align: center;
+  pointer-events: none;
 }
 
-/* Flou — la valeur est aussi pilotée par le control Elementor (override inline) */
+/* Flou */
 .bt-gprev__item--blur .bt-gprev__img {
   filter: blur(4px);
-  transform: scale(1.06); /* évite les bords blancs du blur */
+  transform: scale(1.06);
 }
 
-/* Éléments cachés (hors grille) — en DOM pour la lightbox Elementor */
+/* ── Bouton "Voir toutes les photos" ─────────────────────── */
+.bt-gprev__allphotos-btn {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #111;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font: inherit;
+  font-size: .875em;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s, transform 0.15s;
+  backdrop-filter: blur(4px);
+  z-index: 2;
+  bottom: 12px;
+}
+
+.bt-gprev__allphotos-btn--bottom-left   { left: 12px; }
+.bt-gprev__allphotos-btn--bottom-right  { right: 12px; }
+.bt-gprev__allphotos-btn--bottom-center { left: 50%; transform: translateX(-50%); }
+
+.bt-gprev__allphotos-btn:hover {
+  background: #fff;
+}
+
+.bt-gprev__allphotos-btn svg {
+  flex-shrink: 0;
+}
+
+/* Éléments cachés pour la lightbox */
 .bt-gprev__lightbox-hidden {
   display: none !important;
 }
@@ -1308,24 +1351,21 @@
     border-radius: 8px;
   }
 
-  /* Grande image : pleine largeur */
   .bt-gprev__item--main {
     grid-column: 1 / -1;
     grid-row: 1;
     aspect-ratio: 16 / 9;
   }
 
-  /* Petites images : ratio carré */
   .bt-gprev__item:not(.bt-gprev__item--main) {
     aspect-ratio: 1 / 1;
   }
 
-  /* Masquer images 4+ sur mobile (grande + 2 petites) */
+  /* Masquer images 4+ sur mobile */
   .bt-gprev__item:nth-child(n+4) {
     display: none;
   }
 
-  /* Reset du span-2 du layout 4-images */
   .bt-gprev__grid--4 .bt-gprev__item:nth-child(4) {
     grid-column: auto;
   }
@@ -1407,15 +1447,23 @@
   display: flex;
   align-items: flex-start;
   gap: 12px;
+  /* flex-direction override par control icon_position */
 }
 
+/* Icône — peut contenir emoji, texte, fa, ou SVG Elementor */
 .bt-highlights__icon {
   flex-shrink: 0;
-  font-size: 32px;
+  font-size: 28px;
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.bt-highlights__content { flex: 1; }
+.bt-highlights__icon i   { font-size: inherit; color: inherit; }
+.bt-highlights__icon svg { width: 1em; height: 1em; fill: currentColor; }
+
+.bt-highlights__content { flex: 1; min-width: 0; }
 .bt-highlights__title   { display: block; font-weight: 600; }
 .bt-highlights__desc    { margin: .25em 0 0; }
 
@@ -1427,6 +1475,7 @@
 
 .bt-captain__card {
   display: flex;
+  flex-direction: row; /* override par control card_direction */
   align-items: flex-start;
   gap: 24px;
 }
@@ -1436,23 +1485,26 @@
   width: 100px;
   height: 100px;
   overflow: hidden;
-  border-radius: 50%;
+  border-radius: 50%; /* override par photo_radius */
 }
 
 .bt-captain__photo {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 50%;
+  object-position: center center;
 }
 
-.bt-captain__info { flex: 1; }
-.bt-captain__name { font-weight: 700; margin: 0 0 .25em; }
-.bt-captain__since { margin: 0 0 .5em; }
-.bt-captain__bio { margin: 0; }
+.bt-captain__info  { flex: 1; min-width: 0; }
+.bt-captain__name  { font-weight: 700; margin: 0 0 .25em; }
+.bt-captain__since { margin: 0 0 .5em; font-size: .9em; opacity: .8; }
+.bt-captain__bio   { margin: 0; }
+.bt-captain__bio p { margin: 0 0 .5em; }
+.bt-captain__bio p:last-child { margin-bottom: 0; }
 
 @media (max-width: 480px) {
-  .bt-captain__card { flex-direction: column; }
+  .bt-captain__card { flex-direction: column !important; }
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -1502,7 +1554,12 @@
 .bt-share {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
+}
+
+/* ── Bouton principal ─────────────────────────────────────── */
+.bt-share__top {
+  display: flex;
 }
 
 .bt-share__btn {
@@ -1511,22 +1568,87 @@
   gap: 8px;
   cursor: pointer;
   border: none;
-  background: #0073aa;
+  background: #0f172a;
   color: #fff;
   padding: 10px 20px;
   border-radius: 8px;
   font: inherit;
   font-weight: 600;
-  transition: opacity .2s;
+  font-size: 1em;
+  transition: background .2s, transform .15s;
+  text-decoration: none;
 }
 
-.bt-share__btn:hover { opacity: .85; }
+.bt-share__btn:hover  { background: #1e293b; }
+.bt-share__btn:active { transform: scale(.97); }
 
-.bt-share__ai-title {
-  margin: 0 0 .5em;
-  font-weight: 600;
+.bt-share__btn-icon {
+  flex-shrink: 0;
 }
 
+.bt-share__btn-icon svg,
+.bt-share__btn-icon i {
+  display: block;
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+}
+
+/* ── Sections (social / IA) ───────────────────────────────── */
+.bt-share__section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bt-share__section-title {
+  margin: 0;
+  font-size: .8em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: #64748b;
+}
+
+/* ── Boutons réseaux sociaux ─────────────────────────────── */
+.bt-share__social-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bt-share__social-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: transparent;
+  color: #334155;
+  font: inherit;
+  font-size: .875em;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background .15s, border-color .15s, color .15s;
+}
+
+.bt-share__social-link:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.bt-share__social-link svg { flex-shrink: 0; }
+
+/* Couleurs marque — subtiles par défaut */
+.bt-share__social-link--x:hover         { color: #000; border-color: #000; }
+.bt-share__social-link--facebook:hover  { color: #1877f2; border-color: #1877f2; }
+.bt-share__social-link--whatsapp:hover  { color: #25d366; border-color: #25d366; }
+.bt-share__social-link--linkedin:hover  { color: #0a66c2; border-color: #0a66c2; }
+.bt-share__social-link--email:hover     { color: #475569; border-color: #475569; }
+
+/* ── Liens IA ────────────────────────────────────────────── */
 .bt-share__ai-links {
   display: flex;
   flex-wrap: wrap;
@@ -1536,19 +1658,33 @@
 .bt-share__ai-link {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
-  border-radius: 6px;
-  border: 1px solid currentColor;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1.5px solid currentColor;
   text-decoration: none;
   font-size: .875em;
-  font-weight: 500;
-  color: #334155;
-  background: transparent;
-  transition: background .15s, color .15s;
+  font-weight: 600;
+  transition: background .15s, box-shadow .15s;
 }
 
-.bt-share__ai-link:hover { background: #f1f5f9; }
-.bt-share__ai-link--claude  { color: #b44c1d; border-color: #b44c1d; }
-.bt-share__ai-link--chatgpt { color: #10a37f; border-color: #10a37f; }
-.bt-share__ai-link--gemini  { color: #1a73e8; border-color: #1a73e8; }
+.bt-share__ai-link:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+/* Couleurs spécifiques par IA */
+.bt-share__ai-link--claude  { color: #c96a35; }
+.bt-share__ai-link--chatgpt { color: #10a37f; }
+.bt-share__ai-link--gemini  { color: #1a73e8; }
+
+.bt-share__ai-link--claude:hover  { background: #fff9f6; }
+.bt-share__ai-link--chatgpt:hover { background: #f0fdf4; }
+.bt-share__ai-link--gemini:hover  { background: #eff6ff; }
+
+/* Logo SVG IA */
+.bt-share__ai-logo {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  fill: currentColor;
+}
