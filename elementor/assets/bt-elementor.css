@@ -658,18 +658,24 @@
 }
 
 /* ── Ligne verticale reliant TOUS les <li> ────────────────────
-   left  = var(--bt-itin-dot-center) → centre du dot transport
-           (injecté par transport_dot_size, défaut 22px → 10px)
+   left  = var(--bt-itin-dot-center) + 20px (décalé à droite du dot)
+   pointillé via repeating-linear-gradient
    bottom = calc(-gap) → comble l'espace entre deux <li>
            (injecté par steps_gap, défaut 32px)                  */
 .bt-itin:not(.bt-itin--no-connector) .bt-itin__list > li:not(:last-child)::before {
   content: '';
   position: absolute;
-  left: var(--bt-itin-dot-center, 10px);
+  left: calc(var(--bt-itin-dot-center, 10px) + 20px);
   top: 22px;
   bottom: calc(-1 * var(--bt-itin-gap, 32px));
   width: 2px;
-  background: #d0d0d0;
+  background: repeating-linear-gradient(
+    to bottom,
+    #d0d0d0 0,
+    #d0d0d0 5px,
+    transparent 5px,
+    transparent 10px
+  );
   z-index: 0;
 }
 
