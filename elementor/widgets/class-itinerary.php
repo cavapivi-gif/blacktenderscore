@@ -13,7 +13,7 @@ defined('ABSPATH') || exit;
  *   → supporte Font Awesome ET SVG uploadé (rendu inline, pas <img>).
  *
  * Carte interactive : Google Maps Embed API (iframe, zéro JS).
- * Clé API configurée dans elementor/config/bt-map.php.
+ * Clé API : Elementor → Réglages → Intégrations → Google Maps.
  * Champs ACF nécessaires pour la carte :
  *   • Repeater sub-field : step_coords  (type ACF : Google Map)
  *                          OU step_lat + step_lng (type : Nombre)
@@ -907,8 +907,7 @@ class Itinerary extends \Elementor\Widget_Base {
      *   1. ACF Google Map field → $row['step_coords'] = ['lat' => ..., 'lng' => ...]
      *   2. Deux champs Nombre   → $row['step_lat'] + $row['step_lng']
      *
-     * Clé API configurée dans elementor/config/bt-map.php
-     * ou via filtre WP : add_filter('bt_google_maps_api_key', fn() => 'AIza...');
+     * Clé API : Elementor → Réglages → Intégrations → Google Maps.
      */
     private function render_map(array $rows, string $departure_zone, string $returning_zone, array $s, int $post_id): void {
         $points = [];
@@ -944,15 +943,14 @@ class Itinerary extends \Elementor\Widget_Base {
             return;
         }
 
-        // API key depuis config fichier + filtre WP
-        $cfg     = require __DIR__ . '/../config/bt-map.php';
-        $api_key = (string) apply_filters('bt_google_maps_api_key', $cfg['google_maps_api_key'] ?? '');
+        // Clé API : Elementor → Réglages → Intégrations → Google Maps
+        $api_key = (string) get_option('elementor_google_maps_api_key', '');
         $maptype = $s['map_type'] ?? 'roadmap';
 
         if (empty($api_key)) {
             if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
                 echo '<div class="bt-itin__map-wrap"><p class="bt-widget-placeholder">';
-                echo __('Carte : clé API Google Maps manquante. Renseignez <code>google_maps_api_key</code> dans <code>elementor/config/bt-map.php</code>.', 'blacktenderscore');
+                echo __('Carte : clé API manquante. Renseignez-la dans <strong>Elementor → Réglages → Intégrations → Google Maps</strong>.', 'blacktenderscore');
                 echo '</p></div>';
             }
             return;
