@@ -51,9 +51,9 @@ class FaqAccordion extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('acf_field', [
-            'label'   => __('Champ ACF repeater', 'blacktenderscore'),
+            'label'   => __('Champ ACF (FAQ)', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
-            'options' => ['exp_faq' => __('FAQ (exp_faq)', 'blacktenderscore')],
+            'options' => self::get_faq_field_options(),
             'default' => 'exp_faq',
         ]);
 
@@ -601,6 +601,36 @@ class FaqAccordion extends \Elementor\Widget_Base {
         }
 
         echo '</div>';
+    }
+
+    // ── ACF field discovery ───────────────────────────────────────────────────
+
+    /**
+     * Retourne tous les champs ACF dont le nom contient "faq" (insensible à la casse).
+     * Inclut repeaters et relationships — resolve_qa() gère les deux types.
+     */
+    private static function get_faq_field_options(): array {
+        $options = [];
+
+        if (!function_exists('acf_get_field_groups')) {
+            return ['exp_faq' => 'FAQ (exp_faq)'];
+        }
+
+        foreach (acf_get_field_groups() as $group) {
+            $fields = acf_get_fields($group['key']);
+            if (empty($fields)) continue;
+            foreach ($fields as $field) {
+                if (stripos($field['name'], 'faq') === false) continue;
+                $type_label = $field['type']; // repeater, relationship, post_object…
+                $options[$field['name']] = sprintf('%s (%s) [%s]',
+                    $field['label'],
+                    $field['name'],
+                    $type_label
+                );
+            }
+        }
+
+        return $options ?: ['exp_faq' => 'FAQ (exp_faq)'];
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
