@@ -1,6 +1,9 @@
 <?php
 namespace BlackTenders\Elementor\Widgets;
 
+use BlackTenders\Elementor\AbstractBtWidget;
+use BlackTenders\Elementor\Traits\BtSharedControls;
+
 defined('ABSPATH') || exit;
 
 /**
@@ -10,13 +13,18 @@ defined('ABSPATH') || exit;
  * depuis get_the_terms(). Chaque terme peut afficher son icône (champ ACF
  * `taxomonies_icons` sur le terme) et sa description.
  */
-class TaxonomyList extends \Elementor\Widget_Base {
+class TaxonomyList extends AbstractBtWidget {
 
-    public function get_name():       string { return 'bt-taxonomy-list'; }
-    public function get_title():      string { return 'BT — Taxonomie'; }
-    public function get_icon():       string { return 'eicon-tags'; }
-    public function get_categories(): array  { return ['blacktenderscore']; }
-    public function get_keywords():   array  { return ['taxonomie', 'inclus', 'liste', 'terme', 'bt']; }
+    use BtSharedControls;
+
+    protected static function get_bt_config(): array {
+        return [
+            'id'       => 'bt-taxonomy-list',
+            'title'    => 'BT — Taxonomie',
+            'icon'     => 'eicon-tags',
+            'keywords' => ['taxonomie', 'inclus', 'liste', 'terme', 'bt'],
+        ];
+    }
 
     // ── Controls ─────────────────────────────────────────────────────────────
 
@@ -42,19 +50,7 @@ class TaxonomyList extends \Elementor\Widget_Base {
             'default' => 'exp_included',
         ]);
 
-        $this->add_control('section_title', [
-            'label'   => __('Titre de la section', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
-            'default' => __('Ce qui est inclus', 'blacktenderscore'),
-            'dynamic' => ['active' => true],
-        ]);
-
-        $this->add_control('title_tag', [
-            'label'   => __('Balise du titre', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
-            'options' => ['h2' => 'H2', 'h3' => 'H3', 'h4' => 'H4', 'p' => 'p', 'span' => 'span'],
-            'default' => 'h3',
-        ]);
+        $this->register_section_title_controls(['title' => __('Ce qui est inclus', 'blacktenderscore')]);
 
         $this->add_control('layout', [
             'label'   => __('Disposition', 'blacktenderscore'),
@@ -238,13 +234,12 @@ class TaxonomyList extends \Elementor\Widget_Base {
         $terms = $this->resolve_terms($s['acf_field'], $post_id);
 
         if (empty($terms)) {
-            if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
+            if ($this->is_edit_mode()) {
                 echo '<p class="bt-widget-placeholder">Aucun terme trouvé pour le champ « ' . esc_html($s['acf_field']) . ' ». Vérifiez le nom du champ ACF.</p>';
             }
             return;
         }
 
-        $tag           = esc_attr($s['title_tag'] ?: 'h3');
         $layout        = $s['layout'] ?: 'list';
         $show_icon     = $s['show_icon'] === 'yes';
         $show_desc     = $s['show_description'] === 'yes';
@@ -253,9 +248,7 @@ class TaxonomyList extends \Elementor\Widget_Base {
 
         echo '<div class="bt-taxlist">';
 
-        if (!empty($s['section_title'])) {
-            echo "<{$tag} class=\"bt-taxlist__title\">" . esc_html($s['section_title']) . "</{$tag}>";
-        }
+        $this->render_section_title($s, 'bt-taxlist__title');
 
         $list_class = 'bt-taxlist__list bt-taxlist__list--' . esc_attr($layout);
         echo "<ul class=\"{$list_class}\">";

@@ -1,6 +1,9 @@
 <?php
 namespace BlackTenders\Elementor\Widgets;
 
+use BlackTenders\Elementor\AbstractBtWidget;
+use BlackTenders\Elementor\Traits\BtSharedControls;
+
 defined('ABSPATH') || exit;
 
 /**
@@ -9,13 +12,18 @@ defined('ABSPATH') || exit;
  * Effectue une WP_Query inverse sur le champ ACF `exp_boats` (relationship)
  * pour trouver toutes les excursions associées au bateau courant.
  */
-class RelatedExcursions extends \Elementor\Widget_Base {
+class RelatedExcursions extends AbstractBtWidget {
 
-    public function get_name():       string { return 'bt-related-excursions'; }
-    public function get_title():      string { return 'BT — Excursions de ce bateau'; }
-    public function get_icon():       string { return 'eicon-post-list'; }
-    public function get_categories(): array  { return ['blacktenderscore']; }
-    public function get_keywords():   array  { return ['excursion', 'bateau', 'related', 'relation', 'bt']; }
+    use BtSharedControls;
+
+    protected static function get_bt_config(): array {
+        return [
+            'id'       => 'bt-related-excursions',
+            'title'    => 'BT — Excursions de ce bateau',
+            'icon'     => 'eicon-post-list',
+            'keywords' => ['excursion', 'bateau', 'related', 'relation', 'bt'],
+        ];
+    }
 
     // ── Controls ─────────────────────────────────────────────────────────────
 
@@ -34,19 +42,7 @@ class RelatedExcursions extends \Elementor\Widget_Base {
             'description' => __('Nom du champ ACF relationship utilisé sur les excursions pour pointer vers les bateaux.', 'blacktenderscore'),
         ]);
 
-        $this->add_control('section_title', [
-            'label'   => __('Titre de section', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
-            'default' => __('Excursions avec ce bateau', 'blacktenderscore'),
-            'dynamic' => ['active' => true],
-        ]);
-
-        $this->add_control('title_tag', [
-            'label'   => __('Balise du titre', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
-            'options' => ['h2' => 'H2', 'h3' => 'H3', 'h4' => 'H4', 'p' => 'p'],
-            'default' => 'h3',
-        ]);
+        $this->register_section_title_controls(['title' => __('Excursions avec ce bateau', 'blacktenderscore')]);
 
         $this->add_control('max_results', [
             'label'   => __('Nombre max d\'excursions', 'blacktenderscore'),
@@ -276,10 +272,7 @@ class RelatedExcursions extends \Elementor\Widget_Base {
         $s       = $this->get_settings_for_display();
         $post_id = get_the_ID();
 
-        if (!function_exists('get_field')) {
-            echo '<p class="bt-widget-placeholder">ACF Pro requis.</p>';
-            return;
-        }
+        if (!$this->acf_required()) return;
 
         $meta_key = sanitize_key($s['acf_relation_field'] ?: 'exp_boats');
         $max      = max(1, (int) ($s['max_results'] ?: 6));
@@ -314,20 +307,17 @@ class RelatedExcursions extends \Elementor\Widget_Base {
         ]);
 
         if (!$query->have_posts()) {
-            if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
+            if ($this->is_edit_mode()) {
                 echo '<p class="bt-widget-placeholder">Aucune excursion ne référence ce bateau via le champ <code>' . esc_html($meta_key) . '</code>.</p>';
             }
             return;
         }
 
         $currency = esc_html($s['currency'] ?: '€');
-        $tag      = esc_attr($s['title_tag'] ?: 'h3');
 
         echo '<div class="bt-relexp">';
 
-        if (!empty($s['section_title'])) {
-            echo "<{$tag} class=\"bt-relexp__title\">" . esc_html($s['section_title']) . "</{$tag}>";
-        }
+        $this->render_section_title($s, 'bt-relexp__title');
 
         echo '<div class="bt-relexp__grid">';
 

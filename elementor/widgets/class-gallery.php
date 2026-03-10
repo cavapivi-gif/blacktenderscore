@@ -1,6 +1,9 @@
 <?php
 namespace BlackTenders\Elementor\Widgets;
 
+use BlackTenders\Elementor\AbstractBtWidget;
+use BlackTenders\Elementor\Traits\BtSharedControls;
+
 defined('ABSPATH') || exit;
 
 /**
@@ -9,13 +12,18 @@ defined('ABSPATH') || exit;
  * Lit un champ ACF de type gallery (`boat_gallery` ou `exp_gallery`)
  * et affiche les images en grille avec lightbox Elementor natif.
  */
-class Gallery extends \Elementor\Widget_Base {
+class Gallery extends AbstractBtWidget {
 
-    public function get_name():       string { return 'bt-gallery'; }
-    public function get_title():      string { return 'BT — Galerie photos'; }
-    public function get_icon():       string { return 'eicon-gallery-grid'; }
-    public function get_categories(): array  { return ['blacktenderscore']; }
-    public function get_keywords():   array  { return ['galerie', 'photos', 'images', 'lightbox', 'bt']; }
+    use BtSharedControls;
+
+    protected static function get_bt_config(): array {
+        return [
+            'id'       => 'bt-gallery',
+            'title'    => 'BT — Galerie photos',
+            'icon'     => 'eicon-gallery-grid',
+            'keywords' => ['galerie', 'photos', 'images', 'lightbox', 'bt'],
+        ];
+    }
 
     // ── Controls ─────────────────────────────────────────────────────────────
 
@@ -37,19 +45,7 @@ class Gallery extends \Elementor\Widget_Base {
             'default' => 'boat_gallery',
         ]);
 
-        $this->add_control('section_title', [
-            'label'   => __('Titre de section', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
-            'default' => '',
-            'dynamic' => ['active' => true],
-        ]);
-
-        $this->add_control('title_tag', [
-            'label'   => __('Balise du titre', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
-            'options' => ['h2' => 'H2', 'h3' => 'H3', 'h4' => 'H4', 'p' => 'p'],
-            'default' => 'h3',
-        ]);
+        $this->register_section_title_controls();
 
         $this->add_control('max_images', [
             'label'       => __('Nombre max d\'images (0 = toutes)', 'blacktenderscore'),
@@ -167,20 +163,11 @@ class Gallery extends \Elementor\Widget_Base {
         $s       = $this->get_settings_for_display();
         $post_id = get_the_ID();
 
-        if (!function_exists('get_field')) {
-            echo '<p class="bt-widget-placeholder">ACF Pro requis.</p>';
-            return;
-        }
+        if (!$this->acf_required()) return;
 
         $field_name = $s['acf_field'] ?: 'boat_gallery';
-        $images     = get_field($field_name, $post_id);
-
-        if (empty($images)) {
-            if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
-                echo '<p class="bt-widget-placeholder">Aucune image dans la galerie <code>' . esc_html($field_name) . '</code>.</p>';
-            }
-            return;
-        }
+        $images = $this->get_acf_rows($field_name, __('Aucune image dans la galerie indiquée.', 'blacktenderscore'));
+        if (!$images) return;
 
         $max = (int) ($s['max_images'] ?: 0);
         if ($max > 0) {
@@ -190,7 +177,6 @@ class Gallery extends \Elementor\Widget_Base {
         $thumb_size   = $s['thumb_size'] ?: 'medium';
         $lightbox     = $s['enable_lightbox'] === 'yes';
         $ratio        = $s['aspect_ratio'] ?: 'landscape';
-        $tag          = esc_attr($s['title_tag'] ?: 'h3');
         $group_id     = 'bt-gallery-' . $this->get_id();
         $overlay_icon = esc_html($s['overlay_icon'] ?: '🔍');
 
@@ -204,9 +190,7 @@ class Gallery extends \Elementor\Widget_Base {
 
         echo '<div class="bt-gallery' . $ratio_cls . '">';
 
-        if (!empty($s['section_title'])) {
-            echo "<{$tag} class=\"bt-gallery__title\">" . esc_html($s['section_title']) . "</{$tag}>";
-        }
+        $this->render_section_title($s, 'bt-gallery__title');
 
         echo '<div class="bt-gallery__grid">';
 

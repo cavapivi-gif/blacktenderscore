@@ -1,6 +1,9 @@
 <?php
 namespace BlackTenders\Elementor\Widgets;
 
+use BlackTenders\Elementor\AbstractBtWidget;
+use BlackTenders\Elementor\Traits\BtSharedControls;
+
 defined('ABSPATH') || exit;
 
 /**
@@ -12,13 +15,18 @@ defined('ABSPATH') || exit;
  * Supporte min/max price (auto depuis tarification_par_forfait, ou override manuel),
  * les langues, la capacité, le point de départ, le prestataire.
  */
-class ExcursionSchema extends \Elementor\Widget_Base {
+class ExcursionSchema extends AbstractBtWidget {
 
-    public function get_name():       string { return 'bt-excursion-schema'; }
-    public function get_title():      string { return 'BT — Schema TouristTrip (SEO)'; }
-    public function get_icon():       string { return 'eicon-code'; }
-    public function get_categories(): array  { return ['blacktenderscore']; }
-    public function get_keywords():   array  { return ['schema', 'seo', 'json-ld', 'touristtrip', 'structured data', 'bt']; }
+    use BtSharedControls;
+
+    protected static function get_bt_config(): array {
+        return [
+            'id'       => 'bt-excursion-schema',
+            'title'    => 'BT — Schema TouristTrip (SEO)',
+            'icon'     => 'eicon-code',
+            'keywords' => ['schema', 'seo', 'json-ld', 'touristtrip', 'structured data', 'bt'],
+        ];
+    }
 
     // ── Controls ─────────────────────────────────────────────────────────────
 
@@ -169,7 +177,7 @@ class ExcursionSchema extends \Elementor\Widget_Base {
         $post_id = get_the_ID();
 
         // En mode éditeur, afficher un placeholder visible
-        if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
+        if ($this->is_edit_mode()) {
             echo '<div class="bt-widget-placeholder" style="text-align:left">'
                 . '<strong>🔍 Schema.org TouristTrip</strong><br>'
                 . '<small>Widget invisible — injecte un JSON-LD structuré en front-end pour les moteurs de recherche.</small>'
@@ -178,7 +186,7 @@ class ExcursionSchema extends \Elementor\Widget_Base {
 
         if (is_admin()) return;
 
-        if (!function_exists('get_field')) return;
+        if (!$this->acf_required()) return;
 
         $schema = $this->build_schema($s, $post_id);
         if (empty($schema)) return;
