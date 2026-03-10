@@ -137,6 +137,24 @@
       root.setAttribute('data-bt-init', '1');
       initTabs(root);
     });
+    el.querySelectorAll('[data-bt-share]:not([data-bt-share-init])').forEach(function (btn) {
+      btn.setAttribute('data-bt-share-init', '1');
+      var url    = btn.getAttribute('data-bt-url')    || window.location.href;
+      var title  = btn.getAttribute('data-bt-title')  || document.title;
+      var copied = btn.getAttribute('data-bt-copied') || 'Lien copié !';
+
+      btn.addEventListener('click', function () {
+        if (navigator.share) {
+          navigator.share({ title: title, url: url }).catch(function () {});
+        } else if (navigator.clipboard) {
+          navigator.clipboard.writeText(url).then(function () {
+            var orig = btn.textContent;
+            btn.textContent = copied;
+            setTimeout(function () { btn.textContent = orig; }, 2000);
+          });
+        }
+      });
+    });
   }
 
   /* ── Elementor Handler — pattern officiel ────────────────────────────────── */
@@ -158,6 +176,7 @@
     elementorFrontend.elementsHandler.attachHandler('bt-boat-pricing',  BtWidgetHandler);
     elementorFrontend.elementsHandler.attachHandler('bt-pricing-tabs',  BtWidgetHandler);
     elementorFrontend.elementsHandler.attachHandler('bt-itinerary',     BtWidgetHandler);
+    elementorFrontend.elementsHandler.attachHandler('bt-share',         BtWidgetHandler);
   });
 
   // Fallback : pages sans Elementor JS (ex. thème sans Elementor)

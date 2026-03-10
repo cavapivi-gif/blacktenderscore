@@ -15,6 +15,10 @@ use BlackTenders\Elementor\Widgets\Gallery;
 use BlackTenders\Elementor\Widgets\GalleryPreview;
 use BlackTenders\Elementor\Widgets\ExcursionSchema;
 use BlackTenders\Elementor\Widgets\RepeaterSection;
+use BlackTenders\Elementor\Widgets\Highlights;
+use BlackTenders\Elementor\Widgets\Captain;
+use BlackTenders\Elementor\Widgets\IncludedExcluded;
+use BlackTenders\Elementor\Widgets\Share;
 
 defined('ABSPATH') || exit;
 
@@ -88,6 +92,11 @@ class ElementorManager {
         // ── Widgets bateau ────────────────────────────────────────────────
         $manager->register(new BoatSpecs());
         $manager->register(new BoatPricing());
+        // ── Widgets contenu générique ─────────────────────────────────────
+        $manager->register(new Highlights());
+        $manager->register(new Captain());
+        $manager->register(new IncludedExcluded());
+        $manager->register(new Share());
     }
 
     public function enqueue_editor_extras(): void {
