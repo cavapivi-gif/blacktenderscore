@@ -155,7 +155,7 @@
             },
             {
                 "key": "field_bt_exp_departure_point",
-                "label": "Point de départ \/ arrivé",
+                "label": "Point de départ / arrivé",
                 "name": "exp_departure_point",
                 "aria-label": "",
                 "type": "taxonomy",
@@ -181,24 +181,24 @@
             },
             {
                 "key": "field_bt_exp_departure_coords",
-                "label": "Coordonnées GPS départ (port)",
+                "label": "Coordonnées GPS — Départ",
                 "name": "exp_departure_coords",
                 "aria-label": "",
-                "type": "text",
-                "instructions": "Ex: 43.5125, 6.9487",
+                "type": "google_map",
+                "instructions": "Point de départ sur la carte de l'itinéraire.",
                 "required": 0,
                 "conditional_logic": 0,
                 "wrapper": {
-                    "width": "25",
+                    "width": "50",
                     "class": "",
                     "id": ""
                 },
-                "default_value": "",
-                "maxlength": "",
-                "allow_in_bindings": 1,
-                "placeholder": "43.5125, 6.9487",
-                "prepend": "",
-                "append": ""
+                "center_lat": "43.5125",
+                "center_lng": "6.9487",
+                "center_zoom": "13",
+                "zoom": "",
+                "height": "",
+                "allow_in_bindings": 0
             },
             {
                 "key": "field_bt_exp_departure_times",
@@ -371,7 +371,7 @@
                 "name": "exp_price_per_person",
                 "aria-label": "",
                 "type": "text",
-                "instructions": "Mettre un chiffre entiers, sans virgule ni symbole (€ \/ $).",
+                "instructions": "Mettre un chiffre entiers, sans virgule ni symbole (€ / $).",
                 "required": 1,
                 "conditional_logic": 0,
                 "wrapper": {
@@ -667,7 +667,7 @@
             },
             {
                 "key": "field_bt_exp_itinerary",
-                "label": "Programme \/ Itinéraire",
+                "label": "Programme / Itinéraire",
                 "name": "exp_itinerary",
                 "aria-label": "",
                 "type": "repeater",
@@ -688,7 +688,7 @@
                 "sub_fields": [
                     {
                         "key": "field_bt_exp_itin_time",
-                        "label": "Heure \/ Moment",
+                        "label": "Heure / Moment",
                         "name": "step_time",
                         "aria-label": "",
                         "type": "text",
@@ -813,6 +813,27 @@
                         "ui_on_text": "Retour",
                         "ui_off_text": "Aller",
                         "parent_repeater": "field_bt_exp_itinerary"
+                    },
+                    {
+                        "key": "field_bt_exp_itin_coords",
+                        "label": "Coordonnées GPS étape",
+                        "name": "step_coords",
+                        "aria-label": "",
+                        "type": "google_map",
+                        "instructions": "Position de cette étape sur la carte. Laisser vide si pas de pin.",
+                        "required": 0,
+                        "conditional_logic": 0,
+                        "wrapper": {
+                            "width": "100",
+                            "class": "",
+                            "id": ""
+                        },
+                        "center_lat": "43.5125",
+                        "center_lng": "6.9487",
+                        "center_zoom": "13",
+                        "zoom": "",
+                        "height": "",
+                        "allow_in_bindings": 0
                     }
                 ]
             },
@@ -897,6 +918,27 @@
                 "new_lines": "",
                 "maxlength": "",
                 "placeholder": ""
+            },
+            {
+                "key": "field_bt_exp_arriving_coords",
+                "label": "Coordonnées GPS — Arrivée",
+                "name": "exp_arriving_coords",
+                "aria-label": "",
+                "type": "google_map",
+                "instructions": "Point d'arrivée sur la carte de l'itinéraire.",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "50",
+                    "class": "",
+                    "id": ""
+                },
+                "center_lat": "43.5125",
+                "center_lng": "6.9487",
+                "center_zoom": "13",
+                "zoom": "",
+                "height": "",
+                "allow_in_bindings": 0
             },
             {
                 "key": "field_bt_exp_tab_relations",
@@ -1132,7 +1174,7 @@
                     },
                     {
                         "key": "field_bt_exp_rev_rating",
-                        "label": "Note \/5",
+                        "label": "Note /5",
                         "name": "rev_rating",
                         "aria-label": "",
                         "type": "number",
