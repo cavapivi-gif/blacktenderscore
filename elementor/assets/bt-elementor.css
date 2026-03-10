@@ -777,8 +777,10 @@
 .bt-itin__step--transport .bt-itin__step-body {
   padding: 10px 14px;
   border-radius: 8px;
-  background: rgba(0, 0, 0, .04);
+  background: var(--var--beige-on-bg);
   font-size: .9em;
+  max-width: fit-content;
+  display: inline-flex;
 }
 
 /* Label "DÉPART / ARRIVÉE" — petit texte au-dessus du titre */
