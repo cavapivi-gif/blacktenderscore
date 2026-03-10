@@ -110,6 +110,13 @@
 /* ══════════════════════════════════════════════════════════
    WIDGET : FAQ Accordion
    ══════════════════════════════════════════════════════════ */
+
+/* Section title optionnel */
+.bt-faq__section-title {
+  margin: 0 0 20px;
+}
+
+/* Liste */
 .bt-faq__list {
   list-style: none;
   margin: 0;
@@ -119,18 +126,19 @@
   gap: 8px;
 }
 
-/* ── Accordéon ────────────────────────────────────────────── */
+/* ── Accordéon — Item ─────────────────────────────────────── */
 .bt-faq--accordion .bt-faq__item {
   border: 1px solid #e0e0e0;
-  overflow: hidden;
+  /* PAS de overflow:hidden sur l'item : la grille CSS a besoin de s'étendre */
 }
 
-.bt-faq__question {
+/* ── Header (bouton question) ─────────────────────────────── */
+.bt-faq__header {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   padding: 16px 20px;
   background: transparent;
   border: none;
@@ -141,16 +149,30 @@
   transition: background .15s, color .15s;
 }
 
-.bt-faq__question:hover {
+.bt-faq__header:hover {
   background: rgba(0, 0, 0, .03);
 }
 
+/* Icône à gauche → inverser l'ordre flex */
+.bt-faq--icon-left .bt-faq__header {
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+}
+
+/* Texte question */
+.bt-faq__title-text {
+  flex: 1;
+}
+
+/* ── Icône CSS (fallback si pas d'icône FA) ───────────────── */
 .bt-faq__icon {
   flex-shrink: 0;
   width: 16px;
   height: 16px;
   position: relative;
-  transition: transform .25s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .bt-faq__icon::before,
@@ -164,22 +186,41 @@
   transition: opacity .25s, transform .25s;
 }
 
-/* "+" icon */
-.bt-faq__icon::before { width: 2px; height: 14px; }
-.bt-faq__icon::after  { width: 14px; height: 2px; }
+/* "+" */
+.bt-faq__icon::before { width: 2px;  height: 14px; }
+.bt-faq__icon::after  { width: 14px; height: 2px;  }
 
-/* "×" → rotate en "-" quand ouvert */
-.bt-faq__item--open .bt-faq__icon::before {
+/* → "-" quand actif */
+.bt-faq__item--active .bt-faq__icon::before {
   transform: translate(-50%, -50%) rotate(90deg);
   opacity: 0;
 }
 
-.bt-faq__answer {
-  overflow: hidden;
-  /* animation hauteur gérée par JS */
+/* ── Icônes FA (selected_icon / selected_active_icon) ─────── */
+.bt-faq__icon--open   { display: none; }
+
+.bt-faq__item--active .bt-faq__icon--closed { display: none; }
+.bt-faq__item--active .bt-faq__icon--open   { display: inline-flex; }
+
+/* ── Corps réponse — animation CSS grid ───────────────────── */
+/*
+ * grid-template-rows: 0fr → 1fr
+ * Nécessite que l'enfant direct ait overflow:hidden + min-height:0
+ * Compatible Chrome 66+, Firefox 66+, Safari 12+
+ */
+.bt-faq--accordion .bt-faq__body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows .3s ease;
 }
 
-.bt-faq__answer-inner {
+.bt-faq--accordion .bt-faq__item--active .bt-faq__body {
+  grid-template-rows: 1fr;
+}
+
+.bt-faq__body-inner {
+  overflow: hidden;
+  min-height: 0;
   padding: 0 20px 20px;
   line-height: 1.7;
 }
@@ -215,13 +256,18 @@
   border-bottom-color: #000;
 }
 
+/* Panels tabs : masqués par défaut via classe CSS (pas [hidden]) */
 .bt-faq--tabs .bt-faq__tabpanel {
+  display: none;
+}
+
+.bt-faq--tabs .bt-faq__tabpanel--active {
+  display: block;
   padding: 20px 0 0;
 }
 
-.bt-faq--tabs .bt-faq__answer-inner {
+.bt-faq--tabs .bt-faq__body-inner {
   padding: 0;
-  line-height: 1.7;
 }
 
 
