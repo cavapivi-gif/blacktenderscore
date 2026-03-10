@@ -12,46 +12,14 @@ defined('ABSPATH') || exit;
  * Icônes transport : ICONS control Elementor → Icons_Manager::render_icon()
  *   → supporte Font Awesome ET SVG uploadé (rendu inline, pas <img>).
  *
- * Carte interactive : Leaflet.js + CartoDB/OSM (gratuit, sans API key).
- * Style des tuiles configurable dans elementor/config/bt-map.php.
+ * Carte interactive : Google Maps Embed API (iframe, zéro JS).
+ * Clé API configurée dans elementor/config/bt-map.php.
  * Champs ACF nécessaires pour la carte :
  *   • Repeater sub-field : step_coords  (type ACF : Google Map)
  *                          OU step_lat + step_lng (type : Nombre)
  *   • Post fields        : exp_departure_coords, exp_arriving_coords (Google Map)
  */
 class Itinerary extends \Elementor\Widget_Base {
-
-    /** @var bool Évite de charger Leaflet plusieurs fois par requête. */
-    private static bool $leaflet_loaded = false;
-
-    // ── Helpers config ────────────────────────────────────────────────────────
-
-    /**
-     * Charge la config de tuiles depuis elementor/config/bt-map.php
-     * et applique les filtres WP pour permettre les surcharges thème/mu-plugin.
-     *
-     * @return array{default: string, presets: array<string, array{label: string, url: string, attr: string, maxZoom: int}>}
-     */
-    private static function get_tile_config(): array {
-        static $config = null;
-        if ($config !== null) return $config;
-
-        $raw     = require __DIR__ . '/../config/bt-map.php';
-        $presets = apply_filters('bt_map_tile_presets', $raw['presets'] ?? []);
-        $default = apply_filters('bt_map_default_tile',  $raw['default'] ?? 'voyager');
-
-        $config = ['presets' => $presets, 'default' => $default];
-        return $config;
-    }
-
-    /** Retourne les options {clé => label} pour le SELECT Elementor. */
-    private static function tile_select_options(): array {
-        $out = [];
-        foreach (self::get_tile_config()['presets'] as $key => $p) {
-            $out[$key] = $p['label'];
-        }
-        return $out;
-    }
 
     public function get_name():       string { return 'bt-itinerary'; }
     public function get_title():      string { return 'BT — Programme / Itinéraire'; }
@@ -315,44 +283,15 @@ class Itinerary extends \Elementor\Widget_Base {
             ],
         ]);
 
-        $this->add_control('map_show_path', [
-            'label'        => __('Afficher le tracé du parcours', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
-            'return_value' => 'yes',
-            'default'      => 'yes',
-            'condition'    => ['show_map' => 'yes'],
-        ]);
-
-        $this->add_control('map_path_style', [
-            'label'     => __('Style du tracé', 'blacktenderscore'),
+        $this->add_control('map_type', [
+            'label'     => __('Type de vue', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::SELECT,
             'options'   => [
-                'straight' => __('Droit', 'blacktenderscore'),
-                'curved'   => __('Courbe', 'blacktenderscore'),
-                'dashed'   => __('Tirets', 'blacktenderscore'),
+                'roadmap'   => __('Plan (roadmap)', 'blacktenderscore'),
+                'satellite' => __('Satellite', 'blacktenderscore'),
             ],
-            'default'   => 'straight',
-            'condition' => ['show_map' => 'yes', 'map_show_path' => 'yes'],
-        ]);
-
-        $this->add_control('map_show_popup', [
-            'label'        => __('Popup au clic sur les pins', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
-            'return_value' => 'yes',
-            'default'      => 'yes',
-            'separator'    => 'before',
-            'condition'    => ['show_map' => 'yes'],
-        ]);
-
-        $cfg = self::get_tile_config();
-        $this->add_control('map_tile_style', [
-            'label'       => __('Style de carte', 'blacktenderscore'),
-            'description' => __('Presets dans <code>elementor/config/bt-map.php</code>. Extensible via filtre <code>bt_map_tile_presets</code>.', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::SELECT,
-            'options'     => self::tile_select_options(),
-            'default'     => $cfg['default'],
-            'separator'   => 'before',
-            'condition'   => ['show_map' => 'yes'],
+            'default'   => 'roadmap',
+            'condition' => ['show_map' => 'yes'],
         ]);
 
         $this->end_controls_section();
@@ -749,48 +688,6 @@ class Itinerary extends \Elementor\Widget_Base {
             'selector' => '{{WRAPPER}} .bt-itin__map-wrap',
         ]);
 
-        $this->add_control('map_line_color', [
-            'label'     => __('Couleur du tracé GPS', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'default'   => '#0066cc',
-            // Lue par le JS via getComputedStyle (évite d'exposer la couleur en PHP)
-            'selectors' => ['{{WRAPPER}} .bt-itin__map' => '--bt-map-line-color: {{VALUE}}'],
-            'separator' => 'before',
-            'condition' => ['map_show_path' => 'yes'],
-        ]);
-
-        $this->add_responsive_control('map_line_weight', [
-            'label'      => __('Épaisseur du tracé', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
-            'size_units' => ['px'],
-            'range'      => ['px' => ['min' => 1, 'max' => 10]],
-            'default'    => ['size' => 3, 'unit' => 'px'],
-            'selectors'  => ['{{WRAPPER}} .bt-itin__map' => '--bt-map-line-weight: {{SIZE}}'],
-            'condition'  => ['map_show_path' => 'yes'],
-        ]);
-
-        $this->add_control('heading_map_markers', [
-            'label'     => __('Marqueurs / Pins', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::HEADING,
-            'separator' => 'before',
-        ]);
-
-        $this->add_control('map_marker_color', [
-            'label'     => __('Couleur des pins', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'default'   => '#0066cc',
-            'selectors' => ['{{WRAPPER}} .bt-itin__map' => '--bt-map-marker-color: {{VALUE}}'],
-        ]);
-
-        $this->add_responsive_control('map_marker_size', [
-            'label'      => __('Taille des pins', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
-            'size_units' => ['px'],
-            'range'      => ['px' => ['min' => 6, 'max' => 30]],
-            'default'    => ['size' => 12, 'unit' => 'px'],
-            'selectors'  => ['{{WRAPPER}} .bt-itin__map' => '--bt-map-marker-size: {{SIZE}}'],
-        ]);
-
         $this->end_controls_section();
     }
 
@@ -1005,10 +902,13 @@ class Itinerary extends \Elementor\Widget_Base {
     }
 
     /**
-     * Rend la section carte Leaflet.js avec markers + polyline.
+     * Rend la carte Google Maps (iframe Embed API).
      * Supporte deux formats de coordonnées ACF :
      *   1. ACF Google Map field → $row['step_coords'] = ['lat' => ..., 'lng' => ...]
      *   2. Deux champs Nombre   → $row['step_lat'] + $row['step_lng']
+     *
+     * Clé API configurée dans elementor/config/bt-map.php
+     * ou via filtre WP : add_filter('bt_google_maps_api_key', fn() => 'AIza...');
      */
     private function render_map(array $rows, string $departure_zone, string $returning_zone, array $s, int $post_id): void {
         $points = [];
@@ -1016,35 +916,23 @@ class Itinerary extends \Elementor\Widget_Base {
         // Départ
         $dep = get_field('exp_departure_coords', $post_id);
         if (is_array($dep) && !empty($dep['lat']) && !empty($dep['lng'])) {
-            $points[] = ['lat' => (float) $dep['lat'], 'lng' => (float) $dep['lng'], 'label' => esc_html($departure_zone ?: __('Départ', 'blacktenderscore')), 'desc' => '', 'type' => 'departure'];
+            $points[] = [(float) $dep['lat'], (float) $dep['lng']];
         }
 
         // Étapes
         foreach ($rows as $row) {
             $coords = $row['step_coords'] ?? null;
             if (is_array($coords) && !empty($coords['lat'])) {
-                $lat = (float) $coords['lat'];
-                $lng = (float) $coords['lng'];
+                $points[] = [(float) $coords['lat'], (float) $coords['lng']];
             } elseif (!empty($row['step_lat']) && !empty($row['step_lng'])) {
-                $lat = (float) $row['step_lat'];
-                $lng = (float) $row['step_lng'];
-            } else {
-                continue; // pas de coordonnées → on ignore ce step
+                $points[] = [(float) $row['step_lat'], (float) $row['step_lng']];
             }
-            $points[] = [
-                'lat'   => $lat,
-                'lng'   => $lng,
-                'label' => esc_html($row['step_title'] ?? ''),
-                'desc'  => esc_html($row['step_desc']  ?? ''),
-                'type'  => 'step',
-            ];
         }
 
         // Arrivée
-        $arr      = get_field('exp_arriving_coords', $post_id);
-        $arr_desc = (string) get_field('exp_returning_description', $post_id);
+        $arr = get_field('exp_arriving_coords', $post_id);
         if (is_array($arr) && !empty($arr['lat']) && !empty($arr['lng'])) {
-            $points[] = ['lat' => (float) $arr['lat'], 'lng' => (float) $arr['lng'], 'label' => esc_html($returning_zone ?: __('Arrivée', 'blacktenderscore')), 'desc' => esc_html($arr_desc), 'type' => 'arrival'];
+            $points[] = [(float) $arr['lat'], (float) $arr['lng']];
         }
 
         if (empty($points)) {
@@ -1056,118 +944,46 @@ class Itinerary extends \Elementor\Widget_Base {
             return;
         }
 
-        $this->maybe_load_leaflet();
+        // API key depuis config fichier + filtre WP
+        $cfg     = require __DIR__ . '/../config/bt-map.php';
+        $api_key = (string) apply_filters('bt_google_maps_api_key', $cfg['google_maps_api_key'] ?? '');
+        $maptype = $s['map_type'] ?? 'roadmap';
 
-        $map_id      = 'bt-map-' . uniqid();
-        $fn_id       = 'btMapInit_' . preg_replace('/\W/', '_', $map_id);
-        $show_path   = ($s['map_show_path']  ?? '') === 'yes';
-        $show_popup  = ($s['map_show_popup'] ?? 'yes') !== 'no'; // default on
-        $path_style  = $s['map_path_style']  ?? 'straight';
-        $points_json = wp_json_encode($points);
+        if (empty($api_key)) {
+            if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
+                echo '<div class="bt-itin__map-wrap"><p class="bt-widget-placeholder">';
+                echo __('Carte : clé API Google Maps manquante. Renseignez <code>google_maps_api_key</code> dans <code>elementor/config/bt-map.php</code>.', 'blacktenderscore');
+                echo '</p></div>';
+            }
+            return;
+        }
 
-        // Résolution du preset de tuiles
-        $cfg         = self::get_tile_config();
-        $tile_key    = $s['map_tile_style'] ?? $cfg['default'];
-        $tile        = $cfg['presets'][$tile_key] ?? $cfg['presets'][$cfg['default']];
-        $tile_url    = $tile['url'];
-        $tile_attr   = $tile['attr'];
-        $tile_zoom   = (int) ($tile['maxZoom'] ?? 19);
+        // Construction URL embed
+        $base_args = ['key' => $api_key, 'language' => 'fr', 'maptype' => $maptype];
+
+        if (count($points) === 1) {
+            $url = add_query_arg(
+                array_merge($base_args, ['q' => $points[0][0] . ',' . $points[0][1]]),
+                'https://www.google.com/maps/embed/v1/place'
+            );
+        } else {
+            $middle = array_slice($points, 1, -1);
+            $args   = array_merge($base_args, [
+                'origin'      => $points[0][0] . ',' . $points[0][1],
+                'destination' => end($points)[0] . ',' . end($points)[1],
+                'mode'        => 'driving',
+            ]);
+            if ($middle) {
+                $args['waypoints'] = implode('|', array_map(fn($p) => $p[0] . ',' . $p[1], $middle));
+            }
+            $url = add_query_arg($args, 'https://www.google.com/maps/embed/v1/directions');
+        }
 
         echo '<div class="bt-itin__map-wrap">';
-        echo '<div id="' . esc_attr($map_id) . '" class="bt-itin__map"></div>';
-        ?>
-        <script>
-        (function(){
-        function <?php echo $fn_id; ?>(){
-            if(typeof L==='undefined'){setTimeout(<?php echo $fn_id; ?>,200);return;}
-            var el=document.getElementById(<?php echo wp_json_encode($map_id); ?>);
-            if(!el||el._btInit)return;
-            el._btInit=true;
-            var map=L.map(el,{scrollWheelZoom:false});
-            L.tileLayer(<?php echo wp_json_encode($tile_url); ?>,{
-                attribution:<?php echo wp_json_encode($tile_attr); ?>,
-                maxZoom:<?php echo $tile_zoom; ?>,
-                subdomains:'abcd'
-            }).addTo(map);
-            var cs=getComputedStyle(el);
-            var mc=(cs.getPropertyValue('--bt-map-marker-color')||'#0066cc').trim();
-            var ms=parseFloat(cs.getPropertyValue('--bt-map-marker-size'))||12;
-            var icon=L.divIcon({
-                className:'bt-map-marker',
-                html:'<div style="width:'+ms+'px;height:'+ms+'px;background:'+mc+';border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>',
-                iconSize:[ms,ms],iconAnchor:[ms/2,ms/2],popupAnchor:[0,-ms/2-4]
-            });
-            var pts=<?php echo $points_json; ?>;
-            var lls=[];
-            pts.forEach(function(p){
-                var m=L.marker([p.lat,p.lng],{icon:icon}).addTo(map);
-                <?php if ($show_popup): ?>
-                if(p.label||p.desc){
-                    var html='<div class="bt-map-popup">';
-                    if(p.label)html+='<strong class="info-window__title">'+p.label+'</strong>';
-                    if(p.desc)html+='<p class="info-window__body">'+p.desc+'</p>';
-                    html+='</div>';
-                    m.bindPopup(html);
-                }
-                <?php endif; ?>
-                lls.push([p.lat,p.lng]);
-            });
-            <?php if ($show_path): ?>
-            if(lls.length>1){
-                var lc=(cs.getPropertyValue('--bt-map-line-color')||'#0066cc').trim();
-                var lw=parseFloat(cs.getPropertyValue('--bt-map-line-weight'))||3;
-                <?php if ($path_style === 'curved'): ?>
-                function btBez(a,b,n){var dla=b[0]-a[0],dlg=b[1]-a[1],len=Math.sqrt(dla*dla+dlg*dlg);if(len<1e-9)return[a,b];var off=len*.15,cx=(a[0]+b[0])/2+(-dlg/len)*off,cy=(a[1]+b[1])/2+(dla/len)*off,r=[];for(var i=0;i<=n;i++){var t=i/n;r.push([(1-t)*(1-t)*a[0]+2*(1-t)*t*cx+t*t*b[0],(1-t)*(1-t)*a[1]+2*(1-t)*t*cy+t*t*b[1]]);}return r;}
-                var cl=[];for(var i=0;i<lls.length-1;i++){var seg=btBez(lls[i],lls[i+1],20);if(i>0)seg.shift();cl=cl.concat(seg);}
-                L.polyline(cl,{color:lc,weight:lw,opacity:.85}).addTo(map);
-                <?php elseif ($path_style === 'dashed'): ?>
-                L.polyline(lls,{color:lc,weight:lw,opacity:.85,dashArray:'10 8'}).addTo(map);
-                <?php else: ?>
-                L.polyline(lls,{color:lc,weight:lw,opacity:.85}).addTo(map);
-                <?php endif; ?>
-            }
-            <?php endif; ?>
-            if(lls.length===1)map.setView(lls[0],13);
-            else map.fitBounds(lls,{padding:[30,30]});
-            // invalidateSize : corrige le rendu en grille quand le container
-            // n'avait pas encore sa taille finale à l'init (tabs, transitions…)
-            setTimeout(function(){map.invalidateSize();},150);
-        }
-        if(document.readyState==='loading'){
-            document.addEventListener('DOMContentLoaded',<?php echo $fn_id; ?>);
-        }else{
-            <?php echo $fn_id; ?>();
-        }
-        })();
-        </script>
-        <?php
-
+        printf(
+            '<iframe class="bt-itin__map" src="%s" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>',
+            esc_url($url)
+        );
         echo '</div>';
-    }
-
-    /**
-     * Charge Leaflet (CSS + JS) une seule fois par page/requête.
-     * • Front : via wp_footer (JS) + wp_head deferred (CSS)
-     * • Éditeur / preview Elementor : injection directe (wp_footer ne tourne pas en AJAX)
-     */
-    private function maybe_load_leaflet(): void {
-        if (self::$leaflet_loaded) return;
-        self::$leaflet_loaded = true;
-
-        $css = '<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">' . "\n";
-        $js  = '<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>' . "\n";
-
-        $is_editor = \Elementor\Plugin::$instance->editor->is_edit_mode()
-                  || \Elementor\Plugin::$instance->preview->is_preview_mode();
-
-        if ($is_editor) {
-            // Dans l'éditeur, wp_head/wp_footer ont déjà tourné — on injecte directement
-            echo $css; // phpcs:ignore WordPress.Security.EscapeOutput
-            echo $js;  // phpcs:ignore WordPress.Security.EscapeOutput
-        } else {
-            // Front : enqueue propre via les hooks WordPress
-            add_action('wp_head',   static function() use ($css) { echo $css; }, 50); // phpcs:ignore
-            add_action('wp_footer', static function() use ($js)  { echo $js;  }, 1);  // phpcs:ignore
-        }
     }
 }
