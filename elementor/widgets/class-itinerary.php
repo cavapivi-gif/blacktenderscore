@@ -293,6 +293,27 @@ class Itinerary extends \Elementor\Widget_Base {
             'condition'    => ['show_map' => 'yes'],
         ]);
 
+        $this->add_control('map_path_style', [
+            'label'     => __('Style du tracé', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::SELECT,
+            'options'   => [
+                'straight' => __('Droit', 'blacktenderscore'),
+                'curved'   => __('Courbe', 'blacktenderscore'),
+                'dashed'   => __('Tirets', 'blacktenderscore'),
+            ],
+            'default'   => 'straight',
+            'condition' => ['show_map' => 'yes', 'map_show_path' => 'yes'],
+        ]);
+
+        $this->add_control('map_show_popup', [
+            'label'        => __('Popup au clic sur les pins', 'blacktenderscore'),
+            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => 'yes',
+            'separator'    => 'before',
+            'condition'    => ['show_map' => 'yes'],
+        ]);
+
         $this->end_controls_section();
     }
 
@@ -707,6 +728,28 @@ class Itinerary extends \Elementor\Widget_Base {
             'condition'  => ['map_show_path' => 'yes'],
         ]);
 
+        $this->add_control('heading_map_markers', [
+            'label'     => __('Marqueurs / Pins', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::HEADING,
+            'separator' => 'before',
+        ]);
+
+        $this->add_control('map_marker_color', [
+            'label'     => __('Couleur des pins', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::COLOR,
+            'default'   => '#0066cc',
+            'selectors' => ['{{WRAPPER}} .bt-itin__map' => '--bt-map-marker-color: {{VALUE}}'],
+        ]);
+
+        $this->add_responsive_control('map_marker_size', [
+            'label'      => __('Taille des pins', 'blacktenderscore'),
+            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 6, 'max' => 30]],
+            'default'    => ['size' => 12, 'unit' => 'px'],
+            'selectors'  => ['{{WRAPPER}} .bt-itin__map' => '--bt-map-marker-size: {{SIZE}}'],
+        ]);
+
         $this->end_controls_section();
     }
 
@@ -932,7 +975,7 @@ class Itinerary extends \Elementor\Widget_Base {
         // Départ
         $dep = get_field('exp_departure_coords', $post_id);
         if (is_array($dep) && !empty($dep['lat']) && !empty($dep['lng'])) {
-            $points[] = ['lat' => (float) $dep['lat'], 'lng' => (float) $dep['lng'], 'label' => $departure_zone ?: __('Départ', 'blacktenderscore'), 'type' => 'departure'];
+            $points[] = ['lat' => (float) $dep['lat'], 'lng' => (float) $dep['lng'], 'label' => esc_html($departure_zone ?: __('Départ', 'blacktenderscore')), 'desc' => '', 'type' => 'departure'];
         }
 
         // Étapes
@@ -947,13 +990,20 @@ class Itinerary extends \Elementor\Widget_Base {
             } else {
                 continue; // pas de coordonnées → on ignore ce step
             }
-            $points[] = ['lat' => $lat, 'lng' => $lng, 'label' => esc_html($row['step_title'] ?? ''), 'type' => 'step'];
+            $points[] = [
+                'lat'   => $lat,
+                'lng'   => $lng,
+                'label' => esc_html($row['step_title'] ?? ''),
+                'desc'  => esc_html($row['step_desc']  ?? ''),
+                'type'  => 'step',
+            ];
         }
 
         // Arrivée
-        $arr = get_field('exp_arriving_coords', $post_id);
+        $arr      = get_field('exp_arriving_coords', $post_id);
+        $arr_desc = (string) get_field('exp_returning_description', $post_id);
         if (is_array($arr) && !empty($arr['lat']) && !empty($arr['lng'])) {
-            $points[] = ['lat' => (float) $arr['lat'], 'lng' => (float) $arr['lng'], 'label' => $returning_zone ?: __('Arrivée', 'blacktenderscore'), 'type' => 'arrival'];
+            $points[] = ['lat' => (float) $arr['lat'], 'lng' => (float) $arr['lng'], 'label' => esc_html($returning_zone ?: __('Arrivée', 'blacktenderscore')), 'desc' => esc_html($arr_desc), 'type' => 'arrival'];
         }
 
         if (empty($points)) {
@@ -968,16 +1018,14 @@ class Itinerary extends \Elementor\Widget_Base {
         $this->maybe_load_leaflet();
 
         $map_id      = 'bt-map-' . uniqid();
-        // Identifiant JS valide (pas de tirets)
         $fn_id       = 'btMapInit_' . preg_replace('/\W/', '_', $map_id);
-        $show_path   = ($s['map_show_path'] ?? '') === 'yes';
+        $show_path   = ($s['map_show_path']  ?? '') === 'yes';
+        $show_popup  = ($s['map_show_popup'] ?? 'yes') !== 'no'; // default on
+        $path_style  = $s['map_path_style']  ?? 'straight';
         $points_json = wp_json_encode($points);
 
         echo '<div class="bt-itin__map-wrap">';
         echo '<div id="' . esc_attr($map_id) . '" class="bt-itin__map"></div>';
-
-        // Script d'initialisation inline — lit les custom properties CSS pour les couleurs
-        // (évite d'exposer les valeurs Elementor en PHP/attribut)
         ?>
         <script>
         (function(){
@@ -991,19 +1039,42 @@ class Itinerary extends \Elementor\Widget_Base {
                 attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
                 maxZoom:19
             }).addTo(map);
+            var cs=getComputedStyle(el);
+            var mc=(cs.getPropertyValue('--bt-map-marker-color')||'#0066cc').trim();
+            var ms=parseFloat(cs.getPropertyValue('--bt-map-marker-size'))||12;
+            var icon=L.divIcon({
+                className:'bt-map-marker',
+                html:'<div style="width:'+ms+'px;height:'+ms+'px;background:'+mc+';border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>',
+                iconSize:[ms,ms],iconAnchor:[ms/2,ms/2],popupAnchor:[0,-ms/2-4]
+            });
             var pts=<?php echo $points_json; ?>;
             var lls=[];
             pts.forEach(function(p){
-                var m=L.marker([p.lat,p.lng]).addTo(map);
-                if(p.label)m.bindPopup(p.label);
+                var m=L.marker([p.lat,p.lng],{icon:icon}).addTo(map);
+                <?php if ($show_popup): ?>
+                if(p.label||p.desc){
+                    var html='<div class="bt-map-popup">';
+                    if(p.label)html+='<strong class="info-window__title">'+p.label+'</strong>';
+                    if(p.desc)html+='<p class="info-window__body">'+p.desc+'</p>';
+                    html+='</div>';
+                    m.bindPopup(html);
+                }
+                <?php endif; ?>
                 lls.push([p.lat,p.lng]);
             });
             <?php if ($show_path): ?>
             if(lls.length>1){
-                var cs=getComputedStyle(el);
                 var lc=(cs.getPropertyValue('--bt-map-line-color')||'#0066cc').trim();
                 var lw=parseFloat(cs.getPropertyValue('--bt-map-line-weight'))||3;
+                <?php if ($path_style === 'curved'): ?>
+                function btBez(a,b,n){var dla=b[0]-a[0],dlg=b[1]-a[1],len=Math.sqrt(dla*dla+dlg*dlg);if(len<1e-9)return[a,b];var off=len*.15,cx=(a[0]+b[0])/2+(-dlg/len)*off,cy=(a[1]+b[1])/2+(dla/len)*off,r=[];for(var i=0;i<=n;i++){var t=i/n;r.push([(1-t)*(1-t)*a[0]+2*(1-t)*t*cx+t*t*b[0],(1-t)*(1-t)*a[1]+2*(1-t)*t*cy+t*t*b[1]]);}return r;}
+                var cl=[];for(var i=0;i<lls.length-1;i++){var seg=btBez(lls[i],lls[i+1],20);if(i>0)seg.shift();cl=cl.concat(seg);}
+                L.polyline(cl,{color:lc,weight:lw,opacity:.85}).addTo(map);
+                <?php elseif ($path_style === 'dashed'): ?>
+                L.polyline(lls,{color:lc,weight:lw,opacity:.85,dashArray:'10 8'}).addTo(map);
+                <?php else: ?>
                 L.polyline(lls,{color:lc,weight:lw,opacity:.85}).addTo(map);
+                <?php endif; ?>
             }
             <?php endif; ?>
             if(lls.length===1)map.setView(lls[0],13);
@@ -1030,8 +1101,8 @@ class Itinerary extends \Elementor\Widget_Base {
         if (self::$leaflet_loaded) return;
         self::$leaflet_loaded = true;
 
-        $css = '<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">' . "\n";
-        $js  = '<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/WLcE=" crossorigin=""></script>' . "\n";
+        $css = '<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">' . "\n";
+        $js  = '<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>' . "\n";
 
         $is_editor = \Elementor\Plugin::$instance->editor->is_edit_mode()
                   || \Elementor\Plugin::$instance->preview->is_preview_mode();
