@@ -767,7 +767,7 @@
                         "max": "",
                         "step": 1,
                         "default_value": "",
-                        "placeholder": "30",
+                        "placeholder": 30,
                         "prepend": "",
                         "append": "min",
                         "parent_repeater": "field_bt_exp_itinerary"
@@ -854,7 +854,7 @@
                 "max": "",
                 "step": 1,
                 "default_value": "",
-                "placeholder": "30",
+                "placeholder": 30,
                 "prepend": "",
                 "append": "min"
             },
