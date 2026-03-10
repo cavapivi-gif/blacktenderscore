@@ -684,8 +684,27 @@
                 "min": 0,
                 "max": 0,
                 "rows_per_page": 20,
-                "collapsed": "",
+                "collapsed": "field_bt_exp_itin_title",
                 "sub_fields": [
+                    {
+                        "key": "field_bt_exp_itin_sep_content",
+                        "label": "",
+                        "name": "step_sep_content",
+                        "aria-label": "",
+                        "type": "message",
+                        "instructions": "",
+                        "required": 0,
+                        "conditional_logic": 0,
+                        "wrapper": {
+                            "width": "100",
+                            "class": "bt-acf-section-header",
+                            "id": ""
+                        },
+                        "message": "<div style='margin:-4px -12px 0;padding:5px 12px 4px;background:#e8f0fe;border-left:3px solid #4a6cf7;font-size:11px;font-weight:600;letter-spacing:.5px;color:#2d3a8c;text-transform:uppercase'>⏱ Contenu de l'étape</div>",
+                        "new_lines": "wpautop",
+                        "esc_html": 0,
+                        "parent_repeater": "field_bt_exp_itinerary"
+                    },
                     {
                         "key": "field_bt_exp_itin_time",
                         "label": "Heure / Moment",
@@ -773,6 +792,25 @@
                         "parent_repeater": "field_bt_exp_itinerary"
                     },
                     {
+                        "key": "field_bt_exp_itin_sep_options",
+                        "label": "",
+                        "name": "step_sep_options",
+                        "aria-label": "",
+                        "type": "message",
+                        "instructions": "",
+                        "required": 0,
+                        "conditional_logic": 0,
+                        "wrapper": {
+                            "width": "100",
+                            "class": "bt-acf-section-header",
+                            "id": ""
+                        },
+                        "message": "<div style='margin:-4px -12px 0;padding:5px 12px 4px;background:#fef3e2;border-left:3px solid #f59e0b;font-size:11px;font-weight:600;letter-spacing:.5px;color:#92400e;text-transform:uppercase'>⚙️ Options visuelles</div>",
+                        "new_lines": "wpautop",
+                        "esc_html": 0,
+                        "parent_repeater": "field_bt_exp_itinerary"
+                    },
+                    {
                         "key": "field_bt_exp_itin_icon",
                         "label": "Icône CSS (optionnel)",
                         "name": "step_icon",
@@ -815,6 +853,25 @@
                         "parent_repeater": "field_bt_exp_itinerary"
                     },
                     {
+                        "key": "field_bt_exp_itin_sep_gps",
+                        "label": "",
+                        "name": "step_sep_gps",
+                        "aria-label": "",
+                        "type": "message",
+                        "instructions": "",
+                        "required": 0,
+                        "conditional_logic": 0,
+                        "wrapper": {
+                            "width": "100",
+                            "class": "bt-acf-section-header",
+                            "id": ""
+                        },
+                        "message": "<div style='margin:-4px -12px 0;padding:5px 12px 4px;background:#ecfdf5;border-left:3px solid #10b981;font-size:11px;font-weight:600;letter-spacing:.5px;color:#065f46;text-transform:uppercase'>📍 Coordonnées GPS</div>",
+                        "new_lines": "wpautop",
+                        "esc_html": 0,
+                        "parent_repeater": "field_bt_exp_itinerary"
+                    },
+                    {
                         "key": "field_bt_exp_itin_coords",
                         "label": "Coordonnées GPS étape",
                         "name": "step_coords",
@@ -833,7 +890,8 @@
                         "center_zoom": "13",
                         "zoom": "",
                         "height": "",
-                        "allow_in_bindings": 0
+                        "allow_in_bindings": 0,
+                        "parent_repeater": "field_bt_exp_itinerary"
                     }
                 ]
             },
