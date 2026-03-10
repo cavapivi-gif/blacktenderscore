@@ -1,6 +1,9 @@
 <?php
 namespace BlackTenders\Elementor\Widgets;
 
+use BlackTenders\Elementor\AbstractBtWidget;
+use BlackTenders\Elementor\Traits\BtSharedControls;
+
 defined('ABSPATH') || exit;
 
 /**
@@ -17,14 +20,18 @@ defined('ABSPATH') || exit;
  *
  * Animation accordion : CSS grid-template-rows 0fr→1fr (pas de [hidden]).
  */
-class FaqAccordion extends \Elementor\Widget_Base {
+class FaqAccordion extends AbstractBtWidget {
+    use BtSharedControls;
 
-    public function get_name():       string { return 'bt-faq-accordion'; }
-    public function get_title():      string { return 'BT — FAQ'; }
-    public function get_icon():       string { return 'eicon-toggle'; }
-    public function get_categories(): array  { return ['blacktenderscore']; }
-    public function get_keywords():   array  { return ['faq', 'accordéon', 'accordion', 'tabs', 'question', 'bt']; }
-    public function get_script_depends(): array { return ['bt-elementor']; }
+    protected static function get_bt_config(): array {
+        return [
+            'id'       => 'bt-faq-accordion',
+            'title'    => 'BT — FAQ',
+            'icon'     => 'eicon-toggle',
+            'keywords' => ['faq', 'accordéon', 'accordion', 'tabs', 'question', 'bt'],
+            'js'       => ['bt-elementor'],
+        ];
+    }
 
     // ══ Controls ══════════════════════════════════════════════════════════════
 
@@ -36,19 +43,7 @@ class FaqAccordion extends \Elementor\Widget_Base {
             'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
         ]);
 
-        $this->add_control('section_title', [
-            'label'   => __('Titre de section', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
-            'default' => '',
-            'dynamic' => ['active' => true],
-        ]);
-
-        $this->add_control('section_title_tag', [
-            'label'   => __('Balise titre section', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
-            'options' => ['h2' => 'H2', 'h3' => 'H3', 'h4' => 'H4', 'p' => 'p', 'span' => 'span'],
-            'default' => 'h3',
-        ]);
+        $this->register_section_title_controls();
 
         $this->add_control('acf_field', [
             'label'   => __('Champ ACF (FAQ)', 'blacktenderscore'),
@@ -123,43 +118,7 @@ class FaqAccordion extends \Elementor\Widget_Base {
 
         $this->end_controls_section();
 
-        // ── Style — Titre section ──────────────────────────────────────────────
-        $this->start_controls_section('style_heading', [
-            'label'     => __('Style — Titre section', 'blacktenderscore'),
-            'tab'       => \Elementor\Controls_Manager::TAB_STYLE,
-            'condition' => ['section_title!' => ''],
-        ]);
-
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
-            'name'     => 'heading_typography',
-            'selector' => '{{WRAPPER}} .bt-faq__section-title',
-        ]);
-
-        $this->add_control('heading_color', [
-            'label'     => __('Couleur', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-faq__section-title' => 'color: {{VALUE}}'],
-        ]);
-
-        $this->add_responsive_control('heading_align', [
-            'label'     => __('Alignement', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::CHOOSE,
-            'options'   => [
-                'left'   => ['title' => __('Gauche', 'blacktenderscore'),  'icon' => 'eicon-text-align-left'],
-                'center' => ['title' => __('Centre', 'blacktenderscore'),  'icon' => 'eicon-text-align-center'],
-                'right'  => ['title' => __('Droite', 'blacktenderscore'),  'icon' => 'eicon-text-align-right'],
-            ],
-            'selectors' => ['{{WRAPPER}} .bt-faq__section-title' => 'text-align: {{VALUE}}'],
-        ]);
-
-        $this->add_responsive_control('heading_spacing', [
-            'label'      => __('Espacement sous le titre', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
-            'size_units' => ['px', 'em'],
-            'selectors'  => ['{{WRAPPER}} .bt-faq__section-title' => 'margin-bottom: {{SIZE}}{{UNIT}}'],
-        ]);
-
-        $this->end_controls_section();
+        $this->register_section_title_style('{{WRAPPER}} .bt-faq__section-title');
 
         // ── Style — Accordéon ─────────────────────────────────────────────────
         $this->start_controls_section('style_accordion', [
@@ -483,28 +442,18 @@ class FaqAccordion extends \Elementor\Widget_Base {
         $s       = $this->get_settings_for_display();
         $post_id = get_the_ID();
 
-        if (!function_exists('get_field')) {
-            echo '<p class="bt-widget-placeholder">ACF Pro requis.</p>';
-            return;
-        }
+        if (!$this->acf_required()) return;
 
-        $rows = get_field($s['acf_field'], $post_id);
-
-        if (empty($rows)) {
-            if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
-                echo '<p class="bt-widget-placeholder">Aucune FAQ trouvée pour le champ « ' . esc_html($s['acf_field']) . ' ».</p>';
-            }
-            return;
-        }
+        $rows = $this->get_acf_rows(
+            $s['acf_field'],
+            sprintf(__('Aucune FAQ trouvée pour le champ « %s ».', 'blacktenderscore'), $s['acf_field'])
+        );
+        if (!$rows) return;
 
         $layout = $s['layout'] ?: 'accordion';
         $uid    = 'bt-faq-' . $this->get_id();
 
-        // Titre de section optionnel
-        if (!empty($s['section_title'])) {
-            $tag = esc_attr($s['section_title_tag'] ?: 'h3');
-            echo "<{$tag} class=\"bt-faq__section-title\">" . esc_html($s['section_title']) . "</{$tag}>";
-        }
+        $this->render_section_title($s, 'bt-faq__section-title');
 
         if ($layout === 'tabs') {
             $this->render_tabs($rows, $uid);
@@ -610,27 +559,7 @@ class FaqAccordion extends \Elementor\Widget_Base {
      * Inclut repeaters et relationships — resolve_qa() gère les deux types.
      */
     private static function get_faq_field_options(): array {
-        $options = [];
-
-        if (!function_exists('acf_get_field_groups')) {
-            return ['exp_faq' => 'FAQ (exp_faq)'];
-        }
-
-        foreach (acf_get_field_groups() as $group) {
-            $fields = acf_get_fields($group['key']);
-            if (empty($fields)) continue;
-            foreach ($fields as $field) {
-                if (stripos($field['name'], 'faq') === false) continue;
-                $type_label = $field['type']; // repeater, relationship, post_object…
-                $options[$field['name']] = sprintf('%s (%s) [%s]',
-                    $field['label'],
-                    $field['name'],
-                    $type_label
-                );
-            }
-        }
-
-        return $options ?: ['exp_faq' => 'FAQ (exp_faq)'];
+        return static::acf_field_options('faq', ['exp_faq' => 'FAQ (exp_faq)']);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

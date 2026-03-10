@@ -66,13 +66,16 @@
   /* ── Tabs ────────────────────────────────────────────────────────────────── */
 
   function activateTab(root, tabs, activeTab) {
+    // Generic panel class from data attr (ex: 'bt-pricing__panel' → toggles 'bt-pricing__panel--active')
+    var panelCls = root.getAttribute('data-bt-panel-class');
+
     tabs.forEach(function (tab) {
       var isActive = tab === activeTab;
 
-      // FAQ tabs
-      tab.classList.toggle('bt-faq__tab--active',    isActive);
-      // Pricing tabs
-      tab.classList.toggle('bt-bprice__tab--active', isActive);
+      // Tab button active classes (widget-specific, harmless if not present)
+      tab.classList.toggle('bt-faq__tab--active',     isActive);
+      tab.classList.toggle('bt-pricing__tab--active', isActive);
+      tab.classList.toggle('bt-bprice__tab--active',  isActive);
 
       tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
       tab.setAttribute('tabindex',      isActive ? '0'    : '-1');
@@ -80,8 +83,14 @@
       var panelId = tab.getAttribute('aria-controls');
       var panel   = panelId ? document.getElementById(panelId) : null;
       if (panel) {
-        panel.classList.toggle('bt-faq__tabpanel--active',  isActive);
-        panel.classList.toggle('bt-bprice__panel--active',  isActive);
+        if (panelCls) {
+          // Generic: use data-bt-panel-class (PricingTabs, new widgets)
+          panel.classList.toggle(panelCls + '--active', isActive);
+        } else {
+          // Legacy hardcoded (FaqAccordion tabs, BoatPricing — no data attr set)
+          panel.classList.toggle('bt-faq__tabpanel--active', isActive);
+          panel.classList.toggle('bt-bprice__panel--active', isActive);
+        }
       }
     });
 
@@ -147,6 +156,8 @@
 
     elementorFrontend.elementsHandler.attachHandler('bt-faq-accordion', BtWidgetHandler);
     elementorFrontend.elementsHandler.attachHandler('bt-boat-pricing',  BtWidgetHandler);
+    elementorFrontend.elementsHandler.attachHandler('bt-pricing-tabs',  BtWidgetHandler);
+    elementorFrontend.elementsHandler.attachHandler('bt-itinerary',     BtWidgetHandler);
   });
 
   // Fallback : pages sans Elementor JS (ex. thème sans Elementor)

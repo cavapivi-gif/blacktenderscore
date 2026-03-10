@@ -1,6 +1,9 @@
 <?php
 namespace BlackTenders\Elementor\Widgets;
 
+use BlackTenders\Elementor\AbstractBtWidget;
+use BlackTenders\Elementor\Traits\BtSharedControls;
+
 defined('ABSPATH') || exit;
 
 /**
@@ -19,13 +22,17 @@ defined('ABSPATH') || exit;
  *                          OU step_lat + step_lng (type : Nombre)
  *   • Post fields        : exp_departure_coords, exp_arriving_coords (Google Map)
  */
-class Itinerary extends \Elementor\Widget_Base {
+class Itinerary extends AbstractBtWidget {
+    use BtSharedControls;
 
-    public function get_name():       string { return 'bt-itinerary'; }
-    public function get_title():      string { return 'BT — Programme / Itinéraire'; }
-    public function get_icon():       string { return 'eicon-time-line'; }
-    public function get_categories(): array  { return ['blacktenderscore']; }
-    public function get_keywords():   array  { return ['itinéraire', 'programme', 'timeline', 'étapes', 'carte', 'map', 'bt']; }
+    protected static function get_bt_config(): array {
+        return [
+            'id'       => 'bt-itinerary',
+            'title'    => 'BT — Programme / Itinéraire',
+            'icon'     => 'eicon-time-line',
+            'keywords' => ['itinéraire', 'programme', 'timeline', 'étapes', 'carte', 'map', 'bt'],
+        ];
+    }
 
     // ── Controls ──────────────────────────────────────────────────────────────
 
@@ -697,22 +704,15 @@ class Itinerary extends \Elementor\Widget_Base {
         $s       = $this->get_settings_for_display();
         $post_id = get_the_ID();
 
-        if (!function_exists('get_field')) {
-            echo '<p class="bt-widget-placeholder">ACF Pro requis.</p>';
-            return;
-        }
+        if (!$this->acf_required()) return;
 
         $field_name = sanitize_text_field($s['acf_field'] ?: 'exp_itinerary');
-        $rows       = get_field($field_name, $post_id);
+        $rows       = $this->get_acf_rows(
+            $field_name,
+            sprintf(__('Aucune étape dans le champ « %s ».', 'blacktenderscore'), $field_name)
+        );
+        if (!$rows) return;
 
-        if (empty($rows)) {
-            if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
-                echo '<p class="bt-widget-placeholder">Aucune étape dans <code>' . esc_html($field_name) . '</code>.</p>';
-            }
-            return;
-        }
-
-        $tag            = esc_attr($s['title_tag'] ?: 'h3');
         $show_time      = ($s['show_time']        ?? '') === 'yes';
         $show_duration  = ($s['show_duration']    ?? '') === 'yes';
         $show_desc      = ($s['show_description'] ?? '') === 'yes';
@@ -737,9 +737,7 @@ class Itinerary extends \Elementor\Widget_Base {
 
         echo '<div class="bt-itin' . esc_attr($connector_cls) . '">';
 
-        if (!empty($s['section_title'])) {
-            echo "<{$tag} class=\"bt-itin__title\">" . esc_html($s['section_title']) . "</{$tag}>";
-        }
+        $this->render_section_title($s, 'bt-itin__title', 'section_title', 'title_tag');
 
         // Carte au-dessus (stacked)
         if ($show_map && $map_position === 'above') {
@@ -925,7 +923,7 @@ class Itinerary extends \Elementor\Widget_Base {
         }
 
         if (empty($points)) {
-            if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
+            if ($this->is_edit_mode()) {
                 echo '<div class="bt-itin__map-wrap"><p class="bt-widget-placeholder">';
                 echo __('Carte : aucune coordonnée GPS trouvée dans les étapes. Ajoutez un champ ACF <code>step_coords</code> (type : Google Map) ou <code>step_lat</code> + <code>step_lng</code> (Nombre) dans le repeater.', 'blacktenderscore');
                 echo '</p></div>';
@@ -937,7 +935,7 @@ class Itinerary extends \Elementor\Widget_Base {
         $api_key = (string) get_option('elementor_google_maps_api_key', '');
 
         if (empty($api_key)) {
-            if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
+            if ($this->is_edit_mode()) {
                 echo '<div class="bt-itin__map-wrap"><p class="bt-widget-placeholder">';
                 echo __('Carte : clé API manquante. Renseignez-la dans <strong>Elementor → Réglages → Intégrations → Google Maps</strong>.', 'blacktenderscore');
                 echo '</p></div>';
