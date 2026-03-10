@@ -1,6 +1,9 @@
 <?php
 namespace BlackTenders\Elementor\Widgets;
 
+use BlackTenders\Elementor\AbstractBtWidget;
+use BlackTenders\Elementor\Traits\BtSharedControls;
+
 defined('ABSPATH') || exit;
 
 /**
@@ -11,14 +14,18 @@ defined('ABSPATH') || exit;
  * Format: "1h30 — 45 €" (durée + prix).
  * Optionnellement affiche le calendrier de réservation Regiondo (UUID ACF).
  */
-class PricingTabs extends \Elementor\Widget_Base {
+class PricingTabs extends AbstractBtWidget {
+    use BtSharedControls;
 
-    public function get_name():       string { return 'bt-pricing-tabs'; }
-    public function get_title():      string { return 'BT — Tarification'; }
-    public function get_icon():       string { return 'eicon-price-table'; }
-    public function get_categories(): array  { return ['blacktenderscore']; }
-    public function get_keywords():   array  { return ['tarif', 'prix', 'forfait', 'réservation', 'booking', 'bt']; }
-    public function get_script_depends(): array { return ['bt-elementor']; }
+    protected static function get_bt_config(): array {
+        return [
+            'id'       => 'bt-pricing-tabs',
+            'title'    => 'BT — Tarification',
+            'icon'     => 'eicon-price-table',
+            'keywords' => ['tarif', 'prix', 'forfait', 'réservation', 'booking', 'bt'],
+            'js'       => ['bt-elementor'],
+        ];
+    }
 
     /** Évite d'injecter le script Regiondo plusieurs fois sur la même page. */
     private static bool $regiondo_script_printed = false;
@@ -209,19 +216,13 @@ class PricingTabs extends \Elementor\Widget_Base {
         $s       = $this->get_settings_for_display();
         $post_id = get_the_ID();
 
-        if (!function_exists('get_field')) {
-            echo '<p class="bt-widget-placeholder">ACF Pro requis.</p>';
-            return;
-        }
+        if (!$this->acf_required()) return;
 
-        $rows = get_field($s['acf_field'], $post_id);
-
-        if (empty($rows)) {
-            if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
-                echo '<p class="bt-widget-placeholder">Aucun forfait trouvé pour le champ « ' . esc_html($s['acf_field']) . ' ».</p>';
-            }
-            return;
-        }
+        $rows = $this->get_acf_rows(
+            $s['acf_field'],
+            sprintf(__('Aucun forfait trouvé pour le champ « %s ».', 'blacktenderscore'), $s['acf_field'])
+        );
+        if (!$rows) return;
 
         // UUID global (fallback si pas per-tab)
         $global_uuid = '';
@@ -231,7 +232,7 @@ class PricingTabs extends \Elementor\Widget_Base {
 
         $uid = 'bt-pricing-' . $this->get_id();
 
-        echo "<div class=\"bt-pricing\" id=\"{$uid}\" data-bt-tabs>";
+        echo "<div class=\"bt-pricing\" id=\"{$uid}\" data-bt-tabs data-bt-panel-class=\"bt-pricing__panel\">";
 
         // ── Tab bar ───────────────────────────────────────────────────────
         echo '<div class="bt-pricing__tablist" role="tablist">';
@@ -250,7 +251,7 @@ class PricingTabs extends \Elementor\Widget_Base {
         foreach ($rows as $i => $row) {
             $tab_id  = "{$uid}-tab-{$i}";
             $pan_id  = "{$uid}-panel-{$i}";
-            $hidden  = $i === 0 ? '' : ' hidden';
+            $active_panel = $i === 0 ? ' bt-pricing__panel--active' : '';
             $price   = $row['exp_price']        ?? '';
             $note    = $row['exp_pricing_note'] ?? '';
             $deposit = $row['exp_deposit']      ?? '';
@@ -261,7 +262,7 @@ class PricingTabs extends \Elementor\Widget_Base {
                 $uuid = (string) ($row[$s['booking_uuid_subfield']] ?? '');
             }
 
-            echo "<div class=\"bt-pricing__panel\" id=\"{$pan_id}\" role=\"tabpanel\" aria-labelledby=\"{$tab_id}\"{$hidden}>";
+            echo "<div class=\"bt-pricing__panel{$active_panel}\" id=\"{$pan_id}\" role=\"tabpanel\" aria-labelledby=\"{$tab_id}\">";
 
             // Prix principal
             if ($price !== '') {
@@ -284,7 +285,7 @@ class PricingTabs extends \Elementor\Widget_Base {
             // Booking widget Regiondo
             if ($s['show_booking'] === 'yes' && $uuid) {
                 echo $this->render_booking_widget($uuid, $post_id, $i);
-            } elseif ($s['show_booking'] === 'yes' && \Elementor\Plugin::$instance->editor->is_edit_mode()) {
+            } elseif ($s['show_booking'] === 'yes' && $this->is_edit_mode()) {
                 echo '<div class="bt-widget-placeholder">Widget de réservation Regiondo (UUID requis)</div>';
             }
 

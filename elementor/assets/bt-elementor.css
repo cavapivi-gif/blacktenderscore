@@ -267,6 +267,86 @@
 
 
 /* ══════════════════════════════════════════════════════════
+   WIDGET : Pricing Tabs (Tarification par forfait)
+   ══════════════════════════════════════════════════════════ */
+
+/* Barre d'onglets */
+.bt-pricing__tablist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+/* Onglet */
+.bt-pricing__tab {
+  padding: 10px 20px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 500;
+  color: #666;
+  white-space: nowrap;
+  transition: color .15s, border-color .15s;
+}
+
+.bt-pricing__tab:hover { color: #333; }
+
+.bt-pricing__tab--active {
+  color: #000;
+  border-bottom-color: #000;
+}
+
+/* Panneaux — masqués par défaut via CSS (pas d'attribut [hidden]) */
+.bt-pricing__panel {
+  display: none;
+}
+
+.bt-pricing__panel--active {
+  display: block;
+  padding-top: 20px;
+}
+
+/* Prix */
+.bt-pricing__price-block {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.bt-pricing__price {
+  font-size: 2em;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.bt-pricing__per {
+  font-size: .875em;
+  opacity: .65;
+}
+
+.bt-pricing__note {
+  font-size: .85em;
+  opacity: .7;
+}
+
+.bt-pricing__deposit {
+  font-size: .875em;
+  opacity: .75;
+  margin: 0;
+}
+
+.bt-pricing__booking {
+  margin-top: 20px;
+}
+
+
+/* ══════════════════════════════════════════════════════════
    WIDGET : Boat Pricing — layout tabs
    ══════════════════════════════════════════════════════════ */
 

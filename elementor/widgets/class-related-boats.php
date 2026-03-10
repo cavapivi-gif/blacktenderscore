@@ -1,6 +1,9 @@
 <?php
 namespace BlackTenders\Elementor\Widgets;
 
+use BlackTenders\Elementor\AbstractBtWidget;
+use BlackTenders\Elementor\Traits\BtSharedControls;
+
 defined('ABSPATH') || exit;
 
 /**
@@ -9,13 +12,18 @@ defined('ABSPATH') || exit;
  * Lit le champ ACF `exp_boats` (relationship → boat) du post courant (excursion)
  * et affiche les cartes bateau correspondantes.
  */
-class RelatedBoats extends \Elementor\Widget_Base {
+class RelatedBoats extends AbstractBtWidget {
 
-    public function get_name():       string { return 'bt-related-boats'; }
-    public function get_title():      string { return 'BT — Bateaux de l\'excursion'; }
-    public function get_icon():       string { return 'eicon-posts-grid'; }
-    public function get_categories(): array  { return ['blacktenderscore']; }
-    public function get_keywords():   array  { return ['bateau', 'related', 'excursion', 'relation', 'bt']; }
+    use BtSharedControls;
+
+    protected static function get_bt_config(): array {
+        return [
+            'id'       => 'bt-related-boats',
+            'title'    => 'BT — Bateaux de l\'excursion',
+            'icon'     => 'eicon-posts-grid',
+            'keywords' => ['bateau', 'related', 'excursion', 'relation', 'bt'],
+        ];
+    }
 
     // ── Controls ─────────────────────────────────────────────────────────────
 
@@ -34,19 +42,7 @@ class RelatedBoats extends \Elementor\Widget_Base {
             'description' => __('Nom du champ ACF de type relationship pointant vers boat.', 'blacktenderscore'),
         ]);
 
-        $this->add_control('section_title', [
-            'label'   => __('Titre de section', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
-            'default' => __('Bateaux utilisés', 'blacktenderscore'),
-            'dynamic' => ['active' => true],
-        ]);
-
-        $this->add_control('title_tag', [
-            'label'   => __('Balise du titre', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
-            'options' => ['h2' => 'H2', 'h3' => 'H3', 'h4' => 'H4', 'p' => 'p'],
-            'default' => 'h3',
-        ]);
+        $this->register_section_title_controls(['title' => __('Bateaux utilisés', 'blacktenderscore')]);
 
         $this->end_controls_section();
 
@@ -273,29 +269,23 @@ class RelatedBoats extends \Elementor\Widget_Base {
         $s       = $this->get_settings_for_display();
         $post_id = get_the_ID();
 
-        if (!function_exists('get_field')) {
-            echo '<p class="bt-widget-placeholder">ACF Pro requis.</p>';
-            return;
-        }
+        if (!$this->acf_required()) return;
 
         $field_name = sanitize_key($s['acf_field'] ?: 'exp_boats');
         $boats      = get_field($field_name, $post_id);
 
         if (empty($boats)) {
-            if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
+            if ($this->is_edit_mode()) {
                 echo '<p class="bt-widget-placeholder">Aucun bateau lié trouvé via le champ <code>' . esc_html($field_name) . '</code>. Vérifiez que des bateaux sont associés à cette excursion.</p>';
             }
             return;
         }
 
         $boats = is_array($boats) ? $boats : [$boats];
-        $tag   = esc_attr($s['title_tag'] ?: 'h3');
 
         echo '<div class="bt-relboats">';
 
-        if (!empty($s['section_title'])) {
-            echo "<{$tag} class=\"bt-relboats__title\">" . esc_html($s['section_title']) . "</{$tag}>";
-        }
+        $this->render_section_title($s, 'bt-relboats__title');
 
         echo '<div class="bt-relboats__grid">';
 

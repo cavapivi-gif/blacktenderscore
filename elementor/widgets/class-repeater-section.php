@@ -1,6 +1,9 @@
 <?php
 namespace BlackTenders\Elementor\Widgets;
 
+use BlackTenders\Elementor\AbstractBtWidget;
+use BlackTenders\Elementor\Traits\BtSharedControls;
+
 defined('ABSPATH') || exit;
 
 /**
@@ -15,13 +18,18 @@ defined('ABSPATH') || exit;
  * Deux instances du widget sur la même page avec des offsets différents
  * permettent d'afficher la même liste en plusieurs blocs séparés.
  */
-class RepeaterSection extends \Elementor\Widget_Base {
+class RepeaterSection extends AbstractBtWidget {
 
-    public function get_name():       string { return 'bt-repeater-section'; }
-    public function get_title():      string { return 'BT — Section Repeater'; }
-    public function get_icon():       string { return 'eicon-post-list'; }
-    public function get_categories(): array  { return ['blacktenderscore']; }
-    public function get_keywords():   array  { return ['repeater', 'section', 'liste', 'grille', 'acf', 'bt']; }
+    use BtSharedControls;
+
+    protected static function get_bt_config(): array {
+        return [
+            'id'       => 'bt-repeater-section',
+            'title'    => 'BT — Section Repeater',
+            'icon'     => 'eicon-post-list',
+            'keywords' => ['repeater', 'section', 'liste', 'grille', 'acf', 'bt'],
+        ];
+    }
 
     // ── Controls ──────────────────────────────────────────────────────────────
 
@@ -386,12 +394,7 @@ class RepeaterSection extends \Elementor\Widget_Base {
     protected function render(): void {
         $s = $this->get_settings_for_display();
 
-        if (!function_exists('get_field')) {
-            if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
-                echo '<p class="bt-widget-placeholder">ACF Pro requis.</p>';
-            }
-            return;
-        }
+        if (!$this->acf_required()) return;
 
         // Résoudre la clé du champ
         $key = $s['acf_field'] === '_custom'
@@ -399,7 +402,7 @@ class RepeaterSection extends \Elementor\Widget_Base {
             : (string) ($s['acf_field'] ?? '');
 
         if (!$key || $key === '_none') {
-            if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
+            if ($this->is_edit_mode()) {
                 echo '<p class="bt-widget-placeholder">Aucun champ ACF sélectionné.</p>';
             }
             return;
@@ -415,7 +418,7 @@ class RepeaterSection extends \Elementor\Widget_Base {
             $empty = trim((string) ($s['empty_text'] ?? ''));
             if ($empty) {
                 echo '<p class="bt-rsection__empty">' . esc_html($empty) . '</p>';
-            } elseif (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
+            } elseif ($this->is_edit_mode()) {
                 echo '<p class="bt-widget-placeholder">Aucun item à afficher pour « ' . esc_html($key) . ' ».</p>';
             }
             return;

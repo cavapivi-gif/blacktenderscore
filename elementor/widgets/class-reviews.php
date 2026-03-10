@@ -1,6 +1,9 @@
 <?php
 namespace BlackTenders\Elementor\Widgets;
 
+use BlackTenders\Elementor\AbstractBtWidget;
+use BlackTenders\Elementor\Traits\BtSharedControls;
+
 defined('ABSPATH') || exit;
 
 /**
@@ -10,13 +13,18 @@ defined('ABSPATH') || exit;
  * et affiche les cartes avis. Injecte optionnellement le schema.org
  * AggregateRating + Review en JSON-LD.
  */
-class Reviews extends \Elementor\Widget_Base {
+class Reviews extends AbstractBtWidget {
 
-    public function get_name():       string { return 'bt-reviews'; }
-    public function get_title():      string { return 'BT — Avis clients'; }
-    public function get_icon():       string { return 'eicon-rating'; }
-    public function get_categories(): array  { return ['blacktenderscore']; }
-    public function get_keywords():   array  { return ['avis', 'reviews', 'rating', 'étoiles', 'bt']; }
+    use BtSharedControls;
+
+    protected static function get_bt_config(): array {
+        return [
+            'id'       => 'bt-reviews',
+            'title'    => 'BT — Avis clients',
+            'icon'     => 'eicon-rating',
+            'keywords' => ['avis', 'reviews', 'rating', 'étoiles', 'bt'],
+        ];
+    }
 
     // ── Controls ─────────────────────────────────────────────────────────────
 
@@ -34,19 +42,7 @@ class Reviews extends \Elementor\Widget_Base {
             'default' => 'exp_reviews_highlight',
         ]);
 
-        $this->add_control('section_title', [
-            'label'   => __('Titre de section', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
-            'default' => __('Avis clients', 'blacktenderscore'),
-            'dynamic' => ['active' => true],
-        ]);
-
-        $this->add_control('title_tag', [
-            'label'   => __('Balise du titre', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
-            'options' => ['h2' => 'H2', 'h3' => 'H3', 'h4' => 'H4', 'p' => 'p'],
-            'default' => 'h3',
-        ]);
+        $this->register_section_title_controls(['title' => __('Avis clients', 'blacktenderscore')]);
 
         $this->add_control('max_reviews', [
             'label'   => __('Nombre max d\'avis', 'blacktenderscore'),
@@ -298,20 +294,11 @@ class Reviews extends \Elementor\Widget_Base {
         $s       = $this->get_settings_for_display();
         $post_id = get_the_ID();
 
-        if (!function_exists('get_field')) {
-            echo '<p class="bt-widget-placeholder">ACF Pro requis.</p>';
-            return;
-        }
+        if (!$this->acf_required()) return;
 
         $field_name = sanitize_text_field($s['acf_field'] ?: 'exp_reviews_highlight');
-        $rows       = get_field($field_name, $post_id);
-
-        if (empty($rows)) {
-            if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
-                echo '<p class="bt-widget-placeholder">Aucun avis dans le champ <code>' . esc_html($field_name) . '</code>.</p>';
-            }
-            return;
-        }
+        $rows = $this->get_acf_rows($field_name, __('Aucun avis dans le champ indiqué.', 'blacktenderscore'));
+        if (!$rows) return;
 
         $max_show  = max(1, (int) ($s['max_reviews'] ?: 5));
         $rows      = array_slice($rows, 0, $max_show);
@@ -320,14 +307,11 @@ class Reviews extends \Elementor\Widget_Base {
         $star_off  = esc_html($s['star_empty']  ?: '☆');
         $quote     = esc_html($s['quote_char']  ?: '"');
         $layout    = $s['layout'] ?: 'grid';
-        $tag       = esc_attr($s['title_tag'] ?: 'h3');
         $wrap_cls  = $layout === 'list' ? 'bt-reviews__list' : 'bt-reviews__grid';
 
         echo '<div class="bt-reviews">';
 
-        if (!empty($s['section_title'])) {
-            echo "<{$tag} class=\"bt-reviews__section-title\">" . esc_html($s['section_title']) . "</{$tag}>";
-        }
+        $this->render_section_title($s, 'bt-reviews__section-title');
 
         echo "<div class=\"{$wrap_cls}\">";
 

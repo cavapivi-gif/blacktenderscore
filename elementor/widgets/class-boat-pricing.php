@@ -1,6 +1,9 @@
 <?php
 namespace BlackTenders\Elementor\Widgets;
 
+use BlackTenders\Elementor\AbstractBtWidget;
+use BlackTenders\Elementor\Traits\BtSharedControls;
+
 defined('ABSPATH') || exit;
 
 /**
@@ -9,14 +12,18 @@ defined('ABSPATH') || exit;
  * Layouts : cartes côte à côte | tableau | onglets (tabs).
  * Données : ACF Pro (boat_price_half, boat_price_full, …).
  */
-class BoatPricing extends \Elementor\Widget_Base {
+class BoatPricing extends AbstractBtWidget {
+    use BtSharedControls;
 
-    public function get_name():       string { return 'bt-boat-pricing'; }
-    public function get_title():      string { return 'BT — Tarifs bateau'; }
-    public function get_icon():       string { return 'eicon-price-list'; }
-    public function get_categories(): array  { return ['blacktenderscore']; }
-    public function get_keywords():   array  { return ['tarif', 'prix', 'bateau', 'demi-journée', 'journée', 'bt']; }
-    public function get_script_depends(): array { return ['bt-elementor']; }
+    protected static function get_bt_config(): array {
+        return [
+            'id'       => 'bt-boat-pricing',
+            'title'    => 'BT — Tarifs bateau',
+            'icon'     => 'eicon-price-list',
+            'keywords' => ['tarif', 'prix', 'bateau', 'demi-journée', 'journée', 'bt'],
+            'js'       => ['bt-elementor'],
+        ];
+    }
 
     // ══ Controls ══════════════════════════════════════════════════════════════
 
@@ -28,19 +35,7 @@ class BoatPricing extends \Elementor\Widget_Base {
             'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
         ]);
 
-        $this->add_control('section_title', [
-            'label'   => __('Titre de section', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
-            'default' => __('Tarifs', 'blacktenderscore'),
-            'dynamic' => ['active' => true],
-        ]);
-
-        $this->add_control('title_tag', [
-            'label'   => __('Balise du titre', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
-            'options' => ['h2' => 'H2', 'h3' => 'H3', 'h4' => 'H4', 'p' => 'p', 'span' => 'span'],
-            'default' => 'h3',
-        ]);
+        $this->register_section_title_controls(['title' => __('Tarifs', 'blacktenderscore')]);
 
         $this->add_control('currency', [
             'label'   => __('Symbole monnaie', 'blacktenderscore'),
@@ -573,10 +568,7 @@ class BoatPricing extends \Elementor\Widget_Base {
         $s       = $this->get_settings_for_display();
         $post_id = get_the_ID();
 
-        if (!function_exists('get_field')) {
-            echo '<p class="bt-widget-placeholder">ACF Pro requis.</p>';
-            return;
-        }
+        if (!$this->acf_required()) return;
 
         $currency   = esc_html($s['currency'] ?: '€');
         $price_note = (string) get_field('boat_price_note', $post_id);
@@ -593,19 +585,15 @@ class BoatPricing extends \Elementor\Widget_Base {
                     || ($s['show_zones'] === 'yes' && !empty($zones));
 
         if (!$has_content) {
-            if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
-                echo '<p class="bt-widget-placeholder">Aucun tarif bateau trouvé. Vérifiez que les champs ACF (<code>boat_price_half</code>, <code>boat_price_full</code>) sont remplis sur ce post.</p>';
+            if ($this->is_edit_mode()) {
+                $this->render_placeholder(__('Aucun tarif bateau trouvé. Vérifiez que les champs ACF (boat_price_half, boat_price_full) sont remplis sur ce post.', 'blacktenderscore'));
             }
             return;
         }
 
-        $tag = esc_attr($s['title_tag'] ?: 'h3');
-
         echo '<div class="bt-bprice">';
 
-        if (!empty($s['section_title'])) {
-            echo "<{$tag} class=\"bt-bprice__title\">" . esc_html($s['section_title']) . "</{$tag}>";
-        }
+        $this->render_section_title($s, 'bt-bprice__title');
 
         $layout = $s['layout'] ?: 'cards';
 

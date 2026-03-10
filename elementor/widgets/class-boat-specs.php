@@ -1,6 +1,9 @@
 <?php
 namespace BlackTenders\Elementor\Widgets;
 
+use BlackTenders\Elementor\AbstractBtWidget;
+use BlackTenders\Elementor\Traits\BtSharedControls;
+
 defined('ABSPATH') || exit;
 
 /**
@@ -9,13 +12,18 @@ defined('ABSPATH') || exit;
  * Affiche une grille de spécifications issues des champs ACF du post type `boat`.
  * Chaque spec est configurable (label, icône, visibilité).
  */
-class BoatSpecs extends \Elementor\Widget_Base {
+class BoatSpecs extends AbstractBtWidget {
 
-    public function get_name():       string { return 'bt-boat-specs'; }
-    public function get_title():      string { return 'BT — Fiche technique bateau'; }
-    public function get_icon():       string { return 'eicon-info-box'; }
-    public function get_categories(): array  { return ['blacktenderscore']; }
-    public function get_keywords():   array  { return ['bateau', 'specs', 'technique', 'caractéristiques', 'bt']; }
+    use BtSharedControls;
+
+    protected static function get_bt_config(): array {
+        return [
+            'id'       => 'bt-boat-specs',
+            'title'    => 'BT — Fiche technique bateau',
+            'icon'     => 'eicon-info-box',
+            'keywords' => ['bateau', 'specs', 'technique', 'caractéristiques', 'bt'],
+        ];
+    }
 
     // ── Définition des specs disponibles ─────────────────────────────────────
 
@@ -51,19 +59,7 @@ class BoatSpecs extends \Elementor\Widget_Base {
             'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
         ]);
 
-        $this->add_control('section_title', [
-            'label'   => __('Titre de section', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
-            'default' => __('Caractéristiques techniques', 'blacktenderscore'),
-            'dynamic' => ['active' => true],
-        ]);
-
-        $this->add_control('title_tag', [
-            'label'   => __('Balise du titre', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
-            'options' => ['h2' => 'H2', 'h3' => 'H3', 'h4' => 'H4', 'p' => 'p', 'span' => 'span'],
-            'default' => 'h3',
-        ]);
+        $this->register_section_title_controls(['title' => __('Caractéristiques techniques', 'blacktenderscore')]);
 
         $this->add_control('layout', [
             'label'   => __('Disposition', 'blacktenderscore'),
@@ -256,10 +252,7 @@ class BoatSpecs extends \Elementor\Widget_Base {
         $s       = $this->get_settings_for_display();
         $post_id = get_the_ID();
 
-        if (!function_exists('get_field')) {
-            echo '<p class="bt-widget-placeholder">ACF Pro requis.</p>';
-            return;
-        }
+        if (!$this->acf_required()) return;
 
         $specs   = $this->specs_definition();
         $items   = [];
@@ -282,22 +275,19 @@ class BoatSpecs extends \Elementor\Widget_Base {
         }
 
         if (empty($items)) {
-            if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
+            if ($this->is_edit_mode()) {
                 echo '<p class="bt-widget-placeholder">Aucune spécification trouvée — vérifiez que ce post est de type <code>boat</code> et que les champs ACF sont remplis.</p>';
             }
             return;
         }
 
         $layout   = $s['layout'] ?: 'grid';
-        $tag      = esc_attr($s['title_tag'] ?: 'h3');
         $wrap_cls = 'bt-bspecs__grid';
         if ($layout === 'list') $wrap_cls = 'bt-bspecs__list';
 
         echo '<div class="bt-bspecs">';
 
-        if (!empty($s['section_title'])) {
-            echo "<{$tag} class=\"bt-bspecs__title\">" . esc_html($s['section_title']) . "</{$tag}>";
-        }
+        $this->render_section_title($s, 'bt-bspecs__title');
 
         echo "<div class=\"{$wrap_cls}\">";
         foreach ($items as $item) {

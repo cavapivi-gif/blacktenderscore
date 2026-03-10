@@ -1,6 +1,9 @@
 <?php
 namespace BlackTenders\Elementor\Widgets;
 
+use BlackTenders\Elementor\AbstractBtWidget;
+use BlackTenders\Elementor\Traits\BtSharedControls;
+
 defined('ABSPATH') || exit;
 
 /**
@@ -10,13 +13,18 @@ defined('ABSPATH') || exit;
  * affiche les créneaux disponibles, avec filtrage optionnel par saison.
  * Peut aussi afficher le point de départ (taxonomie city) et un lien Maps.
  */
-class DepartureTimes extends \Elementor\Widget_Base {
+class DepartureTimes extends AbstractBtWidget {
 
-    public function get_name():       string { return 'bt-departure-times'; }
-    public function get_title():      string { return 'BT — Horaires de départ'; }
-    public function get_icon():       string { return 'eicon-clock-o'; }
-    public function get_categories(): array  { return ['blacktenderscore']; }
-    public function get_keywords():   array  { return ['horaires', 'départ', 'temps', 'saison', 'bt']; }
+    use BtSharedControls;
+
+    protected static function get_bt_config(): array {
+        return [
+            'id'       => 'bt-departure-times',
+            'title'    => 'BT — Horaires de départ',
+            'icon'     => 'eicon-clock-o',
+            'keywords' => ['horaires', 'départ', 'temps', 'saison', 'bt'],
+        ];
+    }
 
     // ── Saisons disponibles ───────────────────────────────────────────────────
     private function season_options(): array {
@@ -43,19 +51,7 @@ class DepartureTimes extends \Elementor\Widget_Base {
             'default' => 'exp_departure_times',
         ]);
 
-        $this->add_control('section_title', [
-            'label'   => __('Titre de section', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
-            'default' => __('Horaires de départ', 'blacktenderscore'),
-            'dynamic' => ['active' => true],
-        ]);
-
-        $this->add_control('title_tag', [
-            'label'   => __('Balise du titre', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
-            'options' => ['h2' => 'H2', 'h3' => 'H3', 'h4' => 'H4', 'p' => 'p'],
-            'default' => 'h3',
-        ]);
+        $this->register_section_title_controls(['title' => __('Horaires de départ', 'blacktenderscore')]);
 
         $this->add_control('layout', [
             'label'   => __('Disposition', 'blacktenderscore'),
@@ -305,10 +301,7 @@ class DepartureTimes extends \Elementor\Widget_Base {
         $s       = $this->get_settings_for_display();
         $post_id = get_the_ID();
 
-        if (!function_exists('get_field')) {
-            echo '<p class="bt-widget-placeholder">ACF Pro requis.</p>';
-            return;
-        }
+        if (!$this->acf_required()) return;
 
         $field_name = sanitize_text_field($s['acf_field'] ?: 'exp_departure_times');
         $rows       = get_field($field_name, $post_id);
@@ -343,13 +336,12 @@ class DepartureTimes extends \Elementor\Widget_Base {
         $has_depart = $departure_name !== '';
 
         if (!$has_times && !$has_depart) {
-            if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
+            if ($this->is_edit_mode()) {
                 echo '<p class="bt-widget-placeholder">Aucun horaire ni point de départ trouvé.</p>';
             }
             return;
         }
 
-        $tag    = esc_attr($s['title_tag'] ?: 'h3');
         $layout = $s['layout'] ?: 'grid';
 
         $season_labels = [
@@ -360,9 +352,7 @@ class DepartureTimes extends \Elementor\Widget_Base {
 
         echo '<div class="bt-deptimes">';
 
-        if (!empty($s['section_title'])) {
-            echo "<{$tag} class=\"bt-deptimes__title\">" . esc_html($s['section_title']) . "</{$tag}>";
-        }
+        $this->render_section_title($s, 'bt-deptimes__title');
 
         // Point de départ
         if ($has_depart) {
