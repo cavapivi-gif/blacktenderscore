@@ -374,7 +374,7 @@ class Reviews extends \Elementor\Widget_Base {
     private function render_schema(array $rows, array $s, int $post_id, int $max_stars): void {
         if (empty($rows)) return;
 
-        $ratings = array_filter(array_map(fn($r) => (float) ($r['rev_rating'] ?? 0), $rows));
+        $ratings = array_filter(array_map(fn($r) => (float) ($r['rev_rating'] ?? 0), $rows), fn($v) => $v > 0);
         if (empty($ratings)) return;
 
         $avg   = round(array_sum($ratings) / count($ratings), 1);

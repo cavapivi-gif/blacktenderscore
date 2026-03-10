@@ -337,7 +337,7 @@ class BoatSpecs extends \Elementor\Widget_Base {
 
             default: // scalar (number, text)
                 $val = (string) $raw;
-                if ($val === '' || $val === '0' && $suffix === 'pax') return null;
+                if ($val === '' || ($val === '0' && $suffix === 'pax')) return null;
                 return esc_html($val . ($suffix ? ' ' . $suffix : ''));
         }
     }

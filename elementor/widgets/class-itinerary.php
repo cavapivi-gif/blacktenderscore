@@ -4,28 +4,46 @@ namespace BlackTenders\Elementor\Widgets;
 defined('ABSPATH') || exit;
 
 /**
- * Widget Elementor — Programme / Itinéraire v2.
+ * Widget Elementor — Programme / Itinéraire v3.
  *
- * Architecture unifiée : un seul <ol> contient TOUT —
- * zone de départ, hors-bord aller, étapes ACF, hors-bord retour, zone d'arrivée.
- * La ligne verticale connecte l'ensemble via ::before sur les <li>.
+ * Architecture : un seul <ol> contenant TOUT —
+ * zone départ, hors-bord aller, étapes ACF, hors-bord retour, zone arrivée.
  *
- * Dots SVG built-in : pin (localisation), boat (speedboat), anchor (ancre).
- * Les étapes ACF conservent le support FA class + image ACF.
+ * Icônes transport : ICONS control Elementor → Icons_Manager::render_icon()
+ *   → supporte Font Awesome ET SVG uploadé (rendu inline, pas <img>).
+ *
+ * Carte interactive : Leaflet.js + OpenStreetMap (gratuit, sans API key).
+ * Champs ACF nécessaires pour la carte :
+ *   • Repeater sub-field : step_coords  (type ACF : Google Map)
+ *                          OU step_lat + step_lng (type : Nombre)
+ *   • Post fields        : exp_departure_coords, exp_arriving_coords (Google Map)
  */
 class Itinerary extends \Elementor\Widget_Base {
+
+    /** @var bool Évite de charger Leaflet plusieurs fois par requête. */
+    private static bool $leaflet_loaded = false;
 
     public function get_name():       string { return 'bt-itinerary'; }
     public function get_title():      string { return 'BT — Programme / Itinéraire'; }
     public function get_icon():       string { return 'eicon-time-line'; }
     public function get_categories(): array  { return ['blacktenderscore']; }
-    public function get_keywords():   array  { return ['itinéraire', 'programme', 'timeline', 'étapes', 'bt']; }
+    public function get_keywords():   array  { return ['itinéraire', 'programme', 'timeline', 'étapes', 'carte', 'map', 'bt']; }
 
-    // ── Controls ─────────────────────────────────────────────────────────────
+    // ── Controls ──────────────────────────────────────────────────────────────
 
     protected function register_controls(): void {
+        $this->section_content();
+        $this->section_transport();
+        $this->section_map_content();
+        $this->section_style_timeline();
+        $this->section_style_text();
+        $this->section_style_transport();
+        $this->section_style_map();
+    }
 
-        // ── Contenu ───────────────────────────────────────────────────────
+    // ── Section Contenu ───────────────────────────────────────────────────────
+
+    private function section_content(): void {
         $this->start_controls_section('section_content', [
             'label' => __('Contenu', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
@@ -83,21 +101,24 @@ class Itinerary extends \Elementor\Widget_Base {
         ]);
 
         $this->end_controls_section();
+    }
 
-        // ── Transport / zones ─────────────────────────────────────────────
+    // ── Section Transport ─────────────────────────────────────────────────────
+
+    private function section_transport(): void {
         $this->start_controls_section('section_transport', [
             'label' => __('Transport & zones', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('show_transport', [
-            'label'        => __('Afficher les zones de départ / arrivée', 'blacktenderscore'),
+            'label'        => __('Afficher départ / transport / arrivée', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
-        // ── Zone départ ───────────────────────────────────────────────────
+        // ── Départ ────────────────────────────────────────────────────────────
         $this->add_control('heading_departure', [
             'label'     => __('Zone de départ', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::HEADING,
@@ -112,19 +133,17 @@ class Itinerary extends \Elementor\Widget_Base {
             'condition' => ['show_transport' => 'yes'],
         ]);
 
+        // ICONS control → FA picker + SVG uploader → Icons_Manager::render_icon()
         $this->add_control('departure_dot_icon', [
-            'label'     => __('Icône', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::SELECT,
-            'options'   => [
-                'pin'    => __('📍 Pin (localisation)', 'blacktenderscore'),
-                'anchor' => __('⚓ Ancre', 'blacktenderscore'),
-                'none'   => __('Dot simple', 'blacktenderscore'),
-            ],
-            'default'   => 'pin',
-            'condition' => ['show_transport' => 'yes'],
+            'label'       => __('Icône départ', 'blacktenderscore'),
+            'type'        => \Elementor\Controls_Manager::ICONS,
+            'default'     => ['value' => 'fas fa-map-marker-alt', 'library' => 'fa-solid'],
+            'skin'        => 'inline',
+            'label_block' => false,
+            'condition'   => ['show_transport' => 'yes'],
         ]);
 
-        // ── Hors-bord ─────────────────────────────────────────────────────
+        // ── Hors-bord ─────────────────────────────────────────────────────────
         $this->add_control('heading_outboard', [
             'label'     => __('Hors-bord', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::HEADING,
@@ -147,18 +166,15 @@ class Itinerary extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('outboard_dot_icon', [
-            'label'     => __('Icône', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::SELECT,
-            'options'   => [
-                'boat'   => __('🚤 Bateau', 'blacktenderscore'),
-                'anchor' => __('⚓ Ancre', 'blacktenderscore'),
-                'none'   => __('Dot simple', 'blacktenderscore'),
-            ],
-            'default'   => 'boat',
-            'condition' => ['show_transport' => 'yes'],
+            'label'       => __('Icône hors-bord', 'blacktenderscore'),
+            'type'        => \Elementor\Controls_Manager::ICONS,
+            'default'     => ['value' => 'fas fa-ship', 'library' => 'fa-solid'],
+            'skin'        => 'inline',
+            'label_block' => false,
+            'condition'   => ['show_transport' => 'yes'],
         ]);
 
-        // ── Zone arrivée ──────────────────────────────────────────────────
+        // ── Arrivée ───────────────────────────────────────────────────────────
         $this->add_control('heading_arrival', [
             'label'     => __('Zone d\'arrivée', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::HEADING,
@@ -174,20 +190,115 @@ class Itinerary extends \Elementor\Widget_Base {
         ]);
 
         $this->add_control('arrival_dot_icon', [
-            'label'     => __('Icône', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::SELECT,
-            'options'   => [
-                'anchor' => __('⚓ Ancre', 'blacktenderscore'),
-                'pin'    => __('📍 Pin (localisation)', 'blacktenderscore'),
-                'none'   => __('Dot simple', 'blacktenderscore'),
-            ],
-            'default'   => 'anchor',
-            'condition' => ['show_transport' => 'yes'],
+            'label'       => __('Icône arrivée', 'blacktenderscore'),
+            'type'        => \Elementor\Controls_Manager::ICONS,
+            'default'     => ['value' => 'fas fa-anchor', 'library' => 'fa-solid'],
+            'skin'        => 'inline',
+            'label_block' => false,
+            'condition'   => ['show_transport' => 'yes'],
         ]);
 
         $this->end_controls_section();
+    }
 
-        // ── Style — Timeline ──────────────────────────────────────────────
+    // ── Section Carte ─────────────────────────────────────────────────────────
+
+    private function section_map_content(): void {
+        $this->start_controls_section('section_map', [
+            'label' => __('Carte interactive', 'blacktenderscore'),
+            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+        ]);
+
+        $this->add_control('show_map', [
+            'label'        => __('Afficher la carte', 'blacktenderscore'),
+            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => '',
+        ]);
+
+        $this->add_control('map_acf_notice', [
+            'type'            => \Elementor\Controls_Manager::RAW_HTML,
+            'raw'             => implode('', [
+                '<strong>', __('Champs ACF à créer :', 'blacktenderscore'), '</strong><br>',
+                '• Repeater → <code>step_coords</code> <em>(type : Google Map)</em><br>',
+                '&nbsp;&nbsp;ou <code>step_lat</code> + <code>step_lng</code> <em>(Nombre)</em><br>',
+                '• Post → <code>exp_departure_coords</code><br>',
+                '• Post → <code>exp_arriving_coords</code><br>',
+                '<em>', __('(type : Google Map)', 'blacktenderscore'), '</em>',
+            ]),
+            'content_classes' => 'elementor-descriptor',
+            'condition'       => ['show_map' => 'yes'],
+        ]);
+
+        $this->add_control('map_position', [
+            'label'     => __('Position de la carte', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::SELECT,
+            'options'   => [
+                'below'      => __('Sous la timeline', 'blacktenderscore'),
+                'above'      => __('Au-dessus de la timeline', 'blacktenderscore'),
+                'side-right' => __('À droite (50/50)', 'blacktenderscore'),
+                'side-left'  => __('À gauche (50/50)', 'blacktenderscore'),
+            ],
+            'default'   => 'below',
+            'condition' => ['show_map' => 'yes'],
+        ]);
+
+        $this->add_responsive_control('map_col_ratio', [
+            'label'       => __('Largeur carte (%)', 'blacktenderscore'),
+            'description' => __('Uniquement en mode côte-à-côte. Sur mobile → pleine largeur.', 'blacktenderscore'),
+            'type'        => \Elementor\Controls_Manager::SLIDER,
+            'size_units'  => ['%'],
+            'range'       => ['%' => ['min' => 25, 'max' => 75]],
+            'default'     => ['size' => 50, 'unit' => '%'],
+            'selectors'   => [
+                '{{WRAPPER}} .bt-itin__layout--side' =>
+                    '--bt-itin-map-col: {{SIZE}}{{UNIT}}',
+            ],
+            'condition' => [
+                'show_map'     => 'yes',
+                'map_position' => ['side-right', 'side-left'],
+            ],
+        ]);
+
+        $this->add_responsive_control('map_height', [
+            'label'      => __('Hauteur de la carte', 'blacktenderscore'),
+            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'size_units' => ['px', 'vh'],
+            'range'      => ['px' => ['min' => 150, 'max' => 900], 'vh' => ['min' => 20, 'max' => 80]],
+            'default'    => ['size' => 400, 'unit' => 'px'],
+            'selectors'  => ['{{WRAPPER}} .bt-itin__map' => 'height: {{SIZE}}{{UNIT}}'],
+            'condition'  => ['show_map' => 'yes'],
+        ]);
+
+        $this->add_responsive_control('map_gap', [
+            'label'      => __('Espace timeline ↔ carte', 'blacktenderscore'),
+            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'size_units' => ['px', 'em'],
+            'range'      => ['px' => ['min' => 0, 'max' => 60]],
+            'default'    => ['size' => 24, 'unit' => 'px'],
+            'selectors'  => [
+                '{{WRAPPER}} .bt-itin__layout--side' => 'gap: {{SIZE}}{{UNIT}}',
+            ],
+            'condition' => [
+                'show_map'     => 'yes',
+                'map_position' => ['side-right', 'side-left'],
+            ],
+        ]);
+
+        $this->add_control('map_show_path', [
+            'label'        => __('Afficher le tracé du parcours', 'blacktenderscore'),
+            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => 'yes',
+            'condition'    => ['show_map' => 'yes'],
+        ]);
+
+        $this->end_controls_section();
+    }
+
+    // ── Section Style — Timeline ──────────────────────────────────────────────
+
+    private function section_style_timeline(): void {
         $this->start_controls_section('style_timeline', [
             'label' => __('Style — Timeline', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
@@ -212,105 +323,138 @@ class Itinerary extends \Elementor\Widget_Base {
             'range'      => ['px' => ['min' => 8, 'max' => 80]],
             'default'    => ['size' => 32, 'unit' => 'px'],
             'selectors'  => [
-                // La custom property --bt-itin-gap est consommée par ::before
                 '{{WRAPPER}} .bt-itin__list' => 'gap: {{SIZE}}{{UNIT}}',
+                // --bt-itin-gap consommé par ::before bottom: calc(-1 * var(--bt-itin-gap))
                 '{{WRAPPER}} .bt-itin'       => '--bt-itin-gap: {{SIZE}}{{UNIT}}',
             ],
         ]);
 
+        // ── Ligne de connexion ────────────────────────────────────────────────
+        $this->add_control('heading_connector', [
+            'label'     => __('Ligne de connexion', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::HEADING,
+            'separator' => 'before',
+            'condition' => ['connector' => 'line'],
+        ]);
+
         $this->add_control('line_color', [
-            'label'     => __('Couleur de la ligne', 'blacktenderscore'),
+            'label'     => __('Couleur', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-itin__list > li::before' => 'background-color: {{VALUE}}'],
+            'selectors' => [
+                '{{WRAPPER}} .bt-itin:not(.bt-itin--no-connector) .bt-itin__list > li:not(:last-child)::before' =>
+                    'background-color: {{VALUE}}',
+            ],
             'condition' => ['connector' => 'line'],
         ]);
 
         $this->add_responsive_control('line_width', [
-            'label'      => __('Épaisseur de la ligne', 'blacktenderscore'),
+            'label'      => __('Épaisseur', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'range'      => ['px' => ['min' => 1, 'max' => 8]],
             'default'    => ['size' => 2, 'unit' => 'px'],
-            'selectors'  => ['{{WRAPPER}} .bt-itin__list > li::before' => 'width: {{SIZE}}{{UNIT}}'],
+            'selectors'  => [
+                '{{WRAPPER}} .bt-itin:not(.bt-itin--no-connector) .bt-itin__list > li:not(:last-child)::before' =>
+                    'width: {{SIZE}}{{UNIT}}',
+            ],
             'condition'  => ['connector' => 'line'],
         ]);
 
-        // ── Dots étapes ACF ───────────────────────────────────────────────
+        // ── Dots — Étapes ACF ─────────────────────────────────────────────────
         $this->add_control('heading_step_dots', [
-            'label'     => __('Points — Étapes', 'blacktenderscore'),
+            'label'     => __('Points — Étapes ACF', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::HEADING,
             'separator' => 'before',
         ]);
 
         $this->add_control('dot_color', [
-            'label'     => __('Couleur du point', 'blacktenderscore'),
+            'label'     => __('Couleur', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => [
-                '{{WRAPPER}} .bt-itin__step:not(.bt-itin__step--transport) .bt-itin__dot' => 'background-color: {{VALUE}}; border-color: {{VALUE}}; color: {{VALUE}}',
+                '{{WRAPPER}} .bt-itin__step:not(.bt-itin__step--transport) .bt-itin__dot' =>
+                    'color: {{VALUE}}; background-color: {{VALUE}}',
             ],
         ]);
 
         $this->add_responsive_control('dot_size', [
-            'label'      => __('Taille du point', 'blacktenderscore'),
+            'label'      => __('Taille', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px'],
-            'range'      => ['px' => ['min' => 8, 'max' => 32]],
+            'range'      => ['px' => ['min' => 6, 'max' => 32]],
             'default'    => ['size' => 14, 'unit' => 'px'],
             'selectors'  => [
-                '{{WRAPPER}} .bt-itin__step:not(.bt-itin__step--transport) .bt-itin__dot' => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}}',
-                // Aligne la ligne sur le centre du dot standard
-                '{{WRAPPER}} .bt-itin__list > li::before' => 'left: calc({{SIZE}}{{UNIT}} / 2 - 1px)',
+                '{{WRAPPER}} .bt-itin__step:not(.bt-itin__step--transport) .bt-itin__dot' =>
+                    'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}}',
             ],
         ]);
 
         $this->add_responsive_control('dot_icon_size', [
-            'label'      => __('Taille de l\'icône dans le point', 'blacktenderscore'),
+            'label'      => __('Taille icône dans le point', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px', 'em'],
             'range'      => ['px' => ['min' => 8, 'max' => 28]],
             'default'    => ['size' => 12, 'unit' => 'px'],
             'selectors'  => [
-                '{{WRAPPER}} .bt-itin__step:not(.bt-itin__step--transport) .bt-itin__dot--icon' => 'font-size: {{SIZE}}{{UNIT}}',
+                '{{WRAPPER}} .bt-itin__step:not(.bt-itin__step--transport) .bt-itin__dot--icon' =>
+                    'font-size: {{SIZE}}{{UNIT}}',
             ],
+        ]);
+
+        $this->add_responsive_control('dot_gap', [
+            'label'      => __('Espace dot ↔ contenu', 'blacktenderscore'),
+            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 8, 'max' => 48]],
+            'default'    => ['size' => 20, 'unit' => 'px'],
+            'selectors'  => ['{{WRAPPER}} .bt-itin__step' => 'gap: {{SIZE}}{{UNIT}}'],
         ]);
 
         $this->add_control('return_dot_color', [
             'label'     => __('Couleur point — étape retour', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => [
-                '{{WRAPPER}} .bt-itin__step--return .bt-itin__dot' => 'background-color: {{VALUE}}; border-color: {{VALUE}}; color: {{VALUE}}',
+                '{{WRAPPER}} .bt-itin__step--return .bt-itin__dot' =>
+                    'color: {{VALUE}}; background-color: {{VALUE}}',
             ],
         ]);
 
-        // ── Dots transport (SVG) ──────────────────────────────────────────
+        // ── Dots — Transport (ICONS / SVG) ────────────────────────────────────
         $this->add_control('heading_transport_dots', [
-            'label'     => __('Points SVG — Transport', 'blacktenderscore'),
+            'label'     => __('Points — Transport (icônes)', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::HEADING,
             'separator' => 'before',
         ]);
 
         $this->add_control('transport_dot_color', [
-            'label'     => __('Couleur icône SVG transport', 'blacktenderscore'),
+            'label'     => __('Couleur', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => [
-                '{{WRAPPER}} .bt-itin__step--transport .bt-itin__dot--svg' => 'color: {{VALUE}}',
+                '{{WRAPPER}} .bt-itin__step--transport .bt-itin__dot--transport' =>
+                    'color: {{VALUE}}',
             ],
         ]);
 
         $this->add_responsive_control('transport_dot_size', [
-            'label'      => __('Taille icône SVG transport', 'blacktenderscore'),
+            'label'      => __('Taille', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px'],
-            'range'      => ['px' => ['min' => 14, 'max' => 48]],
+            'range'      => ['px' => ['min' => 12, 'max' => 48]],
             'default'    => ['size' => 22, 'unit' => 'px'],
             'selectors'  => [
-                '{{WRAPPER}} .bt-itin__step--transport .bt-itin__dot--svg' => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}}; font-size: {{SIZE}}{{UNIT}}',
+                '{{WRAPPER}} .bt-itin__step--transport .bt-itin__dot--transport' =>
+                    'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}}; font-size: {{SIZE}}{{UNIT}}',
+                // Aligne le connecteur sur le centre du dot transport
+                '{{WRAPPER}} .bt-itin' =>
+                    '--bt-itin-dot-center: calc({{SIZE}}{{UNIT}} / 2 - 1px)',
             ],
         ]);
 
         $this->end_controls_section();
+    }
 
-        // ── Style — Texte étapes ──────────────────────────────────────────
+    // ── Section Style — Texte étapes ──────────────────────────────────────────
+
+    private function section_style_text(): void {
         $this->start_controls_section('style_text', [
             'label' => __('Style — Texte des étapes', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
@@ -356,19 +500,41 @@ class Itinerary extends \Elementor\Widget_Base {
             'label'      => __('Padding contenu étape', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::DIMENSIONS,
             'size_units' => ['px', 'em'],
-            'selectors'  => ['{{WRAPPER}} .bt-itin__step-body' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+            'selectors'  => [
+                '{{WRAPPER}} .bt-itin__step:not(.bt-itin__step--transport) .bt-itin__step-body' =>
+                    'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}',
+            ],
+        ]);
+
+        $this->add_responsive_control('step_content_indent', [
+            'label'       => __('Décalage hiérarchique', 'blacktenderscore'),
+            'description' => __('Indente le contenu des étapes ACF pour créer une hiérarchie visuelle sous les blocs transport.', 'blacktenderscore'),
+            'type'        => \Elementor\Controls_Manager::SLIDER,
+            'size_units'  => ['px'],
+            'range'       => ['px' => ['min' => 0, 'max' => 48]],
+            'default'     => ['size' => 0, 'unit' => 'px'],
+            'selectors'   => [
+                '{{WRAPPER}} .bt-itin__step:not(.bt-itin__step--transport) .bt-itin__step-body' =>
+                    'margin-left: {{SIZE}}{{UNIT}}',
+            ],
         ]);
 
         $this->add_control('step_bg', [
-            'label'     => __('Fond de l\'étape', 'blacktenderscore'),
+            'label'     => __('Fond des étapes', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-itin__step:not(.bt-itin__step--transport) .bt-itin__step-body' => 'background-color: {{VALUE}}'],
+            'selectors' => [
+                '{{WRAPPER}} .bt-itin__step:not(.bt-itin__step--transport) .bt-itin__step-body' =>
+                    'background-color: {{VALUE}}',
+            ],
+            'separator' => 'before',
         ]);
 
         $this->add_control('return_step_bg', [
-            'label'     => __('Fond étape retour', 'blacktenderscore'),
+            'label'     => __('Fond — étape retour', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-itin__step--return .bt-itin__step-body' => 'background-color: {{VALUE}}'],
+            'selectors' => [
+                '{{WRAPPER}} .bt-itin__step--return .bt-itin__step-body' => 'background-color: {{VALUE}}',
+            ],
         ]);
 
         $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
@@ -377,15 +543,26 @@ class Itinerary extends \Elementor\Widget_Base {
         ]);
 
         $this->add_responsive_control('step_radius', [
-            'label'      => __('Border radius étape', 'blacktenderscore'),
+            'label'      => __('Border radius', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px'],
-            'selectors'  => ['{{WRAPPER}} .bt-itin__step:not(.bt-itin__step--transport) .bt-itin__step-body' => 'border-radius: {{SIZE}}{{UNIT}}'],
+            'selectors'  => [
+                '{{WRAPPER}} .bt-itin__step:not(.bt-itin__step--transport) .bt-itin__step-body' =>
+                    'border-radius: {{SIZE}}{{UNIT}}',
+            ],
+        ]);
+
+        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), [
+            'name'     => 'step_shadow',
+            'selector' => '{{WRAPPER}} .bt-itin__step:not(.bt-itin__step--transport) .bt-itin__step-body',
         ]);
 
         $this->end_controls_section();
+    }
 
-        // ── Style — Zones transport ───────────────────────────────────────
+    // ── Section Style — Zones transport ───────────────────────────────────────
+
+    private function section_style_transport(): void {
         $this->start_controls_section('style_transport', [
             'label' => __('Style — Zones transport', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
@@ -394,7 +571,9 @@ class Itinerary extends \Elementor\Widget_Base {
         $this->add_control('transport_bg', [
             'label'     => __('Fond (tous blocs transport)', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-itin__step--transport .bt-itin__step-body' => 'background-color: {{VALUE}}'],
+            'selectors' => [
+                '{{WRAPPER}} .bt-itin__step--transport .bt-itin__step-body' => 'background-color: {{VALUE}}',
+            ],
         ]);
 
         $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
@@ -406,21 +585,28 @@ class Itinerary extends \Elementor\Widget_Base {
         $this->add_control('transport_color', [
             'label'     => __('Couleur texte transport', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-itin__step--transport .bt-itin__step-body' => 'color: {{VALUE}}'],
+            'selectors' => [
+                '{{WRAPPER}} .bt-itin__step--transport .bt-itin__step-body' => 'color: {{VALUE}}',
+            ],
         ]);
 
         $this->add_responsive_control('transport_padding', [
             'label'      => __('Padding', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::DIMENSIONS,
             'size_units' => ['px', 'em'],
-            'selectors'  => ['{{WRAPPER}} .bt-itin__step--transport .bt-itin__step-body' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+            'selectors'  => [
+                '{{WRAPPER}} .bt-itin__step--transport .bt-itin__step-body' =>
+                    'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}',
+            ],
         ]);
 
         $this->add_responsive_control('transport_radius', [
             'label'      => __('Border radius', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px', '%'],
-            'selectors'  => ['{{WRAPPER}} .bt-itin__step--transport .bt-itin__step-body' => 'border-radius: {{SIZE}}{{UNIT}}'],
+            'selectors'  => [
+                '{{WRAPPER}} .bt-itin__step--transport .bt-itin__step-body' => 'border-radius: {{SIZE}}{{UNIT}}',
+            ],
         ]);
 
         $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
@@ -428,23 +614,103 @@ class Itinerary extends \Elementor\Widget_Base {
             'selector' => '{{WRAPPER}} .bt-itin__step--transport .bt-itin__step-body',
         ]);
 
+        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), [
+            'name'     => 'transport_shadow',
+            'selector' => '{{WRAPPER}} .bt-itin__step--transport .bt-itin__step-body',
+        ]);
+
         $this->add_control('departure_bg', [
             'label'     => __('Override fond — Départ uniquement', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-itin__step--departure .bt-itin__step-body' => 'background-color: {{VALUE}}'],
+            'selectors' => [
+                '{{WRAPPER}} .bt-itin__step--departure .bt-itin__step-body' => 'background-color: {{VALUE}}',
+            ],
             'separator' => 'before',
         ]);
 
         $this->add_control('arrival_bg', [
             'label'     => __('Override fond — Arrivée uniquement', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-itin__step--arrival .bt-itin__step-body' => 'background-color: {{VALUE}}'],
+            'selectors' => [
+                '{{WRAPPER}} .bt-itin__step--arrival .bt-itin__step-body' => 'background-color: {{VALUE}}',
+            ],
+        ]);
+
+        $this->add_control('transport_label_color', [
+            'label'     => __('Couleur label (DÉPART / ARRIVÉE)', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::COLOR,
+            'selectors' => [
+                '{{WRAPPER}} .bt-itin__transport-label' => 'color: {{VALUE}}',
+            ],
+            'separator' => 'before',
         ]);
 
         $this->end_controls_section();
     }
 
-    // ── Render ───────────────────────────────────────────────────────────────
+    // ── Section Style — Carte ─────────────────────────────────────────────────
+
+    private function section_style_map(): void {
+        $this->start_controls_section('style_map', [
+            'label'     => __('Style — Carte', 'blacktenderscore'),
+            'tab'       => \Elementor\Controls_Manager::TAB_STYLE,
+            'condition' => ['show_map' => 'yes'],
+        ]);
+
+        $this->add_responsive_control('map_margin', [
+            'label'      => __('Marge', 'blacktenderscore'),
+            'type'       => \Elementor\Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', 'em'],
+            'selectors'  => [
+                '{{WRAPPER}} .bt-itin__map-wrap' =>
+                    'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}',
+            ],
+        ]);
+
+        $this->add_responsive_control('map_border_radius', [
+            'label'      => __('Border radius', 'blacktenderscore'),
+            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'selectors'  => [
+                '{{WRAPPER}} .bt-itin__map'      => 'border-radius: {{SIZE}}{{UNIT}}',
+                '{{WRAPPER}} .bt-itin__map-wrap' => 'border-radius: {{SIZE}}{{UNIT}}; overflow: hidden',
+            ],
+        ]);
+
+        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
+            'name'     => 'map_border',
+            'selector' => '{{WRAPPER}} .bt-itin__map-wrap',
+        ]);
+
+        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), [
+            'name'     => 'map_shadow',
+            'selector' => '{{WRAPPER}} .bt-itin__map-wrap',
+        ]);
+
+        $this->add_control('map_line_color', [
+            'label'     => __('Couleur du tracé GPS', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::COLOR,
+            'default'   => '#0066cc',
+            // Lue par le JS via getComputedStyle (évite d'exposer la couleur en PHP)
+            'selectors' => ['{{WRAPPER}} .bt-itin__map' => '--bt-map-line-color: {{VALUE}}'],
+            'separator' => 'before',
+            'condition' => ['map_show_path' => 'yes'],
+        ]);
+
+        $this->add_responsive_control('map_line_weight', [
+            'label'      => __('Épaisseur du tracé', 'blacktenderscore'),
+            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 1, 'max' => 10]],
+            'default'    => ['size' => 3, 'unit' => 'px'],
+            'selectors'  => ['{{WRAPPER}} .bt-itin__map' => '--bt-map-line-weight: {{SIZE}}'],
+            'condition'  => ['map_show_path' => 'yes'],
+        ]);
+
+        $this->end_controls_section();
+    }
+
+    // ── Render ────────────────────────────────────────────────────────────────
 
     protected function render(): void {
         $s       = $this->get_settings_for_display();
@@ -460,18 +726,19 @@ class Itinerary extends \Elementor\Widget_Base {
 
         if (empty($rows)) {
             if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
-                echo '<p class="bt-widget-placeholder">Aucune étape dans le champ <code>' . esc_html($field_name) . '</code>.</p>';
+                echo '<p class="bt-widget-placeholder">Aucune étape dans <code>' . esc_html($field_name) . '</code>.</p>';
             }
             return;
         }
 
         $tag            = esc_attr($s['title_tag'] ?: 'h3');
-        $show_time      = $s['show_time']        === 'yes';
-        $show_duration  = $s['show_duration']    === 'yes';
-        $show_desc      = $s['show_description'] === 'yes';
-        $show_transport = $s['show_transport']   === 'yes';
-        $connector      = $s['connector'] ?: 'line';
-        $connector_cls  = $connector === 'none' ? ' bt-itin--no-connector' : '';
+        $show_time      = ($s['show_time']        ?? '') === 'yes';
+        $show_duration  = ($s['show_duration']    ?? '') === 'yes';
+        $show_desc      = ($s['show_description'] ?? '') === 'yes';
+        $show_transport = ($s['show_transport']   ?? '') === 'yes';
+        $show_map       = ($s['show_map']         ?? '') === 'yes';
+        $map_position   = $s['map_position'] ?? 'below';
+        $connector_cls  = ($s['connector'] ?? 'line') === 'none' ? ' bt-itin--no-connector' : '';
 
         // Labels transport
         $lbl_dep     = esc_html($s['label_departure']       ?: __('Départ',          'blacktenderscore'));
@@ -479,30 +746,42 @@ class Itinerary extends \Elementor\Widget_Base {
         $lbl_out_ret = esc_html($s['label_outboard_return'] ?: __('Retour hors-bord', 'blacktenderscore'));
         $lbl_arr     = esc_html($s['label_return']          ?: __('Arrivée',         'blacktenderscore'));
 
-        // Icônes SVG transport
-        $dep_icon = $s['departure_dot_icon']  ?: 'pin';
-        $out_icon = $s['outboard_dot_icon']   ?: 'boat';
-        $arr_icon = $s['arrival_dot_icon']    ?: 'anchor';
-
         // Champs transport ACF
-        $departure_zone = $show_transport ? (string) get_field('exp_departure_zone',        $post_id) : '';
-        $outboard       = $show_transport ? (int)    get_field('exp_outboard',               $post_id) : 0;
-        $returning_zone = $show_transport ? (string) get_field('exp_returning_zone',         $post_id) : '';
-        $returning_desc = $show_transport ? (string) get_field('exp_returning_description',  $post_id) : '';
+        $departure_zone = $show_transport ? (string) get_field('exp_departure_zone',       $post_id) : '';
+        $outboard       = $show_transport ? (int)    get_field('exp_outboard',             $post_id) : 0;
+        $returning_zone = $show_transport ? (string) get_field('exp_returning_zone',       $post_id) : '';
+        $returning_desc = $show_transport ? (string) get_field('exp_returning_description', $post_id) : '';
 
-        echo '<div class="bt-itin' . $connector_cls . '">';
+        $is_side = str_starts_with($map_position, 'side-');
+
+        echo '<div class="bt-itin' . esc_attr($connector_cls) . '">';
 
         if (!empty($s['section_title'])) {
             echo "<{$tag} class=\"bt-itin__title\">" . esc_html($s['section_title']) . "</{$tag}>";
         }
 
-        // ── Timeline unifiée — tout dans un seul <ol> ─────────────────────
+        // Carte au-dessus (stacked)
+        if ($show_map && $map_position === 'above') {
+            $this->render_map($rows, $departure_zone, $returning_zone, $s, $post_id);
+        }
+
+        // Layout côte-à-côte : wrapper grid
+        if ($show_map && $is_side) {
+            $side_cls = $map_position === 'side-left' ? ' bt-itin__layout--map-left' : '';
+            echo '<div class="bt-itin__layout bt-itin__layout--side' . esc_attr($side_cls) . '">';
+        }
+
+        // ── Colonne timeline ──────────────────────────────────────────────────
+        if ($show_map && $is_side) {
+            echo '<div class="bt-itin__col-timeline">';
+        }
+
         echo '<ol class="bt-itin__list">';
 
         // [1] Zone de départ
         if ($show_transport && $departure_zone !== '') {
             echo '<li class="bt-itin__step bt-itin__step--transport bt-itin__step--departure">';
-            echo $this->get_dot_html($dep_icon);
+            $this->render_transport_dot($s['departure_dot_icon'] ?? []);
             echo '<div class="bt-itin__step-body">';
             echo '<span class="bt-itin__transport-label">' . $lbl_dep . '</span>';
             echo '<strong class="bt-itin__step-title">' . esc_html($departure_zone) . '</strong>';
@@ -512,31 +791,33 @@ class Itinerary extends \Elementor\Widget_Base {
         // [2] Hors-bord aller
         if ($show_transport && $outboard > 0) {
             echo '<li class="bt-itin__step bt-itin__step--transport bt-itin__step--outboard">';
-            echo $this->get_dot_html($out_icon);
+            $this->render_transport_dot($s['outboard_dot_icon'] ?? []);
             echo '<div class="bt-itin__step-body">';
-            /* translators: %s = label, %d = minutes */
-            echo '<strong class="bt-itin__step-title">' . esc_html(sprintf('%s — %d min', $lbl_out, $outboard)) . '</strong>';
+            /* translators: %1$s = label, %2$d = minutes */
+            echo '<strong class="bt-itin__step-title">' . esc_html(sprintf(__('%1$s — %2$d min', 'blacktenderscore'), $lbl_out, $outboard)) . '</strong>';
             echo '</div></li>';
         }
 
-        // [3] Étapes ACF du repeater
+        // [3] Étapes ACF repeater
         foreach ($rows as $row) {
-            $time      = $row['step_time']   ?? '';
-            $title     = $row['step_title']  ?? '';
-            $desc      = $row['step_desc']   ?? '';
+            $time      = $row['step_time']       ?? '';
+            $title     = $row['step_title']      ?? '';
+            $desc      = $row['step_desc']       ?? '';
             $duration  = isset($row['step_timethezone']) ? (int) $row['step_timethezone'] : 0;
-            $icon_raw  = $row['step_icon']   ?? null;
+            $icon_raw  = $row['step_icon']       ?? null;
             $is_return = !empty($row['step_is_return']);
 
             $step_cls = 'bt-itin__step' . ($is_return ? ' bt-itin__step--return' : '');
             echo '<li class="' . esc_attr($step_cls) . '">';
 
             // Dot : image ACF | classe FA | dot simple
-            if (is_array($icon_raw) && !empty($icon_raw['url'])) {
+            if (is_array($icon_raw) && !empty($icon_raw['url']) && (isset($icon_raw['sizes']) || isset($icon_raw['filename']))) {
+                // Image ACF (discriminateur : présence de 'sizes' ou 'filename')
                 echo '<span class="bt-itin__dot bt-itin__dot--icon" aria-hidden="true">';
                 echo '<img src="' . esc_url($icon_raw['url']) . '" alt="' . esc_attr($icon_raw['alt'] ?? '') . '" loading="lazy" class="bt-itin__dot-img">';
                 echo '</span>';
             } elseif (is_string($icon_raw) && trim($icon_raw) !== '') {
+                // Classe FA (ex: "fas fa-anchor") entrée en texte libre dans ACF
                 echo '<span class="bt-itin__dot bt-itin__dot--icon" aria-hidden="true"><i class="' . esc_attr(trim($icon_raw)) . '"></i></span>';
             } else {
                 echo '<span class="bt-itin__dot" aria-hidden="true"></span>';
@@ -561,7 +842,7 @@ class Itinerary extends \Elementor\Widget_Base {
             }
 
             if ($show_desc && $desc) {
-                echo '<p class="bt-itin__step-desc">' . esc_html($desc) . '</p>';
+                echo '<p class="bt-itin__step-desc">' . wp_kses_post($desc) . '</p>';
             }
 
             echo '</div></li>';
@@ -570,52 +851,199 @@ class Itinerary extends \Elementor\Widget_Base {
         // [4] Hors-bord retour
         if ($show_transport && $outboard > 0) {
             echo '<li class="bt-itin__step bt-itin__step--transport bt-itin__step--outboard-return">';
-            echo $this->get_dot_html($out_icon);
+            $this->render_transport_dot($s['outboard_dot_icon'] ?? []);
             echo '<div class="bt-itin__step-body">';
-            /* translators: %s = label, %d = minutes */
-            echo '<strong class="bt-itin__step-title">' . esc_html(sprintf('%s — %d min', $lbl_out_ret, $outboard)) . '</strong>';
+            echo '<strong class="bt-itin__step-title">' . esc_html(sprintf(__('%1$s — %2$d min', 'blacktenderscore'), $lbl_out_ret, $outboard)) . '</strong>';
             echo '</div></li>';
         }
 
         // [5] Zone d'arrivée
         if ($show_transport && ($returning_zone !== '' || $returning_desc !== '')) {
             echo '<li class="bt-itin__step bt-itin__step--transport bt-itin__step--arrival">';
-            echo $this->get_dot_html($arr_icon);
+            $this->render_transport_dot($s['arrival_dot_icon'] ?? []);
             echo '<div class="bt-itin__step-body">';
             echo '<span class="bt-itin__transport-label">' . $lbl_arr . '</span>';
             if ($returning_zone !== '') {
                 echo '<strong class="bt-itin__step-title">' . esc_html($returning_zone) . '</strong>';
             }
             if ($returning_desc !== '') {
-                echo '<p class="bt-itin__step-desc">' . esc_html($returning_desc) . '</p>';
+                echo '<p class="bt-itin__step-desc">' . wp_kses_post($returning_desc) . '</p>';
             }
             echo '</div></li>';
         }
 
         echo '</ol>';
+
+        // Ferme la colonne timeline (mode side)
+        if ($show_map && $is_side) {
+            echo '</div>'; // .bt-itin__col-timeline
+        }
+
+        // Carte côte-à-côte ou en dessous
+        if ($show_map && ($is_side || $map_position === 'below')) {
+            if ($show_map && $is_side) {
+                echo '<div class="bt-itin__col-map">';
+            }
+            $this->render_map($rows, $departure_zone, $returning_zone, $s, $post_id);
+            if ($show_map && $is_side) {
+                echo '</div>'; // .bt-itin__col-map
+            }
+        }
+
+        // Ferme le layout grid (mode side)
+        if ($show_map && $is_side) {
+            echo '</div>'; // .bt-itin__layout
+        }
+
+        echo '</div>'; // .bt-itin
+    }
+
+    // ── Helpers privés ────────────────────────────────────────────────────────
+
+    /**
+     * Rend le dot d'une étape transport.
+     *
+     * Utilise Icons_Manager::render_icon() — la méthode officielle Elementor.
+     * • FA icon  → <i class="fas fa-anchor"> (police FontAwesome)
+     * • SVG uploadé → <svg>...</svg> inline (pas de <img>)
+     *
+     * @param array $icon_setting Valeur du control ICONS: ['value' => ..., 'library' => ...]
+     */
+    private function render_transport_dot(array $icon_setting): void {
+        if (empty($icon_setting['value'])) {
+            echo '<span class="bt-itin__dot" aria-hidden="true"></span>';
+            return;
+        }
+
+        echo '<span class="bt-itin__dot bt-itin__dot--transport" aria-hidden="true">';
+        \Elementor\Icons_Manager::render_icon($icon_setting, ['aria-hidden' => 'true']);
+        echo '</span>';
+    }
+
+    /**
+     * Rend la section carte Leaflet.js avec markers + polyline.
+     * Supporte deux formats de coordonnées ACF :
+     *   1. ACF Google Map field → $row['step_coords'] = ['lat' => ..., 'lng' => ...]
+     *   2. Deux champs Nombre   → $row['step_lat'] + $row['step_lng']
+     */
+    private function render_map(array $rows, string $departure_zone, string $returning_zone, array $s, int $post_id): void {
+        $points = [];
+
+        // Départ
+        $dep = get_field('exp_departure_coords', $post_id);
+        if (is_array($dep) && !empty($dep['lat']) && !empty($dep['lng'])) {
+            $points[] = ['lat' => (float) $dep['lat'], 'lng' => (float) $dep['lng'], 'label' => $departure_zone ?: __('Départ', 'blacktenderscore'), 'type' => 'departure'];
+        }
+
+        // Étapes
+        foreach ($rows as $row) {
+            $coords = $row['step_coords'] ?? null;
+            if (is_array($coords) && !empty($coords['lat'])) {
+                $lat = (float) $coords['lat'];
+                $lng = (float) $coords['lng'];
+            } elseif (!empty($row['step_lat']) && !empty($row['step_lng'])) {
+                $lat = (float) $row['step_lat'];
+                $lng = (float) $row['step_lng'];
+            } else {
+                continue; // pas de coordonnées → on ignore ce step
+            }
+            $points[] = ['lat' => $lat, 'lng' => $lng, 'label' => esc_html($row['step_title'] ?? ''), 'type' => 'step'];
+        }
+
+        // Arrivée
+        $arr = get_field('exp_arriving_coords', $post_id);
+        if (is_array($arr) && !empty($arr['lat']) && !empty($arr['lng'])) {
+            $points[] = ['lat' => (float) $arr['lat'], 'lng' => (float) $arr['lng'], 'label' => $returning_zone ?: __('Arrivée', 'blacktenderscore'), 'type' => 'arrival'];
+        }
+
+        if (empty($points)) {
+            if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
+                echo '<div class="bt-itin__map-wrap"><p class="bt-widget-placeholder">';
+                echo __('Carte : aucune coordonnée GPS trouvée. Créez les champs ACF : <code>step_coords</code> (repeater), <code>exp_departure_coords</code>, <code>exp_arriving_coords</code> (type : Google Map).', 'blacktenderscore');
+                echo '</p></div>';
+            }
+            return;
+        }
+
+        $this->maybe_load_leaflet();
+
+        $map_id      = 'bt-map-' . uniqid();
+        // Identifiant JS valide (pas de tirets)
+        $fn_id       = 'btMapInit_' . preg_replace('/\W/', '_', $map_id);
+        $show_path   = ($s['map_show_path'] ?? '') === 'yes';
+        $points_json = wp_json_encode($points);
+
+        echo '<div class="bt-itin__map-wrap">';
+        echo '<div id="' . esc_attr($map_id) . '" class="bt-itin__map"></div>';
+
+        // Script d'initialisation inline — lit les custom properties CSS pour les couleurs
+        // (évite d'exposer les valeurs Elementor en PHP/attribut)
+        ?>
+        <script>
+        (function(){
+        function <?php echo $fn_id; ?>(){
+            if(typeof L==='undefined'){setTimeout(<?php echo $fn_id; ?>,200);return;}
+            var el=document.getElementById(<?php echo wp_json_encode($map_id); ?>);
+            if(!el||el._btInit)return;
+            el._btInit=true;
+            var map=L.map(el);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+                attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                maxZoom:19
+            }).addTo(map);
+            var pts=<?php echo $points_json; ?>;
+            var lls=[];
+            pts.forEach(function(p){
+                var m=L.marker([p.lat,p.lng]).addTo(map);
+                if(p.label)m.bindPopup(p.label);
+                lls.push([p.lat,p.lng]);
+            });
+            <?php if ($show_path): ?>
+            if(lls.length>1){
+                var cs=getComputedStyle(el);
+                var lc=(cs.getPropertyValue('--bt-map-line-color')||'#0066cc').trim();
+                var lw=parseFloat(cs.getPropertyValue('--bt-map-line-weight'))||3;
+                L.polyline(lls,{color:lc,weight:lw,opacity:.85}).addTo(map);
+            }
+            <?php endif; ?>
+            if(lls.length===1)map.setView(lls[0],13);
+            else map.fitBounds(lls,{padding:[30,30]});
+        }
+        if(document.readyState==='loading'){
+            document.addEventListener('DOMContentLoaded',<?php echo $fn_id; ?>);
+        }else{
+            <?php echo $fn_id; ?>();
+        }
+        })();
+        </script>
+        <?php
+
         echo '</div>';
     }
 
-    // ── SVG Helpers ───────────────────────────────────────────────────────────
-
     /**
-     * Retourne un SVG inline pour les dots transport.
-     * `currentColor` → couleur pilotée par le control Elementor transport_dot_color.
+     * Charge Leaflet (CSS + JS) une seule fois par page/requête.
+     * • Front : via wp_footer (JS) + wp_head deferred (CSS)
+     * • Éditeur / preview Elementor : injection directe (wp_footer ne tourne pas en AJAX)
      */
-    private function get_svg(string $name): string {
-        return match ($name) {
-            'pin' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>',
-            'boat' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 21c-1.39 0-2.78-.47-4-1.32-2.44 1.71-5.56 1.71-8 0C6.78 20.53 5.39 21 4 21H2v2h2c1.38 0 2.74-.35 4-.99 2.52 1.29 5.48 1.29 8 0 1.26.65 2.62.99 4 .99h2v-2h-2zM3.95 19H4c1.6 0 3.02-.88 4-2 .98 1.12 2.4 2 4 2s3.02-.88 4-2c.98 1.12 2.4 2 4 2h.05l1.89-6.68c.08-.26.06-.54-.06-.78s-.34-.42-.6-.5L20 10.62V6c0-1.1-.9-2-2-2h-3V1H9v3H6c-1.1 0-2 .9-2 2v4.62l-1.29.42c-.26.08-.48.26-.6.5s-.14.52-.06.78L3.95 19z"/></svg>',
-            'anchor' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17 14h-4v7.61c3.37-.49 6.26-2.78 7.73-5.88L17 14zm-6 0H7l-3.73 1.73C4.74 18.83 7.63 21.12 11 21.61V14zm7-5h-5V7.72A3 3 0 1 0 9 7.72V9H4a1 1 0 0 0 0 2h5v2h6v-2h5a1 1 0 0 0 0-2zM12 5a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>',
-            default => '',
-        };
-    }
+    private function maybe_load_leaflet(): void {
+        if (self::$leaflet_loaded) return;
+        self::$leaflet_loaded = true;
 
-    private function get_dot_html(string $svg_name): string {
-        $svg = $this->get_svg($svg_name);
-        if ($svg !== '') {
-            return '<span class="bt-itin__dot bt-itin__dot--svg" aria-hidden="true">' . $svg . '</span>';
+        $css = '<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">' . "\n";
+        $js  = '<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/WLcE=" crossorigin=""></script>' . "\n";
+
+        $is_editor = \Elementor\Plugin::$instance->editor->is_edit_mode()
+                  || \Elementor\Plugin::$instance->preview->is_preview_mode();
+
+        if ($is_editor) {
+            // Dans l'éditeur, wp_head/wp_footer ont déjà tourné — on injecte directement
+            echo $css; // phpcs:ignore WordPress.Security.EscapeOutput
+            echo $js;  // phpcs:ignore WordPress.Security.EscapeOutput
+        } else {
+            // Front : enqueue propre via les hooks WordPress
+            add_action('wp_head',   static function() use ($css) { echo $css; }, 50); // phpcs:ignore
+            add_action('wp_footer', static function() use ($js)  { echo $js;  }, 1);  // phpcs:ignore
         }
-        return '<span class="bt-itin__dot" aria-hidden="true"></span>';
     }
 }

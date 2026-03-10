@@ -632,7 +632,9 @@
 
 
 /* ══════════════════════════════════════════════════════════
-   WIDGET : Itinerary v2 — architecture <ol> unifiée
+   WIDGET : Itinerary v3 — timeline unifiée <ol>
+   Icônes via ICONS control Elementor (FA + SVG inline)
+   Carte : Leaflet.js
    ══════════════════════════════════════════════════════════ */
 .bt-itin__title {
   margin: 0 0 24px;
@@ -650,26 +652,29 @@
 /* Chaque item : dot + corps côte à côte */
 .bt-itin__step {
   display: flex;
-  gap: 20px;
+  align-items: flex-start;
+  gap: 20px; /* override par Elementor dot_gap */
   position: relative;
 }
 
-/* ── Ligne verticale reliant tous les <li> ────────────────
-   - left calculé par le control dot_size (défaut: 6px = 14px/2 - 1px)
-   - bottom calc() = -gap pour combler l'espace entre deux <li>
-   --bt-itin-gap est injecté par le control steps_gap sur .bt-itin        */
+/* ── Ligne verticale reliant TOUS les <li> ────────────────────
+   left  = var(--bt-itin-dot-center) → centre du dot transport
+           (injecté par transport_dot_size, défaut 22px → 10px)
+   bottom = calc(-gap) → comble l'espace entre deux <li>
+           (injecté par steps_gap, défaut 32px)                  */
 .bt-itin:not(.bt-itin--no-connector) .bt-itin__list > li:not(:last-child)::before {
   content: '';
   position: absolute;
-  left: 6px;
-  top: 20px;
+  left: var(--bt-itin-dot-center, 10px);
+  top: 22px;
   bottom: calc(-1 * var(--bt-itin-gap, 32px));
   width: 2px;
   background: #d0d0d0;
   z-index: 0;
 }
 
-/* ── Dot standard (étape ACF) ─────────────────────────────── */
+/* ── Dot base ─────────────────────────────────────────────────
+   Partagé par transport + ACF, surchargé par les classes BEM   */
 .bt-itin__dot {
   flex-shrink: 0;
   width: 14px;
@@ -681,13 +686,13 @@
   z-index: 1;
 }
 
-/* Dot avec icône FA ou image — taille via control dot_icon_size */
+/* ── Dot ACF : icône FA ou image ──────────────────────────── */
 .bt-itin__dot--icon {
   background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 12px; /* override par Elementor dot_icon_size */
 }
 
 .bt-itin__dot-img {
@@ -698,35 +703,42 @@
   display: block;
 }
 
-/* ── Dot SVG transport (pin / boat / anchor) ──────────────── */
-.bt-itin__dot--svg {
+/* ── Dot transport — icône Elementor (FA + SVG uploadé) ───────
+   Icons_Manager::render_icon() → <i> pour FA, <svg> pour upload */
+.bt-itin__dot--transport {
   background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
+  width: 22px;  /* override par Elementor transport_dot_size */
   height: 22px;
-  font-size: 22px; /* taille SVG — override par control transport_dot_size */
+  font-size: 22px;
   flex-shrink: 0;
   position: relative;
   z-index: 1;
+  margin-top: 2px;
 }
 
-.bt-itin__dot--svg svg {
+/* FA icon et SVG uploadé remplissent le conteneur */
+.bt-itin__dot--transport i,
+.bt-itin__dot--transport svg {
+  font-size: 1em;
   width: 1em;
   height: 1em;
   display: block;
+  line-height: 1;
 }
 
 /* ── Corps de l'étape ─────────────────────────────────────── */
 .bt-itin__step-body {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-/* ── Textes étape standard ────────────────────────────────── */
+/* ── Textes ───────────────────────────────────────────────── */
 .bt-itin__time {
   font-size: .8em;
   font-weight: 700;
@@ -748,7 +760,7 @@
   opacity: .75;
 }
 
-/* Ligne méta : heure + durée */
+/* Méta : heure + durée */
 .bt-itin__meta {
   display: flex;
   align-items: center;
@@ -761,7 +773,7 @@
   opacity: .55;
 }
 
-/* ── Étapes transport (départ / hors-bord / arrivée) ─────── */
+/* ── Blocs transport (départ / hors-bord / arrivée) ───────── */
 .bt-itin__step--transport .bt-itin__step-body {
   padding: 10px 14px;
   border-radius: 8px;
@@ -769,15 +781,75 @@
   font-size: .9em;
 }
 
-/* Label "DÉPART / HORS-BORD / ARRIVÉE" au-dessus du titre */
+/* Label "DÉPART / ARRIVÉE" — petit texte au-dessus du titre */
 .bt-itin__transport-label {
   display: block;
   font-weight: 600;
-  font-size: .75em;
+  font-size: .72em;
   text-transform: uppercase;
-  letter-spacing: .06em;
-  opacity: .55;
+  letter-spacing: .07em;
+  opacity: .5;
   margin-bottom: 2px;
+}
+
+/* ── Layout côte-à-côte (timeline | carte) ────────────────── */
+.bt-itin__layout--side {
+  display: grid;
+  grid-template-columns: 1fr var(--bt-itin-map-col, 50%);
+  gap: 24px; /* override par Elementor map_gap */
+  align-items: start;
+}
+
+/* Carte à gauche → on inverse l'ordre des colonnes */
+.bt-itin__layout--side.bt-itin__layout--map-left {
+  grid-template-columns: var(--bt-itin-map-col, 50%) 1fr;
+}
+
+/* La colonne timeline doit dépasser la carte ? non, scroll natif. */
+.bt-itin__col-timeline {
+  min-width: 0; /* évite overflow flex/grid */
+}
+
+/* Map sticky en mode side → suit le scroll */
+.bt-itin__col-map {
+  position: sticky;
+  top: 24px;
+  min-width: 0;
+}
+
+/* En mode side, la map prend 100% de sa colonne */
+.bt-itin__layout--side .bt-itin__map {
+  height: 100%;
+  min-height: 300px;
+}
+
+/* ── Responsive : mobile = stacked ────────────────────────── */
+@media (max-width: 767px) {
+  .bt-itin__layout--side {
+    grid-template-columns: 1fr !important;
+  }
+
+  .bt-itin__col-map {
+    position: static;
+  }
+
+  /* Carte à gauche : en mobile, on remet timeline en premier */
+  .bt-itin__layout--map-left .bt-itin__col-timeline {
+    order: -1;
+  }
+}
+
+/* ── Carte Leaflet ────────────────────────────────────────── */
+.bt-itin__map-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.bt-itin__map {
+  width: 100%;
+  height: 400px; /* override par Elementor map_height */
+  background: #f0f0f0; /* placeholder avant chargement Leaflet */
+  z-index: 0;
 }
 
 
