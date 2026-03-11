@@ -61,12 +61,11 @@ class Backoffice {
         // Page en plein écran, fond blanc uniforme
         add_action('admin_head', function () {
             echo '<style>
-                body.toplevel_page_blacktenderscore,
-                body.toplevel_page_blacktenderscore #wpwrap,
-                body.toplevel_page_blacktenderscore #wpcontent,
-                body.toplevel_page_blacktenderscore #wpbody,
-                body.toplevel_page_blacktenderscore #wpbody-content { background: #fff !important; }
-                #wpcontent { padding-left: 0 !important; margin-left: 0 !important; }
+                body.toplevel_page_blacktenderscore #adminmenumain,
+                body.toplevel_page_blacktenderscore #adminmenuback,
+                body.toplevel_page_blacktenderscore #adminmenuwrap { display: none !important; }
+                body.toplevel_page_blacktenderscore #wpcontent { margin-left: 0 !important; padding-left: 0 !important; }
+                body.toplevel_page_blacktenderscore #wpbody-content { padding-bottom: 0 !important; }
                 #wpfooter  { display: none !important; }
                 .notice, .update-nag, #screen-meta { display: none !important; }
             </style>';

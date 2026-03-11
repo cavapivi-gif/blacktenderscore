@@ -31,7 +31,12 @@
   line-height: 1.5;
   color: var(--foreground);
   background: var(--background);
-  min-height: 100vh;
+  position: fixed;
+  top: 32px;   /* WP admin bar height */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 99;
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-font-smoothing: antialiased;
