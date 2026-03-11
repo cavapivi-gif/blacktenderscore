@@ -215,49 +215,13 @@ class Highlights extends AbstractBtWidget {
             '{{WRAPPER}} .bt-highlights__item'
         );
 
-        // Style — Icône
-        $this->start_controls_section('style_icon', [
-            'label'     => __('Style — Icône', 'blacktenderscore'),
-            'tab'       => Controls_Manager::TAB_STYLE,
-            'condition' => ['show_icon' => 'yes'],
-        ]);
-
-        $this->add_responsive_control('icon_size', [
-            'label'      => __('Taille', 'blacktenderscore'),
-            'type'       => Controls_Manager::SLIDER,
-            'size_units' => ['px', 'em'],
-            'range'      => ['px' => ['min' => 12, 'max' => 80]],
-            'default'    => ['size' => 28, 'unit' => 'px'],
-            'selectors'  => ['{{WRAPPER}} .bt-highlights__icon' => 'font-size: {{SIZE}}{{UNIT}}; width: {{SIZE}}{{UNIT}}'],
-        ]);
-
-        $this->add_control('icon_color', [
-            'label'     => __('Couleur', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-highlights__icon, {{WRAPPER}} .bt-highlights__icon i, {{WRAPPER}} .bt-highlights__icon svg' => 'color: {{VALUE}}; fill: {{VALUE}}'],
-        ]);
-
-        $this->add_control('icon_bg', [
-            'label'     => __('Fond', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-highlights__icon' => 'background-color: {{VALUE}}'],
-        ]);
-
-        $this->add_responsive_control('icon_padding', [
-            'label'      => __('Padding', 'blacktenderscore'),
-            'type'       => Controls_Manager::DIMENSIONS,
-            'size_units' => ['px', 'em'],
-            'selectors'  => ['{{WRAPPER}} .bt-highlights__icon' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
-        ]);
-
-        $this->add_responsive_control('icon_radius', [
-            'label'      => __('Border radius', 'blacktenderscore'),
-            'type'       => Controls_Manager::SLIDER,
-            'size_units' => ['px', '%'],
-            'selectors'  => ['{{WRAPPER}} .bt-highlights__icon' => 'border-radius: {{SIZE}}{{UNIT}}'],
-        ]);
-
-        $this->end_controls_section();
+        $this->register_icon_style_section(
+            'icon',
+            __('Style — Icône', 'blacktenderscore'),
+            '{{WRAPPER}} .bt-highlights__icon',
+            ['size' => 28],
+            ['show_icon' => 'yes']
+        );
 
         // Typographies via trait
         $this->register_typography_section(
