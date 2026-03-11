@@ -305,7 +305,42 @@
    WIDGET : Pricing Tabs (Tarification par forfait)
    ══════════════════════════════════════════════════════════ */
 
-/* Panneaux — masqués par défaut via CSS (pas d'attribut [hidden]) */
+/* ── Tab bar ───────────────────────────────────────────── */
+.bt-pricing__tablist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  border-bottom: 2px solid var(--bt-border-light);
+  margin-bottom: 0;
+}
+
+.bt-pricing__tab {
+  padding: 10px 20px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px; /* flush avec la bordure du tablist */
+  cursor: pointer;
+  font-size: .9375em;
+  font-weight: 500;
+  color: var(--bt-tab-inactive-color, #666);
+  transition: color .2s, background .2s;
+  border-radius: 6px 6px 0 0;
+  white-space: nowrap;
+}
+
+.bt-pricing__tab:hover {
+  color: var(--bt-tab-hover-color, #333);
+  background: rgba(0, 0, 0, .04);
+}
+
+.bt-pricing__tab--active {
+  background: #09142a;
+  color: #fff;
+  border-bottom-color: #09142a;
+}
+
+/* ── Panneaux — masqués via CSS ────────────────────────── */
 .bt-pricing__panel {
   display: none;
 }
@@ -315,7 +350,7 @@
   padding-top: 20px;
 }
 
-/* Prix */
+/* ── Prix ──────────────────────────────────────────────── */
 .bt-pricing__price-block {
   display: flex;
   align-items: baseline;
@@ -346,8 +381,100 @@
   margin: 0;
 }
 
+/* ── Onboarding — Sélection créneaux ───────────────────── */
+.bt-pricing__onboarding {
+  margin-top: 20px;
+}
+
+.bt-pricing__ob-title {
+  font-size: 1em;
+  font-weight: 600;
+  margin: 0 0 12px;
+  color: inherit;
+}
+
+.bt-pricing__slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bt-pricing__slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 18px;
+  border-radius: 40px;
+  border: 1.5px solid var(--bt-border-light, #e0e0e0);
+  background: transparent;
+  font-size: .9375em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .2s, border-color .2s, color .2s;
+  white-space: nowrap;
+  color: inherit;
+}
+
+.bt-pricing__slot:hover {
+  border-color: currentColor;
+  background: rgba(0, 0, 0, .04);
+}
+
+.bt-pricing__slot--active {
+  background: #09142a;
+  border-color: #09142a;
+  color: #fff;
+}
+
+/* CTA de repli (fallback sans créneaux ACF) */
+.bt-pricing__slot--cta {
+  width: 100%;
+  max-width: 300px;
+  padding: 12px 24px;
+  font-size: 1em;
+  font-weight: 600;
+  background: #09142a;
+  border-color: #09142a;
+  color: #fff;
+}
+
+.bt-pricing__slot--cta:hover {
+  opacity: .88;
+}
+
+/* Grilles de créneaux */
+.bt-pricing__slots--grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.bt-pricing__slots--grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 600px) {
+  .bt-pricing__slots--grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ── Booking ────────────────────────────────────────────── */
 .bt-pricing__booking {
   margin-top: 20px;
+}
+
+/* Reveal animé : JS ajoute .bt-reveal--visible au clic sur un créneau */
+.bt-pricing__booking-reveal {
+  overflow: hidden;
+  transition: opacity .35s ease, max-height .4s ease;
+  opacity: 0;
+  max-height: 0;
+}
+
+.bt-pricing__booking-reveal.bt-pricing__booking-reveal--visible {
+  opacity: 1;
+  max-height: 900px; /* assez grand pour le widget Regiondo */
 }
 
 

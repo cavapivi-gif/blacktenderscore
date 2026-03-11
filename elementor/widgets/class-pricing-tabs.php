@@ -45,6 +45,8 @@ class PricingTabs extends AbstractBtWidget {
             'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
+        $this->register_section_title_controls();
+
         $this->add_control('acf_field', [
             'label'   => __('Champ ACF repeater', 'blacktenderscore'),
             'type'    => Controls_Manager::SELECT,
@@ -54,24 +56,38 @@ class PricingTabs extends AbstractBtWidget {
             'default' => 'tarification_par_forfait',
         ]);
 
-        $this->add_control('show_deposit', [
-            'label'        => __('Afficher l\'acompte', 'blacktenderscore'),
+        $this->add_control('currency', [
+            'label'   => __('Symbole devise', 'blacktenderscore'),
+            'type'    => Controls_Manager::TEXT,
+            'default' => '€',
+        ]);
+
+        $this->add_control('show_note', [
+            'label'        => __('Note tarifaire', 'blacktenderscore'),
             'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
-        $this->add_control('show_note', [
-            'label'        => __('Afficher la note tarifaire', 'blacktenderscore'),
+        $this->add_control('show_per_label', [
+            'label'        => __('Afficher "/ pers."', 'blacktenderscore'),
             'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('per_label', [
-            'label'   => __('Libellé "par pers."', 'blacktenderscore'),
-            'type'    => Controls_Manager::TEXT,
-            'default' => __('/ pers.', 'blacktenderscore'),
+            'label'     => __('Libellé "par pers."', 'blacktenderscore'),
+            'type'      => Controls_Manager::TEXT,
+            'default'   => __('/ pers.', 'blacktenderscore'),
+            'condition' => ['show_per_label' => 'yes'],
+        ]);
+
+        $this->add_control('show_deposit', [
+            'label'        => __('Acompte', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => 'yes',
         ]);
 
         $this->add_control('deposit_label', [
@@ -97,6 +113,15 @@ class PricingTabs extends AbstractBtWidget {
             'default'      => 'yes',
         ]);
 
+        $this->add_control('booking_per_tab', [
+            'label'        => __('UUID différent par forfait (sous-champ repeater)', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'description'  => __('Si chaque forfait a son propre UUID dans le repeater (exp_booking_uuid), activez.', 'blacktenderscore'),
+            'return_value' => 'yes',
+            'default'      => '',
+            'condition'    => ['show_booking' => 'yes'],
+        ]);
+
         $this->add_control('booking_field', [
             'label'     => __('Champ UUID Regiondo (global)', 'blacktenderscore'),
             'type'      => Controls_Manager::SELECT,
@@ -105,16 +130,7 @@ class PricingTabs extends AbstractBtWidget {
                 'exp_booking_long_url'  => __('Forfait long (exp_booking_long_url)', 'blacktenderscore'),
             ],
             'default'   => 'exp_booking_short_url',
-            'condition' => ['show_booking' => 'yes'],
-        ]);
-
-        $this->add_control('booking_per_tab', [
-            'label'        => __('UUID par tab (sous-champ repeater)', 'blacktenderscore'),
-            'type'         => Controls_Manager::SWITCHER,
-            'description'  => __('Si chaque forfait a son propre UUID dans le repeater (champ exp_booking_uuid), activez cette option.', 'blacktenderscore'),
-            'return_value' => 'yes',
-            'default'      => '',
-            'condition'    => ['show_booking' => 'yes'],
+            'condition' => ['show_booking' => 'yes', 'booking_per_tab!' => 'yes'],
         ]);
 
         $this->add_control('booking_uuid_subfield', [
@@ -141,7 +157,6 @@ class PricingTabs extends AbstractBtWidget {
             'default'      => '',
         ]);
 
-        // Titre onboarding — supporte les dynamic tags
         $this->add_control('onboarding_title', [
             'label'     => __('Titre "Choisissez vos dispo"', 'blacktenderscore'),
             'type'      => Controls_Manager::TEXT,
@@ -158,11 +173,23 @@ class PricingTabs extends AbstractBtWidget {
             'condition' => ['show_onboarding' => 'yes', 'onboarding_title!' => ''],
         ]);
 
+        $this->add_control('slot_layout', [
+            'label'     => __('Disposition créneaux', 'blacktenderscore'),
+            'type'      => Controls_Manager::SELECT,
+            'options'   => [
+                'flex'   => __('Ligne (flex wrap)', 'blacktenderscore'),
+                'grid-2' => __('Grille 2 colonnes', 'blacktenderscore'),
+                'grid-3' => __('Grille 3 colonnes', 'blacktenderscore'),
+            ],
+            'default'   => 'flex',
+            'condition' => ['show_onboarding' => 'yes'],
+        ]);
+
         $this->add_control('onboarding_slots_field', [
             'label'       => __('Champ ACF créneaux (repeater)', 'blacktenderscore'),
             'type'        => Controls_Manager::TEXT,
             'default'     => 'exp_departure_times',
-            'description' => __('Repeater ACF contenant les horaires disponibles. Défaut : exp_departure_times.', 'blacktenderscore'),
+            'description' => __('Repeater ACF avec les horaires. Défaut : exp_departure_times.', 'blacktenderscore'),
             'condition'   => ['show_onboarding' => 'yes'],
         ]);
 
@@ -185,15 +212,19 @@ class PricingTabs extends AbstractBtWidget {
 
         // ══ STYLE ══════════════════════════════════════════════════════════════
 
+        $this->register_box_style('container', 'Style — Conteneur', '{{WRAPPER}} .bt-pricing');
+
         $this->register_tabs_nav_style(
             'tab',
-            'Style — Tabs',
+            'Style — Onglets',
             '{{WRAPPER}} .bt-pricing__tab',
             '{{WRAPPER}} .bt-pricing__tab--active',
             '{{WRAPPER}} .bt-pricing__tablist',
             [],
             ['with_hover' => true, 'with_radius' => true, 'with_indicator' => true]
         );
+
+        $this->register_panel_style('panel', 'Style — Panneau', '{{WRAPPER}} .bt-pricing__panel--active');
 
         $this->register_typography_section(
             'price',
@@ -207,28 +238,8 @@ class PricingTabs extends AbstractBtWidget {
             '{{WRAPPER}} .bt-pricing__note, {{WRAPPER}} .bt-pricing__deposit'
         );
 
-        // Panel (fond + padding)
-        $this->start_controls_section('style_panel', [
-            'label' => __('Style — Panneau', 'blacktenderscore'),
-            'tab'   => Controls_Manager::TAB_STYLE,
-        ]);
+        $this->register_section_title_style('{{WRAPPER}} .bt-pricing__section-title');
 
-        $this->add_control('panel_bg', [
-            'label'     => __('Fond du panneau', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-pricing__panel' => 'background-color: {{VALUE}}'],
-        ]);
-
-        $this->add_responsive_control('panel_padding', [
-            'label'      => __('Padding panneau', 'blacktenderscore'),
-            'type'       => Controls_Manager::DIMENSIONS,
-            'size_units' => ['px', 'em'],
-            'selectors'  => ['{{WRAPPER}} .bt-pricing__panel' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
-        ]);
-
-        $this->end_controls_section();
-
-        // Onboarding styles
         $this->register_typography_section(
             'ob_title',
             'Style — Titre onboarding',
@@ -273,9 +284,12 @@ class PricingTabs extends AbstractBtWidget {
             $slots = $this->resolve_onboarding_slots($s, $post_id);
         }
 
-        $uid = 'bt-pricing-' . $this->get_id();
+        $currency = esc_html($s['currency'] ?: '€');
+        $uid      = 'bt-pricing-' . $this->get_id();
 
         echo "<div class=\"bt-pricing\" id=\"{$uid}\" data-bt-tabs data-bt-panel-class=\"bt-pricing__panel\">";
+
+        $this->render_section_title($s, 'bt-pricing__section-title');
 
         // ── Tab bar ───────────────────────────────────────────────────────
         echo '<div class="bt-pricing__tablist" role="tablist">';
@@ -315,16 +329,18 @@ class PricingTabs extends AbstractBtWidget {
                 if ($note && $s['show_note'] === 'yes') {
                     echo '<span class="bt-pricing__note">' . esc_html($note) . ' </span>';
                 }
-                echo '<span class="bt-pricing__price">' . esc_html(number_format((float) $price, 0, ',', ' ')) . ' €</span>';
-                $per_lbl = esc_html($s['per_label'] ?: __('/ pers.', 'blacktenderscore'));
-                echo '<span class="bt-pricing__per"> ' . $per_lbl . '</span>';
+                echo '<span class="bt-pricing__price">' . esc_html(number_format((float) $price, 0, ',', ' ')) . ' ' . $currency . '</span>';
+                if ($s['show_per_label'] === 'yes') {
+                    $per_lbl = esc_html($s['per_label'] ?: __('/ pers.', 'blacktenderscore'));
+                    echo '<span class="bt-pricing__per"> ' . $per_lbl . '</span>';
+                }
                 echo '</div>';
             }
 
             // Acompte
             if ($deposit && $s['show_deposit'] === 'yes') {
                 $dep_lbl = esc_html($s['deposit_label'] ?: __('Acompte :', 'blacktenderscore'));
-                echo '<p class="bt-pricing__deposit">' . $dep_lbl . ' <strong>' . esc_html($deposit) . ' €</strong></p>';
+                echo '<p class="bt-pricing__deposit">' . $dep_lbl . ' <strong>' . esc_html($deposit) . ' ' . $currency . '</strong></p>';
             }
 
             // Booking
@@ -379,7 +395,12 @@ class PricingTabs extends AbstractBtWidget {
         }
 
         // Créneaux
-        echo '<div class="bt-pricing__slots">';
+        $slot_layout_cls = match ($s['slot_layout'] ?? 'flex') {
+            'grid-2' => ' bt-pricing__slots--grid-2',
+            'grid-3' => ' bt-pricing__slots--grid-3',
+            default  => '',
+        };
+        echo '<div class="bt-pricing__slots' . $slot_layout_cls . '">';
         if (!empty($slots)) {
             foreach ($slots as $slot_label) {
                 echo '<button type="button" class="bt-pricing__slot" data-uuid="' . esc_attr($uuid) . '">';
@@ -395,9 +416,9 @@ class PricingTabs extends AbstractBtWidget {
 
         echo '</div>'; // .bt-pricing__onboarding
 
-        // Widget Regiondo — caché jusqu'au clic
+        // Widget Regiondo — révélé avec animation au clic sur un créneau
         if ($uuid) {
-            echo '<div class="bt-pricing__booking-reveal" style="display:none">';
+            echo '<div class="bt-pricing__booking-reveal">';
             echo $this->render_booking_widget($uuid, $post_id, $index);
             echo '</div>';
         } elseif ($this->is_edit_mode()) {
