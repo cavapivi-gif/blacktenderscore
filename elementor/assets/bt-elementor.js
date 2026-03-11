@@ -158,6 +158,177 @@
     });
   }
 
+  /* ── Gallery Lightbox ────────────────────────────────────────────────────── */
+  /*
+   * Visionneuse custom : modal plein écran + strip de miniatures en bas.
+   * Un seul DOM #bt-lb créé au premier usage (singleton).
+   *
+   * Déclencheurs :
+   *   [data-bt-gallery-images] — wrapper gallery avec JSON des images
+   *   [data-bt-lb-index]       — lien vers une image (index dans le tableau)
+   *   [data-bt-lb-open]        — bouton "Voir toutes les photos" (ouvre à 0)
+   */
+
+  var _lb      = null;  // nœud DOM modal
+  var _lbImgs  = [];    // tableau { src, thumb, alt, caption }
+  var _lbIdx   = 0;     // index courant
+
+  function _lbCreate() {
+    if (document.getElementById('bt-lb')) {
+      _lb = document.getElementById('bt-lb');
+      return;
+    }
+    var d = document.createElement('div');
+    d.id        = 'bt-lb';
+    d.className = 'bt-lb';
+    d.setAttribute('role', 'dialog');
+    d.setAttribute('aria-modal', 'true');
+    d.setAttribute('aria-label', 'Visionneuse photos');
+    d.innerHTML =
+      '<button class="bt-lb__close" aria-label="Fermer">&times;</button>' +
+      '<div class="bt-lb__counter"></div>' +
+      '<button class="bt-lb__prev" aria-label="Image précédente">&#8249;</button>' +
+      '<button class="bt-lb__next" aria-label="Image suivante">&#8250;</button>' +
+      '<div class="bt-lb__stage">' +
+        '<img class="bt-lb__img" src="" alt="" />' +
+        '<p class="bt-lb__caption"></p>' +
+      '</div>' +
+      '<div class="bt-lb__thumbs"></div>';
+    document.body.appendChild(d);
+    _lb = d;
+
+    _lb.querySelector('.bt-lb__close').addEventListener('click', _lbClose);
+    _lb.querySelector('.bt-lb__prev').addEventListener('click', function () { _lbGo(-1); });
+    _lb.querySelector('.bt-lb__next').addEventListener('click', function () { _lbGo(1); });
+
+    // Click sur le fond → ferme
+    _lb.addEventListener('click', function (e) { if (e.target === _lb) _lbClose(); });
+
+    // Keyboard
+    document.addEventListener('keydown', function (e) {
+      if (!_lb || !_lb.classList.contains('bt-lb--open')) return;
+      if (e.key === 'Escape')      _lbClose();
+      if (e.key === 'ArrowLeft')   _lbGo(-1);
+      if (e.key === 'ArrowRight')  _lbGo(1);
+    });
+
+    // Touch swipe
+    var _tx = 0;
+    _lb.addEventListener('touchstart', function (e) { _tx = e.touches[0].clientX; }, { passive: true });
+    _lb.addEventListener('touchend',   function (e) {
+      var dx = e.changedTouches[0].clientX - _tx;
+      if (Math.abs(dx) > 40) _lbGo(dx < 0 ? 1 : -1);
+    }, { passive: true });
+  }
+
+  function _lbOpen(images, idx) {
+    _lbCreate();
+    _lbImgs = images;
+    _lbIdx  = idx;
+    _lbRenderThumbs();
+    _lbSetImg(idx, false);
+    _lb.classList.add('bt-lb--open');
+    _lb.removeAttribute('aria-hidden');
+    document.body.style.overflow = 'hidden';
+    _lb.querySelector('.bt-lb__close').focus();
+  }
+
+  function _lbClose() {
+    if (!_lb) return;
+    _lb.classList.remove('bt-lb--open');
+    _lb.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  function _lbGo(dir) {
+    _lbIdx = (_lbIdx + dir + _lbImgs.length) % _lbImgs.length;
+    _lbSetImg(_lbIdx, true);
+  }
+
+  function _lbSetImg(idx, fade) {
+    var imgEl = _lb.querySelector('.bt-lb__img');
+    var capEl = _lb.querySelector('.bt-lb__caption');
+    var cntEl = _lb.querySelector('.bt-lb__counter');
+    var cur   = _lbImgs[idx];
+
+    if (fade) {
+      imgEl.classList.add('bt-lb__img--fade');
+      setTimeout(function () {
+        imgEl.src = cur.src;
+        imgEl.alt = cur.alt || '';
+        imgEl.classList.remove('bt-lb__img--fade');
+      }, 120);
+    } else {
+      imgEl.src = cur.src;
+      imgEl.alt = cur.alt || '';
+    }
+
+    capEl.textContent  = cur.caption || '';
+    capEl.style.display = cur.caption ? '' : 'none';
+    if (cntEl) cntEl.textContent = (idx + 1) + ' / ' + _lbImgs.length;
+
+    _lbSyncThumb(idx);
+  }
+
+  function _lbRenderThumbs() {
+    var strip = _lb.querySelector('.bt-lb__thumbs');
+    strip.innerHTML = '';
+    _lbImgs.forEach(function (im, i) {
+      var btn = document.createElement('button');
+      btn.className = 'bt-lb__thumb';
+      btn.setAttribute('aria-label', 'Image ' + (i + 1));
+      var timg = document.createElement('img');
+      timg.src     = im.thumb || im.src;
+      timg.alt     = '';
+      timg.loading = 'lazy';
+      btn.appendChild(timg);
+      btn.addEventListener('click', function () {
+        _lbIdx = i;
+        _lbSetImg(i, true);
+      });
+      strip.appendChild(btn);
+    });
+  }
+
+  function _lbSyncThumb(idx) {
+    if (!_lb) return;
+    _lb.querySelectorAll('.bt-lb__thumb').forEach(function (t, i) {
+      t.classList.toggle('bt-lb__thumb--active', i === idx);
+    });
+    var active = _lb.querySelector('.bt-lb__thumb--active');
+    if (active) active.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+  }
+
+  function initGallery(el) {
+    el.querySelectorAll('[data-bt-gallery]:not([data-bt-g-init])').forEach(function (gallery) {
+      gallery.setAttribute('data-bt-g-init', '1');
+
+      var raw = gallery.getAttribute('data-bt-gallery-images');
+      if (!raw) return;
+
+      var images;
+      try { images = JSON.parse(raw); } catch (e) { return; }
+      if (!images || !images.length) return;
+
+      // Click sur une image individuelle
+      gallery.querySelectorAll('[data-bt-lb-index]').forEach(function (a) {
+        a.addEventListener('click', function (e) {
+          e.preventDefault();
+          _lbOpen(images, parseInt(a.getAttribute('data-bt-lb-index'), 10) || 0);
+        });
+      });
+
+      // Click "Voir toutes les photos"
+      var btn = gallery.querySelector('[data-bt-lb-open]');
+      if (btn) {
+        btn.addEventListener('click', function (e) {
+          e.preventDefault();
+          _lbOpen(images, 0);
+        });
+      }
+    });
+  }
+
   /* ── Bootstrap ───────────────────────────────────────────────────────────── */
 
   function boot(scope) {
@@ -173,6 +344,7 @@
       initTabs(root);
     });
     initPricingButtons(el);
+    initGallery(el);
     el.querySelectorAll('[data-bt-share]:not([data-bt-share-init])').forEach(function (btn) {
       btn.setAttribute('data-bt-share-init', '1');
       var url    = btn.getAttribute('data-bt-url')    || window.location.href;
@@ -245,6 +417,7 @@
     elementorFrontend.elementsHandler.attachHandler('bt-pricing-tabs',  BtWidgetHandler);
     elementorFrontend.elementsHandler.attachHandler('bt-itinerary',     BtWidgetHandler);
     elementorFrontend.elementsHandler.attachHandler('bt-share',         BtWidgetHandler);
+    elementorFrontend.elementsHandler.attachHandler('bt-gallery',       BtWidgetHandler);
   });
 
   // Fallback : pages sans Elementor JS (ex. thème sans Elementor)

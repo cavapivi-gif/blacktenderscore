@@ -94,19 +94,13 @@ class Highlights extends AbstractBtWidget {
             'condition' => ['data_source' => 'acf'],
         ]);
 
-        $this->add_control('separator_icon_fallback', [
-            'label'     => __('Icône de fallback (si sous-champ vide)', 'blacktenderscore'),
-            'type'      => Controls_Manager::HEADING,
-            'separator' => 'before',
-            'condition' => ['data_source' => 'acf'],
-        ]);
-
         $this->add_control('default_icon', [
-            'label'     => __('Icône Elementor par défaut', 'blacktenderscore'),
-            'type'      => Controls_Manager::ICONS,
-            'default'   => ['value' => 'fas fa-check', 'library' => 'fa-solid'],
-            'skin'      => 'inline',
-            'condition' => ['data_source' => 'acf'],
+            'label'       => __('Icône de fallback (emoji ou texte)', 'blacktenderscore'),
+            'description' => __('Affiché si le sous-champ icône ACF est vide.', 'blacktenderscore'),
+            'type'        => Controls_Manager::TEXT,
+            'default'     => '✓',
+            'separator'   => 'before',
+            'condition'   => ['data_source' => 'acf'],
         ]);
 
         // ── Mode manuel (Repeater natif) ──────────────────────────────────

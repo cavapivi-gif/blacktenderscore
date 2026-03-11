@@ -1240,6 +1240,7 @@
   position: relative;
   overflow: hidden;
   min-height: 0;
+  height: 100%;   /* propagate grid row height so children can use height:100% */
 }
 
 /* ── Lien / wrapper ───────────────────────────────────────────────────── */
@@ -1358,6 +1359,185 @@
   bottom: 16px;
   left: 50%;
   transform: translateX(-50%);
+}
+
+/* ── BT Lightbox — visionneuse custom avec strip de miniatures ────────── */
+/*
+ * Singleton : un seul #bt-lb créé par le JS pour toute la page.
+ * Remplace la lightbox native Elementor (trop basique, pas de thumbnails).
+ *
+ * Structure :
+ *   .bt-lb
+ *     .bt-lb__close
+ *     .bt-lb__prev / .bt-lb__next
+ *     .bt-lb__stage
+ *       img.bt-lb__img
+ *       p.bt-lb__caption
+ *     .bt-lb__thumbs
+ *       button.bt-lb__thumb [--active]
+ *         img
+ */
+.bt-lb {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: rgba(0, 0, 0, 0.92);
+  flex-direction: column;
+  align-items: stretch;
+  overscroll-behavior: contain;
+}
+
+.bt-lb--open { display: flex; }
+
+/* Stage — zone image principale */
+.bt-lb__stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: 52px 72px 16px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.bt-lb__img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 6px;
+  transition: opacity 0.15s ease;
+  user-select: none;
+}
+
+.bt-lb__img--fade { opacity: 0; }
+
+.bt-lb__caption {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: .82em;
+  text-align: center;
+  margin: 10px 0 0;
+  line-height: 1.4;
+  max-width: 600px;
+}
+
+/* Boutons de navigation */
+.bt-lb__close,
+.bt-lb__prev,
+.bt-lb__next {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  line-height: 1;
+  opacity: 0.85;
+  border-radius: 50%;
+  transition: background 0.15s, opacity 0.15s;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bt-lb__close:hover,
+.bt-lb__prev:hover,
+.bt-lb__next:hover {
+  background: rgba(255, 255, 255, 0.22);
+  opacity: 1;
+}
+
+.bt-lb__close {
+  top: 14px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  font-size: 1.4rem;
+  border-radius: 50%;
+}
+
+.bt-lb__prev,
+.bt-lb__next {
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  font-size: 1.5rem;
+  /* account for thumbnail strip height */
+  margin-top: -50px;
+}
+
+.bt-lb__prev { left: 14px; }
+.bt-lb__next { right: 14px; }
+
+/* Counter */
+.bt-lb__counter {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.55);
+  font-size: .78em;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+/* Thumbnail strip */
+.bt-lb__thumbs {
+  flex-shrink: 0;
+  display: flex;
+  gap: 6px;
+  padding: 10px 16px;
+  overflow-x: auto;
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.bt-lb__thumbs::-webkit-scrollbar {
+  height: 4px;
+}
+
+.bt-lb__thumbs::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 2px;
+}
+
+.bt-lb__thumb {
+  flex-shrink: 0;
+  width: 68px;
+  height: 50px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  background: #1a1a1a;
+  padding: 0;
+  transition: border-color 0.15s, opacity 0.15s;
+  opacity: 0.55;
+}
+
+.bt-lb__thumb:hover   { opacity: 0.85; }
+.bt-lb__thumb--active { border-color: #fff; opacity: 1; }
+
+.bt-lb__thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .bt-lb__stage   { padding: 48px 12px 8px; }
+  .bt-lb__prev    { left: 6px; }
+  .bt-lb__next    { right: 6px; }
+  .bt-lb__thumb   { width: 52px; height: 40px; }
 }
 
 
@@ -1636,6 +1816,7 @@
   display: flex;
   align-items: flex-start;
   gap: 12px;
+  min-width: 0;          /* prevent grid/flex overflow */
   /* flex-direction override par control icon_position */
 }
 
@@ -1652,7 +1833,7 @@
 .bt-highlights__icon i   { font-size: inherit; color: inherit; }
 .bt-highlights__icon svg { width: 1em; height: 1em; fill: currentColor; }
 
-.bt-highlights__content { flex: 1; min-width: 0; }
+.bt-highlights__content { flex: 1; min-width: 0; overflow: hidden; word-break: break-word; }
 .bt-highlights__title   { display: block; font-weight: 600; }
 .bt-highlights__desc    { margin: .25em 0 0; }
 
