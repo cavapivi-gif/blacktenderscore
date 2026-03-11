@@ -120,83 +120,27 @@ class FaqAccordion extends AbstractBtWidget {
 
         $this->register_section_title_style('{{WRAPPER}} .bt-faq__section-title');
 
-        // ── Style — Accordéon ─────────────────────────────────────────────────
-        $this->start_controls_section('style_accordion', [
-            'label' => __('Style — Accordéon', 'blacktenderscore'),
+        // ── Style — Espacement ────────────────────────────────────────────────
+        $this->start_controls_section('style_accordion_layout', [
+            'label' => __('Style — Espacement', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
         ]);
-
-        $this->add_responsive_control('items_gap', [
-            'label'      => __('Espacement entre éléments', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
-            'size_units' => ['px'],
-            'default'    => ['size' => 8, 'unit' => 'px'],
-            'selectors'  => ['{{WRAPPER}} .bt-faq__list' => 'gap: {{SIZE}}{{UNIT}}'],
-        ]);
-
-        // Item : Normal / Survol / Actif
-        $this->start_controls_tabs('item_style_tabs');
-
-        $this->start_controls_tab('item_tab_normal', ['label' => __('Normal', 'blacktenderscore')]);
-        $this->add_control('item_bg', [
-            'label'     => __('Fond', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-faq__item' => 'background-color: {{VALUE}}'],
-        ]);
-        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
-            'name'     => 'item_border',
-            'selector' => '{{WRAPPER}} .bt-faq__item',
-        ]);
-        $this->end_controls_tab();
-
-        $this->start_controls_tab('item_tab_hover', ['label' => __('Survol', 'blacktenderscore')]);
-        $this->add_control('item_bg_hover', [
-            'label'     => __('Fond', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-faq__item:hover' => 'background-color: {{VALUE}}'],
-        ]);
-        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
-            'name'     => 'item_border_hover',
-            'selector' => '{{WRAPPER}} .bt-faq__item:hover',
-        ]);
-        $this->end_controls_tab();
-
-        $this->start_controls_tab('item_tab_active', ['label' => __('Actif', 'blacktenderscore')]);
-        $this->add_control('item_bg_active', [
-            'label'     => __('Fond', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-faq__item.bt-faq__item--active' => 'background-color: {{VALUE}}'],
-        ]);
-        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
-            'name'     => 'item_border_active',
-            'selector' => '{{WRAPPER}} .bt-faq__item.bt-faq__item--active',
-        ]);
-        $this->end_controls_tab();
-
-        $this->end_controls_tabs();
-
-        $this->add_responsive_control('item_border_radius', [
-            'label'      => __('Border radius', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::DIMENSIONS,
-            'size_units' => ['px', '%', 'em'],
-            'selectors'  => [
-                '{{WRAPPER}} .bt-faq__item' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}; overflow: hidden',
-            ],
-        ]);
-
-        $this->add_responsive_control('item_padding', [
-            'label'      => __('Padding', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::DIMENSIONS,
-            'size_units' => ['px', 'em'],
-            'selectors'  => ['{{WRAPPER}} .bt-faq__item' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
-        ]);
-
-        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), [
-            'name'     => 'item_shadow',
-            'selector' => '{{WRAPPER}} .bt-faq__item',
-        ]);
-
+        $this->register_gap_control(
+            'items_gap',
+            __('Espacement entre éléments', 'blacktenderscore'),
+            ['{{WRAPPER}} .bt-faq__list'],
+            8
+        );
         $this->end_controls_section();
+
+        // ── Style — Item (Normal / Survol / Actif) ────────────────────────────
+        $this->register_item_3state_style(
+            'item',
+            __('Style — Item', 'blacktenderscore'),
+            '{{WRAPPER}} .bt-faq__item',
+            '{{WRAPPER}} .bt-faq__item:hover',
+            '{{WRAPPER}} .bt-faq__item.bt-faq__item--active'
+        );
 
         // ── Style — Questions ─────────────────────────────────────────────────
         $this->start_controls_section('style_question', [

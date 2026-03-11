@@ -98,3 +98,58 @@ abstract class Abstract_BT_Tag extends \Elementor\Core\DynamicTags\Tag {
         return '';
     }
 }
+
+/**
+ * Classe abstraite pour les Dynamic Tags affichant une plage de deux champs.
+ *
+ * Les sous-classes définissent uniquement `sides()` (les clés de borne :
+ * [1, 2] ou ['min', 'max']) ; le rendu et le séparateur sont partagés.
+ *
+ * Override `with_taxonomy_fallback()` pour activer la résolution WP native.
+ */
+abstract class Abstract_Range_Tag extends Abstract_BT_Tag {
+
+    /** @return array Les deux clés de borne, ex. [1, 2] ou ['min', 'max']. */
+    abstract protected function sides(): array;
+
+    /**
+     * Si true, tente get_the_terms() quand get_field() renvoie vide.
+     * Activé uniquement pour Tag_Acf_Range (champs génériques pouvant être
+     * des taxonomies WP natives).
+     */
+    protected function with_taxonomy_fallback(): bool { return false; }
+
+    public function render(): void {
+        $post_id  = (int) get_the_ID();
+        $sep      = (string) ($this->get_settings('separator') ?: ' - ');
+        $fallback = (string) ($this->get_settings('fallback')  ?? '');
+
+        $parts = [];
+
+        foreach ($this->sides() as $side) {
+            $key = trim((string) ($this->get_settings("field_{$side}") ?? ''));
+            if (!$key) continue;
+
+            $raw = function_exists('get_field') ? get_field($key, $post_id) : null;
+
+            if ($this->with_taxonomy_fallback() && empty($raw) && $raw !== '0' && $raw !== 0) {
+                $native = get_the_terms($post_id, $key);
+                if (is_array($native) && !empty($native)) $raw = $native;
+            }
+
+            $str = $this->acf_scalar($raw);
+            if ($str === '') continue;
+
+            $prefix  = (string) ($this->get_settings("prefix_{$side}") ?? '');
+            $suffix  = (string) ($this->get_settings("suffix_{$side}") ?? '');
+            $parts[] = $prefix . $str . $suffix;
+        }
+
+        if (empty($parts)) {
+            if ($fallback !== '') echo esc_html($fallback);
+            return;
+        }
+
+        echo esc_html(implode($sep, $parts));
+    }
+}

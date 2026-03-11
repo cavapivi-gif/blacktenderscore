@@ -206,6 +206,164 @@ trait BtLayoutControls {
      * @param array  $defaults 'color' (hex), 'width' (px int), 'length' (% int)
      * @param array  $condition Elementor condition optionnelle
      */
+    /**
+     * Ajoute un contrôle gap responsive dans la section courante (inline).
+     * À appeler ENTRE start_controls_section() et end_controls_section().
+     *
+     * Control généré :
+     *   $control_id  RESPONSIVE SLIDER px → gap: {{SIZE}}{{UNIT}}
+     *
+     * @param string   $control_id  ID du contrôle (ex: 'items_gap', 'badges_gap')
+     * @param string   $label       Label affiché
+     * @param array    $selectors   Sélecteurs CSS (ex: ['{{WRAPPER}} .bt-foo__list'])
+     * @param int      $default     Valeur par défaut en px (défaut 16)
+     */
+    protected function register_gap_control(
+        string $control_id,
+        string $label,
+        array  $selectors,
+        int    $default = 16
+    ): void {
+        $map = [];
+        foreach ($selectors as $sel) {
+            $map[$sel] = 'gap: {{SIZE}}{{UNIT}}';
+        }
+
+        $this->add_responsive_control($control_id, [
+            'label'      => __($label, 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'default'    => ['size' => $default, 'unit' => 'px'],
+            'selectors'  => $map,
+        ]);
+    }
+
+    /**
+     * Ajoute une paire de contrôles couleur fond + texte pour un badge (inline).
+     * À appeler ENTRE start_controls_section() et end_controls_section().
+     *
+     * Controls générés :
+     *   {prefix}_bg      COLOR → background-color
+     *   {prefix}_color   COLOR → color
+     *
+     * @param string $prefix    Préfixe IDs (ex: 'season_badge' → season_badge_bg, season_badge_color)
+     * @param string $label     Titre HEADING visuel dans l'éditeur
+     * @param string $selector  Sélecteur CSS
+     * @param array  $defaults  'bg' (hex), 'color' (hex)
+     * @param array  $condition Condition Elementor optionnelle (appliquée aux 3 controls)
+     */
+    protected function register_badge_colors(
+        string $prefix,
+        string $label,
+        string $selector,
+        array  $defaults  = [],
+        array  $condition = []
+    ): void {
+        $heading_args = [
+            'label'     => $label,
+            'type'      => Controls_Manager::HEADING,
+            'separator' => 'before',
+        ];
+        if (!empty($condition)) $heading_args['condition'] = $condition;
+        $this->add_control("{$prefix}_heading", $heading_args);
+
+        $bg_args = [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'default'   => $defaults['bg'] ?? '',
+            'selectors' => [$selector => 'background-color: {{VALUE}}'],
+        ];
+        if (!empty($condition)) $bg_args['condition'] = $condition;
+        $this->add_control("{$prefix}_bg", $bg_args);
+
+        $color_args = [
+            'label'     => __('Couleur texte', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'default'   => $defaults['color'] ?? '',
+            'selectors' => [$selector => 'color: {{VALUE}}'],
+        ];
+        if (!empty($condition)) $color_args['condition'] = $condition;
+        $this->add_control("{$prefix}_color", $color_args);
+    }
+
+    /**
+     * Section Style complète pour une icône (Elementor Icons, emoji, SVG).
+     *
+     * Controls générés (prefixés par $prefix) :
+     *   {prefix}_size     RESPONSIVE SLIDER px/em → font-size + width
+     *   {prefix}_color    COLOR → color (+ i, svg fill)
+     *   {prefix}_bg       COLOR → background-color
+     *   {prefix}_padding  DIMENSIONS px/em → padding
+     *   {prefix}_radius   RESPONSIVE SLIDER px/% → border-radius
+     *
+     * @param string $prefix    Préfixe IDs (ex: 'icon')
+     * @param string $label     Label section (ex: 'Style — Icône')
+     * @param string $selector  Sélecteur CSS du wrapper icône
+     * @param array  $defaults  'size' (int px, défaut 24), 'color', 'bg', 'radius' (int px)
+     * @param array  $condition Condition Elementor optionnelle
+     */
+    protected function register_icon_style_section(
+        string $prefix,
+        string $label,
+        string $selector,
+        array  $defaults  = [],
+        array  $condition = []
+    ): void {
+        $section_args = ['label' => $label, 'tab' => Controls_Manager::TAB_STYLE];
+        if (!empty($condition)) $section_args['condition'] = $condition;
+        $this->start_controls_section("style_{$prefix}", $section_args);
+
+        $size = $defaults['size'] ?? 24;
+        $this->add_responsive_control("{$prefix}_size", [
+            'label'      => __('Taille', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px', 'em'],
+            'range'      => ['px' => ['min' => 12, 'max' => 80]],
+            'default'    => ['size' => $size, 'unit' => 'px'],
+            'selectors'  => [$selector => 'font-size: {{SIZE}}{{UNIT}}; width: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        $this->add_control("{$prefix}_color", [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'default'   => $defaults['color'] ?? '',
+            'selectors' => [
+                $selector           => 'color: {{VALUE}}',
+                "{$selector} i"     => 'color: {{VALUE}}',
+                "{$selector} svg"   => 'fill: {{VALUE}}; color: {{VALUE}}',
+            ],
+        ]);
+
+        $this->add_control("{$prefix}_bg", [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'default'   => $defaults['bg'] ?? '',
+            'selectors' => [$selector => 'background-color: {{VALUE}}'],
+        ]);
+
+        $this->add_responsive_control("{$prefix}_padding", [
+            'label'      => __('Padding', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', 'em'],
+            'selectors'  => [$selector => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+
+        if (isset($defaults['radius'])) {
+            $r_default = ['size' => (int) $defaults['radius'], 'unit' => 'px'];
+        } else {
+            $r_default = [];
+        }
+        $this->add_responsive_control("{$prefix}_radius", [
+            'label'      => __('Border radius', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px', '%'],
+            'default'    => $r_default,
+            'selectors'  => [$selector => 'border-radius: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        $this->end_controls_section();
+    }
+
     protected function register_separator_controls(
         string $prefix,
         string $label,

@@ -213,31 +213,20 @@ class DepartureTimes extends AbstractBtWidget {
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
         ]);
 
-        $this->add_responsive_control('badges_gap', [
-            'label'      => __('Espacement badges', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
-            'size_units' => ['px'],
-            'default'    => ['size' => 8, 'unit' => 'px'],
-            'selectors'  => [
-                '{{WRAPPER}} .bt-deptimes__grid'   => 'gap: {{SIZE}}{{UNIT}}',
-                '{{WRAPPER}} .bt-deptimes__inline' => 'gap: {{SIZE}}{{UNIT}}',
-                '{{WRAPPER}} .bt-deptimes__list'   => 'gap: {{SIZE}}{{UNIT}}',
-            ],
-        ]);
+        $this->register_gap_control(
+            'badges_gap',
+            __('Espacement badges', 'blacktenderscore'),
+            ['{{WRAPPER}} .bt-deptimes__grid', '{{WRAPPER}} .bt-deptimes__inline', '{{WRAPPER}} .bt-deptimes__list'],
+            8
+        );
 
-        $this->add_control('season_badge_bg', [
-            'label'     => __('Fond badge saison', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-deptimes__season-badge' => 'background-color: {{VALUE}}'],
-            'condition' => ['show_season_badge' => 'yes'],
-        ]);
-
-        $this->add_control('season_badge_color', [
-            'label'     => __('Texte badge saison', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-deptimes__season-badge' => 'color: {{VALUE}}'],
-            'condition' => ['show_season_badge' => 'yes'],
-        ]);
+        $this->register_badge_colors(
+            'season_badge',
+            __('Badge saison', 'blacktenderscore'),
+            '{{WRAPPER}} .bt-deptimes__season-badge',
+            [],
+            ['show_season_badge' => 'yes']
+        );
 
         $this->end_controls_section();
 
@@ -323,7 +312,7 @@ class DepartureTimes extends AbstractBtWidget {
 
         if (!$has_times && !$has_depart) {
             if ($this->is_edit_mode()) {
-                echo '<p class="bt-widget-placeholder">Aucun horaire ni point de départ trouvé.</p>';
+                $this->render_placeholder(__('Aucun horaire ni point de départ trouvé.', 'blacktenderscore'));
             }
             return;
         }

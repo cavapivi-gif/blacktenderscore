@@ -19,11 +19,14 @@ defined('ABSPATH') || exit;
  *  - Scalaire (number, text)    → valeur brute
  *  - Champ non renseigné        → la partie est omise (pas de séparateur orphelin)
  */
-class Tag_Acf_Range extends Abstract_BT_Tag {
+class Tag_Acf_Range extends Abstract_Range_Tag {
 
     public function get_name():       string { return 'bt-acf-range'; }
     public function get_title():      string { return 'BT: Plage de champs ACF'; }
     public function get_categories(): array  { return ['text', 'number']; }
+
+    protected function sides(): array                { return [1, 2]; }
+    protected function with_taxonomy_fallback(): bool { return true; }
 
     // ── Controls ──────────────────────────────────────────────────────────────
 
@@ -116,41 +119,4 @@ class Tag_Acf_Range extends Abstract_BT_Tag {
         ]);
     }
 
-    // ── Render ────────────────────────────────────────────────────────────────
-
-    public function render(): void {
-        $post_id  = (int) get_the_ID();
-        $sep      = (string) ($this->get_settings('separator') ?: ' - ');
-        $fallback = (string) ($this->get_settings('fallback')  ?? '');
-
-        $parts = [];
-
-        foreach ([1, 2] as $n) {
-            $key = trim((string) ($this->get_settings("field_{$n}") ?? ''));
-            if (!$key) continue;
-
-            $raw = function_exists('get_field') ? get_field($key, $post_id) : null;
-
-            // Fallback taxonomie WP native
-            if (empty($raw) && $raw !== '0' && $raw !== 0) {
-                $native = get_the_terms($post_id, $key);
-                if (is_array($native) && !empty($native)) $raw = $native;
-            }
-
-            $str = $this->acf_scalar($raw);
-            if ($str === '') continue;
-
-            $prefix = (string) ($this->get_settings("prefix_{$n}") ?? '');
-            $suffix = (string) ($this->get_settings("suffix_{$n}") ?? '');
-
-            $parts[] = $prefix . $str . $suffix;
-        }
-
-        if (empty($parts)) {
-            if ($fallback !== '') echo esc_html($fallback);
-            return;
-        }
-
-        echo esc_html(implode($sep, $parts));
-    }
 }

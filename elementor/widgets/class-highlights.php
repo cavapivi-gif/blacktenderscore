@@ -5,15 +5,18 @@ use BlackTenders\Elementor\AbstractBtWidget;
 use BlackTenders\Elementor\Traits\BtSharedControls;
 use Elementor\Controls_Manager;
 use Elementor\Icons_Manager;
+use Elementor\Repeater;
 
 defined('ABSPATH') || exit;
 
 /**
  * Widget Elementor — Points forts.
  *
- * Repeater ACF (highlight_icon, highlight_title, highlight_desc)
- * en grille ou liste, avec Elementor Icons comme icône de fallback
- * et styles via les méthodes partagées du trait.
+ * Source : ACF repeater (noms de sous-champs configurables)
+ *       OU Repeater natif Elementor (mode manuel, dynamic tags supportés).
+ *
+ * Layouts : grille | liste.
+ * Icône : gauche, droite ou au-dessus du texte.
  */
 class Highlights extends AbstractBtWidget {
 
@@ -38,65 +41,128 @@ class Highlights extends AbstractBtWidget {
             'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
-        $this->add_control('acf_field', [
-            'label'   => __('Champ ACF repeater', 'blacktenderscore'),
-            'type'    => Controls_Manager::TEXT,
-            'default' => 'exp_highlights',
+        $this->add_control('data_source', [
+            'label'   => __('Source des données', 'blacktenderscore'),
+            'type'    => Controls_Manager::CHOOSE,
+            'options' => [
+                'acf'    => ['title' => __('ACF', 'blacktenderscore'),    'icon' => 'eicon-database'],
+                'static' => ['title' => __('Manuel', 'blacktenderscore'), 'icon' => 'eicon-editor-list-ul'],
+            ],
+            'default' => 'acf',
+            'toggle'  => false,
         ]);
 
-        $this->register_section_title_controls(['title' => __('Points forts', 'blacktenderscore')]);
+        // ── Mode ACF ──────────────────────────────────────────────────────
+        $this->add_control('acf_field', [
+            'label'     => __('Champ ACF repeater', 'blacktenderscore'),
+            'type'      => Controls_Manager::TEXT,
+            'default'   => 'exp_highlights',
+            'dynamic'   => ['active' => true],
+            'condition' => ['data_source' => 'acf'],
+        ]);
 
         $this->add_control('max_items', [
-            'label'   => __('Nombre max d\'éléments', 'blacktenderscore'),
-            'type'    => Controls_Manager::NUMBER,
-            'min'     => 1,
-            'max'     => 50,
-            'default' => 12,
+            'label'     => __('Nombre max d\'éléments', 'blacktenderscore'),
+            'type'      => Controls_Manager::NUMBER,
+            'min'       => 1,
+            'max'       => 50,
+            'default'   => 12,
+            'condition' => ['data_source' => 'acf'],
         ]);
 
         $this->add_control('sf_icon', [
-            'label'   => __('Sous-champ icône (emoji/texte)', 'blacktenderscore'),
-            'type'    => Controls_Manager::TEXT,
-            'default' => 'highlight_icon',
+            'label'     => __('Sous-champ icône (emoji/texte)', 'blacktenderscore'),
+            'type'      => Controls_Manager::TEXT,
+            'default'   => 'highlight_icon',
+            'dynamic'   => ['active' => true],
+            'condition' => ['data_source' => 'acf'],
         ]);
 
         $this->add_control('sf_title', [
-            'label'   => __('Sous-champ titre', 'blacktenderscore'),
-            'type'    => Controls_Manager::TEXT,
-            'default' => 'highlight_title',
+            'label'     => __('Sous-champ titre', 'blacktenderscore'),
+            'type'      => Controls_Manager::TEXT,
+            'default'   => 'highlight_title',
+            'dynamic'   => ['active' => true],
+            'condition' => ['data_source' => 'acf'],
         ]);
 
         $this->add_control('sf_desc', [
-            'label'   => __('Sous-champ description', 'blacktenderscore'),
-            'type'    => Controls_Manager::TEXT,
-            'default' => 'highlight_desc',
+            'label'     => __('Sous-champ description', 'blacktenderscore'),
+            'type'      => Controls_Manager::TEXT,
+            'default'   => 'highlight_desc',
+            'dynamic'   => ['active' => true],
+            'condition' => ['data_source' => 'acf'],
         ]);
 
         $this->add_control('separator_icon_fallback', [
-            'label'     => __('─────── Icône de fallback ───────', 'blacktenderscore'),
+            'label'     => __('Icône de fallback (si sous-champ vide)', 'blacktenderscore'),
             'type'      => Controls_Manager::HEADING,
             'separator' => 'before',
+            'condition' => ['data_source' => 'acf'],
         ]);
 
         $this->add_control('default_icon', [
-            'label'       => __('Icône par défaut (si champ ACF vide)', 'blacktenderscore'),
-            'description' => __('Utilisée quand le champ emoji/icône ACF est vide.', 'blacktenderscore'),
-            'type'        => Controls_Manager::ICONS,
-            'default'     => ['value' => 'fas fa-check', 'library' => 'fa-solid'],
-            'skin'        => 'inline',
+            'label'     => __('Icône Elementor par défaut', 'blacktenderscore'),
+            'type'      => Controls_Manager::ICONS,
+            'default'   => ['value' => 'fas fa-check', 'library' => 'fa-solid'],
+            'skin'      => 'inline',
+            'condition' => ['data_source' => 'acf'],
         ]);
 
-        $this->add_control('separator_visibility', [
-            'label'     => __('─────── Visibilité ───────', 'blacktenderscore'),
+        // ── Mode manuel (Repeater natif) ──────────────────────────────────
+        $repeater = new Repeater();
+
+        $repeater->add_control('item_icon', [
+            'label'   => __('Icône', 'blacktenderscore'),
+            'type'    => Controls_Manager::ICONS,
+            'default' => ['value' => 'fas fa-check', 'library' => 'fa-solid'],
+            'skin'    => 'inline',
+        ]);
+
+        $repeater->add_control('item_title', [
+            'label'       => __('Titre', 'blacktenderscore'),
+            'type'        => Controls_Manager::TEXT,
+            'default'     => '',
+            'label_block' => true,
+            'dynamic'     => ['active' => true],
+        ]);
+
+        $repeater->add_control('item_desc', [
+            'label'       => __('Description', 'blacktenderscore'),
+            'type'        => Controls_Manager::TEXTAREA,
+            'default'     => '',
+            'label_block' => true,
+            'dynamic'     => ['active' => true],
+        ]);
+
+        $this->add_control('static_items', [
+            'label'       => __('Éléments', 'blacktenderscore'),
+            'type'        => Controls_Manager::REPEATER,
+            'fields'      => $repeater->get_controls(),
+            'default'     => [
+                ['item_icon' => ['value' => 'fas fa-check', 'library' => 'fa-solid'], 'item_title' => __('Point fort 1', 'blacktenderscore'), 'item_desc' => ''],
+                ['item_icon' => ['value' => 'fas fa-check', 'library' => 'fa-solid'], 'item_title' => __('Point fort 2', 'blacktenderscore'), 'item_desc' => ''],
+                ['item_icon' => ['value' => 'fas fa-check', 'library' => 'fa-solid'], 'item_title' => __('Point fort 3', 'blacktenderscore'), 'item_desc' => ''],
+            ],
+            'title_field' => '{{{ item_title || "Item" }}}',
+            'condition'   => ['data_source' => 'static'],
+        ]);
+
+        // ── Titre de section + visibilité ─────────────────────────────────
+        $this->add_control('separator_section', [
+            'label'     => __('Titre & Visibilité', 'blacktenderscore'),
             'type'      => Controls_Manager::HEADING,
             'separator' => 'before',
         ]);
+
+        $this->register_section_title_controls(['title' => __('Points forts', 'blacktenderscore')]);
 
         $this->add_control('show_icon', [
             'label'        => __('Afficher l\'icône', 'blacktenderscore'),
             'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
+            'separator'    => 'before',
         ]);
 
         $this->add_control('show_title', [
@@ -144,7 +210,7 @@ class Highlights extends AbstractBtWidget {
         ]);
 
         $this->add_responsive_control('gap', [
-            'label'      => __('Espacement', 'blacktenderscore'),
+            'label'      => __('Espacement entre items', 'blacktenderscore'),
             'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'default'    => ['size' => 16, 'unit' => 'px'],
@@ -154,51 +220,68 @@ class Highlights extends AbstractBtWidget {
             ],
         ]);
 
+        // ── Position & alignement icône ───────────────────────────────────
         $this->add_control('icon_position', [
-            'label'   => __('Position de l\'icône', 'blacktenderscore'),
-            'type'    => Controls_Manager::CHOOSE,
-            'options' => [
-                'row'    => ['title' => __('Gauche du texte', 'blacktenderscore'), 'icon' => 'eicon-h-align-left'],
-                'column' => ['title' => __('Au-dessus du texte', 'blacktenderscore'), 'icon' => 'eicon-v-align-top'],
+            'label'     => __('Position icône', 'blacktenderscore'),
+            'type'      => Controls_Manager::CHOOSE,
+            'options'   => [
+                'row'         => ['title' => __('Gauche',    'blacktenderscore'), 'icon' => 'eicon-h-align-left'],
+                'row-reverse' => ['title' => __('Droite',    'blacktenderscore'), 'icon' => 'eicon-h-align-right'],
+                'column'      => ['title' => __('Au-dessus', 'blacktenderscore'), 'icon' => 'eicon-v-align-top'],
             ],
             'default'   => 'row',
             'condition' => ['show_icon' => 'yes'],
             'selectors' => ['{{WRAPPER}} .bt-highlights__item' => 'flex-direction: {{VALUE}}'],
+            'separator' => 'before',
         ]);
 
+        // Alignement vertical icône ↕ (mode row / row-reverse uniquement)
         $this->add_control('icon_valign', [
-            'label'   => __('Alignement vertical icône', 'blacktenderscore'),
-            'type'    => Controls_Manager::CHOOSE,
-            'options' => [
-                'flex-start' => ['title' => __('Haut', 'blacktenderscore'), 'icon' => 'eicon-v-align-top'],
+            'label'     => __('Alignement vertical', 'blacktenderscore'),
+            'type'      => Controls_Manager::CHOOSE,
+            'options'   => [
+                'flex-start' => ['title' => __('Haut',   'blacktenderscore'), 'icon' => 'eicon-v-align-top'],
                 'center'     => ['title' => __('Centre', 'blacktenderscore'), 'icon' => 'eicon-v-align-middle'],
-                'flex-end'   => ['title' => __('Bas', 'blacktenderscore'), 'icon' => 'eicon-v-align-bottom'],
+                'flex-end'   => ['title' => __('Bas',    'blacktenderscore'), 'icon' => 'eicon-v-align-bottom'],
             ],
             'default'   => 'flex-start',
-            'condition' => ['show_icon' => 'yes', 'icon_position' => 'row'],
+            'condition' => ['show_icon' => 'yes', 'icon_position' => ['row', 'row-reverse']],
             'selectors' => ['{{WRAPPER}} .bt-highlights__item' => 'align-items: {{VALUE}}'],
         ]);
 
-        $this->add_control('content_align', [
-            'label'   => __('Alignement du texte', 'blacktenderscore'),
-            'type'    => Controls_Manager::CHOOSE,
-            'options' => [
+        // Alignement horizontal ↔ (mode column uniquement)
+        $this->add_control('icon_halign', [
+            'label'     => __('Alignement horizontal', 'blacktenderscore'),
+            'type'      => Controls_Manager::CHOOSE,
+            'options'   => [
+                'flex-start' => ['title' => __('Gauche', 'blacktenderscore'), 'icon' => 'eicon-text-align-left'],
+                'center'     => ['title' => __('Centre', 'blacktenderscore'), 'icon' => 'eicon-text-align-center'],
+                'flex-end'   => ['title' => __('Droite', 'blacktenderscore'), 'icon' => 'eicon-text-align-right'],
+            ],
+            'default'   => 'flex-start',
+            'condition' => ['show_icon' => 'yes', 'icon_position' => 'column'],
+            'selectors' => ['{{WRAPPER}} .bt-highlights__item' => 'align-items: {{VALUE}}'],
+        ]);
+
+        // Alignement texte (mode column, indépendant de l'alignement flex)
+        $this->add_control('content_text_align', [
+            'label'     => __('Alignement texte', 'blacktenderscore'),
+            'type'      => Controls_Manager::CHOOSE,
+            'options'   => [
                 'left'   => ['title' => __('Gauche', 'blacktenderscore'), 'icon' => 'eicon-text-align-left'],
                 'center' => ['title' => __('Centre', 'blacktenderscore'), 'icon' => 'eicon-text-align-center'],
                 'right'  => ['title' => __('Droite', 'blacktenderscore'), 'icon' => 'eicon-text-align-right'],
             ],
-            'default'   => '',
             'condition' => ['icon_position' => 'column'],
-            'selectors' => [
-                '{{WRAPPER}} .bt-highlights__item' => 'align-items: {{VALUE}}; text-align: {{VALUE}}',
-            ],
+            'selectors' => ['{{WRAPPER}} .bt-highlights__content' => 'text-align: {{VALUE}}'],
         ]);
 
+        // Espace icône ↔ texte (gap dans le flex item)
         $this->add_responsive_control('icon_spacing', [
-            'label'      => __('Espacement icône ↔ texte', 'blacktenderscore'),
+            'label'      => __('Espace icône ↔ texte', 'blacktenderscore'),
             'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px', 'em'],
-            'range'      => ['px' => ['min' => 0, 'max' => 40]],
+            'range'      => ['px' => ['min' => 0, 'max' => 48]],
             'default'    => ['size' => 12, 'unit' => 'px'],
             'condition'  => ['show_icon' => 'yes'],
             'selectors'  => ['{{WRAPPER}} .bt-highlights__item' => 'gap: {{SIZE}}{{UNIT}}'],
@@ -215,51 +298,14 @@ class Highlights extends AbstractBtWidget {
             '{{WRAPPER}} .bt-highlights__item'
         );
 
-        // Style — Icône
-        $this->start_controls_section('style_icon', [
-            'label'     => __('Style — Icône', 'blacktenderscore'),
-            'tab'       => Controls_Manager::TAB_STYLE,
-            'condition' => ['show_icon' => 'yes'],
-        ]);
+        $this->register_icon_style_section(
+            'icon',
+            __('Style — Icône', 'blacktenderscore'),
+            '{{WRAPPER}} .bt-highlights__icon',
+            ['size' => 28],
+            ['show_icon' => 'yes']
+        );
 
-        $this->add_responsive_control('icon_size', [
-            'label'      => __('Taille', 'blacktenderscore'),
-            'type'       => Controls_Manager::SLIDER,
-            'size_units' => ['px', 'em'],
-            'range'      => ['px' => ['min' => 12, 'max' => 80]],
-            'default'    => ['size' => 28, 'unit' => 'px'],
-            'selectors'  => ['{{WRAPPER}} .bt-highlights__icon' => 'font-size: {{SIZE}}{{UNIT}}; width: {{SIZE}}{{UNIT}}'],
-        ]);
-
-        $this->add_control('icon_color', [
-            'label'     => __('Couleur', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-highlights__icon, {{WRAPPER}} .bt-highlights__icon i, {{WRAPPER}} .bt-highlights__icon svg' => 'color: {{VALUE}}; fill: {{VALUE}}'],
-        ]);
-
-        $this->add_control('icon_bg', [
-            'label'     => __('Fond', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-highlights__icon' => 'background-color: {{VALUE}}'],
-        ]);
-
-        $this->add_responsive_control('icon_padding', [
-            'label'      => __('Padding', 'blacktenderscore'),
-            'type'       => Controls_Manager::DIMENSIONS,
-            'size_units' => ['px', 'em'],
-            'selectors'  => ['{{WRAPPER}} .bt-highlights__icon' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
-        ]);
-
-        $this->add_responsive_control('icon_radius', [
-            'label'      => __('Border radius', 'blacktenderscore'),
-            'type'       => Controls_Manager::SLIDER,
-            'size_units' => ['px', '%'],
-            'selectors'  => ['{{WRAPPER}} .bt-highlights__icon' => 'border-radius: {{SIZE}}{{UNIT}}'],
-        ]);
-
-        $this->end_controls_section();
-
-        // Typographies via trait
         $this->register_typography_section(
             'item_title',
             __('Style — Titre item', 'blacktenderscore'),
@@ -282,43 +328,37 @@ class Highlights extends AbstractBtWidget {
     // ── Render ───────────────────────────────────────────────────────────────
 
     protected function render(): void {
-        $s = $this->get_settings_for_display();
+        $s      = $this->get_settings_for_display();
+        $source = $s['data_source'] ?? 'acf';
 
-        if (!$this->acf_required()) return;
+        $rows = $source === 'static'
+            ? $this->resolve_static_rows($s)
+            : $this->resolve_acf_rows($s);
 
-        $field_name = sanitize_text_field($s['acf_field'] ?: 'exp_highlights');
-        $rows = $this->get_acf_rows($field_name, __('Aucun point fort trouvé.', 'blacktenderscore'));
         if (!$rows) return;
 
-        $max_items = max(1, (int) ($s['max_items'] ?: 12));
-        $rows      = array_slice($rows, 0, $max_items);
-        $sf_icon   = sanitize_text_field($s['sf_icon']  ?: 'highlight_icon');
-        $sf_title  = sanitize_text_field($s['sf_title'] ?: 'highlight_title');
-        $sf_desc   = sanitize_text_field($s['sf_desc']  ?: 'highlight_desc');
-        $layout    = $s['layout'] ?: 'grid';
-        $wrap_cls  = $layout === 'list' ? 'bt-highlights__list' : 'bt-highlights__grid';
+        $layout   = $s['layout'] ?: 'grid';
+        $wrap_cls = $layout === 'list' ? 'bt-highlights__list' : 'bt-highlights__grid';
 
         echo '<div class="bt-highlights">';
-
         $this->render_section_title($s, 'bt-highlights__section-title');
-
         echo "<div class=\"{$wrap_cls}\">";
 
         foreach ($rows as $row) {
-            $icon  = $row[$sf_icon]  ?? '';
-            $title = $row[$sf_title] ?? '';
-            $desc  = $row[$sf_desc]  ?? '';
+            $icon  = $row['icon'];
+            $title = $row['title'];
+            $desc  = $row['desc'];
 
             echo '<div class="bt-highlights__item">';
 
             if ($s['show_icon'] === 'yes') {
                 echo '<span class="bt-highlights__icon" aria-hidden="true">';
-                if ($icon) {
-                    // Emoji ou texte depuis ACF
+                if (is_array($icon) && !empty($icon['value'])) {
+                    // Icône Elementor (repeater statique ou fallback ACF)
+                    Icons_Manager::render_icon($icon, ['aria-hidden' => 'true']);
+                } elseif (is_string($icon) && $icon !== '') {
+                    // Emoji ou texte brut depuis ACF
                     echo esc_html($icon);
-                } elseif (!empty($s['default_icon']['value'])) {
-                    // Icône Elementor (fa, eicon...)
-                    Icons_Manager::render_icon($s['default_icon'], ['aria-hidden' => 'true']);
                 }
                 echo '</span>';
             }
@@ -337,7 +377,66 @@ class Highlights extends AbstractBtWidget {
             echo '</div>'; // .bt-highlights__item
         }
 
-        echo '</div>'; // grid/list
+        echo '</div>'; // grid / list
         echo '</div>'; // .bt-highlights
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /**
+     * Résout les rows depuis un repeater ACF.
+     * L'icône est une string (emoji/texte ACF) ou un array ICONS (fallback Elementor).
+     */
+    private function resolve_acf_rows(array $s): ?array {
+        if (!$this->acf_required()) return null;
+
+        $field_name = sanitize_text_field($s['acf_field'] ?: 'exp_highlights');
+        $raw = $this->get_acf_rows($field_name, __('Aucun point fort trouvé.', 'blacktenderscore'));
+        if (!$raw) return null;
+
+        $max      = max(1, (int) ($s['max_items'] ?: 12));
+        $sf_icon  = sanitize_text_field($s['sf_icon']  ?: 'highlight_icon');
+        $sf_title = sanitize_text_field($s['sf_title'] ?: 'highlight_title');
+        $sf_desc  = sanitize_text_field($s['sf_desc']  ?: 'highlight_desc');
+        $fallback = $s['default_icon'] ?? [];
+
+        $rows = [];
+        foreach (array_slice($raw, 0, $max) as $row) {
+            $icon = $row[$sf_icon] ?? '';
+            $rows[] = [
+                // Priorité : valeur ACF (string) → icône Elementor de fallback
+                'icon'  => ($icon !== '') ? $icon : $fallback,
+                'title' => $row[$sf_title] ?? '',
+                'desc'  => $row[$sf_desc]  ?? '',
+            ];
+        }
+
+        return $rows ?: null;
+    }
+
+    /**
+     * Résout les rows depuis le Repeater natif Elementor.
+     * L'icône est toujours un array ICONS.
+     */
+    private function resolve_static_rows(array $s): ?array {
+        $items = $s['static_items'] ?? [];
+
+        if (empty($items)) {
+            if ($this->is_edit_mode()) {
+                $this->render_placeholder(__('Ajoutez des éléments dans l\'onglet Contenu.', 'blacktenderscore'));
+            }
+            return null;
+        }
+
+        $rows = [];
+        foreach ($items as $item) {
+            $rows[] = [
+                'icon'  => $item['item_icon']  ?? [],
+                'title' => $item['item_title'] ?? '',
+                'desc'  => $item['item_desc']  ?? '',
+            ];
+        }
+
+        return $rows;
     }
 }

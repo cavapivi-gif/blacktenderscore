@@ -24,10 +24,13 @@ require_once __DIR__ . '/trait-bt-content-controls.php';
  *   register_section_title_style($selector)         — section complète
  *
  * BtLayoutControls (trait-bt-layout-controls.php)
- *   register_grid_layout_controls($sel, $defaults, $label) — section complète
+ *   register_grid_layout_controls($sel, $defaults, $label)              — section complète
  *   register_box_style($prefix, $label, $sel, $defaults, $condition)
  *   register_separator_controls($prefix, $label, $sel, $defaults, $condition)
  *   register_stars_style($prefix, $label, $sel, $defaults, $condition)
+ *   register_icon_style_section($prefix, $label, $sel, $defaults, $condition) — section complète icône
+ *   register_gap_control($control_id, $label, $selectors[], $default)   — inline (section ouverte)
+ *   register_badge_colors($prefix, $label, $sel, $defaults, $condition) — inline (section ouverte)
  *
  * BtNavControls (trait-bt-nav-controls.php)
  *   register_tabs_nav_style($prefix, $label, $tab_sel, $active_sel, $tablist_sel, $condition, $options)
