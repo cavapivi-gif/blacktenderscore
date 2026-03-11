@@ -94,13 +94,25 @@ class Highlights extends AbstractBtWidget {
             'condition' => ['data_source' => 'acf'],
         ]);
 
+        $this->add_control('icon_fallback_mode', [
+            'label'     => __('Quand l\'icône ACF est vide', 'blacktenderscore'),
+            'type'      => Controls_Manager::SELECT,
+            'options'   => [
+                'icon' => __('Afficher une icône par défaut', 'blacktenderscore'),
+                'none' => __('Ne rien afficher', 'blacktenderscore'),
+            ],
+            'default'   => 'icon',
+            'separator' => 'before',
+            'condition' => ['data_source' => 'acf'],
+        ]);
+
         $this->add_control('default_icon', [
-            'label'       => __('Icône de fallback (emoji ou texte)', 'blacktenderscore'),
+            'label'       => __('Icône de fallback', 'blacktenderscore'),
             'description' => __('Affiché si le sous-champ icône ACF est vide.', 'blacktenderscore'),
-            'type'        => Controls_Manager::TEXT,
-            'default'     => '✓',
-            'separator'   => 'before',
-            'condition'   => ['data_source' => 'acf'],
+            'type'        => Controls_Manager::ICONS,
+            'default'     => ['value' => 'fas fa-check', 'library' => 'fa-solid'],
+            'skin'        => 'inline',
+            'condition'   => ['data_source' => 'acf', 'icon_fallback_mode' => 'icon'],
         ]);
 
         // ── Mode manuel (Repeater natif) ──────────────────────────────────
@@ -281,6 +293,17 @@ class Highlights extends AbstractBtWidget {
             'selectors'  => ['{{WRAPPER}} .bt-highlights__item' => 'gap: {{SIZE}}{{UNIT}}'],
         ]);
 
+        // Espace titre ↔ description
+        $this->add_responsive_control('content_spacing', [
+            'label'      => __('Espace titre ↔ description', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px', 'em'],
+            'range'      => ['px' => ['min' => 0, 'max' => 40]],
+            'default'    => ['size' => 4, 'unit' => 'px'],
+            'selectors'  => ['{{WRAPPER}} .bt-highlights__desc' => 'margin-top: {{SIZE}}{{UNIT}}'],
+            'condition'  => ['show_desc' => 'yes'],
+        ]);
+
         $this->end_controls_section();
 
         // ── Styles via traits ─────────────────────────────────────────────
@@ -346,15 +369,18 @@ class Highlights extends AbstractBtWidget {
             echo '<div class="bt-highlights__item">';
 
             if ($s['show_icon'] === 'yes') {
-                echo '<span class="bt-highlights__icon" aria-hidden="true">';
-                if (is_array($icon) && !empty($icon['value'])) {
-                    // Icône Elementor (repeater statique ou fallback ACF)
-                    Icons_Manager::render_icon($icon, ['aria-hidden' => 'true']);
-                } elseif (is_string($icon) && $icon !== '') {
-                    // Emoji ou texte brut depuis ACF
-                    echo esc_html($icon);
+                $has_icon = (is_array($icon) && !empty($icon['value']))
+                         || (is_string($icon) && $icon !== '');
+
+                if ($has_icon || $icon !== null) {
+                    echo '<span class="bt-highlights__icon" aria-hidden="true">';
+                    if (is_array($icon) && !empty($icon['value'])) {
+                        Icons_Manager::render_icon($icon, ['aria-hidden' => 'true']);
+                    } elseif (is_string($icon) && $icon !== '') {
+                        echo esc_html($icon);
+                    }
+                    echo '</span>';
                 }
-                echo '</span>';
             }
 
             echo '<div class="bt-highlights__content">';
@@ -392,14 +418,27 @@ class Highlights extends AbstractBtWidget {
         $sf_icon  = sanitize_text_field($s['sf_icon']  ?: 'highlight_icon');
         $sf_title = sanitize_text_field($s['sf_title'] ?: 'highlight_title');
         $sf_desc  = sanitize_text_field($s['sf_desc']  ?: 'highlight_desc');
-        $fallback = $s['default_icon'] ?? [];
+        // Normalize fallback based on mode
+        $fallback_mode = $s['icon_fallback_mode'] ?? 'icon';
+        if ($fallback_mode === 'none') {
+            $fallback = null;
+        } else {
+            $fallback_raw = $s['default_icon'] ?? [];
+            if (is_string($fallback_raw) && $fallback_raw !== '') {
+                $fallback = $fallback_raw;
+            } elseif (is_array($fallback_raw) && !empty($fallback_raw['value'])) {
+                $fallback = $fallback_raw;
+            } else {
+                $fallback = ['value' => 'fas fa-check', 'library' => 'fa-solid'];
+            }
+        }
 
         $rows = [];
         foreach (array_slice($raw, 0, $max) as $row) {
-            $icon = $row[$sf_icon] ?? '';
+            $icon_raw = $row[$sf_icon] ?? '';
+            $icon_str = is_string($icon_raw) ? trim($icon_raw) : '';
             $rows[] = [
-                // Priorité : valeur ACF (string) → icône Elementor de fallback
-                'icon'  => ($icon !== '') ? $icon : $fallback,
+                'icon'  => ($icon_str !== '') ? $icon_str : $fallback,
                 'title' => $row[$sf_title] ?? '',
                 'desc'  => $row[$sf_desc]  ?? '',
             ];

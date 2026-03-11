@@ -195,7 +195,17 @@ class PricingTabs extends AbstractBtWidget {
             '{{WRAPPER}} .bt-pricing__tab--active',
             '{{WRAPPER}} .bt-pricing__tablist',
             [],
-            ['with_hover' => true, 'with_radius' => true, 'with_indicator' => true]
+            [
+                'with_hover'      => true,
+                'with_radius'     => true,
+                'with_indicator'  => true,
+                'with_direction'  => true,
+                'with_justify'    => true,
+                'with_scroll'     => true,
+                'with_breakpoint' => true,
+                'with_panel'      => true,
+                'panel_sel'       => '{{WRAPPER}} .bt-pricing__panel--active',
+            ]
         );
 
         $this->register_panel_style('panel', 'Style — Panneau', '{{WRAPPER}} .bt-pricing__panel--active');
@@ -452,16 +462,8 @@ class PricingTabs extends AbstractBtWidget {
             self::$regiondo_script_printed = true;
         }
 
-        // Load custom CSS from widget_map settings
-        $custom_css = '';
-        $widget_map = get_option('bt_widget_map', []);
-        foreach ($widget_map as $pid => $config) {
-            $wid = is_array($config) ? ($config['widget_id'] ?? '') : $config;
-            if ($wid === $uuid && is_array($config) && !empty($config['custom_css'])) {
-                $custom_css = $config['custom_css'];
-                break;
-            }
-        }
+        // Load global custom CSS for all booking widgets
+        $custom_css = get_option('bt_booking_custom_css', '');
 
         ob_start(); ?>
         <div class="bt-pricing__booking">

@@ -75,6 +75,13 @@ class RestApi {
             'permission_callback' => $auth,
         ]);
 
+        // Avis Regiondo
+        register_rest_route(self::NS, '/reviews', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'get_reviews'],
+            'permission_callback' => $auth,
+        ]);
+
         // Dashboard (agrégation)
         register_rest_route(self::NS, '/dashboard', [
             'methods'             => 'GET',
@@ -86,6 +93,13 @@ class RestApi {
         register_rest_route(self::NS, '/test-connection', [
             'methods'             => 'GET',
             'callback'            => [$this, 'test_connection'],
+            'permission_callback' => $auth,
+        ]);
+
+        // Diagnostic complet (réponses brutes de chaque endpoint)
+        register_rest_route(self::NS, '/diagnostic', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'run_diagnostic'],
             'permission_callback' => $auth,
         ]);
 
@@ -123,19 +137,6 @@ class RestApi {
         $locale   = $req->get_param('locale') ?: 'fr-FR';
         $client   = new Client();
         $products = $client->get_products($locale);
-
-        // Enrichit avec le post WP lié (si sync déjà fait)
-        foreach ($products as &$p) {
-            $posts = get_posts([
-                'post_type'  => get_option('bt_post_types', ['excursion']),
-                'meta_key'   => '_bt_regiondo_product_id',
-                'meta_value' => $p['product_id'],
-                'numberposts'=> 1,
-                'fields'     => 'ids',
-            ]);
-            $p['wp_post_id']  = $posts[0] ?? null;
-            $p['wp_post_url'] = $posts[0] ? get_edit_post_link($posts[0], 'raw') : null;
-        }
 
         return rest_ensure_response(['data' => $products, 'total' => count($products)]);
     }
@@ -230,6 +231,15 @@ class RestApi {
         return rest_ensure_response(['success' => $success]);
     }
 
+    public function get_reviews(\WP_REST_Request $req): \WP_REST_Response {
+        $client = new Client();
+        $data   = $client->get_reviews(array_filter([
+            'product_id' => $req->get_param('product_id'),
+            'limit'      => (int) ($req->get_param('limit') ?: 250),
+        ]));
+        return rest_ensure_response($data);
+    }
+
     public function get_dashboard(\WP_REST_Request $req): \WP_REST_Response {
         $client = new Client();
 
@@ -278,11 +288,11 @@ class RestApi {
             }
         }
 
-        // Calculate revenue from confirmed bookings
+        // Calculate revenue (exclude canceled/rejected)
         $revenue_month = 0;
         foreach (($bookings['data'] ?? []) as $b) {
-            $status = $b['status'] ?? '';
-            if ($status === 'confirmed' || $status === '') {
+            $status = strtolower($b['status'] ?? '');
+            if (!in_array($status, ['canceled', 'rejected', 'cancelled'], true)) {
                 $revenue_month += floatval($b['total_price'] ?? 0);
             }
         }
@@ -329,6 +339,32 @@ class RestApi {
         }
     }
 
+    public function run_diagnostic(): \WP_REST_Response {
+        $client = new Client();
+
+        $endpoints = [
+            ['label' => 'Products',            'path' => 'products',              'params' => ['limit' => 5, 'store_locale' => 'fr-FR']],
+            ['label' => 'Partner Bookings',     'path' => 'partner/bookings',      'params' => ['limit' => 5, 'type' => 'offline_reservation,booking,voucher,redeem']],
+            ['label' => 'Supplier Bookings',    'path' => 'supplier/bookings',     'params' => ['limit' => 5, 'type' => 'offline_reservation,booking,voucher,redeem']],
+            ['label' => 'Partner Sold Items',   'path' => 'partner/solditems',     'params' => ['limit' => 5]],
+            ['label' => 'Supplier Sold Items',  'path' => 'supplier/solditems',    'params' => ['limit' => 5]],
+            ['label' => 'Partner CRM',          'path' => 'partner/crmcustomers',  'params' => ['limit' => 5]],
+            ['label' => 'Reviews',              'path' => 'reviews',               'params' => ['limit' => 5]],
+            ['label' => 'Categories',           'path' => 'categories',            'params' => ['limit' => 5]],
+            ['label' => 'Account Locale',       'path' => 'account/locale',        'params' => []],
+        ];
+
+        $results = [];
+        foreach ($endpoints as $ep) {
+            $results[] = array_merge(
+                ['label' => $ep['label']],
+                $client->raw_request($ep['path'], $ep['params'])
+            );
+        }
+
+        return rest_ensure_response(['endpoints' => $results]);
+    }
+
     public function get_settings(): \WP_REST_Response {
         try {
             $products = (new Client())->get_products('fr-FR');
@@ -345,8 +381,9 @@ class RestApi {
             'post_types'     => get_option('bt_post_types', ['excursion']),
             'sync_interval'  => (int) get_option('bt_regiondo_sync_interval', 0),
             'sync_next_run'  => $next ?: null,
-            'widget_map'     => get_option('bt_widget_map', []),
-            'products'       => $products,
+            'widget_map'          => get_option('bt_widget_map', []),
+            'booking_custom_css'  => get_option('bt_booking_custom_css', ''),
+            'products'            => $products,
             'all_post_types' => array_values(array_map(fn($pt) => [
                 'name'  => $pt->name,
                 'label' => $pt->label,
@@ -387,6 +424,17 @@ class RestApi {
                 }
             }
             update_option('bt_widget_map', $clean);
+        }
+        if (isset($body['booking_custom_css'])) {
+            $css = wp_strip_all_tags($body['booking_custom_css']);
+            // Strip CSS-based XSS vectors
+            $css = preg_replace('/expression\s*\(/i', '/* blocked */(', $css);
+            $css = preg_replace('/javascript\s*:/i', '/* blocked */', $css);
+            $css = preg_replace('/-moz-binding\s*:/i', '/* blocked */', $css);
+            $css = preg_replace('/behavior\s*:/i', '/* blocked */', $css);
+            $css = preg_replace('/url\s*\(\s*["\']?\s*data\s*:\s*text\/html/i', 'url(/* blocked */', $css);
+            $css = preg_replace('/@import\s+url/i', '/* blocked */', $css);
+            update_option('bt_booking_custom_css', $css);
         }
         if (isset($body['sync_interval'])) {
             $interval = absint($body['sync_interval']);

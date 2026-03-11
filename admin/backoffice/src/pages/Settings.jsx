@@ -1,7 +1,249 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
 import { api } from '../lib/api'
 import { PageHeader, Input, Textarea, Btn, Notice, Spinner, SectionTitle, Divider, Toggle } from '../components/ui'
+
+/* ── CSS Sanitizer — strips XSS vectors ────────────────────────── */
+const CSS_DANGEROUS = [
+  /expression\s*\(/gi,
+  /javascript\s*:/gi,
+  /-moz-binding\s*:/gi,
+  /behavior\s*:/gi,
+  /url\s*\(\s*["']?\s*data\s*:\s*text\/html/gi,
+  /<\/?script/gi,
+  /<\/?style/gi,
+  /@import\s+url/gi,
+]
+
+function sanitizeCss(raw) {
+  let css = raw
+  for (const pattern of CSS_DANGEROUS) {
+    css = css.replace(pattern, '/* blocked */')
+  }
+  return css
+}
+
+function getCssWarnings(raw) {
+  const warnings = []
+  if (/expression\s*\(/i.test(raw)) warnings.push('expression() bloqué (vecteur XSS IE)')
+  if (/javascript\s*:/i.test(raw)) warnings.push('javascript: bloqué')
+  if (/-moz-binding/i.test(raw)) warnings.push('-moz-binding bloqué')
+  if (/behavior\s*:/i.test(raw)) warnings.push('behavior: bloqué')
+  if (/<script/i.test(raw)) warnings.push('Balise <script> bloquée')
+  if (/@import\s+url/i.test(raw)) warnings.push('@import url() bloqué')
+  return warnings
+}
+
+/* ── CSS Tokenizer + Highlighter (single-pass, no regex overlap) ── */
+const CSS_COLORS = {
+  comment:  '#6a737d',
+  string:   '#032f62',
+  selector: '#22863a',
+  property: '#6f42c1',
+  value:    '#222',
+  number:   '#005cc5',
+  hex:      '#e36209',
+  brace:    '#586069',
+  colon:    '#999',
+  semi:     '#999',
+  atrule:   '#d73a49',
+}
+
+function esc(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+function span(color, text) {
+  return `<span style="color:${color}">${text}</span>`
+}
+
+function highlightCss(code) {
+  if (!code) return ''
+  let out = ''
+  let i = 0
+  const len = code.length
+  // Track whether we're inside { } to distinguish selectors from properties
+  let inBlock = 0
+
+  while (i < len) {
+    // ── Comment /* ... */
+    if (code[i] === '/' && code[i + 1] === '*') {
+      const end = code.indexOf('*/', i + 2)
+      const slice = end === -1 ? code.slice(i) : code.slice(i, end + 2)
+      out += span(CSS_COLORS.comment, esc(slice))
+      i += slice.length
+      continue
+    }
+
+    // ── String "..." or '...'
+    if (code[i] === '"' || code[i] === "'") {
+      const q = code[i]
+      let j = i + 1
+      while (j < len && code[j] !== q) { if (code[j] === '\\') j++; j++ }
+      const slice = code.slice(i, j + 1)
+      out += span(CSS_COLORS.string, esc(slice))
+      i = j + 1
+      continue
+    }
+
+    // ── Braces
+    if (code[i] === '{') { inBlock++; out += span(CSS_COLORS.brace, '{'); i++; continue }
+    if (code[i] === '}') { inBlock = Math.max(0, inBlock - 1); out += span(CSS_COLORS.brace, '}'); i++; continue }
+
+    // ── Semicolon
+    if (code[i] === ';') { out += span(CSS_COLORS.semi, ';'); i++; continue }
+
+    // ── Inside a block: property: value;
+    if (inBlock > 0) {
+      // Whitespace / newlines — pass through
+      if (/\s/.test(code[i])) { out += esc(code[i]); i++; continue }
+
+      // Property name (word-chars and hyphens before a colon)
+      const propMatch = code.slice(i).match(/^([a-zA-Z-]+)(\s*)(:\s*)/)
+      if (propMatch) {
+        out += span(CSS_COLORS.property, esc(propMatch[1]))
+        out += esc(propMatch[2])
+        out += span(CSS_COLORS.colon, esc(propMatch[3]))
+        i += propMatch[0].length
+
+        // Now consume the value until ; or } or end
+        let val = ''
+        while (i < len && code[i] !== ';' && code[i] !== '}') {
+          // Nested comment in value
+          if (code[i] === '/' && code[i + 1] === '*') {
+            // Flush accumulated value
+            if (val) { out += colorizeValue(val); val = '' }
+            const cEnd = code.indexOf('*/', i + 2)
+            const cSlice = cEnd === -1 ? code.slice(i) : code.slice(i, cEnd + 2)
+            out += span(CSS_COLORS.comment, esc(cSlice))
+            i += cSlice.length
+            continue
+          }
+          // String in value
+          if (code[i] === '"' || code[i] === "'") {
+            if (val) { out += colorizeValue(val); val = '' }
+            const q = code[i]
+            let j = i + 1
+            while (j < len && code[j] !== q) { if (code[j] === '\\') j++; j++ }
+            out += span(CSS_COLORS.string, esc(code.slice(i, j + 1)))
+            i = j + 1
+            continue
+          }
+          val += code[i]
+          i++
+        }
+        if (val) out += colorizeValue(val)
+        continue
+      }
+
+      // Fallback: just output the char
+      out += esc(code[i]); i++; continue
+    }
+
+    // ── Outside block: selector or at-rule
+    // @-rule
+    if (code[i] === '@') {
+      let j = i
+      while (j < len && code[j] !== '{' && code[j] !== ';' && code[j] !== '\n') j++
+      out += span(CSS_COLORS.atrule, esc(code.slice(i, j)))
+      i = j
+      continue
+    }
+
+    // Selector: everything until {
+    if (/[a-zA-Z.#:\[\]_*>,~+\-]/.test(code[i])) {
+      let j = i
+      while (j < len && code[j] !== '{' && code[j] !== '}') j++
+      out += span(CSS_COLORS.selector, esc(code.slice(i, j)))
+      i = j
+      continue
+    }
+
+    // Anything else (whitespace, newlines outside blocks)
+    out += esc(code[i]); i++
+  }
+
+  return out
+}
+
+// Colorize a CSS value fragment — highlight #hex and numbers
+function colorizeValue(val) {
+  return esc(val)
+    .replace(/(#[0-9a-fA-F]{3,8})\b/g, `<span style="color:${CSS_COLORS.hex}">$1</span>`)
+    .replace(/\b(\d+\.?\d*)(px|em|rem|%|vh|vw|vmin|vmax|s|ms|deg|fr|ch|ex)?\b/g,
+      `<span style="color:${CSS_COLORS.number}">$1$2</span>`)
+}
+
+/* ── CssEditor Component ───────────────────────────────────────── */
+function CssEditor({ value, onChange, placeholder }) {
+  const textareaRef = useRef(null)
+  const preRef = useRef(null)
+  const warnings = getCssWarnings(value || '')
+
+  const syncScroll = useCallback(() => {
+    if (preRef.current && textareaRef.current) {
+      preRef.current.scrollTop = textareaRef.current.scrollTop
+      preRef.current.scrollLeft = textareaRef.current.scrollLeft
+    }
+  }, [])
+
+  const handleChange = useCallback((e) => {
+    onChange(sanitizeCss(e.target.value))
+  }, [onChange])
+
+  // Auto-resize
+  useEffect(() => {
+    const ta = textareaRef.current
+    if (ta) {
+      ta.style.height = 'auto'
+      ta.style.height = Math.max(120, ta.scrollHeight) + 'px'
+    }
+  }, [value])
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="relative rounded-md border border-input overflow-hidden font-mono text-xs leading-relaxed">
+        {/* Highlighted layer (behind) */}
+        <pre
+          ref={preRef}
+          className="absolute inset-0 m-0 p-3 overflow-hidden pointer-events-none whitespace-pre-wrap break-words"
+          aria-hidden="true"
+          dangerouslySetInnerHTML={{ __html: highlightCss(value || '') + '\n' }}
+          style={{ background: 'transparent', fontFamily: 'inherit', fontSize: 'inherit', lineHeight: 'inherit' }}
+        />
+        {/* Textarea (on top, transparent text) */}
+        <textarea
+          ref={textareaRef}
+          value={value || ''}
+          onChange={handleChange}
+          onScroll={syncScroll}
+          placeholder={placeholder}
+          spellCheck={false}
+          className="relative w-full p-3 bg-transparent resize-none outline-none"
+          style={{
+            color: 'transparent',
+            caretColor: 'var(--foreground, #000)',
+            fontFamily: 'inherit',
+            fontSize: 'inherit',
+            lineHeight: 'inherit',
+            minHeight: '120px',
+            WebkitTextFillColor: 'transparent',
+          }}
+        />
+      </div>
+      {warnings.length > 0 && (
+        <div className="flex flex-col gap-0.5">
+          {warnings.map((w, i) => (
+            <span key={i} className="text-[11px] text-destructive flex items-center gap-1">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 9v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+              {w}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 const INTERVALS = [
   { value: 0,    label: 'Désactivée (manuel uniquement)' },
@@ -42,13 +284,16 @@ export default function Settings() {
     setSettings(prev => ({ ...prev, [key]: value }))
   }
 
-  function setWidgetConfig(productId, key, value) {
+  function setWidgetId(productId, value) {
     setSettings(prev => {
       const map = { ...prev.widget_map }
-      if (typeof map[productId] === 'string') {
-        map[productId] = { widget_id: map[productId], custom_css: '' }
+      const existing = map[productId]
+      // Keep custom_css if it was per-product (backward compat), but we don't use it anymore
+      if (typeof existing === 'object') {
+        map[productId] = { ...existing, widget_id: value }
+      } else {
+        map[productId] = { widget_id: value, custom_css: '' }
       }
-      map[productId] = { ...(map[productId] ?? { widget_id: '', custom_css: '' }), [key]: value }
       return { ...prev, widget_map: map }
     })
   }
@@ -57,12 +302,6 @@ export default function Settings() {
     const v = settings?.widget_map?.[productId]
     if (typeof v === 'string') return v
     return v?.widget_id ?? ''
-  }
-
-  function getCustomCss(productId) {
-    const v = settings?.widget_map?.[productId]
-    if (typeof v === 'string') return ''
-    return v?.custom_css ?? ''
   }
 
   async function handleSave() {
@@ -205,11 +444,11 @@ export default function Settings() {
 
         <Divider />
 
-        {/* ── Widget map + Custom CSS ─────────────────────────── */}
+        {/* ── Widget map ───────────────────────────────────────── */}
         <section id="widgets">
-          <SectionTitle>Tarification — Widget ID & Custom CSS</SectionTitle>
+          <SectionTitle>Widgets Regiondo — ID par produit</SectionTitle>
           <p className="text-sm text-muted-foreground mt-1 mb-4">
-            Associez chaque produit à son Widget ID Regiondo et personnalisez le CSS du widget de réservation.
+            Associez chaque produit à son Widget ID Regiondo.
             <br />
             <span className="text-xs">Regiondo → Shop Config → Website Integration → Booking Widgets</span>
           </p>
@@ -218,46 +457,43 @@ export default function Settings() {
             <Notice type="warn">Aucun produit. Vérifiez la clé API puis enregistrez.</Notice>
           )}
 
-          <div className="space-y-6">
+          <div className="space-y-3">
             {(settings.products ?? []).map(p => (
-              <div key={p.product_id} className="rounded-lg border bg-card p-4 space-y-3">
-                <div className="flex items-center gap-3">
-                  {p.thumbnail_url && (
-                    <img src={p.thumbnail_url} alt="" className="w-10 h-10 rounded-md object-cover border" />
-                  )}
-                  <div>
-                    <div className="text-sm font-medium">{p.name}</div>
-                    <code className="text-xs text-muted-foreground">#{p.product_id}</code>
-                  </div>
-                </div>
-
-                <Input
-                  label="Widget ID"
-                  value={getWidgetId(p.product_id)}
-                  onChange={e => setWidgetConfig(p.product_id, 'widget_id', e.target.value)}
-                  placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-                  className="font-mono text-xs"
-                />
-
-                <Textarea
-                  label="Custom CSS"
-                  value={getCustomCss(p.product_id)}
-                  onChange={e => setWidgetConfig(p.product_id, 'custom_css', e.target.value)}
-                  placeholder={`.regiondo-widget {\n  background: bisque;\n}`}
-                  className="font-mono text-xs min-h-[60px]"
-                />
-
-                {getWidgetId(p.product_id) && (
-                  <div className="text-xs text-muted-foreground">
-                    <span className="font-medium">Aperçu front :</span>{' '}
-                    <code className="bg-muted px-1.5 py-0.5 rounded text-[11px]">
-                      {'<booking-widget widget-id="'}{getWidgetId(p.product_id)}{'">'}
-                    </code>
-                  </div>
+              <div key={p.product_id} className="flex items-center gap-3 rounded-lg border bg-card px-4 py-3">
+                {p.thumbnail_url && (
+                  <img src={p.thumbnail_url} alt="" className="w-8 h-8 rounded object-cover border shrink-0" />
                 )}
+                <div className="shrink-0 w-40">
+                  <div className="text-sm font-medium truncate">{p.name}</div>
+                  <code className="text-[11px] text-muted-foreground">#{p.product_id}</code>
+                </div>
+                <div className="flex-1">
+                  <Input
+                    value={getWidgetId(p.product_id)}
+                    onChange={e => setWidgetId(p.product_id, e.target.value)}
+                    placeholder="Widget ID (UUID)"
+                    className="font-mono text-xs"
+                  />
+                </div>
               </div>
             ))}
           </div>
+        </section>
+
+        <Divider />
+
+        {/* ── Global Custom CSS for booking widgets ──────────── */}
+        <section id="widget-css">
+          <SectionTitle>Custom CSS — Widgets de réservation</SectionTitle>
+          <p className="text-sm text-muted-foreground mt-1 mb-4">
+            Ce CSS sera injecté dans chaque <code className="bg-muted px-1 py-0.5 rounded text-[11px]">{'<booking-widget>'}</code> sur le front.
+            Il s'applique à tous les widgets de réservation Regiondo.
+          </p>
+          <CssEditor
+            value={settings.booking_custom_css ?? ''}
+            onChange={v => set('booking_custom_css', v)}
+            placeholder={`.regiondo-widget .regiondo-button-addtocart {\n  border-radius: 40px;\n  background: #222;\n}`}
+          />
         </section>
 
         <Divider />

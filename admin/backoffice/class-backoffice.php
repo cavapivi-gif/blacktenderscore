@@ -37,18 +37,22 @@ class Backoffice {
 
         if (!is_dir($build_dir)) return;
 
+        // Cache-bust based on actual file modification time
+        $css_ver = file_exists($build_dir . 'index.css') ? filemtime($build_dir . 'index.css') : BT_VERSION;
+        $js_ver  = file_exists($build_dir . 'index.js')  ? filemtime($build_dir . 'index.js')  : BT_VERSION;
+
         wp_enqueue_style(
             'bt-backoffice',
             $build_url . 'index.css',
             [],
-            BT_VERSION
+            $css_ver
         );
 
         wp_enqueue_script(
             'bt-backoffice',
             $build_url . 'index.js',
             [],
-            BT_VERSION,
+            $js_ver,
             true
         );
 
@@ -61,13 +65,11 @@ class Backoffice {
         // Page en plein écran, fond blanc uniforme
         add_action('admin_head', function () {
             echo '<style>
-                body.toplevel_page_blacktenderscore #adminmenumain,
-                body.toplevel_page_blacktenderscore #adminmenuback,
-                body.toplevel_page_blacktenderscore #adminmenuwrap { display: none !important; }
-                body.toplevel_page_blacktenderscore #wpcontent { margin-left: 0 !important; padding-left: 0 !important; }
                 body.toplevel_page_blacktenderscore #wpbody-content { padding-bottom: 0 !important; }
-                #wpfooter  { display: none !important; }
-                .notice, .update-nag, #screen-meta { display: none !important; }
+                body.toplevel_page_blacktenderscore #wpfooter { display: none !important; }
+                body.toplevel_page_blacktenderscore .notice,
+                body.toplevel_page_blacktenderscore .update-nag,
+                body.toplevel_page_blacktenderscore #screen-meta { display: none !important; }
             </style>';
         });
     }

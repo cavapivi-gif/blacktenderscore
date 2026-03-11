@@ -11,35 +11,18 @@ defined('ABSPATH') || exit;
 /**
  * BtNavControls — Onglets, panneaux, items multi-états.
  *
- * Méthodes :
- *   register_tabs_nav_style($prefix, $label, $tab_sel, $active_sel, $tablist_sel, $condition)
- *   register_panel_style($prefix, $label, $selector, $condition)
- *   register_item_3state_style($prefix, $label, $item_sel, $hover_sel, $active_sel, $condition)
+ * Options avancées (comme le widget Tabs natif Elementor) :
+ *   'with_direction'  — Direction responsive (horizontal/vertical)
+ *   'with_justify'    — Alignement onglets (start/center/end/stretch)
+ *   'with_scroll'     — Scroll horizontal responsive
+ *   'with_breakpoint' — Breakpoint pour passer en accordéon
+ *   'with_hover'      — État survol
+ *   'with_radius'     — Border radius
+ *   'with_indicator'  — Épaisseur indicateur actif
+ *   'with_panel'      — Padding panneau (+ 'panel_sel')
  */
 trait BtNavControls {
 
-    /**
-     * Section de style pour une barre d'onglets — Normal, Survol (optionnel) et Actif.
-     *
-     * Controls générés (prefixés par $prefix) :
-     *   {prefix}_typography
-     *   {prefix}_color / {prefix}_bg / {prefix}_border  (tab Normal)
-     *   {prefix}_hover_color / {prefix}_hover_bg         (tab Survol, si $options['with_hover'])
-     *   {prefix}_active_color / {prefix}_active_bg / {prefix}_active_border_color  (tab Actif)
-     *   {prefix}_padding
-     *   {prefix}_gap    (si $tablist_sel fourni)
-     *   {prefix}_radius (si $options['with_radius'])
-     *   {prefix}_indicator_size (si $options['with_indicator'])
-     *   {prefix}_panel_padding  (si $options['with_panel'] + $options['panel_sel'])
-     *
-     * @param string $prefix      Préfixe IDs contrôles
-     * @param string $label       Label section
-     * @param string $tab_sel     Sélecteur onglet
-     * @param string $active_sel  Sélecteur actif
-     * @param string $tablist_sel Sélecteur liste (pour gap) — optionnel
-     * @param array  $condition   Condition Elementor optionnelle
-     * @param array  $options     Clés : 'with_hover', 'with_radius', 'with_indicator', 'with_panel', 'panel_sel'
-     */
     protected function register_tabs_nav_style(
         string $prefix,
         string $label,
@@ -57,6 +40,84 @@ trait BtNavControls {
             $section_args['condition'] = $condition;
         }
         $this->start_controls_section("style_{$prefix}", $section_args);
+
+        // ── Direction (responsive) ────────────────────────────────────────
+        if (!empty($options['with_direction']) && $tablist_sel) {
+            $this->add_responsive_control("{$prefix}_direction", [
+                'label'   => __('Direction', 'blacktenderscore'),
+                'type'    => Controls_Manager::CHOOSE,
+                'options' => [
+                    'row'    => ['title' => __('Horizontal', 'blacktenderscore'), 'icon' => 'eicon-h-align-left'],
+                    'column' => ['title' => __('Vertical', 'blacktenderscore'),   'icon' => 'eicon-v-align-top'],
+                ],
+                'default'   => 'row',
+                'selectors' => [$tablist_sel => 'flex-direction: {{VALUE}}'],
+            ]);
+        }
+
+        // ── Justify (responsive) ──────────────────────────────────────────
+        if (!empty($options['with_justify']) && $tablist_sel) {
+            $this->add_responsive_control("{$prefix}_justify", [
+                'label'   => __('Alignement onglets', 'blacktenderscore'),
+                'type'    => Controls_Manager::CHOOSE,
+                'options' => [
+                    'flex-start' => ['title' => __('Début', 'blacktenderscore'),  'icon' => 'eicon-align-start-h'],
+                    'center'     => ['title' => __('Centre', 'blacktenderscore'), 'icon' => 'eicon-align-center-h'],
+                    'flex-end'   => ['title' => __('Fin', 'blacktenderscore'),    'icon' => 'eicon-align-end-h'],
+                    'stretch'    => ['title' => __('Étirer', 'blacktenderscore'), 'icon' => 'eicon-align-stretch-h'],
+                ],
+                'default'   => 'flex-start',
+                'selectors' => [$tablist_sel => 'justify-content: {{VALUE}}'],
+            ]);
+
+            // Stretch → each tab grows equally
+            $this->add_responsive_control("{$prefix}_tab_grow", [
+                'label'     => __('Étirement', 'blacktenderscore'),
+                'type'      => Controls_Manager::HIDDEN,
+                'default'   => '1',
+                'selectors' => [$tab_sel => 'flex-grow: 1; text-align: center'],
+                'condition' => ["{$prefix}_justify" => 'stretch'],
+            ]);
+        }
+
+        // ── Horizontal scroll (responsive) ────────────────────────────────
+        if (!empty($options['with_scroll']) && $tablist_sel) {
+            $this->add_responsive_control("{$prefix}_scroll", [
+                'label'   => __('Scroll horizontal', 'blacktenderscore'),
+                'type'    => Controls_Manager::SELECT,
+                'options' => [
+                    'wrap'   => __('Retour à la ligne', 'blacktenderscore'),
+                    'scroll' => __('Scroll horizontal', 'blacktenderscore'),
+                ],
+                'default'   => 'wrap',
+                'selectors' => [
+                    $tablist_sel => '{{VALUE}}',
+                ],
+                'selectors_dictionary' => [
+                    'wrap'   => 'overflow-x: visible; flex-wrap: wrap',
+                    'scroll' => 'overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none',
+                ],
+            ]);
+        }
+
+        // ── Breakpoint accordion ──────────────────────────────────────────
+        if (!empty($options['with_breakpoint'])) {
+            $this->add_control("{$prefix}_breakpoint", [
+                'label'   => __('Passer en accordéon', 'blacktenderscore'),
+                'type'    => Controls_Manager::SELECT,
+                'options' => [
+                    'none'   => __('Jamais', 'blacktenderscore'),
+                    'mobile' => __('Mobile (< 768px)', 'blacktenderscore'),
+                    'tablet' => __('Tablette (< 1025px)', 'blacktenderscore'),
+                ],
+                'default'     => 'none',
+                'description' => __('Sous ce breakpoint, les onglets passent en accordéon vertical.', 'blacktenderscore'),
+                'render_type' => 'template',
+                'prefix_class' => 'bt-tabs-bp-',
+            ]);
+        }
+
+        $this->add_control("{$prefix}_layout_sep", ['type' => Controls_Manager::DIVIDER]);
 
         $this->add_group_control(Group_Control_Typography::get_type(), [
             'name'     => "{$prefix}_typography",
@@ -155,7 +216,16 @@ trait BtNavControls {
                 'label'      => __('Espacement entre onglets', 'blacktenderscore'),
                 'type'       => Controls_Manager::SLIDER,
                 'size_units' => ['px'],
+                'range'      => ['px' => ['min' => 0, 'max' => 40]],
                 'selectors'  => [$tablist_sel => 'gap: {{SIZE}}{{UNIT}}'],
+            ]);
+
+            $this->add_responsive_control("{$prefix}_tablist_spacing", [
+                'label'      => __('Espace sous les onglets', 'blacktenderscore'),
+                'type'       => Controls_Manager::SLIDER,
+                'size_units' => ['px', 'em'],
+                'range'      => ['px' => ['min' => 0, 'max' => 60]],
+                'selectors'  => [$tablist_sel => 'margin-bottom: {{SIZE}}{{UNIT}}'],
             ]);
         }
 
@@ -191,18 +261,6 @@ trait BtNavControls {
         $this->end_controls_section();
     }
 
-    /**
-     * Section de style pour un panneau de contenu (corps d'onglet, réponse...).
-     *
-     * Controls générés (prefixés par $prefix) :
-     *   {prefix}_typography, {prefix}_color, {prefix}_bg
-     *   {prefix}_padding, {prefix}_border, {prefix}_border_radius, {prefix}_shadow
-     *
-     * @param string $prefix    Préfixe IDs contrôles
-     * @param string $label     Label section
-     * @param string $selector  Sélecteur CSS
-     * @param array  $condition Condition Elementor optionnelle
-     */
     protected function register_panel_style(
         string $prefix,
         string $label,
@@ -262,25 +320,6 @@ trait BtNavControls {
         $this->end_controls_section();
     }
 
-    /**
-     * Section de style pour un élément à 3 états : Normal / Survol / Actif.
-     *
-     * Controls générés (prefixés par $prefix) :
-     *   {prefix}_style_tabs (conteneur tabs)
-     *   {prefix}_bg / {prefix}_border             (Normal)
-     *   {prefix}_bg_hover / {prefix}_border_hover (Survol)
-     *   {prefix}_bg_active / {prefix}_border_active (Actif)
-     *   {prefix}_border_radius, {prefix}_padding, {prefix}_shadow (hors tabs)
-     *
-     * ⚠ Les IDs de controls ne doivent pas changer une fois des templates enregistrés.
-     *
-     * @param string      $prefix      Préfixe
-     * @param string      $label       Label section
-     * @param string      $item_sel    Sélecteur item normal
-     * @param string|null $hover_sel   Sélecteur survol (défaut: $item_sel + ':hover')
-     * @param string|null $active_sel  Sélecteur actif  (défaut: $item_sel + '.{prefix}--active')
-     * @param array       $condition   Condition Elementor optionnelle
-     */
     protected function register_item_3state_style(
         string  $prefix,
         string  $label,
@@ -303,7 +342,6 @@ trait BtNavControls {
 
         $this->start_controls_tabs("{$prefix}_style_tabs");
 
-        // ── Normal
         $this->start_controls_tab("{$prefix}_tab_normal", ['label' => __('Normal', 'blacktenderscore')]);
         $this->add_control("{$prefix}_bg", [
             'label'     => __('Fond', 'blacktenderscore'),
@@ -316,7 +354,6 @@ trait BtNavControls {
         ]);
         $this->end_controls_tab();
 
-        // ── Survol
         $this->start_controls_tab("{$prefix}_tab_hover", ['label' => __('Survol', 'blacktenderscore')]);
         $this->add_control("{$prefix}_bg_hover", [
             'label'     => __('Fond', 'blacktenderscore'),
@@ -329,7 +366,6 @@ trait BtNavControls {
         ]);
         $this->end_controls_tab();
 
-        // ── Actif
         $this->start_controls_tab("{$prefix}_tab_active", ['label' => __('Actif', 'blacktenderscore')]);
         $this->add_control("{$prefix}_bg_active", [
             'label'     => __('Fond', 'blacktenderscore'),
@@ -368,22 +404,6 @@ trait BtNavControls {
         $this->end_controls_section();
     }
 
-    /**
-     * Section Style bouton/CTA — Normal et Survol.
-     *
-     * Controls générés (prefixés par $prefix) :
-     *   {prefix}_typography
-     *   {prefix}_color / {prefix}_bg / {prefix}_border  (Normal)
-     *   {prefix}_color_hover / {prefix}_bg_hover        (Survol)
-     *   {prefix}_padding   DIMENSIONS
-     *   {prefix}_radius    DIMENSIONS
-     *
-     * @param string $prefix    Préfixe IDs
-     * @param string $label     Label section
-     * @param string $selector  Sélecteur CSS du bouton
-     * @param array  $defaults  'color', 'bg' (valeurs par défaut)
-     * @param array  $condition Condition Elementor optionnelle
-     */
     protected function register_button_style(
         string $prefix,
         string $label,

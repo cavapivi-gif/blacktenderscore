@@ -230,11 +230,15 @@ class BoatPricing extends AbstractBtWidget {
             '{{WRAPPER}} .bt-bprice__tablist',
             ['layout' => 'tabs'],
             [
-                'with_hover'     => true,
-                'with_radius'    => true,
-                'with_indicator' => true,
-                'with_panel'     => true,
-                'panel_sel'      => '{{WRAPPER}} .bt-bprice__panel--active',
+                'with_hover'      => true,
+                'with_radius'     => true,
+                'with_indicator'  => true,
+                'with_direction'  => true,
+                'with_justify'    => true,
+                'with_scroll'     => true,
+                'with_breakpoint' => true,
+                'with_panel'      => true,
+                'panel_sel'       => '{{WRAPPER}} .bt-bprice__panel--active',
             ]
         );
 
