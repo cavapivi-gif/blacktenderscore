@@ -96,6 +96,13 @@ class RestApi {
             'permission_callback' => $auth,
         ]);
 
+        // Diagnostic complet (réponses brutes de chaque endpoint)
+        register_rest_route(self::NS, '/diagnostic', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'run_diagnostic'],
+            'permission_callback' => $auth,
+        ]);
+
         // Réglages
         register_rest_route(self::NS, '/settings', [
             'methods'             => 'GET',
@@ -345,6 +352,32 @@ class RestApi {
         }
     }
 
+    public function run_diagnostic(): \WP_REST_Response {
+        $client = new Client();
+
+        $endpoints = [
+            ['label' => 'Products',            'path' => 'products',              'params' => ['limit' => 5, 'store_locale' => 'fr-FR']],
+            ['label' => 'Partner Bookings',     'path' => 'partner/bookings',      'params' => ['limit' => 5, 'type' => 'offline_reservation,booking,voucher,redeem']],
+            ['label' => 'Supplier Bookings',    'path' => 'supplier/bookings',     'params' => ['limit' => 5, 'type' => 'offline_reservation,booking,voucher,redeem']],
+            ['label' => 'Partner Sold Items',   'path' => 'partner/solditems',     'params' => ['limit' => 5]],
+            ['label' => 'Supplier Sold Items',  'path' => 'supplier/solditems',    'params' => ['limit' => 5]],
+            ['label' => 'Partner CRM',          'path' => 'partner/crmcustomers',  'params' => ['limit' => 5]],
+            ['label' => 'Reviews',              'path' => 'reviews',               'params' => ['limit' => 5]],
+            ['label' => 'Categories',           'path' => 'categories',            'params' => ['limit' => 5]],
+            ['label' => 'Account Locale',       'path' => 'account/locale',        'params' => []],
+        ];
+
+        $results = [];
+        foreach ($endpoints as $ep) {
+            $results[] = array_merge(
+                ['label' => $ep['label']],
+                $client->raw_request($ep['path'], $ep['params'])
+            );
+        }
+
+        return rest_ensure_response(['endpoints' => $results]);
+    }
+
     public function get_settings(): \WP_REST_Response {
         try {
             $products = (new Client())->get_products('fr-FR');
@@ -361,8 +394,9 @@ class RestApi {
             'post_types'     => get_option('bt_post_types', ['excursion']),
             'sync_interval'  => (int) get_option('bt_regiondo_sync_interval', 0),
             'sync_next_run'  => $next ?: null,
-            'widget_map'     => get_option('bt_widget_map', []),
-            'products'       => $products,
+            'widget_map'          => get_option('bt_widget_map', []),
+            'booking_custom_css'  => get_option('bt_booking_custom_css', ''),
+            'products'            => $products,
             'all_post_types' => array_values(array_map(fn($pt) => [
                 'name'  => $pt->name,
                 'label' => $pt->label,
@@ -403,6 +437,9 @@ class RestApi {
                 }
             }
             update_option('bt_widget_map', $clean);
+        }
+        if (isset($body['booking_custom_css'])) {
+            update_option('bt_booking_custom_css', wp_strip_all_tags($body['booking_custom_css']));
         }
         if (isset($body['sync_interval'])) {
             $interval = absint($body['sync_interval']);

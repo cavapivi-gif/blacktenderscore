@@ -8,6 +8,13 @@ const STATUS_MAP = {
   confirmed: { variant: 'confirmed', label: 'Confirmé' },
   cancelled: { variant: 'cancelled', label: 'Annulé' },
   pending:   { variant: 'pending',   label: 'En attente' },
+  booked:    { variant: 'confirmed', label: 'Réservé' },
+  sent:      { variant: 'pending',   label: 'Envoyé' },
+  approved:  { variant: 'confirmed', label: 'Approuvé' },
+  reserved:  { variant: 'pending',   label: 'Réservé' },
+  canceled:  { variant: 'cancelled', label: 'Annulé' },
+  rejected:  { variant: 'cancelled', label: 'Rejeté' },
+  processing:{ variant: 'pending',   label: 'En cours' },
 }
 
 export default function Dashboard() {
@@ -18,6 +25,8 @@ export default function Dashboard() {
   const [syncing, setSyncing] = useState(false)
   const [flushing, setFlushing] = useState(false)
   const [syncResult, setSyncResult] = useState(null)
+  const [diagLoading, setDiagLoading] = useState(false)
+  const [diagData, setDiagData] = useState(null)
 
   useEffect(() => {
     api.dashboard()
@@ -49,6 +58,19 @@ export default function Dashboard() {
       setData(fresh)
     } finally {
       setFlushing(false)
+    }
+  }
+
+  async function handleDiagnostic() {
+    setDiagLoading(true)
+    setDiagData(null)
+    try {
+      const res = await api.diagnostic()
+      setDiagData(res)
+    } catch (e) {
+      setDiagData({ error: e.message })
+    } finally {
+      setDiagLoading(false)
     }
   }
 
@@ -110,7 +132,7 @@ export default function Dashboard() {
         </div>
       ) : (
         <>
-          {/* Stats — responsive 2→4 columns */}
+          {/* Stats */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-border mx-6 mt-5 border rounded-lg overflow-hidden">
             <StatCard
               label="Produits"
@@ -151,7 +173,7 @@ export default function Dashboard() {
           )}
 
           {/* Recent bookings */}
-          <div className="mx-6 mt-6 mb-10">
+          <div className="mx-6 mt-6">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs text-muted-foreground uppercase tracking-wider">Réservations récentes</span>
               <button onClick={() => navigate('/bookings')} className="text-xs text-muted-foreground underline hover:text-foreground">
@@ -162,9 +184,59 @@ export default function Dashboard() {
               <Table
                 columns={bookingCols}
                 data={data?.recent_bookings ?? []}
-                empty="Aucune réservation trouvée. Vérifiez la connexion API dans les réglages."
+                empty="Aucune réservation trouvée."
               />
             </div>
+          </div>
+
+          {/* Diagnostic API */}
+          <div className="mx-6 mt-6 mb-10">
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-xs text-muted-foreground uppercase tracking-wider">Diagnostic API</span>
+              <Btn variant="secondary" size="sm" loading={diagLoading} onClick={handleDiagnostic}>
+                {diagData ? 'Relancer le diagnostic' : 'Lancer le diagnostic'}
+              </Btn>
+            </div>
+
+            {diagData?.error && (
+              <Notice type="error">{diagData.error}</Notice>
+            )}
+
+            {diagData?.endpoints && (
+              <div className="space-y-3">
+                {diagData.endpoints.map((ep, i) => {
+                  const ok = ep.status >= 200 && ep.status < 300 && !ep.error
+                  const hasData = ep.response?.data && (Array.isArray(ep.response.data) ? ep.response.data.length > 0 : true)
+                  const hasError = ep.response?.error || ep.response?.error_code || ep.response?.error_message
+                  return (
+                    <details key={i} className="rounded-lg border bg-card overflow-hidden">
+                      <summary className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/50">
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${
+                          hasError ? 'bg-orange-400' :
+                          ok && hasData ? 'bg-emerald-500' :
+                          ok ? 'bg-yellow-400' :
+                          'bg-red-500'
+                        }`} />
+                        <span className="text-sm font-medium flex-1">{ep.label}</span>
+                        <code className="text-[11px] text-muted-foreground">{ep.status}</code>
+                        {hasData && <Badge variant="confirmed">{Array.isArray(ep.response.data) ? ep.response.data.length + ' items' : 'OK'}</Badge>}
+                        {hasError && <Badge variant="cancelled">Erreur</Badge>}
+                        {ok && !hasData && !hasError && <Badge variant="pending">Vide</Badge>}
+                        {!ok && <Badge variant="cancelled">{ep.error || 'HTTP ' + ep.status}</Badge>}
+                      </summary>
+                      <div className="border-t px-4 py-3">
+                        <p className="text-[11px] text-muted-foreground mb-2 break-all">
+                          <span className="font-medium">URL:</span> {ep.url}
+                        </p>
+                        <pre className="text-[11px] bg-muted/50 rounded p-3 overflow-x-auto max-h-80 whitespace-pre-wrap break-all">
+                          {JSON.stringify(ep.response ?? ep.raw ?? ep.error, null, 2)}
+                        </pre>
+                      </div>
+                    </details>
+                  )
+                })}
+              </div>
+            )}
           </div>
         </>
       )}

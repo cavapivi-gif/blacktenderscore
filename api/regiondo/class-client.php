@@ -396,6 +396,45 @@ class Client {
         return str_replace('%2C', ',', $qs);
     }
 
+    /**
+     * Raw request for diagnostics — returns full debug info.
+     */
+    public function raw_request(string $endpoint, array $params = []): array {
+        if (!$this->auth->is_configured()) {
+            return ['url' => $endpoint, 'error' => 'API keys not configured', 'status' => 0];
+        }
+
+        $url = self::BASE_URL . $endpoint;
+        if ($params) {
+            $url .= '?' . $this->build_query_string($params);
+        }
+
+        $ch      = curl_init($url);
+        $headers = $this->auth->get_headers($url);
+
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER     => $headers,
+            CURLOPT_TIMEOUT        => 15,
+            CURLOPT_FOLLOWLOCATION => true,
+        ]);
+
+        $response = curl_exec($ch);
+        $status   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error    = curl_error($ch);
+        curl_close($ch);
+
+        $decoded = $response ? (json_decode($response, true) ?? null) : null;
+
+        return [
+            'url'      => $url,
+            'status'   => $status,
+            'error'    => $error ?: null,
+            'response' => $decoded,
+            'raw'      => !$decoded ? substr($response ?? '', 0, 1000) : null,
+        ];
+    }
+
     // ─── HTTP ─────────────────────────────────────────────────────────────────
 
     private function request(string $url, string $method = 'GET', ?string $body = null): array {
