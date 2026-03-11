@@ -426,7 +426,15 @@ class RestApi {
             update_option('bt_widget_map', $clean);
         }
         if (isset($body['booking_custom_css'])) {
-            update_option('bt_booking_custom_css', wp_strip_all_tags($body['booking_custom_css']));
+            $css = wp_strip_all_tags($body['booking_custom_css']);
+            // Strip CSS-based XSS vectors
+            $css = preg_replace('/expression\s*\(/i', '/* blocked */(', $css);
+            $css = preg_replace('/javascript\s*:/i', '/* blocked */', $css);
+            $css = preg_replace('/-moz-binding\s*:/i', '/* blocked */', $css);
+            $css = preg_replace('/behavior\s*:/i', '/* blocked */', $css);
+            $css = preg_replace('/url\s*\(\s*["\']?\s*data\s*:\s*text\/html/i', 'url(/* blocked */', $css);
+            $css = preg_replace('/@import\s+url/i', '/* blocked */', $css);
+            update_option('bt_booking_custom_css', $css);
         }
         if (isset($body['sync_interval'])) {
             $interval = absint($body['sync_interval']);
