@@ -1649,12 +1649,14 @@
   justify-content: center;
 }
 
-.bt-highlights__icon i   { font-size: inherit; color: inherit; }
-.bt-highlights__icon svg { width: 1em; height: 1em; fill: currentColor; }
+/* Icon inherits size/color from parent — works for FA <i>, SVG, and emoji */
+.bt-highlights__icon i     { font-size: inherit; color: inherit; line-height: 1; }
+.bt-highlights__icon svg   { width: 1em; height: 1em; fill: currentColor; }
+.bt-highlights__icon i::before { font-size: inherit; }
 
 .bt-highlights__content { flex: 1; min-width: 0; }
 .bt-highlights__title   { display: block; font-weight: 600; }
-.bt-highlights__desc    { margin: .25em 0 0; }
+.bt-highlights__desc    { margin: 4px 0 0; }
 
 /* ══════════════════════════════════════════════════════════
    WIDGET : Captain
