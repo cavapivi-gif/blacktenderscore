@@ -150,9 +150,11 @@ class BoatPricing extends AbstractBtWidget {
         $this->end_controls_section();
 
         // ── Tarifs par zone ───────────────────────────────────────────────
+        // Zones pricing is incompatible with tabs layout (IF/ELSE).
         $this->start_controls_section('section_zones', [
-            'label' => __('Tarifs par zone de navigation', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'label'     => __('Tarifs par zone de navigation', 'blacktenderscore'),
+            'tab'       => \Elementor\Controls_Manager::TAB_CONTENT,
+            'condition' => ['layout!' => 'tabs'],
         ]);
 
         $this->add_control('show_zones', [
@@ -360,8 +362,8 @@ class BoatPricing extends AbstractBtWidget {
             }
         }
 
-        // ── Tableau par zone ──────────────────────────────────────────────
-        if ($s['show_zones'] === 'yes' && !empty($zones)) {
+        // ── Tableau par zone (incompatible avec layout=tabs) ─────────────
+        if ($s['show_zones'] === 'yes' && $layout !== 'tabs' && !empty($zones)) {
             $this->render_zones($zones, $s, $currency);
         }
 
