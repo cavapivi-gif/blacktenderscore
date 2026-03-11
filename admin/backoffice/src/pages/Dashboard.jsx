@@ -1,8 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
-import { PageHeader, StatCard, Table, Btn, Notice, Spinner } from '../components/ui'
-import { RefreshDouble, Book, Box, Group } from 'iconoir-react'
+import { PageHeader, StatCard, Table, Btn, Notice, Spinner, Badge } from '../components/ui'
+import { RefreshDouble } from 'iconoir-react'
+
+const STATUS_MAP = {
+  confirmed: { variant: 'confirmed', label: 'Confirmé' },
+  cancelled: { variant: 'cancelled', label: 'Annulé' },
+  pending:   { variant: 'pending',   label: 'En attente' },
+}
 
 export default function Dashboard() {
   const navigate = useNavigate()
@@ -26,6 +32,8 @@ export default function Dashboard() {
     try {
       const res = await api.sync()
       setSyncResult(res)
+      const fresh = await api.dashboard()
+      setData(fresh)
     } catch (e) {
       setError(e.message)
     } finally {
@@ -37,6 +45,8 @@ export default function Dashboard() {
     setFlushing(true)
     try {
       await api.flushCache()
+      const fresh = await api.dashboard()
+      setData(fresh)
     } finally {
       setFlushing(false)
     }
@@ -55,7 +65,10 @@ export default function Dashboard() {
     {
       key: 'status',
       label: 'Statut',
-      render: r => <span className="text-xs text-gray-500">{r.status ?? '—'}</span>,
+      render: r => {
+        const s = STATUS_MAP[r.status] ?? { variant: 'default', label: r.status ?? '—' }
+        return <Badge variant={s.variant}>{s.label}</Badge>
+      },
     },
   ]
 
@@ -63,6 +76,7 @@ export default function Dashboard() {
     <div>
       <PageHeader
         title="Tableau de bord"
+        subtitle="Vue d'ensemble de votre activité Regiondo"
         actions={
           <>
             <Btn variant="secondary" size="sm" loading={flushing} onClick={handleFlush}>
@@ -77,13 +91,13 @@ export default function Dashboard() {
       />
 
       {error && (
-        <div className="px-8 pt-6">
+        <div className="px-6 pt-5">
           <Notice type="error">{error}</Notice>
         </div>
       )}
 
       {syncResult && (
-        <div className="px-8 pt-6">
+        <div className="px-6 pt-5">
           <Notice type="success">
             Sync terminée — {syncResult.created} créés, {syncResult.updated} mis à jour, {syncResult.errors} erreurs
           </Notice>
@@ -96,8 +110,8 @@ export default function Dashboard() {
         </div>
       ) : (
         <>
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-px bg-gray-200 mx-8 mt-8 border border-gray-200">
+          {/* Stats — responsive 2→4 columns */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-border mx-6 mt-5 border rounded-lg overflow-hidden">
             <StatCard
               label="Produits"
               value={data?.products_count ?? 0}
@@ -106,7 +120,17 @@ export default function Dashboard() {
             <StatCard
               label="Réservations ce mois"
               value={data?.bookings_month ?? 0}
+              accent
               sub={<button onClick={() => navigate('/bookings')} className="text-xs underline">Voir tout</button>}
+            />
+            <StatCard
+              label="CA du mois"
+              value={
+                data?.revenue_month != null
+                  ? `${Number(data.revenue_month).toLocaleString('fr-FR')} €`
+                  : '—'
+              }
+              sub="Revenus confirmés"
             />
             <StatCard
               label="Clients CRM"
@@ -115,19 +139,30 @@ export default function Dashboard() {
             />
           </div>
 
+          {/* API status */}
+          {data?.api_status && (
+            <div className="mx-6 mt-4">
+              <Notice type={data.api_status === 'ok' ? 'info' : 'warn'}>
+                {data.api_status === 'ok'
+                  ? `API Regiondo connectée — ${data.products_count} produits synchronisés`
+                  : `Problème de connexion API : ${data.api_error ?? 'vérifiez vos clés dans Réglages'}`}
+              </Notice>
+            </div>
+          )}
+
           {/* Recent bookings */}
-          <div className="mx-8 mt-8">
+          <div className="mx-6 mt-6 mb-10">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs text-gray-400 uppercase tracking-widest">Réservations récentes</span>
-              <button onClick={() => navigate('/bookings')} className="text-xs text-gray-400 underline hover:text-black">
+              <span className="text-xs text-muted-foreground uppercase tracking-wider">Réservations récentes</span>
+              <button onClick={() => navigate('/bookings')} className="text-xs text-muted-foreground underline hover:text-foreground">
                 Tout voir
               </button>
             </div>
-            <div className="border border-gray-200">
+            <div className="rounded-lg border overflow-hidden">
               <Table
                 columns={bookingCols}
                 data={data?.recent_bookings ?? []}
-                empty="Aucune réservation ce mois."
+                empty="Aucune réservation trouvée. Vérifiez la connexion API dans les réglages."
               />
             </div>
           </div>

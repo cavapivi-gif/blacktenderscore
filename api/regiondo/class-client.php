@@ -135,21 +135,75 @@ class Client {
         return $result;
     }
 
-    // ─── PARTENAIRE / REPORTING ───────────────────────────────────────────────
+    // ─── RÉSERVATIONS / REPORTING ────────────────────────────────────────────
 
     /**
-     * @param array $params Clés : page, per_page, from (YYYY-MM-DD), to, product_id, order_number
+     * Fetch bookings — tries supplier endpoint first, then partner fallback.
+     *
+     * @param array $params Keys: page, per_page, from (YYYY-MM-DD), to, product_id, order_number
      */
     public function get_bookings(array $params = []): array {
         $defaults = ['page' => 1, 'per_page' => 50];
         $params   = array_merge($defaults, $params);
-        $url      = self::BASE_URL . 'partner/bookings?' . http_build_query($params);
-        $data     = $this->request($url);
-        return [
-            'data'  => $data['data']  ?? [],
-            'total' => $data['total'] ?? 0,
-            'page'  => $data['page']  ?? 1,
-        ];
+
+        // Try supplier endpoint first (bookings)
+        $url  = self::BASE_URL . 'bookings?' . http_build_query($params);
+        $data = $this->request($url);
+
+        if (!empty($data['data']) || !empty($data['bookings'])) {
+            $items = $data['data'] ?? $data['bookings'] ?? [];
+            return [
+                'data'  => $this->normalize_bookings($items),
+                'total' => $data['total'] ?? $data['count'] ?? count($items),
+                'page'  => $data['page'] ?? 1,
+            ];
+        }
+
+        // Fallback: partner/bookings
+        $url  = self::BASE_URL . 'partner/bookings?' . http_build_query($params);
+        $data = $this->request($url);
+
+        if (!empty($data['data']) || !empty($data['bookings'])) {
+            $items = $data['data'] ?? $data['bookings'] ?? [];
+            return [
+                'data'  => $this->normalize_bookings($items),
+                'total' => $data['total'] ?? $data['count'] ?? count($items),
+                'page'  => $data['page'] ?? 1,
+            ];
+        }
+
+        // Fallback: orders endpoint
+        $url  = self::BASE_URL . 'orders?' . http_build_query($params);
+        $data = $this->request($url);
+
+        if (!empty($data['data']) || !empty($data['orders'])) {
+            $items = $data['data'] ?? $data['orders'] ?? [];
+            return [
+                'data'  => $this->normalize_bookings($items),
+                'total' => $data['total'] ?? $data['count'] ?? count($items),
+                'page'  => $data['page'] ?? 1,
+            ];
+        }
+
+        return ['data' => [], 'total' => 0, 'page' => 1];
+    }
+
+    /**
+     * Normalize various booking response formats to a consistent structure.
+     */
+    private function normalize_bookings(array $items): array {
+        return array_map(function($b) {
+            return [
+                'booking_ref'   => $b['booking_ref'] ?? $b['order_number'] ?? $b['reference_id'] ?? $b['id'] ?? '',
+                'product_name'  => $b['product_name'] ?? $b['name'] ?? $b['product'] ?? '',
+                'booking_date'  => $b['booking_date'] ?? $b['date'] ?? $b['created_at'] ?? $b['order_date'] ?? '',
+                'customer_name' => $b['customer_name'] ?? trim(($b['first_name'] ?? '') . ' ' . ($b['last_name'] ?? '')) ?: ($b['customer'] ?? ''),
+                'total_price'   => $b['total_price'] ?? $b['total'] ?? $b['price'] ?? $b['amount'] ?? null,
+                'currency_code' => $b['currency_code'] ?? $b['currency'] ?? 'EUR',
+                'status'        => $b['status'] ?? 'confirmed',
+                'customer_email'=> $b['customer_email'] ?? $b['email'] ?? '',
+            ];
+        }, $items);
     }
 
     public function get_sold_items(array $params = []): array {
@@ -166,8 +220,23 @@ class Client {
     public function get_crm_customers(array $params = []): array {
         $defaults = ['page' => 1, 'per_page' => 50];
         $params   = array_merge($defaults, $params);
-        $url      = self::BASE_URL . 'partner/crmcustomers?' . http_build_query($params);
-        $data     = $this->request($url);
+
+        // Try supplier CRM endpoint first
+        $url  = self::BASE_URL . 'customers?' . http_build_query($params);
+        $data = $this->request($url);
+
+        if (!empty($data['data']) || !empty($data['customers'])) {
+            $items = $data['data'] ?? $data['customers'] ?? [];
+            return [
+                'data'  => $items,
+                'total' => $data['total'] ?? $data['count'] ?? count($items),
+            ];
+        }
+
+        // Fallback: partner CRM endpoint
+        $url  = self::BASE_URL . 'partner/crmcustomers?' . http_build_query($params);
+        $data = $this->request($url);
+
         return [
             'data'  => $data['data']  ?? [],
             'total' => $data['total'] ?? 0,
@@ -227,6 +296,7 @@ class Client {
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER     => $headers,
             CURLOPT_TIMEOUT        => 15,
+            CURLOPT_FOLLOWLOCATION => true,
         ];
 
         if ($method === 'POST') {
@@ -241,9 +311,20 @@ class Client {
 
         $response = curl_exec($ch);
         $status   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error    = curl_error($ch);
         curl_close($ch);
 
-        if ($status < 200 || $status >= 300 || empty($response)) return [];
+        if ($error) {
+            error_log('[BlackTenders] cURL error: ' . $error . ' URL: ' . $url);
+            return [];
+        }
+
+        if ($status < 200 || $status >= 300 || empty($response)) {
+            if ($status >= 400) {
+                error_log('[BlackTenders] API error ' . $status . ' for: ' . $url . ' — Response: ' . substr($response ?? '', 0, 500));
+            }
+            return [];
+        }
 
         return json_decode($response, true) ?? [];
     }

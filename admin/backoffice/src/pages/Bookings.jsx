@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import { api } from '../lib/api'
-import { PageHeader, Table, Btn, Input, Pagination, Notice, Spinner } from '../components/ui'
+import { PageHeader, Table, Btn, Pagination, Notice, Spinner, Badge } from '../components/ui'
 
-const STATUS_LABELS = {
-  confirmed: 'Confirmé',
-  cancelled: 'Annulé',
-  pending:   'En attente',
+const STATUS_MAP = {
+  confirmed: { variant: 'confirmed', label: 'Confirmé' },
+  cancelled: { variant: 'cancelled', label: 'Annulé' },
+  pending:   { variant: 'pending',   label: 'En attente' },
 }
 
 function offsetDate(days) {
@@ -73,11 +73,10 @@ export default function Bookings() {
     {
       key: 'status',
       label: 'Statut',
-      render: r => (
-        <span className={`text-xs ${r.status === 'confirmed' ? 'text-gray-700' : 'text-gray-400'}`}>
-          {STATUS_LABELS[r.status] ?? r.status ?? '—'}
-        </span>
-      ),
+      render: r => {
+        const s = STATUS_MAP[r.status] ?? { variant: 'default', label: r.status ?? '—' }
+        return <Badge variant={s.variant}>{s.label}</Badge>
+      },
     },
   ]
 
@@ -85,19 +84,22 @@ export default function Bookings() {
     <div>
       <PageHeader
         title="Réservations"
-        actions={total > 0 && <span className="text-xs text-gray-400">{total} réservation{total > 1 ? 's' : ''}</span>}
+        subtitle="Historique des réservations Regiondo"
+        actions={total > 0 && <span className="text-xs text-muted-foreground">{total} réservation{total > 1 ? 's' : ''}</span>}
       />
 
       {/* Filtres */}
-      <div className="px-8 py-5 flex items-center gap-4 border-b border-gray-100">
+      <div className="px-6 py-4 flex items-center gap-4 border-b">
         {/* Presets */}
         <div className="flex items-center gap-1">
           {PRESETS.map((p, i) => (
             <button
               key={i}
               onClick={() => applyPreset(i)}
-              className={`px-3 py-1.5 text-xs border transition-colors ${
-                preset === i ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-500 hover:border-black hover:text-black'
+              className={`px-3 py-1.5 text-xs border rounded-md transition-colors ${
+                preset === i
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'border-border text-muted-foreground hover:border-foreground hover:text-foreground'
               }`}
             >
               {p.label}
@@ -105,24 +107,24 @@ export default function Bookings() {
           ))}
         </div>
 
-        <div className="h-4 w-px bg-gray-200" />
+        <div className="h-4 w-px bg-border" />
 
         {/* Custom dates */}
         <input
           type="date"
           value={from}
           onChange={e => { setFrom(e.target.value); setPreset(-1); setPage(1) }}
-          className="border border-gray-200 px-2 py-1.5 text-xs outline-none focus:border-black"
+          className="rounded-md border border-input px-2 py-1.5 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         />
-        <span className="text-xs text-gray-300">→</span>
+        <span className="text-xs text-muted-foreground">→</span>
         <input
           type="date"
           value={to}
           onChange={e => { setTo(e.target.value); setPreset(-1); setPage(1) }}
-          className="border border-gray-200 px-2 py-1.5 text-xs outline-none focus:border-black"
+          className="rounded-md border border-input px-2 py-1.5 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         />
 
-        <div className="h-4 w-px bg-gray-200" />
+        <div className="h-4 w-px bg-border" />
 
         {/* Search */}
         <input
@@ -130,18 +132,18 @@ export default function Bookings() {
           placeholder="N° commande…"
           value={search}
           onChange={e => { setSearch(e.target.value); setPage(1) }}
-          className="border border-gray-200 px-3 py-1.5 text-xs w-36 outline-none focus:border-black"
+          className="rounded-md border border-input px-3 py-1.5 text-xs w-36 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         />
       </div>
 
-      {error && <div className="px-8 pt-4"><Notice type="error">{error}</Notice></div>}
+      {error && <div className="px-6 pt-4"><Notice type="error">{error}</Notice></div>}
 
-      <div className="mx-8 mt-6 border border-gray-200">
+      <div className="mx-6 mt-5 rounded-lg border overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-20"><Spinner size={20} /></div>
         ) : (
           <>
-            <Table columns={columns} data={data} empty="Aucune réservation." />
+            <Table columns={columns} data={data} empty="Aucune réservation trouvée." />
             <Pagination page={page} total={total} perPage={perPage} onChange={setPage} />
           </>
         )}
