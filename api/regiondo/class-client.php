@@ -138,20 +138,41 @@ class Client {
     // ─── RÉSERVATIONS / REPORTING ────────────────────────────────────────────
 
     /**
-     * Fetch bookings via GET /supplier/bookings (official Regiondo endpoint).
+     * Fetch bookings via Regiondo API.
+     * Tries /partner/bookings (Swagger spec) then /supplier/bookings (PDF doc).
      *
      * @param array $params Keys: from (YYYY-MM-DD), to, product_id, status, limit, offset
      */
     public function get_bookings(array $params = []): array {
-        // Convert our params to Regiondo API format
+        $query = $this->build_booking_query($params);
+
+        // Try /partner/bookings first (confirmed in Swagger OpenAPI spec)
+        $url  = self::BASE_URL . 'partner/bookings?' . $this->build_query_string($query);
+        $data = $this->request($url);
+
+        if ($this->is_valid_response($data)) {
+            return $this->parse_booking_response($data, $params);
+        }
+
+        // Fallback: /supplier/bookings (referenced in PDF doc)
+        $url  = self::BASE_URL . 'supplier/bookings?' . $this->build_query_string($query);
+        $data = $this->request($url);
+
+        if ($this->is_valid_response($data)) {
+            return $this->parse_booking_response($data, $params);
+        }
+
+        return ['data' => [], 'total' => 0, 'page' => 1];
+    }
+
+    private function build_booking_query(array $params): array {
         $query = [
             'limit'  => $params['per_page'] ?? $params['limit'] ?? 250,
             'offset' => isset($params['page']) ? (($params['page'] - 1) * ($params['per_page'] ?? 250)) : ($params['offset'] ?? 0),
-            // Include all booking types by default (not just "booking")
+            // Include all booking types (default is "booking" only)
             'type'   => $params['type'] ?? 'offline_reservation,booking,voucher,redeem',
         ];
 
-        // Date range filter
         if (!empty($params['from']) || !empty($params['to'])) {
             $from = $params['from'] ?? '2020-01-01';
             $to   = $params['to']   ?? date('Y-m-d');
@@ -159,29 +180,34 @@ class Client {
             $query['date_range_by'] = $params['date_range_by'] ?? 'date_bought';
         }
 
-        if (!empty($params['product_id'])) {
-            $query['product_ids'] = $params['product_id'];
-        }
-        if (!empty($params['order_number'])) {
-            $query['order_ids'] = $params['order_number'];
-        }
-        if (!empty($params['status'])) {
-            $query['status'] = $params['status'];
-        }
+        if (!empty($params['product_id']))   $query['product_ids'] = $params['product_id'];
+        if (!empty($params['order_number'])) $query['order_ids']   = $params['order_number'];
+        if (!empty($params['status']))       $query['status']      = $params['status'];
 
-        $url  = self::BASE_URL . 'supplier/bookings?' . http_build_query($query);
-        $data = $this->request($url);
+        return $query;
+    }
 
-        if (!empty($data['data'])) {
-            $items = $data['data'];
-            return [
-                'data'  => $this->normalize_bookings($items),
-                'total' => $data['total'] ?? count($items),
-                'page'  => ($params['page'] ?? 1),
-            ];
+    private function parse_booking_response(array $data, array $params): array {
+        $items = $data['data'] ?? [];
+        return [
+            'data'  => $this->normalize_bookings($items),
+            'total' => $data['total'] ?? count($items),
+            'page'  => ($params['page'] ?? 1),
+        ];
+    }
+
+    /**
+     * Check if API response is valid (not an error disguised as 200).
+     * Regiondo can return 200 with error info in the body.
+     */
+    private function is_valid_response(array $data): bool {
+        if (empty($data)) return false;
+        // Regiondo silent errors: 200 status but error fields in body
+        if (isset($data['error']) || isset($data['error_code'])) {
+            error_log('[BlackTenders] Regiondo API error: ' . json_encode($data));
+            return false;
         }
-
-        return ['data' => [], 'total' => 0, 'page' => 1];
+        return isset($data['data']) || isset($data['total']);
     }
 
     /**
@@ -215,20 +241,44 @@ class Client {
             $query['date_range_by'] = $params['date_range_by'] ?? 'date_bought';
         }
 
-        $url  = self::BASE_URL . 'supplier/solditems?' . http_build_query($query);
-        $data = $this->request($url);
-        return [
-            'data'  => $data['data']  ?? [],
-            'total' => $data['total'] ?? 0,
-        ];
+        // Try /partner/solditems first, then /supplier/solditems
+        foreach (['partner/solditems', 'supplier/solditems'] as $endpoint) {
+            $url  = self::BASE_URL . $endpoint . '?' . $this->build_query_string($query);
+            $data = $this->request($url);
+            if ($this->is_valid_response($data)) {
+                return [
+                    'data'  => $data['data'] ?? [],
+                    'total' => $data['total'] ?? 0,
+                ];
+            }
+        }
+
+        return ['data' => [], 'total' => 0];
     }
 
     /**
-     * Extract unique customers from bookings data.
-     * Regiondo API has no dedicated customers endpoint —
-     * we derive customers from supplier/bookings.
+     * Fetch CRM customers.
+     * Tries /partner/crmcustomers (confirmed in Swagger spec),
+     * falls back to extracting from bookings data.
      */
     public function get_crm_customers(array $params = []): array {
+        $query = [
+            'limit'  => $params['per_page'] ?? $params['limit'] ?? 250,
+            'offset' => isset($params['page']) ? (($params['page'] - 1) * ($params['per_page'] ?? 250)) : ($params['offset'] ?? 0),
+        ];
+
+        // Try /partner/crmcustomers (exists per Swagger spec)
+        $url  = self::BASE_URL . 'partner/crmcustomers?' . $this->build_query_string($query);
+        $data = $this->request($url);
+
+        if ($this->is_valid_response($data)) {
+            return [
+                'data'  => $data['data'] ?? [],
+                'total' => $data['total'] ?? count($data['data'] ?? []),
+            ];
+        }
+
+        // Fallback: derive customers from bookings
         $cache_key = 'bt_regiondo_customers';
         $cached    = $this->cache->get($cache_key);
         if ($cached !== false) {
@@ -241,8 +291,7 @@ class Client {
             ];
         }
 
-        // Fetch all bookings to extract customers
-        $bookings = $this->get_bookings(['limit' => 250, 'type' => 'offline_reservation,booking,voucher,redeem']);
+        $bookings = $this->get_bookings(['limit' => 250]);
         $by_email = [];
 
         foreach ($bookings['data'] as $b) {
@@ -336,6 +385,17 @@ class Client {
         return $this->request($url);
     }
 
+    /**
+     * Build query string without encoding commas.
+     * Regiondo uses commas as separators (date_range, type) and
+     * encoding them as %2C can break HMAC signature matching.
+     */
+    private function build_query_string(array $params): string {
+        $qs = http_build_query($params);
+        // Restore commas — Regiondo expects raw commas in date_range and type params
+        return str_replace('%2C', ',', $qs);
+    }
+
     // ─── HTTP ─────────────────────────────────────────────────────────────────
 
     private function request(string $url, string $method = 'GET', ?string $body = null): array {
@@ -377,12 +437,17 @@ class Client {
         }
 
         if ($status < 200 || $status >= 300 || empty($response)) {
-            if ($status >= 400) {
-                error_log('[BlackTenders] API error ' . $status . ' for: ' . $url . ' — Response: ' . substr($response ?? '', 0, 500));
-            }
+            error_log('[BlackTenders] API ' . $status . ' for: ' . $url . ' — ' . substr($response ?? '', 0, 500));
             return [];
         }
 
-        return json_decode($response, true) ?? [];
+        $decoded = json_decode($response, true) ?? [];
+
+        // Detect silent errors (Regiondo can return 200 with error in body)
+        if (isset($decoded['error']) || isset($decoded['error_code']) || isset($decoded['error_message'])) {
+            error_log('[BlackTenders] API silent error for: ' . $url . ' — ' . substr($response, 0, 500));
+        }
+
+        return $decoded;
     }
 }
