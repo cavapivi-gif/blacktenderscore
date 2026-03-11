@@ -74,11 +74,13 @@ abstract class Abstract_Boat_Spec_Tag extends Abstract_BT_Tag {
  *
  * Rendu par défaut : "8 - 12 pax"
  */
-class Tag_Boat_Pax extends Abstract_BT_Tag {
+class Tag_Boat_Pax extends Abstract_Range_Tag {
 
     public function get_name():       string { return 'bt-boat-pax'; }
     public function get_title():      string { return 'BT: Passagers (bateau)'; }
     public function get_categories(): array  { return ['text', 'number']; }
+
+    protected function sides(): array { return ['min', 'max']; }
 
     protected function register_controls(): void {
 
@@ -169,33 +171,6 @@ class Tag_Boat_Pax extends Abstract_BT_Tag {
         ]);
     }
 
-    public function render(): void {
-        $post_id  = (int) get_the_ID();
-        $sep      = (string) ($this->get_settings('separator') ?: ' - ');
-        $fallback = (string) ($this->get_settings('fallback')  ?? '');
-
-        $parts = [];
-
-        foreach (['min', 'max'] as $side) {
-            $key = trim((string) ($this->get_settings("field_{$side}") ?? ''));
-            if (!$key) continue;
-
-            $raw = function_exists('get_field') ? get_field($key, $post_id) : null;
-            $str = $this->acf_scalar($raw);
-            if ($str === '') continue;
-
-            $prefix  = (string) ($this->get_settings("prefix_{$side}") ?? '');
-            $suffix  = (string) ($this->get_settings("suffix_{$side}") ?? '');
-            $parts[] = $prefix . $str . $suffix;
-        }
-
-        if (empty($parts)) {
-            if ($fallback !== '') echo esc_html($fallback);
-            return;
-        }
-
-        echo esc_html(implode($sep, $parts));
-    }
 }
 
 // ── Tag : Motorisation ────────────────────────────────────────────────────────

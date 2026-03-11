@@ -312,7 +312,7 @@ class DepartureTimes extends AbstractBtWidget {
 
         if (!$has_times && !$has_depart) {
             if ($this->is_edit_mode()) {
-                echo '<p class="bt-widget-placeholder">Aucun horaire ni point de départ trouvé.</p>';
+                $this->render_placeholder(__('Aucun horaire ni point de départ trouvé.', 'blacktenderscore'));
             }
             return;
         }

@@ -92,6 +92,13 @@ class RelatedBoats extends AbstractBtWidget {
             'default'      => 'yes',
         ]);
 
+        $this->add_control('card_title_tag', [
+            'label'   => __('Balise titre carte', 'blacktenderscore'),
+            'type'    => \Elementor\Controls_Manager::SELECT,
+            'options' => ['h2' => 'H2', 'h3' => 'H3', 'h4' => 'H4', 'h5' => 'H5', 'h6' => 'H6', 'p' => 'p', 'span' => 'span'],
+            'default' => 'h4',
+        ]);
+
         $this->end_controls_section();
 
         // ── Specs affichées sur la carte ──────────────────────────────────
@@ -263,7 +270,7 @@ class RelatedBoats extends AbstractBtWidget {
 
         if (empty($boats)) {
             if ($this->is_edit_mode()) {
-                echo '<p class="bt-widget-placeholder">Aucun bateau lié trouvé via le champ <code>' . esc_html($field_name) . '</code>. Vérifiez que des bateaux sont associés à cette excursion.</p>';
+                $this->render_placeholder(sprintf(__('Aucun bateau lié trouvé via le champ « %s ». Vérifiez que des bateaux sont associés à cette excursion.', 'blacktenderscore'), $field_name));
             }
             return;
         }
@@ -321,7 +328,8 @@ class RelatedBoats extends AbstractBtWidget {
 
             echo '<div class="bt-relboats__body">';
 
-            echo '<h4 class="bt-relboats__card-title"><a href="' . esc_url($boat_url) . '">' . esc_html($boat_title) . '</a></h4>';
+            $title_tag = esc_attr($s['card_title_tag'] ?: 'h4');
+            echo "<{$title_tag} class=\"bt-relboats__card-title\"><a href=\"" . esc_url($boat_url) . '">' . esc_html($boat_title) . "</a></{$title_tag}>";
 
             if ($s['show_tagline'] === 'yes' && $tagline) {
                 echo '<p class="bt-relboats__tagline">' . esc_html($tagline) . '</p>';

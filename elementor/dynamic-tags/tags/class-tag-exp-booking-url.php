@@ -13,11 +13,10 @@ defined('ABSPATH') || exit;
  *  - forfait   : court (short) ou long
  *  - base_url  : URL de base Regiondo (override si besoin)
  */
-class Tag_Exp_Booking_Url extends \Elementor\Core\DynamicTags\Tag {
+class Tag_Exp_Booking_Url extends Abstract_BT_Tag {
 
     public function get_name():       string { return 'bt-exp-booking-url'; }
     public function get_title():      string { return 'BT: URL réservation Regiondo'; }
-    public function get_group():      string { return 'blacktenderscore'; }
     public function get_categories(): array  { return ['url']; }
 
     protected function register_controls(): void {

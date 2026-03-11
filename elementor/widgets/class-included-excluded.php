@@ -45,26 +45,29 @@ class IncludedExcluded extends AbstractBtWidget {
         ]);
 
         $this->add_control('included_field', [
-            'label'   => __('Champ inclus', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
-            'options' => [
+            'label'     => __('Champ inclus', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::SELECT,
+            'options'   => [
                 'exp_included'             => __('Inclus (exp_included)', 'blacktenderscore'),
                 'boat_equipment_included'  => __('Équipements bateau (boat_equipment_included)', 'blacktenderscore'),
                 'boat_services_included'   => __('Services bateau (boat_services_included)', 'blacktenderscore'),
             ],
-            'default' => 'exp_included',
+            'default'   => 'exp_included',
+            'condition' => ['show_included' => 'yes'],
         ]);
 
         $this->add_control('included_label', [
-            'label'   => __('Titre colonne inclus', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
-            'default' => 'Inclus',
+            'label'     => __('Titre colonne inclus', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::TEXT,
+            'default'   => 'Inclus',
+            'condition' => ['show_included' => 'yes'],
         ]);
 
         $this->add_control('included_icon', [
-            'label'   => __('Icône inclus', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
-            'default' => '✓',
+            'label'     => __('Icône inclus', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::TEXT,
+            'default'   => '✓',
+            'condition' => ['show_included' => 'yes', 'show_icons' => 'yes'],
         ]);
 
         $this->add_control('show_excluded', [
@@ -75,25 +78,28 @@ class IncludedExcluded extends AbstractBtWidget {
         ]);
 
         $this->add_control('excluded_field', [
-            'label'   => __('Champ exclus', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
-            'options' => [
+            'label'     => __('Champ exclus', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::SELECT,
+            'options'   => [
                 'exp_to_excluded'       => __('Exclus (exp_to_excluded)', 'blacktenderscore'),
                 'boat_option_on_demand' => __('Options sur demande (boat_option_on_demand)', 'blacktenderscore'),
             ],
-            'default' => 'exp_to_excluded',
+            'default'   => 'exp_to_excluded',
+            'condition' => ['show_excluded' => 'yes'],
         ]);
 
         $this->add_control('excluded_label', [
-            'label'   => __('Titre colonne exclus', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
-            'default' => 'Non inclus',
+            'label'     => __('Titre colonne exclus', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::TEXT,
+            'default'   => 'Non inclus',
+            'condition' => ['show_excluded' => 'yes'],
         ]);
 
         $this->add_control('excluded_icon', [
-            'label'   => __('Icône exclus', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
-            'default' => '✗',
+            'label'     => __('Icône exclus', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::TEXT,
+            'default'   => '✗',
+            'condition' => ['show_excluded' => 'yes', 'show_icons' => 'yes'],
         ]);
 
         $this->add_control('show_desc', [
@@ -185,12 +191,14 @@ class IncludedExcluded extends AbstractBtWidget {
             'label'     => __('Couleur icône inclus', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-inclexcl__col--included .bt-inclexcl__icon' => 'color: {{VALUE}}'],
+            'condition' => ['show_icons' => 'yes'],
         ]);
 
         $this->add_control('excluded_icon_color', [
             'label'     => __('Couleur icône exclus', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-inclexcl__col--excluded .bt-inclexcl__icon' => 'color: {{VALUE}}'],
+            'condition' => ['show_icons' => 'yes'],
         ]);
 
         $this->add_responsive_control('icon_size', [
@@ -199,6 +207,7 @@ class IncludedExcluded extends AbstractBtWidget {
             'size_units' => ['px', 'em'],
             'default'    => ['size' => 14, 'unit' => 'px'],
             'selectors'  => ['{{WRAPPER}} .bt-inclexcl__icon' => 'font-size: {{SIZE}}{{UNIT}}'],
+            'condition'  => ['show_icons' => 'yes'],
         ]);
 
         $this->add_responsive_control('items_gap', [

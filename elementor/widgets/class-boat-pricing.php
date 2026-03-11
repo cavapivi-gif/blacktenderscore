@@ -147,6 +147,27 @@ class BoatPricing extends AbstractBtWidget {
             'default'      => 'yes',
         ]);
 
+        $this->add_control('table_col_forfait', [
+            'label'     => __('En-tête col. Forfait', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::TEXT,
+            'default'   => __('Forfait', 'blacktenderscore'),
+            'condition' => ['layout' => 'table'],
+        ]);
+
+        $this->add_control('table_col_duration', [
+            'label'     => __('En-tête col. Durée', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::TEXT,
+            'default'   => __('Durée', 'blacktenderscore'),
+            'condition' => ['layout' => 'table'],
+        ]);
+
+        $this->add_control('table_col_price', [
+            'label'     => __('En-tête col. Prix', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::TEXT,
+            'default'   => __('Prix', 'blacktenderscore'),
+            'condition' => ['layout' => 'table'],
+        ]);
+
         $this->end_controls_section();
 
         // ── Tarifs par zone ───────────────────────────────────────────────
@@ -467,8 +488,12 @@ class BoatPricing extends AbstractBtWidget {
     // ── Render : Tableau ──────────────────────────────────────────────────────
 
     private function render_table(array $cards, array $s, string $currency, string $note, $deposit, bool $fuel_incl, int $pax_max): void {
+        $col_forfait  = $s['table_col_forfait']  ?: __('Forfait', 'blacktenderscore');
+        $col_duration = $s['table_col_duration'] ?: __('Durée', 'blacktenderscore');
+        $col_price    = $s['table_col_price']    ?: __('Prix', 'blacktenderscore');
+
         echo '<div class="bt-bprice__table-wrap"><table class="bt-bprice__table">';
-        echo '<thead><tr><th>' . esc_html(__('Forfait', 'blacktenderscore')) . '</th><th>' . esc_html(__('Durée', 'blacktenderscore')) . '</th><th>' . esc_html(__('Prix', 'blacktenderscore')) . '</th></tr></thead><tbody>';
+        echo '<thead><tr><th>' . esc_html($col_forfait) . '</th><th>' . esc_html($col_duration) . '</th><th>' . esc_html($col_price) . '</th></tr></thead><tbody>';
         foreach ($cards as $card) {
             echo '<tr>';
             echo '<td class="bt-bprice__card-label">' . esc_html($card['label']) . '</td>';

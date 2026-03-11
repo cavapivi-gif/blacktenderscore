@@ -214,7 +214,7 @@ class BoatSpecs extends AbstractBtWidget {
 
         if (empty($items)) {
             if ($this->is_edit_mode()) {
-                echo '<p class="bt-widget-placeholder">Aucune spécification trouvée — vérifiez que ce post est de type <code>boat</code> et que les champs ACF sont remplis.</p>';
+                $this->render_placeholder(__('Aucune spécification trouvée — vérifiez que ce post est de type boat et que les champs ACF sont remplis.', 'blacktenderscore'));
             }
             return;
         }

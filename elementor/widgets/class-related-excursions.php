@@ -105,6 +105,13 @@ class RelatedExcursions extends AbstractBtWidget {
             'default'      => 'yes',
         ]);
 
+        $this->add_control('card_title_tag', [
+            'label'   => __('Balise titre carte', 'blacktenderscore'),
+            'type'    => \Elementor\Controls_Manager::SELECT,
+            'options' => ['h2' => 'H2', 'h3' => 'H3', 'h4' => 'H4', 'h5' => 'H5', 'h6' => 'H6', 'p' => 'p', 'span' => 'span'],
+            'default' => 'h4',
+        ]);
+
         $this->add_control('show_tagline', [
             'label'        => __('Afficher l\'accroche', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
@@ -287,7 +294,7 @@ class RelatedExcursions extends AbstractBtWidget {
 
         if (!$query->have_posts()) {
             if ($this->is_edit_mode()) {
-                echo '<p class="bt-widget-placeholder">Aucune excursion ne référence ce bateau via le champ <code>' . esc_html($meta_key) . '</code>.</p>';
+                $this->render_placeholder(sprintf(__('Aucune excursion ne référence ce bateau via le champ « %s ».', 'blacktenderscore'), $meta_key));
             }
             return;
         }
@@ -350,7 +357,8 @@ class RelatedExcursions extends AbstractBtWidget {
             }
 
             echo '<div class="bt-relexp__body">';
-            echo '<h4 class="bt-relexp__card-title"><a href="' . esc_url($url) . '">' . esc_html($title) . '</a></h4>';
+            $title_tag = esc_attr($s['card_title_tag'] ?: 'h4');
+            echo "<{$title_tag} class=\"bt-relexp__card-title\"><a href=\"" . esc_url($url) . '">' . esc_html($title) . "</a></{$title_tag}>";
 
             if ($s['show_tagline'] === 'yes' && $tagline) {
                 echo '<p class="bt-relexp__tagline">' . esc_html($tagline) . '</p>';
