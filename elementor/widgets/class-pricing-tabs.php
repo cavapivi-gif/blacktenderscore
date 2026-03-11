@@ -3,6 +3,7 @@ namespace BlackTenders\Elementor\Widgets;
 
 use BlackTenders\Elementor\AbstractBtWidget;
 use BlackTenders\Elementor\Traits\BtSharedControls;
+use Elementor\Controls_Manager;
 
 defined('ABSPATH') || exit;
 
@@ -12,7 +13,11 @@ defined('ABSPATH') || exit;
  * Lit le repeater ACF `tarification_par_forfait` du post courant.
  * Chaque ligne = un tab dont le titre est le nom du terme ACF exp_time.
  * Format: "1h30 — 45 €" (durée + prix).
- * Optionnellement affiche le calendrier de réservation Regiondo (UUID ACF).
+ *
+ * Mode Onboarding (optionnel) :
+ *   Affiche un titre "Choisissez vos dispo" + les créneaux horaires disponibles
+ *   (champ ACF configurable) avant de révéler le widget de réservation Regiondo.
+ *   Le widget Regiondo se charge au clic sur un créneau (lazy-reveal).
  */
 class PricingTabs extends AbstractBtWidget {
     use BtSharedControls;
@@ -22,7 +27,7 @@ class PricingTabs extends AbstractBtWidget {
             'id'       => 'bt-pricing-tabs',
             'title'    => 'BT — Tarification',
             'icon'     => 'eicon-price-table',
-            'keywords' => ['tarif', 'prix', 'forfait', 'réservation', 'booking', 'bt'],
+            'keywords' => ['tarif', 'prix', 'forfait', 'réservation', 'booking', 'créneau', 'horaire', 'bt'],
             'js'       => ['bt-elementor'],
         ];
     }
@@ -34,15 +39,15 @@ class PricingTabs extends AbstractBtWidget {
 
     protected function register_controls(): void {
 
-        // ── Content ───────────────────────────────────────────────────────
+        // ── Contenu général ───────────────────────────────────────────────
         $this->start_controls_section('section_content', [
             'label' => __('Contenu', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('acf_field', [
             'label'   => __('Champ ACF repeater', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
+            'type'    => Controls_Manager::SELECT,
             'options' => [
                 'tarification_par_forfait' => __('Tarification par forfait (tarification_par_forfait)', 'blacktenderscore'),
             ],
@@ -51,50 +56,50 @@ class PricingTabs extends AbstractBtWidget {
 
         $this->add_control('show_deposit', [
             'label'        => __('Afficher l\'acompte', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('show_note', [
             'label'        => __('Afficher la note tarifaire', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('per_label', [
             'label'   => __('Libellé "par pers."', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
+            'type'    => Controls_Manager::TEXT,
             'default' => __('/ pers.', 'blacktenderscore'),
         ]);
 
         $this->add_control('deposit_label', [
             'label'     => __('Libellé "Acompte"', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => __('Acompte :', 'blacktenderscore'),
             'condition' => ['show_deposit' => 'yes'],
         ]);
 
         $this->end_controls_section();
 
-        // ── Réservation ───────────────────────────────────────────────────
+        // ── Réservation Regiondo ──────────────────────────────────────────
         $this->start_controls_section('section_booking', [
             'label' => __('Réservation Regiondo', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('show_booking', [
             'label'        => __('Afficher le widget de réservation', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'description'  => __('Intègre le calendrier Regiondo via le UUID stocké dans le champ ACF.', 'blacktenderscore'),
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('booking_field', [
-            'label'     => __('Champ UUID Regiondo', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::SELECT,
+            'label'     => __('Champ UUID Regiondo (global)', 'blacktenderscore'),
+            'type'      => Controls_Manager::SELECT,
             'options'   => [
                 'exp_booking_short_url' => __('Forfait court (exp_booking_short_url)', 'blacktenderscore'),
                 'exp_booking_long_url'  => __('Forfait long (exp_booking_long_url)', 'blacktenderscore'),
@@ -104,110 +109,142 @@ class PricingTabs extends AbstractBtWidget {
         ]);
 
         $this->add_control('booking_per_tab', [
-            'label'       => __('UUID par tab (champ sous-repeater)', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::SWITCHER,
-            'description' => __('Si chaque forfait a son propre UUID dans le repeater (champ exp_booking_uuid), activez cette option.', 'blacktenderscore'),
-            'return_value'=> 'yes',
-            'default'     => '',
-            'condition'   => ['show_booking' => 'yes'],
+            'label'        => __('UUID par tab (sous-champ repeater)', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'description'  => __('Si chaque forfait a son propre UUID dans le repeater (champ exp_booking_uuid), activez cette option.', 'blacktenderscore'),
+            'return_value' => 'yes',
+            'default'      => '',
+            'condition'    => ['show_booking' => 'yes'],
         ]);
 
         $this->add_control('booking_uuid_subfield', [
             'label'     => __('Nom du sous-champ UUID', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => 'exp_booking_uuid',
             'condition' => ['show_booking' => 'yes', 'booking_per_tab' => 'yes'],
         ]);
 
         $this->end_controls_section();
 
-        // ── Style — Tabs ──────────────────────────────────────────────────
-        $this->start_controls_section('style_tabs', [
-            'label' => __('Style — Tabs', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+        // ── Onboarding — Choisissez vos dispo ────────────────────────────
+        $this->start_controls_section('section_onboarding', [
+            'label'     => __('Onboarding — Sélection créneaux', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_CONTENT,
+            'condition' => ['show_booking' => 'yes'],
         ]);
 
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
-            'name'     => 'tab_typography',
-            'selector' => '{{WRAPPER}} .bt-pricing__tab',
+        $this->add_control('show_onboarding', [
+            'label'        => __('Afficher les créneaux avant réservation', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'description'  => __('Montre les horaires disponibles. Le widget Regiondo se révèle au clic sur un créneau.', 'blacktenderscore'),
+            'return_value' => 'yes',
+            'default'      => '',
         ]);
 
-        $this->add_control('tab_color', [
-            'label'     => __('Couleur', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-pricing__tab' => 'color: {{VALUE}}'],
+        // Titre onboarding — supporte les dynamic tags
+        $this->add_control('onboarding_title', [
+            'label'     => __('Titre "Choisissez vos dispo"', 'blacktenderscore'),
+            'type'      => Controls_Manager::TEXT,
+            'default'   => __('Choisissez vos dispo', 'blacktenderscore'),
+            'dynamic'   => ['active' => true],
+            'condition' => ['show_onboarding' => 'yes'],
         ]);
 
-        $this->add_control('tab_bg', [
-            'label'     => __('Fond', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-pricing__tab' => 'background-color: {{VALUE}}'],
+        $this->add_control('onboarding_title_tag', [
+            'label'     => __('Balise titre', 'blacktenderscore'),
+            'type'      => Controls_Manager::SELECT,
+            'options'   => ['h3' => 'H3', 'h4' => 'H4', 'h5' => 'H5', 'p' => 'p', 'span' => 'span'],
+            'default'   => 'h4',
+            'condition' => ['show_onboarding' => 'yes', 'onboarding_title!' => ''],
         ]);
 
-        $this->add_control('tab_active_color', [
-            'label'     => __('Couleur (actif)', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-pricing__tab--active' => 'color: {{VALUE}}'],
+        $this->add_control('onboarding_slots_field', [
+            'label'       => __('Champ ACF créneaux (repeater)', 'blacktenderscore'),
+            'type'        => Controls_Manager::TEXT,
+            'default'     => 'exp_departure_times',
+            'description' => __('Repeater ACF contenant les horaires disponibles. Défaut : exp_departure_times.', 'blacktenderscore'),
+            'condition'   => ['show_onboarding' => 'yes'],
         ]);
 
-        $this->add_control('tab_active_bg', [
-            'label'     => __('Fond (actif)', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-pricing__tab--active' => 'background-color: {{VALUE}}'],
+        $this->add_control('onboarding_slot_subfield', [
+            'label'     => __('Sous-champ heure', 'blacktenderscore'),
+            'type'      => Controls_Manager::TEXT,
+            'default'   => 'time',
+            'condition' => ['show_onboarding' => 'yes'],
         ]);
 
-        $this->add_responsive_control('tab_padding', [
-            'label'      => __('Padding tab', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::DIMENSIONS,
-            'size_units' => ['px', 'em'],
-            'selectors'  => ['{{WRAPPER}} .bt-pricing__tab' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
-        ]);
-
-        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
-            'name'     => 'tab_border',
-            'selector' => '{{WRAPPER}} .bt-pricing__tab',
+        $this->add_control('onboarding_fallback_label', [
+            'label'       => __('Bouton de repli (si aucun créneau)', 'blacktenderscore'),
+            'type'        => Controls_Manager::TEXT,
+            'default'     => __('Voir les disponibilités', 'blacktenderscore'),
+            'description' => __('Affiché si le champ ACF est vide ou introuvable.', 'blacktenderscore'),
+            'condition'   => ['show_onboarding' => 'yes'],
         ]);
 
         $this->end_controls_section();
 
-        // ── Style — Contenu ───────────────────────────────────────────────
+        // ══ STYLE ══════════════════════════════════════════════════════════════
+
+        $this->register_tabs_nav_style(
+            'tab',
+            'Style — Tabs',
+            '{{WRAPPER}} .bt-pricing__tab',
+            '{{WRAPPER}} .bt-pricing__tab--active',
+            '{{WRAPPER}} .bt-pricing__tablist',
+            [],
+            ['with_hover' => true, 'with_radius' => true, 'with_indicator' => true]
+        );
+
+        $this->register_typography_section(
+            'price',
+            'Style — Prix',
+            '{{WRAPPER}} .bt-pricing__price'
+        );
+
+        $this->register_typography_section(
+            'note',
+            'Style — Note / Acompte',
+            '{{WRAPPER}} .bt-pricing__note, {{WRAPPER}} .bt-pricing__deposit'
+        );
+
+        // Panel (fond + padding)
         $this->start_controls_section('style_panel', [
             'label' => __('Style — Panneau', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
-        ]);
-
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
-            'name'     => 'price_typography',
-            'label'    => __('Typographie prix', 'blacktenderscore'),
-            'selector' => '{{WRAPPER}} .bt-pricing__price',
-        ]);
-
-        $this->add_control('price_color', [
-            'label'     => __('Couleur prix', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-pricing__price' => 'color: {{VALUE}}'],
-        ]);
-
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
-            'name'     => 'note_typography',
-            'label'    => __('Typographie note', 'blacktenderscore'),
-            'selector' => '{{WRAPPER}} .bt-pricing__note, {{WRAPPER}} .bt-pricing__deposit',
+            'tab'   => Controls_Manager::TAB_STYLE,
         ]);
 
         $this->add_control('panel_bg', [
             'label'     => __('Fond du panneau', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-pricing__panel' => 'background-color: {{VALUE}}'],
         ]);
 
         $this->add_responsive_control('panel_padding', [
             'label'      => __('Padding panneau', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::DIMENSIONS,
+            'type'       => Controls_Manager::DIMENSIONS,
             'size_units' => ['px', 'em'],
             'selectors'  => ['{{WRAPPER}} .bt-pricing__panel' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
         ]);
 
         $this->end_controls_section();
+
+        // Onboarding styles
+        $this->register_typography_section(
+            'ob_title',
+            'Style — Titre onboarding',
+            '{{WRAPPER}} .bt-pricing__ob-title',
+            [],
+            [],
+            ['show_onboarding' => 'yes']
+        );
+
+        $this->register_button_style(
+            'slot',
+            'Style — Créneaux',
+            '{{WRAPPER}} .bt-pricing__slot',
+            [],
+            ['show_onboarding' => 'yes']
+        );
     }
 
     // ── Render ───────────────────────────────────────────────────────────────
@@ -230,6 +267,12 @@ class PricingTabs extends AbstractBtWidget {
             $global_uuid = (string) get_field($s['booking_field'], $post_id);
         }
 
+        // Créneaux onboarding (lus une seule fois — partagés entre tous les tabs)
+        $slots = [];
+        if ($s['show_onboarding'] === 'yes') {
+            $slots = $this->resolve_onboarding_slots($s, $post_id);
+        }
+
         $uid = 'bt-pricing-' . $this->get_id();
 
         echo "<div class=\"bt-pricing\" id=\"{$uid}\" data-bt-tabs data-bt-panel-class=\"bt-pricing__panel\">";
@@ -241,7 +284,9 @@ class PricingTabs extends AbstractBtWidget {
             $tab_id = "{$uid}-tab-{$i}";
             $pan_id = "{$uid}-panel-{$i}";
             $active = $i === 0 ? ' bt-pricing__tab--active' : '';
-            echo "<button class=\"bt-pricing__tab{$active}\" id=\"{$tab_id}\" role=\"tab\" aria-selected=\"" . ($i === 0 ? 'true' : 'false') . "\" aria-controls=\"{$pan_id}\" tabindex=\"" . ($i === 0 ? '0' : '-1') . "\">";
+            $sel    = $i === 0 ? 'true' : 'false';
+            $tabi   = $i === 0 ? '0' : '-1';
+            echo "<button class=\"bt-pricing__tab{$active}\" id=\"{$tab_id}\" role=\"tab\" aria-selected=\"{$sel}\" aria-controls=\"{$pan_id}\" tabindex=\"{$tabi}\">";
             echo esc_html($label);
             echo '</button>';
         }
@@ -249,20 +294,20 @@ class PricingTabs extends AbstractBtWidget {
 
         // ── Panels ────────────────────────────────────────────────────────
         foreach ($rows as $i => $row) {
-            $tab_id  = "{$uid}-tab-{$i}";
-            $pan_id  = "{$uid}-panel-{$i}";
-            $active_panel = $i === 0 ? ' bt-pricing__panel--active' : '';
-            $price   = $row['exp_price']        ?? '';
-            $note    = $row['exp_pricing_note'] ?? '';
-            $deposit = $row['exp_deposit']      ?? '';
+            $tab_id      = "{$uid}-tab-{$i}";
+            $pan_id      = "{$uid}-panel-{$i}";
+            $active_cls  = $i === 0 ? ' bt-pricing__panel--active' : '';
+            $price       = $row['exp_price']        ?? '';
+            $note        = $row['exp_pricing_note'] ?? '';
+            $deposit     = $row['exp_deposit']      ?? '';
 
-            // UUID per-tab
+            // UUID per-tab ou global
             $uuid = $global_uuid;
             if ($s['show_booking'] === 'yes' && $s['booking_per_tab'] === 'yes') {
                 $uuid = (string) ($row[$s['booking_uuid_subfield']] ?? '');
             }
 
-            echo "<div class=\"bt-pricing__panel{$active_panel}\" id=\"{$pan_id}\" role=\"tabpanel\" aria-labelledby=\"{$tab_id}\">";
+            echo "<div class=\"bt-pricing__panel{$active_cls}\" id=\"{$pan_id}\" role=\"tabpanel\" aria-labelledby=\"{$tab_id}\">";
 
             // Prix principal
             if ($price !== '') {
@@ -282,11 +327,15 @@ class PricingTabs extends AbstractBtWidget {
                 echo '<p class="bt-pricing__deposit">' . $dep_lbl . ' <strong>' . esc_html($deposit) . ' €</strong></p>';
             }
 
-            // Booking widget Regiondo
-            if ($s['show_booking'] === 'yes' && $uuid) {
-                echo $this->render_booking_widget($uuid, $post_id, $i);
-            } elseif ($s['show_booking'] === 'yes' && $this->is_edit_mode()) {
-                echo '<div class="bt-widget-placeholder">Widget de réservation Regiondo (UUID requis)</div>';
+            // Booking
+            if ($s['show_booking'] === 'yes') {
+                if ($s['show_onboarding'] === 'yes') {
+                    $this->render_onboarding_block($s, $slots, $uuid, $post_id, $i);
+                } elseif ($uuid) {
+                    echo $this->render_booking_widget($uuid, $post_id, $i);
+                } elseif ($this->is_edit_mode()) {
+                    echo '<div class="bt-widget-placeholder">Widget de réservation Regiondo (UUID requis)</div>';
+                }
             }
 
             echo '</div>'; // .bt-pricing__panel
@@ -296,6 +345,65 @@ class PricingTabs extends AbstractBtWidget {
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /**
+     * Lit les créneaux depuis le champ ACF configurable.
+     * Retourne un tableau de labels (strings).
+     */
+    private function resolve_onboarding_slots(array $s, int $post_id): array {
+        $field_name = sanitize_text_field($s['onboarding_slots_field'] ?: 'exp_departure_times');
+        $subfield   = sanitize_key($s['onboarding_slot_subfield'] ?: 'time');
+        $rows       = get_field($field_name, $post_id);
+
+        if (empty($rows) || !is_array($rows)) return [];
+
+        $labels = [];
+        foreach ($rows as $row) {
+            $t = is_array($row) ? ($row[$subfield] ?? '') : (string) $row;
+            if ($t !== '') $labels[] = (string) $t;
+        }
+        return $labels;
+    }
+
+    /**
+     * Rend le bloc onboarding (titre + créneaux + booking révélé au clic).
+     */
+    private function render_onboarding_block(array $s, array $slots, string $uuid, int $post_id, int $index): void {
+        echo '<div class="bt-pricing__onboarding" data-bt-onboarding>';
+
+        // Titre "Choisissez vos dispo"
+        $ob_title = $s['onboarding_title'] ?? '';
+        if ($ob_title) {
+            $tag = esc_attr($s['onboarding_title_tag'] ?: 'h4');
+            echo "<{$tag} class=\"bt-pricing__ob-title\">" . esc_html($ob_title) . "</{$tag}>";
+        }
+
+        // Créneaux
+        echo '<div class="bt-pricing__slots">';
+        if (!empty($slots)) {
+            foreach ($slots as $slot_label) {
+                echo '<button type="button" class="bt-pricing__slot" data-uuid="' . esc_attr($uuid) . '">';
+                echo esc_html($slot_label);
+                echo '</button>';
+            }
+        } else {
+            // Fallback CTA si aucun créneau trouvé
+            $fallback = esc_html($s['onboarding_fallback_label'] ?: __('Voir les disponibilités', 'blacktenderscore'));
+            echo '<button type="button" class="bt-pricing__slot bt-pricing__slot--cta" data-uuid="' . esc_attr($uuid) . '">' . $fallback . '</button>';
+        }
+        echo '</div>'; // .bt-pricing__slots
+
+        echo '</div>'; // .bt-pricing__onboarding
+
+        // Widget Regiondo — caché jusqu'au clic
+        if ($uuid) {
+            echo '<div class="bt-pricing__booking-reveal" style="display:none">';
+            echo $this->render_booking_widget($uuid, $post_id, $index);
+            echo '</div>';
+        } elseif ($this->is_edit_mode()) {
+            echo '<div class="bt-widget-placeholder">Widget de réservation Regiondo (UUID requis)</div>';
+        }
+    }
 
     private function get_tab_label(array $row, int $i): string {
         $term_val = $row['exp_time'] ?? null;
@@ -314,11 +422,9 @@ class PricingTabs extends AbstractBtWidget {
                     if ($t && !is_wp_error($t)) return $t->name;
                 }
             }
-            // exp_time est un champ texte libre (ex : "1h30") — l'utiliser directement
             if (is_string($term_val) && $term_val !== '') return $term_val;
         }
 
-        // Fallback : numérotation + prix
         $price = $row['exp_price'] ?? '';
         return $price ? "Forfait " . ($i + 1) . " — {$price} €" : "Forfait " . ($i + 1);
     }
@@ -327,7 +433,6 @@ class PricingTabs extends AbstractBtWidget {
         $widget_id = esc_attr($uuid);
         $style_id  = "bt-booking-styles-{$post_id}-{$index}";
 
-        // Script chargé une seule fois par page, peu importe le nombre de forfaits
         $script = '';
         if (!self::$regiondo_script_printed) {
             $script = '<script src="https://widgets.regiondo.net/booking/v1/booking-widget.min.js" async></script>';
