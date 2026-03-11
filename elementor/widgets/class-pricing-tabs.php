@@ -195,7 +195,17 @@ class PricingTabs extends AbstractBtWidget {
             '{{WRAPPER}} .bt-pricing__tab--active',
             '{{WRAPPER}} .bt-pricing__tablist',
             [],
-            ['with_hover' => true, 'with_radius' => true, 'with_indicator' => true]
+            [
+                'with_hover'      => true,
+                'with_radius'     => true,
+                'with_indicator'  => true,
+                'with_direction'  => true,
+                'with_justify'    => true,
+                'with_scroll'     => true,
+                'with_breakpoint' => true,
+                'with_panel'      => true,
+                'panel_sel'       => '{{WRAPPER}} .bt-pricing__panel--active',
+            ]
         );
 
         $this->register_panel_style('panel', 'Style — Panneau', '{{WRAPPER}} .bt-pricing__panel--active');

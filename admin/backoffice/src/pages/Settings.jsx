@@ -1,7 +1,139 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
 import { api } from '../lib/api'
 import { PageHeader, Input, Textarea, Btn, Notice, Spinner, SectionTitle, Divider, Toggle } from '../components/ui'
+
+/* ── CSS Sanitizer — strips XSS vectors ────────────────────────── */
+const CSS_DANGEROUS = [
+  /expression\s*\(/gi,
+  /javascript\s*:/gi,
+  /-moz-binding\s*:/gi,
+  /behavior\s*:/gi,
+  /url\s*\(\s*["']?\s*data\s*:\s*text\/html/gi,
+  /<\/?script/gi,
+  /<\/?style/gi,
+  /@import\s+url/gi,
+]
+
+function sanitizeCss(raw) {
+  let css = raw
+  for (const pattern of CSS_DANGEROUS) {
+    css = css.replace(pattern, '/* blocked */')
+  }
+  return css
+}
+
+function getCssWarnings(raw) {
+  const warnings = []
+  if (/expression\s*\(/i.test(raw)) warnings.push('expression() bloqué (vecteur XSS IE)')
+  if (/javascript\s*:/i.test(raw)) warnings.push('javascript: bloqué')
+  if (/-moz-binding/i.test(raw)) warnings.push('-moz-binding bloqué')
+  if (/behavior\s*:/i.test(raw)) warnings.push('behavior: bloqué')
+  if (/<script/i.test(raw)) warnings.push('Balise <script> bloquée')
+  if (/@import\s+url/i.test(raw)) warnings.push('@import url() bloqué')
+  return warnings
+}
+
+/* ── CSS Syntax Highlighter ────────────────────────────────────── */
+function highlightCss(code) {
+  if (!code) return ''
+  // Escape HTML first
+  let html = code
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+
+  // Comments
+  html = html.replace(/(\/\*[\s\S]*?\*\/)/g, '<span style="color:var(--css-comment,#6a737d)">$1</span>')
+  // Strings
+  html = html.replace(/(["'])(?:(?!\1).)*?\1/g, '<span style="color:var(--css-string,#032f62)">$1</span>')
+  // Properties (word before colon inside braces context)
+  html = html.replace(/([a-z-]+)(\s*:)/gi, '<span style="color:var(--css-property,#6f42c1)">$1</span>$2')
+  // Values: numbers + units
+  html = html.replace(/:\s*([^;}{]+)/g, (m, val) => {
+    const colored = val
+      .replace(/(#[0-9a-fA-F]{3,8})/g, '<span style="color:var(--css-color,#e36209)">$1</span>')
+      .replace(/(\b\d+\.?\d*)(px|em|rem|%|vh|vw|s|ms|deg|fr)?\b/g, '<span style="color:var(--css-number,#005cc5)">$1$2</span>')
+    return ': ' + colored
+  })
+  // Selectors (lines that end with {)
+  html = html.replace(/^([^{}/*]+?)(\s*\{)/gm, '<span style="color:var(--css-selector,#22863a)">$1</span>$2')
+  // Braces
+  html = html.replace(/([{}])/g, '<span style="color:var(--css-brace,#586069)">$1</span>')
+
+  return html
+}
+
+/* ── CssEditor Component ───────────────────────────────────────── */
+function CssEditor({ value, onChange, placeholder }) {
+  const textareaRef = useRef(null)
+  const preRef = useRef(null)
+  const warnings = getCssWarnings(value || '')
+
+  const syncScroll = useCallback(() => {
+    if (preRef.current && textareaRef.current) {
+      preRef.current.scrollTop = textareaRef.current.scrollTop
+      preRef.current.scrollLeft = textareaRef.current.scrollLeft
+    }
+  }, [])
+
+  const handleChange = useCallback((e) => {
+    onChange(sanitizeCss(e.target.value))
+  }, [onChange])
+
+  // Auto-resize
+  useEffect(() => {
+    const ta = textareaRef.current
+    if (ta) {
+      ta.style.height = 'auto'
+      ta.style.height = Math.max(120, ta.scrollHeight) + 'px'
+    }
+  }, [value])
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="relative rounded-md border border-input overflow-hidden font-mono text-xs leading-relaxed">
+        {/* Highlighted layer (behind) */}
+        <pre
+          ref={preRef}
+          className="absolute inset-0 m-0 p-3 overflow-hidden pointer-events-none whitespace-pre-wrap break-words"
+          aria-hidden="true"
+          dangerouslySetInnerHTML={{ __html: highlightCss(value || '') + '\n' }}
+          style={{ background: 'transparent', fontFamily: 'inherit', fontSize: 'inherit', lineHeight: 'inherit' }}
+        />
+        {/* Textarea (on top, transparent text) */}
+        <textarea
+          ref={textareaRef}
+          value={value || ''}
+          onChange={handleChange}
+          onScroll={syncScroll}
+          placeholder={placeholder}
+          spellCheck={false}
+          className="relative w-full p-3 bg-transparent resize-none outline-none"
+          style={{
+            color: 'transparent',
+            caretColor: 'var(--foreground, #000)',
+            fontFamily: 'inherit',
+            fontSize: 'inherit',
+            lineHeight: 'inherit',
+            minHeight: '120px',
+            WebkitTextFillColor: 'transparent',
+          }}
+        />
+      </div>
+      {warnings.length > 0 && (
+        <div className="flex flex-col gap-0.5">
+          {warnings.map((w, i) => (
+            <span key={i} className="text-[11px] text-destructive flex items-center gap-1">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 9v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+              {w}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 const INTERVALS = [
   { value: 0,    label: 'Désactivée (manuel uniquement)' },
@@ -247,11 +379,10 @@ export default function Settings() {
             Ce CSS sera injecté dans chaque <code className="bg-muted px-1 py-0.5 rounded text-[11px]">{'<booking-widget>'}</code> sur le front.
             Il s'applique à tous les widgets de réservation Regiondo.
           </p>
-          <Textarea
+          <CssEditor
             value={settings.booking_custom_css ?? ''}
-            onChange={e => set('booking_custom_css', e.target.value)}
+            onChange={v => set('booking_custom_css', v)}
             placeholder={`.regiondo-widget .regiondo-button-addtocart {\n  border-radius: 40px;\n  background: #222;\n}`}
-            className="font-mono text-xs min-h-[120px]"
           />
         </section>
 

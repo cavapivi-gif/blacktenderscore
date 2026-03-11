@@ -1830,12 +1830,14 @@
   justify-content: center;
 }
 
-.bt-highlights__icon i   { font-size: inherit; color: inherit; }
-.bt-highlights__icon svg { width: 1em; height: 1em; fill: currentColor; }
+/* Icon inherits size/color from parent — works for FA <i>, SVG, and emoji */
+.bt-highlights__icon i     { font-size: inherit; color: inherit; line-height: 1; }
+.bt-highlights__icon svg   { width: 1em; height: 1em; fill: currentColor; }
+.bt-highlights__icon i::before { font-size: inherit; }
 
 .bt-highlights__content { flex: 1; min-width: 0; overflow: hidden; word-break: break-word; }
 .bt-highlights__title   { display: block; font-weight: 600; }
-.bt-highlights__desc    { margin: .25em 0 0; }
+.bt-highlights__desc    { margin: 4px 0 0; }
 
 /* ══════════════════════════════════════════════════════════
    WIDGET : Captain
@@ -2057,4 +2059,75 @@
   height: 18px;
   flex-shrink: 0;
   fill: currentColor;
+}
+
+
+/* ══════════════════════════════════════════════════════════
+   SHARED : Tab direction, scroll & breakpoint accordion
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Vertical direction: wrapper becomes row ──────────── */
+[role="tablist"][style*="flex-direction: column"] {
+  border-bottom: none;
+  border-right: 2px solid var(--bt-border-light, #e0e0e0);
+}
+
+/* When tablist is column, the parent needs to be a row */
+.bt-pricing[style*="flex-direction"] > .bt-pricing__tablist,
+.bt-bprice[style*="flex-direction"] > .bt-bprice__tablist {
+  /* Elementor handles flex-direction via inline styles */
+}
+
+/* ── Hide scrollbar for scroll mode ──────────────────── */
+[role="tablist"]::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Breakpoint accordion — shared rules ─────────────── */
+
+/* Mobile breakpoint (< 768px) */
+@media (max-width: 767px) {
+  .bt-tabs-bp-mobile [role="tablist"] {
+    display: none !important;
+  }
+
+  .bt-tabs-bp-mobile .bt-pricing__panel,
+  .bt-tabs-bp-mobile .bt-bprice__panel,
+  .bt-tabs-bp-mobile .bt-faq__tabpanel {
+    display: block;
+    border-bottom: 1px solid var(--bt-border-light, #e0e0e0);
+    padding: 16px 0;
+  }
+
+  /* Add tab title as accordion header before each panel */
+  .bt-tabs-bp-mobile [data-bt-tab-title]::before {
+    content: attr(data-bt-tab-title);
+    display: block;
+    font-weight: 600;
+    padding: 12px 0;
+    cursor: pointer;
+  }
+}
+
+/* Tablet breakpoint (< 1025px) */
+@media (max-width: 1024px) {
+  .bt-tabs-bp-tablet [role="tablist"] {
+    display: none !important;
+  }
+
+  .bt-tabs-bp-tablet .bt-pricing__panel,
+  .bt-tabs-bp-tablet .bt-bprice__panel,
+  .bt-tabs-bp-tablet .bt-faq__tabpanel {
+    display: block;
+    border-bottom: 1px solid var(--bt-border-light, #e0e0e0);
+    padding: 16px 0;
+  }
+
+  .bt-tabs-bp-tablet [data-bt-tab-title]::before {
+    content: attr(data-bt-tab-title);
+    display: block;
+    font-weight: 600;
+    padding: 12px 0;
+    cursor: pointer;
+  }
 }
