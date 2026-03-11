@@ -3,14 +3,31 @@ namespace BlackTenders\Elementor\Widgets;
 
 use BlackTenders\Elementor\AbstractBtWidget;
 use BlackTenders\Elementor\Traits\BtSharedControls;
+use Elementor\Controls_Manager;
+use Elementor\Group_Control_Typography;
 
 defined('ABSPATH') || exit;
 
 /**
  * Widget Elementor — Galerie photos.
  *
- * Lit un champ ACF de type gallery (`boat_gallery` ou `exp_gallery`)
- * et affiche les images en grille avec lightbox Elementor natif.
+ * Deux dispositions :
+ *   airbnb — 1 grande image (colonne principale) + vignettes en grille 2×N
+ *   grid   — grille libre N colonnes
+ *
+ * Toutes les images (y compris au-delà de max_visible) sont injectées dans
+ * le slideshow Elementor : la lightbox affiche la galerie complète.
+ *
+ * Overlay "+N photos" sur la dernière vignette visible, avec option flou.
+ * Bouton "Voir toutes les photos" positionnable sur l'image principale.
+ * Zoom au survol sans emoji — design épuré, pas d'icône kitch.
+ *
+ * ── Layout Airbnb (5 images, col_ratio = 2fr 1fr 1fr) ──────────────────
+ *   ┌─────────────┬──────┬──────┐
+ *   │             │  2   │  3   │
+ *   │      1      ├──────┼──────┤
+ *   │   [btn]     │  4   │ 5+x  │
+ *   └─────────────┴──────┴──────┘
  */
 class Gallery extends AbstractBtWidget {
 
@@ -21,23 +38,23 @@ class Gallery extends AbstractBtWidget {
             'id'       => 'bt-gallery',
             'title'    => 'BT — Galerie photos',
             'icon'     => 'eicon-gallery-grid',
-            'keywords' => ['galerie', 'photos', 'images', 'lightbox', 'bt'],
+            'keywords' => ['galerie', 'photos', 'images', 'lightbox', 'airbnb', 'bt'],
         ];
     }
 
-    // ── Controls ─────────────────────────────────────────────────────────────
+    // ══ Controls ══════════════════════════════════════════════════════════════
 
     protected function register_controls(): void {
 
         // ── Contenu ───────────────────────────────────────────────────────
         $this->start_controls_section('section_content', [
             'label' => __('Contenu', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('acf_field', [
-            'label'   => __('Champ ACF gallery', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
+            'label'   => __('Champ ACF galerie', 'blacktenderscore'),
+            'type'    => Controls_Manager::SELECT,
             'options' => [
                 'boat_gallery' => __('Galerie bateau (boat_gallery)', 'blacktenderscore'),
                 'exp_gallery'  => __('Galerie excursion (exp_gallery)', 'blacktenderscore'),
@@ -47,169 +64,441 @@ class Gallery extends AbstractBtWidget {
 
         $this->register_section_title_controls();
 
-        $this->add_control('max_images', [
-            'label'       => __('Nombre max d\'images (0 = toutes)', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::NUMBER,
-            'min'         => 0,
-            'max'         => 100,
-            'default'     => 0,
+        $this->add_control('layout', [
+            'label'     => __('Disposition', 'blacktenderscore'),
+            'type'      => Controls_Manager::SELECT,
+            'options'   => [
+                'airbnb' => __('Airbnb (hero + vignettes)', 'blacktenderscore'),
+                'grid'   => __('Grille libre', 'blacktenderscore'),
+            ],
+            'default'   => 'airbnb',
+            'separator' => 'before',
+        ]);
+
+        $this->add_control('max_visible', [
+            'label'       => __('Images affichées dans la grille', 'blacktenderscore'),
+            'description' => __('Les images supplémentaires restent accessibles via la lightbox.', 'blacktenderscore'),
+            'type'        => Controls_Manager::NUMBER,
+            'min'         => 1,
+            'max'         => 20,
+            'default'     => 5,
         ]);
 
         $this->add_control('thumb_size', [
-            'label'   => __('Taille miniature', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
+            'label'   => __('Qualité des miniatures', 'blacktenderscore'),
+            'type'    => Controls_Manager::SELECT,
             'options' => [
-                'thumbnail' => 'Miniature (150px)',
-                'medium'    => 'Moyenne (300px)',
-                'large'     => 'Grande (1024px)',
-                'full'      => 'Originale',
+                'medium'       => __('Moyenne (300px)', 'blacktenderscore'),
+                'medium_large' => __('Moyen-grand (768px)', 'blacktenderscore'),
+                'large'        => __('Grande (1024px)', 'blacktenderscore'),
+                'full'         => __('Originale', 'blacktenderscore'),
             ],
-            'default' => 'medium',
+            'default' => 'large',
         ]);
 
         $this->add_control('enable_lightbox', [
-            'label'        => __('Lightbox Elementor', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'label'        => __('Activer la lightbox', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
+        $this->add_control('show_caption', [
+            'label'        => __('Afficher les légendes', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => '',
+        ]);
+
         $this->end_controls_section();
 
-        // ── Grille ────────────────────────────────────────────────────────
-        $this->start_controls_section('section_grid', [
-            'label' => __('Grille', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+        // ── Grille libre [condition: grid] ─────────────────────────────────
+        $this->start_controls_section('section_grid_layout', [
+            'label'     => __('Mise en page — Grille', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_CONTENT,
+            'condition' => ['layout' => 'grid'],
         ]);
 
         $this->add_responsive_control('columns', [
             'label'          => __('Colonnes', 'blacktenderscore'),
-            'type'           => \Elementor\Controls_Manager::NUMBER,
-            'min'            => 1,
-            'max'            => 8,
-            'default'        => 3,
-            'tablet_default' => 2,
-            'mobile_default' => 2,
+            'type'           => Controls_Manager::SELECT,
+            'options'        => ['1' => '1', '2' => '2', '3' => '3', '4' => '4', '5' => '5', '6' => '6'],
+            'default'        => '3',
+            'tablet_default' => '2',
+            'mobile_default' => '2',
             'selectors'      => ['{{WRAPPER}} .bt-gallery__grid' => 'grid-template-columns: repeat({{VALUE}}, 1fr)'],
         ]);
 
         $this->add_control('aspect_ratio', [
             'label'   => __('Ratio des images', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
+            'type'    => Controls_Manager::SELECT,
             'options' => [
-                'square'   => __('Carré (1:1)', 'blacktenderscore'),
+                'square'    => __('Carré (1:1)', 'blacktenderscore'),
                 'landscape' => __('Paysage (4:3)', 'blacktenderscore'),
-                'wide'     => __('Cinémascope (16:9)', 'blacktenderscore'),
-                'portrait' => __('Portrait (3:4)', 'blacktenderscore'),
-                'auto'     => __('Auto (original)', 'blacktenderscore'),
+                'wide'      => __('Cinémascope (16:9)', 'blacktenderscore'),
+                'portrait'  => __('Portrait (3:4)', 'blacktenderscore'),
+                'auto'      => __('Auto (original)', 'blacktenderscore'),
             ],
             'default' => 'landscape',
         ]);
 
         $this->end_controls_section();
 
-        $this->register_section_title_style('{{WRAPPER}} .bt-gallery__title');
-
-        // ── Style ─────────────────────────────────────────────────────────
-        $this->start_controls_section('style_gallery', [
-            'label' => __('Style', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+        // ── Overlay — Dernière image ───────────────────────────────────────
+        $this->start_controls_section('section_overlay', [
+            'label' => __('Overlay — Dernière image', 'blacktenderscore'),
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
-        $this->add_responsive_control('gap', [
-            'label'      => __('Espacement', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+        $this->add_control('overlay_mode', [
+            'label'   => __('Affichage', 'blacktenderscore'),
+            'type'    => Controls_Manager::SELECT,
+            'options' => [
+                'photos' => __('+N photos', 'blacktenderscore'),
+                'count'  => __('+N (chiffre seul)', 'blacktenderscore'),
+                'custom' => __('Texte personnalisé', 'blacktenderscore'),
+                'none'   => __('Aucun overlay', 'blacktenderscore'),
+            ],
+            'default' => 'photos',
+        ]);
+
+        $this->add_control('overlay_text', [
+            'label'       => __('Texte personnalisé', 'blacktenderscore'),
+            'description' => __('Utilisez {n} pour le nombre de photos cachées.', 'blacktenderscore'),
+            'type'        => Controls_Manager::TEXT,
+            'default'     => __('Voir les {n} photos', 'blacktenderscore'),
+            'condition'   => ['overlay_mode' => 'custom'],
+        ]);
+
+        $this->add_control('overlay_show_always', [
+            'label'        => __('Toujours afficher l\'overlay', 'blacktenderscore'),
+            'description'  => __('Même si toutes les images sont visibles.', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => '',
+        ]);
+
+        $this->add_control('overlay_blur', [
+            'label'        => __('Flou sur la dernière image', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => '',
+            'separator'    => 'before',
+            'condition'    => ['overlay_mode!' => 'none'],
+        ]);
+
+        $this->add_responsive_control('overlay_blur_intensity', [
+            'label'      => __('Intensité du flou', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 0, 'max' => 20, 'step' => 1]],
+            'default'    => ['size' => 4, 'unit' => 'px'],
+            'condition'  => ['overlay_mode!' => 'none', 'overlay_blur' => 'yes'],
+            'selectors'  => [
+                '{{WRAPPER}} .bt-gallery__item--last .bt-gallery__img' => 'filter: blur({{SIZE}}{{UNIT}}); transform: scale(1.06)',
+            ],
+        ]);
+
+        $this->end_controls_section();
+
+        // ── Bouton "Voir toutes les photos" [airbnb] ───────────────────────
+        $this->start_controls_section('section_allphotos_btn', [
+            'label'     => __('Bouton — Voir toutes les photos', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_CONTENT,
+            'condition' => ['layout' => 'airbnb'],
+        ]);
+
+        $this->add_control('show_allphotos_btn', [
+            'label'        => __('Afficher le bouton', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => 'yes',
+        ]);
+
+        $this->add_control('allphotos_label', [
+            'label'     => __('Label', 'blacktenderscore'),
+            'type'      => Controls_Manager::TEXT,
+            'default'   => __('Voir toutes les photos', 'blacktenderscore'),
+            'condition' => ['show_allphotos_btn' => 'yes'],
+        ]);
+
+        $this->add_control('allphotos_position', [
+            'label'   => __('Position', 'blacktenderscore'),
+            'type'    => Controls_Manager::SELECT,
+            'options' => [
+                'bottom-left'   => __('Bas gauche', 'blacktenderscore'),
+                'bottom-right'  => __('Bas droite', 'blacktenderscore'),
+                'bottom-center' => __('Bas centre', 'blacktenderscore'),
+            ],
+            'default'   => 'bottom-right',
+            'condition' => ['show_allphotos_btn' => 'yes'],
+        ]);
+
+        $this->end_controls_section();
+
+        // ══ STYLE TAB ═════════════════════════════════════════════════════════
+
+        $this->register_section_title_style('{{WRAPPER}} .bt-gallery__title');
+
+        // ── Style — Grille ────────────────────────────────────────────────
+        $this->start_controls_section('style_grid', [
+            'label' => __('Style — Grille', 'blacktenderscore'),
+            'tab'   => Controls_Manager::TAB_STYLE,
+        ]);
+
+        $this->add_responsive_control('grid_gap', [
+            'label'      => __('Espacement entre images', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'range'      => ['px' => ['min' => 0, 'max' => 40]],
             'default'    => ['size' => 8, 'unit' => 'px'],
             'selectors'  => ['{{WRAPPER}} .bt-gallery__grid' => 'gap: {{SIZE}}{{UNIT}}'],
         ]);
 
-        $this->add_responsive_control('border_radius', [
-            'label'      => __('Border radius images', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+        $this->add_responsive_control('grid_height', [
+            'label'      => __('Hauteur de la grille', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px', 'vh'],
+            'range'      => ['px' => ['min' => 100, 'max' => 800], 'vh' => ['min' => 10, 'max' => 100]],
+            'default'    => ['size' => 420, 'unit' => 'px'],
+            'condition'  => ['layout' => 'airbnb'],
+            'selectors'  => ['{{WRAPPER}} .bt-gallery__grid' => 'height: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        $this->add_control('col_ratio', [
+            'label'     => __('Proportion colonne principale', 'blacktenderscore'),
+            'type'      => Controls_Manager::SELECT,
+            'options'   => [
+                '1fr 1fr 1fr' => __('Égal — 1/3 · 1/3 · 1/3', 'blacktenderscore'),
+                '2fr 1fr 1fr' => __('Standard Airbnb — 50% · 25% · 25%', 'blacktenderscore'),
+                '3fr 2fr 2fr' => __('Grande principale — 43% · 29% · 29%', 'blacktenderscore'),
+                '3fr 1fr 1fr' => __('Très grande — 60% · 20% · 20%', 'blacktenderscore'),
+            ],
+            'default'   => '2fr 1fr 1fr',
+            'condition' => ['layout' => 'airbnb'],
+            'selectors' => ['{{WRAPPER}} .bt-gallery__grid' => 'grid-template-columns: {{VALUE}}'],
+        ]);
+
+        $this->add_responsive_control('grid_radius', [
+            'label'      => __('Border radius global', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px', '%'],
-            'selectors'  => ['{{WRAPPER}} .bt-gallery__item img' => 'border-radius: {{SIZE}}{{UNIT}}'],
+            'default'    => ['size' => 12, 'unit' => 'px'],
+            'selectors'  => ['{{WRAPPER}} .bt-gallery__grid' => 'border-radius: {{SIZE}}{{UNIT}}; overflow: hidden'],
         ]);
 
-        $this->add_control('overlay_color', [
-            'label'     => __('Couleur overlay au survol', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-gallery__item::after' => 'background-color: {{VALUE}}'],
+        $this->add_responsive_control('img_radius', [
+            'label'      => __('Border radius images individuelles', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px', '%'],
+            'default'    => ['size' => 0, 'unit' => 'px'],
+            'selectors'  => ['{{WRAPPER}} .bt-gallery__item' => 'border-radius: {{SIZE}}{{UNIT}}; overflow: hidden'],
         ]);
 
-        $this->add_control('overlay_icon', [
-            'label'   => __('Icône overlay survol', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
-            'default' => '🔍',
+        $this->add_control('img_position', [
+            'label'     => __('Point focal des images', 'blacktenderscore'),
+            'type'      => Controls_Manager::SELECT,
+            'options'   => [
+                'center center' => __('Centre', 'blacktenderscore'),
+                'center top'    => __('Haut', 'blacktenderscore'),
+                'center bottom' => __('Bas', 'blacktenderscore'),
+                'left center'   => __('Gauche', 'blacktenderscore'),
+                'right center'  => __('Droite', 'blacktenderscore'),
+            ],
+            'default'   => 'center center',
+            'selectors' => ['{{WRAPPER}} .bt-gallery__img' => 'object-position: {{VALUE}}'],
+        ]);
+
+        $this->add_control('hover_zoom', [
+            'label'        => __('Zoom au survol', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => 'yes',
+            'separator'    => 'before',
+        ]);
+
+        $this->add_responsive_control('hover_zoom_scale', [
+            'label'     => __('Intensité du zoom (%)', 'blacktenderscore'),
+            'type'      => Controls_Manager::SLIDER,
+            'range'     => ['px' => ['min' => 100, 'max' => 130, 'step' => 1]],
+            'default'   => ['size' => 104, 'unit' => 'px'],
+            'condition' => ['hover_zoom' => 'yes'],
+            'selectors' => [
+                '{{WRAPPER}} .bt-gallery--zoom .bt-gallery__link:hover .bt-gallery__img' => 'transform: scale({{SIZE}}%)',
+            ],
         ]);
 
         $this->end_controls_section();
+
+        // ── Style — Overlay (+N photos) ────────────────────────────────────
+        $this->start_controls_section('style_overlay', [
+            'label'     => __('Style — Overlay (+N photos)', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_STYLE,
+            'condition' => ['overlay_mode!' => 'none'],
+        ]);
+
+        $this->add_control('overlay_bg', [
+            'label'     => __('Couleur de fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'default'   => 'rgba(0,0,0,0.45)',
+            'selectors' => ['{{WRAPPER}} .bt-gallery__overlay' => 'background-color: {{VALUE}}'],
+        ]);
+
+        $this->add_group_control(Group_Control_Typography::get_type(), [
+            'name'     => 'count_typography',
+            'label'    => __('Typographie compteur', 'blacktenderscore'),
+            'selector' => '{{WRAPPER}} .bt-gallery__count',
+        ]);
+
+        $this->add_control('count_color', [
+            'label'     => __('Couleur texte', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'default'   => '#ffffff',
+            'selectors' => ['{{WRAPPER}} .bt-gallery__count' => 'color: {{VALUE}}'],
+        ]);
+
+        $this->end_controls_section();
+
+        // ── Style — Légende ────────────────────────────────────────────────
+        $this->register_typography_section(
+            'caption',
+            __('Style — Légende', 'blacktenderscore'),
+            '{{WRAPPER}} .bt-gallery__caption',
+            [],
+            [],
+            ['show_caption' => 'yes']
+        );
+
+        // ── Style — Bouton "Voir toutes" ───────────────────────────────────
+        $this->register_box_style(
+            'allphotos',
+            __('Style — Bouton voir toutes les photos', 'blacktenderscore'),
+            '{{WRAPPER}} .bt-gallery__allphotos-btn',
+            ['padding' => 10, 'radius' => 8],
+            ['show_allphotos_btn' => 'yes', 'layout' => 'airbnb']
+        );
+
+        $this->register_typography_section(
+            'allphotos_label',
+            __('Style — Label bouton', 'blacktenderscore'),
+            '{{WRAPPER}} .bt-gallery__allphotos-btn',
+            [],
+            [],
+            ['show_allphotos_btn' => 'yes', 'layout' => 'airbnb']
+        );
     }
 
-    // ── Render ───────────────────────────────────────────────────────────────
+    // ══ Render ════════════════════════════════════════════════════════════════
 
     protected function render(): void {
-        $s       = $this->get_settings_for_display();
-        $post_id = get_the_ID();
-
         if (!$this->acf_required()) return;
 
+        $s          = $this->get_settings_for_display();
         $field_name = $s['acf_field'] ?: 'boat_gallery';
-        $images = $this->get_acf_rows($field_name, __('Aucune image dans la galerie indiquée.', 'blacktenderscore'));
-        if (!$images) return;
+        $all_images = $this->get_acf_rows($field_name, __('Aucune image dans la galerie indiquée.', 'blacktenderscore'));
 
-        $max = (int) ($s['max_images'] ?: 0);
-        if ($max > 0) {
-            $images = array_slice($images, 0, $max);
+        if (!$all_images) return;
+
+        $max_visible = max(1, (int) ($s['max_visible'] ?? 5));
+        $visible     = array_slice($all_images, 0, $max_visible);
+        $hidden      = array_slice($all_images, $max_visible);
+        $remaining   = count($hidden);
+
+        $layout     = $s['layout'] ?: 'airbnb';
+        $lightbox   = ($s['enable_lightbox'] ?? 'yes') === 'yes';
+        $group_id   = 'bt-gallery-' . $this->get_id();
+        $thumb_size = $s['thumb_size'] ?: 'large';
+        $hover_zoom = ($s['hover_zoom'] ?? 'yes') === 'yes';
+
+        $overlay_mode = $s['overlay_mode'] ?? 'photos';
+        $show_always  = ($s['overlay_show_always'] ?? '') === 'yes';
+        $show_overlay = $overlay_mode !== 'none' && ($remaining > 0 || $show_always);
+        $count_vis    = count($visible);
+
+        $show_btn  = $layout === 'airbnb' && ($s['show_allphotos_btn'] ?? 'yes') === 'yes';
+        $btn_label = esc_html($s['allphotos_label'] ?: __('Voir toutes les photos', 'blacktenderscore'));
+        $btn_pos   = $s['allphotos_position'] ?? 'bottom-right';
+
+        // Wrapper classes
+        $wrap_cls = 'bt-gallery bt-gallery--' . esc_attr($layout);
+        if ($hover_zoom) $wrap_cls .= ' bt-gallery--zoom';
+        if ($layout === 'grid') {
+            $wrap_cls .= ' bt-gallery--' . esc_attr($s['aspect_ratio'] ?? 'landscape');
         }
 
-        $thumb_size   = $s['thumb_size'] ?: 'medium';
-        $lightbox     = $s['enable_lightbox'] === 'yes';
-        $ratio        = $s['aspect_ratio'] ?: 'landscape';
-        $group_id     = 'bt-gallery-' . $this->get_id();
-        $overlay_icon = esc_html($s['overlay_icon'] ?: '🔍');
-
-        $ratio_cls = match ($ratio) {
-            'square'   => ' bt-gallery--square',
-            'wide'     => ' bt-gallery--wide',
-            'portrait' => ' bt-gallery--portrait',
-            'auto'     => ' bt-gallery--auto',
-            default    => ' bt-gallery--landscape',
-        };
-
-        echo '<div class="bt-gallery' . $ratio_cls . '">';
+        echo '<div class="' . esc_attr($wrap_cls) . '">';
 
         $this->render_section_title($s, 'bt-gallery__title');
 
         echo '<div class="bt-gallery__grid">';
 
-        foreach ($images as $i => $img) {
+        foreach ($visible as $i => $img) {
             if (!is_array($img)) continue;
 
-            $full_url  = $img['url']   ?? '';
-            $thumb_url = $img['sizes'][$thumb_size] ?? $full_url;
-            $alt       = $img['alt']   ?? ($img['title'] ?? '');
+            $is_main  = ($i === 0);
+            $is_last  = ($i === $count_vis - 1);
+            $has_over = $is_last && $show_overlay;
+
+            $full_url  = $img['url'] ?? '';
+            $thumb_url = $img['sizes'][$thumb_size] ?? ($img['sizes']['large'] ?? $full_url);
+            $alt       = esc_attr($img['alt'] ?? ($img['title'] ?? ''));
             $caption   = $img['caption'] ?? '';
 
-            echo '<figure class="bt-gallery__item">';
+            $item_cls = 'bt-gallery__item';
+            if ($is_main)  $item_cls .= ' bt-gallery__item--main';
+            if ($has_over) $item_cls .= ' bt-gallery__item--last';
+
+            echo '<figure class="' . esc_attr($item_cls) . '">';
 
             if ($lightbox && $full_url) {
-                echo '<a href="' . esc_url($full_url) . '"'
+                // Overlay clique → ouvre lightbox depuis le début
+                $lb_index = ($has_over && $remaining > 0) ? 0 : $i;
+                echo '<a class="bt-gallery__link"'
+                    . ' href="' . esc_url($full_url) . '"'
                     . ' data-elementor-open-lightbox="yes"'
                     . ' data-elementor-lightbox-slideshow="' . esc_attr($group_id) . '"'
-                    . ' data-elementor-lightbox-index="' . (int) $i . '"'
+                    . ' data-elementor-lightbox-index="' . (int) $lb_index . '"'
                     . ($caption ? ' data-elementor-lightbox-title="' . esc_attr($caption) . '"' : '')
-                    . ' class="bt-gallery__link"'
                     . '>';
-                echo '<img src="' . esc_url($thumb_url) . '" alt="' . esc_attr($alt) . '" loading="lazy" class="bt-gallery__img" />';
-                echo '<span class="bt-gallery__overlay" aria-hidden="true"><span class="bt-gallery__overlay-icon">' . $overlay_icon . '</span></span>';
-                echo '</a>';
             } else {
-                echo '<img src="' . esc_url($thumb_url) . '" alt="' . esc_attr($alt) . '" loading="lazy" class="bt-gallery__img" />';
+                echo '<span class="bt-gallery__link">';
             }
 
-            if ($caption) {
+            echo '<img'
+                . ' src="' . esc_url($thumb_url) . '"'
+                . ' alt="' . $alt . '"'
+                . ' loading="' . ($is_main ? 'eager' : 'lazy') . '"'
+                . ' class="bt-gallery__img"'
+                . ' />';
+
+            // Overlay "+N photos" sur la dernière vignette
+            if ($has_over) {
+                $text = $this->build_overlay_text($overlay_mode, $s['overlay_text'] ?? '', $remaining);
+                echo '<span class="bt-gallery__overlay" aria-hidden="true">';
+                if ($text !== '') {
+                    echo '<span class="bt-gallery__count">' . esc_html($text) . '</span>';
+                }
+                echo '</span>';
+            }
+
+            // Bouton "Voir toutes les photos" sur l'image principale (airbnb uniquement)
+            if ($is_main && $show_btn) {
+                $lb_attr = ($lightbox && $full_url)
+                    ? ' href="' . esc_url($full_url) . '"'
+                      . ' data-elementor-open-lightbox="yes"'
+                      . ' data-elementor-lightbox-slideshow="' . esc_attr($group_id) . '"'
+                      . ' data-elementor-lightbox-index="0"'
+                    : ' href="#"';
+
+                echo '<a class="bt-gallery__allphotos-btn bt-gallery__allphotos-btn--' . esc_attr($btn_pos) . '"' . $lb_attr . '>';
+                echo '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> ';
+                echo $btn_label;
+                echo '</a>';
+            }
+
+            echo $lightbox ? '</a>' : '</span>';
+
+            if (($s['show_caption'] ?? '') === 'yes' && $caption) {
                 echo '<figcaption class="bt-gallery__caption">' . esc_html($caption) . '</figcaption>';
             }
 
@@ -217,6 +506,35 @@ class Gallery extends AbstractBtWidget {
         }
 
         echo '</div>'; // .bt-gallery__grid
+
+        // Éléments cachés pour lightbox complète (toutes les images de la galerie)
+        if ($lightbox && !empty($hidden)) {
+            echo '<div class="bt-gallery__lightbox-hidden" aria-hidden="true" style="display:none">';
+            foreach ($hidden as $j => $img) {
+                if (!is_array($img) || empty($img['url'])) continue;
+                $caption = $img['caption'] ?? '';
+                echo '<a'
+                    . ' href="' . esc_url($img['url']) . '"'
+                    . ' data-elementor-open-lightbox="yes"'
+                    . ' data-elementor-lightbox-slideshow="' . esc_attr($group_id) . '"'
+                    . ' data-elementor-lightbox-index="' . (int) ($max_visible + $j) . '"'
+                    . ($caption ? ' data-elementor-lightbox-title="' . esc_attr($caption) . '"' : '')
+                    . '></a>';
+            }
+            echo '</div>';
+        }
+
         echo '</div>'; // .bt-gallery
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private function build_overlay_text(string $mode, string $custom, int $remaining): string {
+        return match ($mode) {
+            'count'  => '+' . $remaining,
+            'photos' => '+' . $remaining . ' ' . _n('photo', 'photos', $remaining, 'blacktenderscore'),
+            'custom' => str_replace('{n}', (string) $remaining, $custom),
+            default  => '',
+        };
     }
 }
