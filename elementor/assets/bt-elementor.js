@@ -123,6 +123,37 @@
     });
   }
 
+  /* ── Onboarding — Sélection créneaux ────────────────────────────────────── */
+
+  function initOnboarding(el) {
+    el.querySelectorAll('[data-bt-onboarding]:not([data-bt-ob-init])').forEach(function (ob) {
+      ob.setAttribute('data-bt-ob-init', '1');
+
+      var panel  = ob.closest('.bt-pricing__panel, .bt-bprice__panel');
+      var reveal = panel ? panel.querySelector('.bt-pricing__booking-reveal') : null;
+
+      ob.querySelectorAll('.bt-pricing__slot').forEach(function (slot) {
+        slot.addEventListener('click', function () {
+          // Marque le créneau actif
+          ob.querySelectorAll('.bt-pricing__slot').forEach(function (s) {
+            s.classList.remove('bt-pricing__slot--active');
+          });
+          slot.classList.add('bt-pricing__slot--active');
+
+          // Révèle le widget de réservation
+          if (reveal) {
+            reveal.style.removeProperty('display');
+            reveal.classList.add('bt-pricing__booking-reveal--visible');
+            // Scroll fluide vers le widget
+            setTimeout(function () {
+              reveal.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 80);
+          }
+        });
+      });
+    });
+  }
+
   /* ── Bootstrap ───────────────────────────────────────────────────────────── */
 
   function boot(scope) {
@@ -137,6 +168,7 @@
       root.setAttribute('data-bt-init', '1');
       initTabs(root);
     });
+    initOnboarding(el);
     el.querySelectorAll('[data-bt-share]:not([data-bt-share-init])').forEach(function (btn) {
       btn.setAttribute('data-bt-share-init', '1');
       var url    = btn.getAttribute('data-bt-url')    || window.location.href;
