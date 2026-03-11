@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { useLocation } from 'react-router-dom'
 import { api } from '../lib/api'
 import { PageHeader, Input, Btn, Notice, Spinner } from '../components/ui'
 
@@ -17,6 +18,8 @@ export default function Settings() {
   const [flushing, setFlushing] = useState(false)
   const [saved, setSaved]       = useState(false)
   const [error, setError]       = useState(null)
+  const location                = useLocation()
+  const didScroll               = useRef(false)
 
   useEffect(() => {
     api.settings()
@@ -24,6 +27,15 @@ export default function Settings() {
       .catch(e => setError(e.message))
       .finally(() => setLoading(false))
   }, [])
+
+  // Scroll to hash anchor once settings are loaded
+  useEffect(() => {
+    if (!loading && location.hash && !didScroll.current) {
+      didScroll.current = true
+      const el = document.getElementById(location.hash.slice(1))
+      if (el) el.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [loading, location.hash])
 
   function set(key, value) {
     setSettings(prev => ({ ...prev, [key]: value }))
@@ -33,15 +45,6 @@ export default function Settings() {
     setSettings(prev => ({
       ...prev,
       widget_map: { ...prev.widget_map, [productId]: widgetId },
-    }))
-  }
-
-  function togglePostType(name) {
-    setSettings(prev => ({
-      ...prev,
-      post_types: prev.post_types.includes(name)
-        ? prev.post_types.filter(t => t !== name)
-        : [...prev.post_types, name],
     }))
   }
 
@@ -94,7 +97,7 @@ export default function Settings() {
         {saved && <Notice type="success">Réglages enregistrés.</Notice>}
 
         {/* ── Credentials ───────────────────────────────────────── */}
-        <section>
+        <section id="api">
           <SectionTitle>Connexion API Regiondo</SectionTitle>
           <div className="space-y-3 mt-4">
             <Input
@@ -114,7 +117,7 @@ export default function Settings() {
         <Divider />
 
         {/* ── Synchronisation automatique ───────────────────────── */}
-        <section>
+        <section id="sync">
           <SectionTitle>Synchronisation automatique des produits</SectionTitle>
           <p className="text-xs text-gray-400 mt-1 mb-4">
             Importe automatiquement les produits Regiondo vers des posts WordPress.
@@ -157,7 +160,7 @@ export default function Settings() {
         <Divider />
 
         {/* ── Widget map ────────────────────────────────────────── */}
-        <section>
+        <section id="widgets">
           <SectionTitle>Widget ID par produit</SectionTitle>
           <p className="text-xs text-gray-400 mt-1 mb-4">
             Regiondo → Shop Config → Website Integration → Booking Widgets.
@@ -190,7 +193,7 @@ export default function Settings() {
         <Divider />
 
         {/* ── Cache ─────────────────────────────────────────────── */}
-        <section>
+        <section id="cache">
           <SectionTitle>Cache API</SectionTitle>
           <div className="flex items-end gap-3 mt-4">
             <div className="w-36">

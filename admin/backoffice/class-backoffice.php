@@ -30,14 +30,13 @@ class Backoffice {
     }
 
     public function enqueue(string $hook): void {
-        if ($hook !== 'toplevel_page_bt-regiondo') return;
+        if ($hook !== 'toplevel_page_blacktenderscore') return;
 
         $build_dir = BT_DIR . 'admin/backoffice/build/assets/';
         $build_url = BT_URL . 'admin/backoffice/build/assets/';
 
         if (!is_dir($build_dir)) return;
 
-        // Désactive les styles WP admin qui pourraient interférer
         wp_enqueue_style(
             'bt-backoffice',
             $build_url . 'index.css',
@@ -59,9 +58,14 @@ class Backoffice {
             'version'  => BT_VERSION,
         ]);
 
-        // Supprime la barre d'admin WP pour avoir la page en plein écran
+        // Page en plein écran, fond blanc uniforme
         add_action('admin_head', function () {
             echo '<style>
+                body.toplevel_page_blacktenderscore,
+                body.toplevel_page_blacktenderscore #wpwrap,
+                body.toplevel_page_blacktenderscore #wpcontent,
+                body.toplevel_page_blacktenderscore #wpbody,
+                body.toplevel_page_blacktenderscore #wpbody-content { background: #fff !important; }
                 #wpcontent { padding-left: 0 !important; margin-left: 0 !important; }
                 #wpfooter  { display: none !important; }
                 .notice, .update-nag, #screen-meta { display: none !important; }

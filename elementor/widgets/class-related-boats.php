@@ -66,12 +66,7 @@ class RelatedBoats extends AbstractBtWidget {
         $this->add_control('image_size', [
             'label'   => __('Taille d\'image', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
-            'options' => [
-                'thumbnail' => 'Miniature',
-                'medium'    => 'Moyenne',
-                'large'     => 'Grande',
-                'full'      => 'Originale',
-            ],
+            'options' => ['thumbnail' => 'Miniature', 'medium' => 'Moyenne', 'large' => 'Grande', 'full' => 'Originale'],
             'default' => 'medium',
         ]);
 
@@ -97,25 +92,86 @@ class RelatedBoats extends AbstractBtWidget {
             'default'      => 'yes',
         ]);
 
+        $this->end_controls_section();
+
+        // ── Specs affichées sur la carte ──────────────────────────────────
+        $this->start_controls_section('section_specs', [
+            'label' => __('Specs bateau', 'blacktenderscore'),
+            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+        ]);
+
         $this->add_control('show_specs', [
-            'label'        => __('Afficher passagers + motorisation', 'blacktenderscore'),
+            'label'        => __('Afficher les specs bateau', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('spec_pax_label', [
-            'label'     => __('Icône / Label passagers', 'blacktenderscore'),
+            'label'     => __('Icône passagers max', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::TEXT,
             'default'   => '👥',
             'condition' => ['show_specs' => 'yes'],
         ]);
 
+        $this->add_control('show_pax_comfort', [
+            'label'        => __('Afficher passagers confort', 'blacktenderscore'),
+            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => '',
+            'condition'    => ['show_specs' => 'yes'],
+        ]);
+
+        $this->add_control('spec_comfort_label', [
+            'label'     => __('Icône passagers confort', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::TEXT,
+            'default'   => '🪑',
+            'condition' => ['show_specs' => 'yes', 'show_pax_comfort' => 'yes'],
+        ]);
+
+        $this->add_control('show_cabins', [
+            'label'        => __('Afficher cabines', 'blacktenderscore'),
+            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => '',
+            'condition'    => ['show_specs' => 'yes'],
+        ]);
+
+        $this->add_control('spec_cabins_label', [
+            'label'     => __('Icône cabines', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::TEXT,
+            'default'   => '🛏',
+            'condition' => ['show_specs' => 'yes', 'show_cabins' => 'yes'],
+        ]);
+
         $this->add_control('spec_engine_label', [
-            'label'     => __('Icône / Label motorisation', 'blacktenderscore'),
+            'label'     => __('Icône motorisation', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::TEXT,
             'default'   => '⚡',
             'condition' => ['show_specs' => 'yes'],
+        ]);
+
+        $this->add_control('show_year', [
+            'label'        => __('Afficher l\'année', 'blacktenderscore'),
+            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => '',
+            'condition'    => ['show_specs' => 'yes'],
+        ]);
+
+        $this->add_control('spec_year_label', [
+            'label'     => __('Icône année', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::TEXT,
+            'default'   => '📅',
+            'condition' => ['show_specs' => 'yes', 'show_year' => 'yes'],
+        ]);
+
+        $this->end_controls_section();
+
+        // ── Bouton lien ───────────────────────────────────────────────────
+        $this->start_controls_section('section_link', [
+            'label' => __('Bouton lien', 'blacktenderscore'),
+            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('show_link', [
@@ -134,14 +190,14 @@ class RelatedBoats extends AbstractBtWidget {
 
         $this->end_controls_section();
 
+        // ── STYLE ─────────────────────────────────────────────────────────
+
         $this->register_section_title_style('{{WRAPPER}} .bt-relboats__title');
 
-        // ── Style — Cartes ────────────────────────────────────────────────
-        $this->start_controls_section('style_cards', [
-            'label' => __('Style — Cartes', 'blacktenderscore'),
+        $this->start_controls_section('style_grid', [
+            'label' => __('Style — Grille', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
         ]);
-
         $this->add_responsive_control('cards_gap', [
             'label'      => __('Espacement', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
@@ -149,99 +205,49 @@ class RelatedBoats extends AbstractBtWidget {
             'default'    => ['size' => 24, 'unit' => 'px'],
             'selectors'  => ['{{WRAPPER}} .bt-relboats__grid' => 'gap: {{SIZE}}{{UNIT}}'],
         ]);
-
-        $this->end_controls_section();
-
-        $this->register_box_style('card', 'Style — Cartes', '{{WRAPPER}} .bt-relboats__card');
-
-        // ── Style — Texte ─────────────────────────────────────────────────
-        $this->start_controls_section('style_text', [
-            'label' => __('Style — Texte', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
-        ]);
-
         $this->add_responsive_control('body_padding', [
-            'label'      => __('Padding contenu', 'blacktenderscore'),
+            'label'      => __('Padding contenu carte', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::DIMENSIONS,
             'size_units' => ['px', 'em'],
             'default'    => ['top' => '16', 'right' => '16', 'bottom' => '16', 'left' => '16', 'unit' => 'px', 'isLinked' => true],
             'selectors'  => ['{{WRAPPER}} .bt-relboats__body' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
         ]);
-
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
-            'name'     => 'title_typo',
-            'label'    => __('Typographie titre bateau', 'blacktenderscore'),
-            'selector' => '{{WRAPPER}} .bt-relboats__card-title',
-        ]);
-
-        $this->add_control('title_color', [
-            'label'     => __('Couleur titre', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-relboats__card-title' => 'color: {{VALUE}}'],
-        ]);
-
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
-            'name'     => 'tagline_typo',
-            'label'    => __('Typographie accroche', 'blacktenderscore'),
-            'selector' => '{{WRAPPER}} .bt-relboats__tagline',
-        ]);
-
-        $this->add_control('tagline_color', [
-            'label'     => __('Couleur accroche', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-relboats__tagline' => 'color: {{VALUE}}'],
-        ]);
-
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
-            'name'     => 'specs_typo',
-            'label'    => __('Typographie specs', 'blacktenderscore'),
-            'selector' => '{{WRAPPER}} .bt-relboats__specs',
-        ]);
-
-        $this->add_control('specs_color', [
-            'label'     => __('Couleur specs', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-relboats__specs' => 'color: {{VALUE}}'],
-        ]);
-
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
-            'name'     => 'btn_typo',
-            'label'    => __('Typographie bouton', 'blacktenderscore'),
-            'selector' => '{{WRAPPER}} .bt-relboats__btn',
-        ]);
-
-        $this->add_control('btn_color', [
-            'label'     => __('Couleur bouton', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-relboats__btn' => 'color: {{VALUE}}'],
-        ]);
-
-        $this->add_control('btn_bg', [
-            'label'     => __('Fond bouton', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-relboats__btn' => 'background-color: {{VALUE}}'],
-        ]);
-
-        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
-            'name'     => 'btn_border',
-            'selector' => '{{WRAPPER}} .bt-relboats__btn',
-        ]);
-
-        $this->add_responsive_control('btn_radius', [
-            'label'      => __('Border radius bouton', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
-            'size_units' => ['px', '%'],
-            'selectors'  => ['{{WRAPPER}} .bt-relboats__btn' => 'border-radius: {{SIZE}}{{UNIT}}'],
-        ]);
-
-        $this->add_responsive_control('btn_padding', [
-            'label'      => __('Padding bouton', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::DIMENSIONS,
-            'size_units' => ['px', 'em'],
-            'selectors'  => ['{{WRAPPER}} .bt-relboats__btn' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
-        ]);
-
         $this->end_controls_section();
+
+        $this->register_box_style('card', 'Style — Cartes', '{{WRAPPER}} .bt-relboats__card');
+
+        $this->register_typography_section(
+            'card_title',
+            'Style — Titre bateau',
+            '{{WRAPPER}} .bt-relboats__card-title, {{WRAPPER}} .bt-relboats__card-title a',
+            ['with_hover' => true]
+        );
+
+        $this->register_typography_section(
+            'tagline',
+            'Style — Accroche',
+            '{{WRAPPER}} .bt-relboats__tagline',
+            [],
+            [],
+            ['show_tagline' => 'yes']
+        );
+
+        $this->register_typography_section(
+            'specs',
+            'Style — Specs',
+            '{{WRAPPER}} .bt-relboats__specs',
+            [],
+            [],
+            ['show_specs' => 'yes']
+        );
+
+        $this->register_button_style(
+            'btn',
+            'Style — Bouton',
+            '{{WRAPPER}} .bt-relboats__btn',
+            [],
+            ['show_link' => 'yes']
+        );
     }
 
     // ── Render ───────────────────────────────────────────────────────────────
@@ -280,8 +286,9 @@ class RelatedBoats extends AbstractBtWidget {
             $boat_title = get_the_title($boat->ID);
 
             // Cover image
-            $cover = get_field('boat_cover', $boat->ID);
+            $cover   = get_field('boat_cover', $boat->ID);
             $img_url = '';
+            $img_alt = $boat_title;
             if (is_array($cover)) {
                 $size    = $s['image_size'] ?: 'medium';
                 $img_url = $cover['sizes'][$size] ?? $cover['url'] ?? '';
@@ -296,16 +303,19 @@ class RelatedBoats extends AbstractBtWidget {
             }
 
             // ACF fields
-            $tagline    = (string) get_field('boat_tagline',    $boat->ID);
-            $pax_max    = (string) get_field('boat_pax_max',    $boat->ID);
-            $enginepow  = (string) get_field('boat_enginepower', $boat->ID);
+            $tagline   = (string) get_field('boat_tagline',     $boat->ID);
+            $pax_max   = (string) get_field('boat_pax_max',     $boat->ID);
+            $pax_comf  = (string) get_field('boat_pax_comfort', $boat->ID);
+            $cabins    = (string) get_field('boat_cabins',      $boat->ID);
+            $enginepow = (string) get_field('boat_enginepower', $boat->ID);
+            $year      = (string) get_field('boat_year',        $boat->ID);
 
             echo '<div class="bt-relboats__card">';
 
             // Image
             if ($s['show_image'] === 'yes' && $img_url) {
                 echo '<a href="' . esc_url($boat_url) . '" class="bt-relboats__img-wrap" tabindex="-1" aria-hidden="true">';
-                echo '<img src="' . esc_url($img_url) . '" alt="' . esc_attr($img_alt ?? $boat_title) . '" loading="lazy" class="bt-relboats__img" />';
+                echo '<img src="' . esc_url($img_url) . '" alt="' . esc_attr($img_alt) . '" loading="lazy" class="bt-relboats__img" />';
                 echo '</a>';
             }
 
@@ -317,15 +327,26 @@ class RelatedBoats extends AbstractBtWidget {
                 echo '<p class="bt-relboats__tagline">' . esc_html($tagline) . '</p>';
             }
 
-            if ($s['show_specs'] === 'yes' && ($pax_max || $enginepow)) {
-                echo '<ul class="bt-relboats__specs">';
-                if ($pax_max) {
-                    echo '<li>' . esc_html($s['spec_pax_label'] ?: '👥') . ' ' . esc_html($pax_max) . ' pax</li>';
+            if ($s['show_specs'] === 'yes') {
+                $specs_html = '';
+                if ($pax_max > 0) {
+                    $specs_html .= '<li>' . esc_html($s['spec_pax_label'] ?: '👥') . ' ' . esc_html($pax_max) . ' pax</li>';
                 }
-                if ($enginepow) {
-                    echo '<li>' . esc_html($s['spec_engine_label'] ?: '⚡') . ' ' . esc_html($enginepow) . ' CV</li>';
+                if ($s['show_pax_comfort'] === 'yes' && $pax_comf > 0) {
+                    $specs_html .= '<li>' . esc_html($s['spec_comfort_label'] ?: '🪑') . ' ' . esc_html($pax_comf) . ' confort</li>';
                 }
-                echo '</ul>';
+                if ($s['show_cabins'] === 'yes' && $cabins > 0) {
+                    $specs_html .= '<li>' . esc_html($s['spec_cabins_label'] ?: '🛏') . ' ' . esc_html($cabins) . ' cab.</li>';
+                }
+                if ($enginepow > 0) {
+                    $specs_html .= '<li>' . esc_html($s['spec_engine_label'] ?: '⚡') . ' ' . esc_html($enginepow) . ' CV</li>';
+                }
+                if ($s['show_year'] === 'yes' && $year) {
+                    $specs_html .= '<li>' . esc_html($s['spec_year_label'] ?: '📅') . ' ' . esc_html($year) . '</li>';
+                }
+                if ($specs_html) {
+                    echo '<ul class="bt-relboats__specs">' . $specs_html . '</ul>';
+                }
             }
 
             if ($s['show_link'] === 'yes') {

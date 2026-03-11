@@ -27,11 +27,14 @@ require_once __DIR__ . '/trait-bt-content-controls.php';
  *   register_grid_layout_controls($sel, $defaults, $label) — section complète
  *   register_box_style($prefix, $label, $sel, $defaults, $condition)
  *   register_separator_controls($prefix, $label, $sel, $defaults, $condition)
+ *   register_stars_style($prefix, $label, $sel, $defaults, $condition)
  *
  * BtNavControls (trait-bt-nav-controls.php)
- *   register_tabs_nav_style($prefix, $label, $tab_sel, $active_sel, ...)
+ *   register_tabs_nav_style($prefix, $label, $tab_sel, $active_sel, $tablist_sel, $condition, $options)
+ *     $options : 'with_hover', 'with_radius', 'with_indicator', 'with_panel' + 'panel_sel'
  *   register_panel_style($prefix, $label, $selector, $condition)
  *   register_item_3state_style($prefix, $label, $item_sel, ...)
+ *   register_button_style($prefix, $label, $selector, $defaults, $condition)
  *
  * BtTypographyControls (trait-bt-typography-controls.php)
  *   register_typography_section($prefix, $label, $selector, $options, ...)
