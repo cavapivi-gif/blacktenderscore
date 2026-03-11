@@ -39,7 +39,7 @@ class RelatedExcursions extends AbstractBtWidget {
             'label'       => __('Champ ACF relation (sur excursion)', 'blacktenderscore'),
             'type'        => \Elementor\Controls_Manager::TEXT,
             'default'     => 'exp_boats',
-            'description' => __('Nom du champ ACF relationship utilisé sur les excursions pour pointer vers les bateaux.', 'blacktenderscore'),
+            'description' => __('Champ ACF relationship sur les excursions pointant vers les bateaux.', 'blacktenderscore'),
         ]);
 
         $this->register_section_title_controls(['title' => __('Excursions avec ce bateau', 'blacktenderscore')]);
@@ -50,6 +50,18 @@ class RelatedExcursions extends AbstractBtWidget {
             'min'     => 1,
             'max'     => 24,
             'default' => 6,
+        ]);
+
+        $this->add_control('orderby', [
+            'label'   => __('Trier par', 'blacktenderscore'),
+            'type'    => \Elementor\Controls_Manager::SELECT,
+            'options' => [
+                'post__in' => __('Ordre de relation', 'blacktenderscore'),
+                'date'     => __('Date (récent → ancien)', 'blacktenderscore'),
+                'title'    => __('Titre (A → Z)', 'blacktenderscore'),
+                'rand'     => __('Aléatoire', 'blacktenderscore'),
+            ],
+            'default' => 'post__in',
         ]);
 
         $this->end_controls_section();
@@ -100,6 +112,27 @@ class RelatedExcursions extends AbstractBtWidget {
             'default'      => 'yes',
         ]);
 
+        $this->add_control('show_duration', [
+            'label'        => __('Afficher la durée', 'blacktenderscore'),
+            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => '',
+        ]);
+
+        $this->add_control('duration_subfield', [
+            'label'     => __('Champ ACF durée', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::TEXT,
+            'default'   => 'exp_duration',
+            'condition' => ['show_duration' => 'yes'],
+        ]);
+
+        $this->add_control('duration_label', [
+            'label'     => __('Icône / préfixe durée', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::TEXT,
+            'default'   => '⏱',
+            'condition' => ['show_duration' => 'yes'],
+        ]);
+
         $this->add_control('show_price', [
             'label'        => __('Afficher le prix de départ', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
@@ -137,14 +170,14 @@ class RelatedExcursions extends AbstractBtWidget {
 
         $this->end_controls_section();
 
+        // ── STYLE ─────────────────────────────────────────────────────────
+
         $this->register_section_title_style('{{WRAPPER}} .bt-relexp__title');
 
-        // ── Style — Cartes ────────────────────────────────────────────────
-        $this->start_controls_section('style_cards', [
-            'label' => __('Style — Cartes', 'blacktenderscore'),
+        $this->start_controls_section('style_grid', [
+            'label' => __('Style — Grille', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
         ]);
-
         $this->add_responsive_control('cards_gap', [
             'label'      => __('Espacement', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
@@ -152,99 +185,58 @@ class RelatedExcursions extends AbstractBtWidget {
             'default'    => ['size' => 24, 'unit' => 'px'],
             'selectors'  => ['{{WRAPPER}} .bt-relexp__grid' => 'gap: {{SIZE}}{{UNIT}}'],
         ]);
-
-        $this->end_controls_section();
-
-        $this->register_box_style('card', 'Style — Cartes', '{{WRAPPER}} .bt-relexp__card');
-
-        // ── Style — Texte ─────────────────────────────────────────────────
-        $this->start_controls_section('style_text', [
-            'label' => __('Style — Texte', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
-        ]);
-
         $this->add_responsive_control('body_padding', [
-            'label'      => __('Padding contenu', 'blacktenderscore'),
+            'label'      => __('Padding contenu carte', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::DIMENSIONS,
             'size_units' => ['px', 'em'],
             'default'    => ['top' => '16', 'right' => '16', 'bottom' => '16', 'left' => '16', 'unit' => 'px', 'isLinked' => true],
             'selectors'  => ['{{WRAPPER}} .bt-relexp__body' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
         ]);
-
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
-            'name'     => 'title_typo',
-            'label'    => __('Typographie titre', 'blacktenderscore'),
-            'selector' => '{{WRAPPER}} .bt-relexp__card-title',
-        ]);
-
-        $this->add_control('title_color', [
-            'label'     => __('Couleur titre', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-relexp__card-title a, {{WRAPPER}} .bt-relexp__card-title' => 'color: {{VALUE}}'],
-        ]);
-
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
-            'name'     => 'tagline_typo',
-            'label'    => __('Typographie accroche', 'blacktenderscore'),
-            'selector' => '{{WRAPPER}} .bt-relexp__tagline',
-        ]);
-
-        $this->add_control('tagline_color', [
-            'label'     => __('Couleur accroche', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-relexp__tagline' => 'color: {{VALUE}}'],
-        ]);
-
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
-            'name'     => 'price_typo',
-            'label'    => __('Typographie prix', 'blacktenderscore'),
-            'selector' => '{{WRAPPER}} .bt-relexp__price',
-        ]);
-
-        $this->add_control('price_color', [
-            'label'     => __('Couleur prix', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-relexp__price' => 'color: {{VALUE}}'],
-        ]);
-
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
-            'name'     => 'btn_typo',
-            'label'    => __('Typographie bouton', 'blacktenderscore'),
-            'selector' => '{{WRAPPER}} .bt-relexp__btn',
-        ]);
-
-        $this->add_control('btn_color', [
-            'label'     => __('Couleur bouton', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-relexp__btn' => 'color: {{VALUE}}'],
-        ]);
-
-        $this->add_control('btn_bg', [
-            'label'     => __('Fond bouton', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-relexp__btn' => 'background-color: {{VALUE}}'],
-        ]);
-
-        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
-            'name'     => 'btn_border',
-            'selector' => '{{WRAPPER}} .bt-relexp__btn',
-        ]);
-
-        $this->add_responsive_control('btn_radius', [
-            'label'      => __('Border radius bouton', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
-            'size_units' => ['px', '%'],
-            'selectors'  => ['{{WRAPPER}} .bt-relexp__btn' => 'border-radius: {{SIZE}}{{UNIT}}'],
-        ]);
-
-        $this->add_responsive_control('btn_padding', [
-            'label'      => __('Padding bouton', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::DIMENSIONS,
-            'size_units' => ['px', 'em'],
-            'selectors'  => ['{{WRAPPER}} .bt-relexp__btn' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
-        ]);
-
         $this->end_controls_section();
+
+        $this->register_box_style('card', 'Style — Cartes', '{{WRAPPER}} .bt-relexp__card');
+
+        $this->register_typography_section(
+            'card_title',
+            'Style — Titre excursion',
+            '{{WRAPPER}} .bt-relexp__card-title a, {{WRAPPER}} .bt-relexp__card-title',
+            ['with_hover' => true]
+        );
+
+        $this->register_typography_section(
+            'tagline',
+            'Style — Accroche',
+            '{{WRAPPER}} .bt-relexp__tagline',
+            [],
+            [],
+            ['show_tagline' => 'yes']
+        );
+
+        $this->register_typography_section(
+            'duration',
+            'Style — Durée',
+            '{{WRAPPER}} .bt-relexp__duration',
+            [],
+            [],
+            ['show_duration' => 'yes']
+        );
+
+        $this->register_typography_section(
+            'price',
+            'Style — Prix',
+            '{{WRAPPER}} .bt-relexp__price',
+            [],
+            [],
+            ['show_price' => 'yes']
+        );
+
+        $this->register_button_style(
+            'btn',
+            'Style — Bouton',
+            '{{WRAPPER}} .bt-relexp__btn',
+            [],
+            ['show_link' => 'yes']
+        );
     }
 
     // ── Render ───────────────────────────────────────────────────────────────
@@ -257,6 +249,7 @@ class RelatedExcursions extends AbstractBtWidget {
 
         $meta_key = sanitize_key($s['acf_relation_field'] ?: 'exp_boats');
         $max      = max(1, (int) ($s['max_results'] ?: 6));
+        $orderby  = $s['orderby'] ?: 'post__in';
 
         // Reverse query avec cache transient
         $cache_key = 'bt_relexp_' . $post_id . '_' . $meta_key;
@@ -279,13 +272,18 @@ class RelatedExcursions extends AbstractBtWidget {
             set_transient($cache_key, $ids, HOUR_IN_SECONDS * 6);
         }
 
-        $query = new \WP_Query([
+        $query_args = [
             'post_type'      => 'excursion',
             'posts_per_page' => $max,
             'post_status'    => 'publish',
             'post__in'       => $ids ?: [0],
-            'orderby'        => 'post__in',
-        ]);
+            'orderby'        => $orderby,
+        ];
+        if ($orderby === 'title') {
+            $query_args['order'] = 'ASC';
+        }
+
+        $query = new \WP_Query($query_args);
 
         if (!$query->have_posts()) {
             if ($this->is_edit_mode()) {
@@ -294,7 +292,8 @@ class RelatedExcursions extends AbstractBtWidget {
             return;
         }
 
-        $currency = esc_html($s['currency'] ?: '€');
+        $currency    = esc_html($s['currency'] ?: '€');
+        $duration_sf = sanitize_text_field($s['duration_subfield'] ?: 'exp_duration');
 
         echo '<div class="bt-relexp">';
 
@@ -304,11 +303,12 @@ class RelatedExcursions extends AbstractBtWidget {
 
         while ($query->have_posts()) {
             $query->the_post();
-            $pid      = get_the_ID();
-            $url      = get_permalink();
-            $title    = get_the_title();
-            $tagline  = (string) get_field('exp_tagline', $pid);
-            $cover    = get_field('exp_cover', $pid);
+            $pid     = get_the_ID();
+            $url     = get_permalink();
+            $title   = get_the_title();
+            $tagline = (string) get_field('exp_tagline', $pid);
+            $cover   = get_field('exp_cover', $pid);
+            $duration_val = $s['show_duration'] === 'yes' ? (string) get_field($duration_sf, $pid) : '';
 
             // Min price from repeater
             $min_price = null;
@@ -354,6 +354,11 @@ class RelatedExcursions extends AbstractBtWidget {
 
             if ($s['show_tagline'] === 'yes' && $tagline) {
                 echo '<p class="bt-relexp__tagline">' . esc_html($tagline) . '</p>';
+            }
+
+            if ($s['show_duration'] === 'yes' && $duration_val) {
+                $dur_prefix = esc_html($s['duration_label'] ?: '⏱');
+                echo '<p class="bt-relexp__duration">' . $dur_prefix . ' ' . esc_html($duration_val) . '</p>';
             }
 
             if ($s['show_price'] === 'yes' && $min_price !== null) {

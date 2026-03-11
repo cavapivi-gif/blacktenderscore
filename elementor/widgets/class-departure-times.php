@@ -51,6 +51,20 @@ class DepartureTimes extends AbstractBtWidget {
             'default' => 'exp_departure_times',
         ]);
 
+        $this->add_control('subfield_time', [
+            'label'       => __('Sous-champ heure', 'blacktenderscore'),
+            'type'        => \Elementor\Controls_Manager::TEXT,
+            'default'     => 'time',
+            'description' => __('Nom du sous-champ ACF contenant l\'heure dans le repeater.', 'blacktenderscore'),
+        ]);
+
+        $this->add_control('subfield_season', [
+            'label'       => __('Sous-champ saison', 'blacktenderscore'),
+            'type'        => \Elementor\Controls_Manager::TEXT,
+            'default'     => 'season',
+            'description' => __('Nom du sous-champ ACF contenant la saison dans le repeater.', 'blacktenderscore'),
+        ]);
+
         $this->register_section_title_controls(['title' => __('Horaires de départ', 'blacktenderscore')]);
 
         $this->add_control('layout', [
@@ -65,15 +79,15 @@ class DepartureTimes extends AbstractBtWidget {
         ]);
 
         $this->add_responsive_control('grid_columns', [
-            'label'     => __('Colonnes', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::NUMBER,
-            'min'       => 2,
-            'max'       => 8,
-            'default'   => 4,
+            'label'          => __('Colonnes', 'blacktenderscore'),
+            'type'           => \Elementor\Controls_Manager::NUMBER,
+            'min'            => 2,
+            'max'            => 8,
+            'default'        => 4,
             'tablet_default' => 3,
             'mobile_default' => 2,
-            'selectors' => ['{{WRAPPER}} .bt-deptimes__grid' => 'grid-template-columns: repeat({{VALUE}}, 1fr)'],
-            'condition' => ['layout' => 'grid'],
+            'selectors'      => ['{{WRAPPER}} .bt-deptimes__grid' => 'grid-template-columns: repeat({{VALUE}}, 1fr)'],
+            'condition'      => ['layout' => 'grid'],
         ]);
 
         $this->end_controls_section();
@@ -162,10 +176,10 @@ class DepartureTimes extends AbstractBtWidget {
         ]);
 
         $this->add_control('departure_icon_color', [
-            'label'      => __('Couleur icône', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::COLOR,
-            'selectors'  => ['{{WRAPPER}} .bt-deptimes__departure-icon' => 'color: {{VALUE}}'],
-            'condition'  => ['show_departure_point' => 'yes'],
+            'label'     => __('Couleur icône', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-deptimes__departure-icon' => 'color: {{VALUE}}'],
+            'condition' => ['show_departure_point' => 'yes'],
         ]);
 
         $this->add_control('show_map_link', [
@@ -186,11 +200,16 @@ class DepartureTimes extends AbstractBtWidget {
 
         $this->end_controls_section();
 
+        // ══ STYLE ══════════════════════════════════════════════════════════════
+
         $this->register_section_title_style('{{WRAPPER}} .bt-deptimes__title');
 
-        // ── Style — Badges horaires ───────────────────────────────────────
-        $this->start_controls_section('style_badges', [
-            'label' => __('Style — Badges horaires', 'blacktenderscore'),
+        // Badge horaire : box style (fond, border, radius, padding, shadow)
+        $this->register_box_style('badge', 'Style — Badges horaires', '{{WRAPPER}} .bt-deptimes__badge', ['padding' => 8]);
+
+        // Espacement + badge saison (petite section custom)
+        $this->start_controls_section('style_badges_extra', [
+            'label' => __('Style — Espacement & saison', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
         ]);
 
@@ -206,80 +225,55 @@ class DepartureTimes extends AbstractBtWidget {
             ],
         ]);
 
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
-            'name'     => 'time_typo',
-            'label'    => __('Typographie heure', 'blacktenderscore'),
-            'selector' => '{{WRAPPER}} .bt-deptimes__time',
-        ]);
-
-        $this->add_control('time_color', [
-            'label'     => __('Couleur heure', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-deptimes__time' => 'color: {{VALUE}}'],
-        ]);
-
-        $this->add_control('badge_bg', [
-            'label'     => __('Fond du badge', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-deptimes__badge' => 'background-color: {{VALUE}}'],
-        ]);
-
-        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
-            'name'     => 'badge_border',
-            'selector' => '{{WRAPPER}} .bt-deptimes__badge',
-        ]);
-
-        $this->add_responsive_control('badge_radius', [
-            'label'      => __('Border radius badge', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
-            'size_units' => ['px', '%'],
-            'default'    => ['size' => 8, 'unit' => 'px'],
-            'selectors'  => ['{{WRAPPER}} .bt-deptimes__badge' => 'border-radius: {{SIZE}}{{UNIT}}'],
-        ]);
-
-        $this->add_responsive_control('badge_padding', [
-            'label'      => __('Padding badge', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::DIMENSIONS,
-            'size_units' => ['px', 'em'],
-            'default'    => ['top' => '8', 'right' => '12', 'bottom' => '8', 'left' => '12', 'unit' => 'px', 'isLinked' => false],
-            'selectors'  => ['{{WRAPPER}} .bt-deptimes__badge' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
-        ]);
-
         $this->add_control('season_badge_bg', [
             'label'     => __('Fond badge saison', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-deptimes__season-badge' => 'background-color: {{VALUE}}'],
+            'condition' => ['show_season_badge' => 'yes'],
         ]);
 
         $this->add_control('season_badge_color', [
             'label'     => __('Texte badge saison', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-deptimes__season-badge' => 'color: {{VALUE}}'],
+            'condition' => ['show_season_badge' => 'yes'],
         ]);
 
         $this->end_controls_section();
 
-        // ── Style — Point de départ ───────────────────────────────────────
-        $this->start_controls_section('style_point', [
-            'label' => __('Style — Point de départ', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
-        ]);
+        // Heure : typographie complète
+        $this->register_typography_section(
+            'time',
+            'Style — Heure',
+            '{{WRAPPER}} .bt-deptimes__time'
+        );
 
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
-            'name'     => 'point_typo',
-            'selector' => '{{WRAPPER}} .bt-deptimes__point',
-        ]);
+        // Point de départ : typographie + lien Maps
+        $this->register_typography_section(
+            'point',
+            'Style — Point de départ',
+            '{{WRAPPER}} .bt-deptimes__point',
+            [],
+            [],
+            ['show_departure_point' => 'yes']
+        );
 
-        $this->add_control('point_color', [
-            'label'     => __('Couleur', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-deptimes__point' => 'color: {{VALUE}}'],
+        $this->start_controls_section('style_map_link', [
+            'label'     => __('Style — Lien Maps', 'blacktenderscore'),
+            'tab'       => \Elementor\Controls_Manager::TAB_STYLE,
+            'condition' => ['show_departure_point' => 'yes', 'show_map_link' => 'yes'],
         ]);
 
         $this->add_control('map_link_color', [
             'label'     => __('Couleur lien Maps', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-deptimes__map-link' => 'color: {{VALUE}}'],
+        ]);
+
+        $this->add_control('map_link_color_hover', [
+            'label'     => __('Couleur au survol', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-deptimes__map-link:hover' => 'color: {{VALUE}}'],
         ]);
 
         $this->end_controls_section();
@@ -293,14 +287,16 @@ class DepartureTimes extends AbstractBtWidget {
 
         if (!$this->acf_required()) return;
 
-        $field_name = sanitize_text_field($s['acf_field'] ?: 'exp_departure_times');
-        $rows       = get_field($field_name, $post_id);
+        $field_name    = sanitize_text_field($s['acf_field'] ?: 'exp_departure_times');
+        $sf_time       = sanitize_key($s['subfield_time']   ?: 'time');
+        $sf_season     = sanitize_key($s['subfield_season'] ?: 'season');
+        $rows          = get_field($field_name, $post_id);
 
         // Filtrer par saison si activé
         if ($s['filter_season'] === 'yes' && !empty($rows)) {
             $active = $s['active_season'] ?: 'summer';
-            $rows   = array_filter($rows, function ($r) use ($active) {
-                $season = $r['season'] ?? 'all';
+            $rows   = array_filter($rows, function ($r) use ($active, $sf_season) {
+                $season = $r[$sf_season] ?? 'all';
                 return $season === $active || $season === 'all';
             });
         }
@@ -348,18 +344,12 @@ class DepartureTimes extends AbstractBtWidget {
         if ($has_depart) {
             echo '<div class="bt-deptimes__departure-info">';
 
-            $icon_html = '';
-            if (!empty($s['departure_icon']['value'])) {
-                ob_start();
-                \Elementor\Icons_Manager::render_icon($s['departure_icon'], ['aria-hidden' => 'true', 'class' => 'bt-deptimes__departure-icon']);
-                $icon_html = ob_get_clean();
-            }
+            $icon_html = $this->capture_icon($s['departure_icon'], ['aria-hidden' => 'true', 'class' => 'bt-deptimes__departure-icon']);
 
             echo '<span class="bt-deptimes__point">' . $icon_html . ' ' . esc_html($departure_name) . '</span>';
 
             if ($s['show_map_link'] === 'yes' && $departure_coords) {
-                // Convertir "43.5125, 6.9487" en lien Google Maps
-                $coords = preg_replace('/\s+/', '', $departure_coords);
+                $coords  = preg_replace('/\s+/', '', $departure_coords);
                 $map_url = 'https://www.google.com/maps/search/?api=1&query=' . urlencode($coords);
                 $lbl     = esc_html($s['map_link_label'] ?: __('Voir sur la carte', 'blacktenderscore'));
                 echo ' <a href="' . esc_url($map_url) . '" class="bt-deptimes__map-link" target="_blank" rel="noopener noreferrer">' . $lbl . '</a>';
@@ -379,8 +369,8 @@ class DepartureTimes extends AbstractBtWidget {
             echo "<ul class=\"{$wrap_cls}\">";
 
             foreach ($rows as $row) {
-                $time   = $row['time']   ?? '';
-                $season = $row['season'] ?? 'all';
+                $time   = $row[$sf_time]   ?? '';
+                $season = $row[$sf_season] ?? 'all';
 
                 if (!$time) continue;
 

@@ -146,12 +146,44 @@
       btn.addEventListener('click', function () {
         if (navigator.share) {
           navigator.share({ title: title, url: url }).catch(function () {});
-        } else if (navigator.clipboard) {
-          navigator.clipboard.writeText(url).then(function () {
-            var orig = btn.textContent;
-            btn.textContent = copied;
-            setTimeout(function () { btn.textContent = orig; }, 2000);
-          });
+        } else {
+          // Fallback : copier dans le presse-papier
+          var fallback = function () {
+            // Cible uniquement la span label pour ne pas détruire l'icône SVG
+            var labelEl = btn.querySelector('.bt-share__btn-label');
+            var orig    = labelEl ? labelEl.textContent : btn.textContent;
+
+            if (labelEl) {
+              labelEl.textContent = copied;
+            } else {
+              btn.setAttribute('data-orig-text', btn.textContent);
+              btn.textContent = copied;
+            }
+
+            setTimeout(function () {
+              if (labelEl) {
+                labelEl.textContent = orig;
+              } else {
+                btn.textContent = btn.getAttribute('data-orig-text') || orig;
+              }
+            }, 2200);
+          };
+
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(fallback).catch(fallback);
+          } else {
+            // Fallback IE/vieux navigateurs
+            try {
+              var ta = document.createElement('textarea');
+              ta.value = url;
+              ta.style.cssText = 'position:fixed;opacity:0;';
+              document.body.appendChild(ta);
+              ta.select();
+              document.execCommand('copy');
+              document.body.removeChild(ta);
+              fallback();
+            } catch (e) {}
+          }
         }
       });
     });

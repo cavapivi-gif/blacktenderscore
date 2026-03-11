@@ -125,6 +125,73 @@ trait BtLayoutControls {
     }
 
     /**
+     * Section Style pour les étoiles de notation.
+     *
+     * Controls générés (prefixés par $prefix) :
+     *   {prefix}_filled_color   COLOR → couleur étoiles pleines (.bt-star--filled)
+     *   {prefix}_empty_color    COLOR → couleur étoiles vides (.bt-star--empty)
+     *   {prefix}_size           SLIDER px/em → font-size du conteneur
+     *   {prefix}_gap            SLIDER px → letter-spacing entre étoiles
+     *
+     * ⚠ Le render doit entourer chaque étoile de :
+     *     <span class="bt-star bt-star--filled">★</span>
+     *     <span class="bt-star bt-star--empty">☆</span>
+     *
+     * @param string $prefix    ex: 'stars'
+     * @param string $label     ex: 'Style — Étoiles'
+     * @param string $selector  ex: '{{WRAPPER}} .bt-reviews__stars'
+     * @param array  $defaults  'filled_color', 'empty_color', 'size' (int px, défaut 18), 'gap' (int px)
+     * @param array  $condition Condition Elementor optionnelle
+     */
+    protected function register_stars_style(
+        string $prefix,
+        string $label,
+        string $selector,
+        array  $defaults  = [],
+        array  $condition = []
+    ): void {
+        $section_args = ['label' => $label, 'tab' => Controls_Manager::TAB_STYLE];
+        if (!empty($condition)) {
+            $section_args['condition'] = $condition;
+        }
+        $this->start_controls_section("style_{$prefix}", $section_args);
+
+        $this->add_control("{$prefix}_filled_color", [
+            'label'     => __('Couleur étoiles pleines', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'default'   => $defaults['filled_color'] ?? '',
+            'selectors' => ["{$selector} .bt-star--filled" => 'color: {{VALUE}}'],
+        ]);
+
+        $this->add_control("{$prefix}_empty_color", [
+            'label'     => __('Couleur étoiles vides', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'default'   => $defaults['empty_color'] ?? '',
+            'selectors' => ["{$selector} .bt-star--empty" => 'color: {{VALUE}}'],
+        ]);
+
+        $size = $defaults['size'] ?? 18;
+        $this->add_responsive_control("{$prefix}_size", [
+            'label'      => __('Taille', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px', 'em'],
+            'range'      => ['px' => ['min' => 10, 'max' => 48]],
+            'default'    => ['size' => $size, 'unit' => 'px'],
+            'selectors'  => [$selector => 'font-size: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        $this->add_responsive_control("{$prefix}_gap", [
+            'label'      => __('Espacement entre étoiles', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 0, 'max' => 12]],
+            'selectors'  => [$selector => 'letter-spacing: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        $this->end_controls_section();
+    }
+
+    /**
      * Section Style pour un séparateur / diviseur visuel.
      *
      * Controls générés :

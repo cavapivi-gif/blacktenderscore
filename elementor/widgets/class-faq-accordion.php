@@ -580,13 +580,6 @@ class FaqAccordion extends AbstractBtWidget {
         return ['', ''];
     }
 
-    private function capture_icon(array $icon_settings): string {
-        if (empty($icon_settings['value'])) return '';
-        ob_start();
-        \Elementor\Icons_Manager::render_icon($icon_settings, ['aria-hidden' => 'true']);
-        return (string) ob_get_clean();
-    }
-
     private function render_schema(array $rows): void {
         $items = [];
         foreach ($rows as $row) {

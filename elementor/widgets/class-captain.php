@@ -3,14 +3,15 @@ namespace BlackTenders\Elementor\Widgets;
 
 use BlackTenders\Elementor\AbstractBtWidget;
 use BlackTenders\Elementor\Traits\BtSharedControls;
+use Elementor\Controls_Manager;
 
 defined('ABSPATH') || exit;
 
 /**
  * Widget Elementor — Profil capitaine.
  *
- * Affiche la fiche profil du capitaine/skipper du bateau :
- * photo, nom, année de début, biographie.
+ * Photo, nom, "depuis", biographie depuis champs ACF.
+ * Layout horizontal ou vertical, styles via méthodes partagées.
  */
 class Captain extends AbstractBtWidget {
 
@@ -32,145 +33,202 @@ class Captain extends AbstractBtWidget {
         // ── Contenu ───────────────────────────────────────────────────────
         $this->start_controls_section('section_content', [
             'label' => __('Contenu', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->register_section_title_controls(['title' => __('Votre capitaine', 'blacktenderscore')]);
 
-        $this->add_control('show_photo', [
-            'label'        => __('Afficher la photo', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
-            'return_value' => 'yes',
-            'default'      => 'yes',
-        ]);
-
-        $this->add_control('photo_acf_field', [
-            'label'   => __('Champ ACF photo (image)', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
-            'default' => 'boat_captain_photo',
-        ]);
-
-        $this->add_control('photo_size', [
-            'label'   => __('Taille de l\'image', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
-            'options' => [
-                'thumbnail' => __('Miniature', 'blacktenderscore'),
-                'medium'    => __('Moyenne', 'blacktenderscore'),
-                'large'     => __('Grande', 'blacktenderscore'),
-                'full'      => __('Originale', 'blacktenderscore'),
-            ],
-            'default' => 'medium',
-        ]);
-
         $this->add_control('name_acf_field', [
-            'label'   => __('Champ ACF nom', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
-            'default' => 'boat_captain_name',
+            'label'     => __('Champ ACF nom', 'blacktenderscore'),
+            'type'      => Controls_Manager::TEXT,
+            'default'   => 'boat_captain_name',
+            'separator' => 'before',
         ]);
 
         $this->add_control('show_since', [
-            'label'        => __('Afficher \'depuis\'', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'label'        => __('Afficher «depuis»', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('since_acf_field', [
-            'label'   => __('Champ ACF (année de début)', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
-            'default' => 'boat_captain_since',
+            'label'     => __('Champ ACF (année de début)', 'blacktenderscore'),
+            'type'      => Controls_Manager::TEXT,
+            'default'   => 'boat_captain_since',
+            'condition' => ['show_since' => 'yes'],
         ]);
 
         $this->add_control('since_prefix', [
-            'label'   => __('Libellé \'depuis\'', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
-            'default' => 'Skipper depuis',
+            'label'     => __('Libellé «depuis»', 'blacktenderscore'),
+            'type'      => Controls_Manager::TEXT,
+            'default'   => __('Skipper depuis', 'blacktenderscore'),
+            'condition' => ['show_since' => 'yes'],
         ]);
 
         $this->add_control('show_bio', [
             'label'        => __('Afficher la bio', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('bio_acf_field', [
-            'label'   => __('Champ ACF bio', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
-            'default' => 'boat_captain_bio',
+            'label'     => __('Champ ACF bio', 'blacktenderscore'),
+            'type'      => Controls_Manager::TEXT,
+            'default'   => 'boat_captain_bio',
+            'condition' => ['show_bio' => 'yes'],
         ]);
 
         $this->end_controls_section();
 
-        // ── Style ─────────────────────────────────────────────────────────
+        // ── Photo ─────────────────────────────────────────────────────────
+        $this->start_controls_section('section_photo', [
+            'label' => __('Photo', 'blacktenderscore'),
+            'tab'   => Controls_Manager::TAB_CONTENT,
+        ]);
+
+        $this->add_control('show_photo', [
+            'label'        => __('Afficher la photo', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => 'yes',
+        ]);
+
+        $this->add_control('photo_acf_field', [
+            'label'     => __('Champ ACF photo (image)', 'blacktenderscore'),
+            'type'      => Controls_Manager::TEXT,
+            'default'   => 'boat_captain_photo',
+            'condition' => ['show_photo' => 'yes'],
+        ]);
+
+        $this->add_control('photo_size', [
+            'label'     => __('Taille de l\'image', 'blacktenderscore'),
+            'type'      => Controls_Manager::SELECT,
+            'options'   => [
+                'thumbnail' => __('Miniature', 'blacktenderscore'),
+                'medium'    => __('Moyenne', 'blacktenderscore'),
+                'large'     => __('Grande', 'blacktenderscore'),
+                'full'      => __('Originale', 'blacktenderscore'),
+            ],
+            'default'   => 'medium',
+            'condition' => ['show_photo' => 'yes'],
+        ]);
+
+        $this->end_controls_section();
+
+        // ── Mise en page ──────────────────────────────────────────────────
+        $this->start_controls_section('section_layout', [
+            'label' => __('Mise en page', 'blacktenderscore'),
+            'tab'   => Controls_Manager::TAB_CONTENT,
+        ]);
+
+        $this->add_control('card_direction', [
+            'label'   => __('Disposition de la carte', 'blacktenderscore'),
+            'type'    => Controls_Manager::CHOOSE,
+            'options' => [
+                'row'    => ['title' => __('Horizontal (photo + infos côte à côte)', 'blacktenderscore'), 'icon' => 'eicon-h-align-left'],
+                'column' => ['title' => __('Vertical (photo au-dessus)', 'blacktenderscore'), 'icon' => 'eicon-v-align-top'],
+            ],
+            'default'   => 'row',
+            'selectors' => ['{{WRAPPER}} .bt-captain__card' => 'flex-direction: {{VALUE}}'],
+        ]);
+
+        $this->add_responsive_control('card_align_items', [
+            'label'   => __('Alignement vertical (mode horizontal)', 'blacktenderscore'),
+            'type'    => Controls_Manager::SELECT,
+            'options' => [
+                'flex-start' => __('Haut', 'blacktenderscore'),
+                'center'     => __('Centre', 'blacktenderscore'),
+                'flex-end'   => __('Bas', 'blacktenderscore'),
+            ],
+            'default'   => 'flex-start',
+            'condition' => ['card_direction' => 'row'],
+            'selectors' => ['{{WRAPPER}} .bt-captain__card' => 'align-items: {{VALUE}}'],
+        ]);
+
+        $this->add_responsive_control('card_gap', [
+            'label'      => __('Espacement photo / infos', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'default'    => ['size' => 24, 'unit' => 'px'],
+            'selectors'  => ['{{WRAPPER}} .bt-captain__card' => 'gap: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        $this->end_controls_section();
+
+        // ── Styles ────────────────────────────────────────────────────────
         $this->register_section_title_style('{{WRAPPER}} .bt-captain__section-title');
 
-        $this->register_box_style('card', 'Style — Carte', '{{WRAPPER}} .bt-captain__card', ['padding' => 24]);
+        $this->register_box_style('card', __('Style — Carte', 'blacktenderscore'), '{{WRAPPER}} .bt-captain__card', ['padding' => 24]);
 
         // Style — Photo
         $this->start_controls_section('style_photo', [
-            'label' => __('Style — Photo', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
-        ]);
-
-        $this->add_responsive_control('photo_radius', [
-            'label'      => __('Rayon de bordure', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
-            'size_units' => ['px', '%'],
-            'default'    => ['size' => 50, 'unit' => '%'],
-            'selectors'  => ['{{WRAPPER}} .bt-captain__photo' => 'border-radius: {{SIZE}}{{UNIT}}'],
+            'label'     => __('Style — Photo', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_STYLE,
+            'condition' => ['show_photo' => 'yes'],
         ]);
 
         $this->add_responsive_control('photo_size_px', [
             'label'      => __('Taille', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px'],
-            'range'      => ['px' => ['min' => 40, 'max' => 200]],
+            'range'      => ['px' => ['min' => 40, 'max' => 300]],
             'default'    => ['size' => 100, 'unit' => 'px'],
-            'selectors'  => ['{{WRAPPER}} .bt-captain__photo-wrap' => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}}'],
+            'selectors'  => ['{{WRAPPER}} .bt-captain__photo-wrap' => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}}; flex-shrink: 0'],
+        ]);
+
+        $this->add_responsive_control('photo_radius', [
+            'label'      => __('Border radius', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px', '%'],
+            'default'    => ['size' => 50, 'unit' => '%'],
+            'selectors'  => [
+                '{{WRAPPER}} .bt-captain__photo-wrap' => 'border-radius: {{SIZE}}{{UNIT}}; overflow: hidden',
+                '{{WRAPPER}} .bt-captain__photo'      => 'border-radius: {{SIZE}}{{UNIT}}',
+            ],
+        ]);
+
+        $this->add_control('photo_object_position', [
+            'label'     => __('Point focal', 'blacktenderscore'),
+            'type'      => Controls_Manager::SELECT,
+            'options'   => [
+                'center center' => __('Centre', 'blacktenderscore'),
+                'center top'    => __('Haut', 'blacktenderscore'),
+                'center bottom' => __('Bas', 'blacktenderscore'),
+                'left center'   => __('Gauche', 'blacktenderscore'),
+                'right center'  => __('Droite', 'blacktenderscore'),
+            ],
+            'default'   => 'center center',
+            'selectors' => ['{{WRAPPER}} .bt-captain__photo' => 'object-position: {{VALUE}}'],
         ]);
 
         $this->end_controls_section();
 
-        // Style — Nom
-        $this->start_controls_section('style_name', [
-            'label' => __('Style — Nom', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
-        ]);
+        // Typographies
+        $this->register_typography_section(
+            'name',
+            __('Style — Nom', 'blacktenderscore'),
+            '{{WRAPPER}} .bt-captain__name'
+        );
 
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
-            'name'     => 'name_typography',
-            'label'    => __('Typographie', 'blacktenderscore'),
-            'selector' => '{{WRAPPER}} .bt-captain__name',
-        ]);
+        $this->register_typography_section(
+            'since',
+            __('Style — «Depuis»', 'blacktenderscore'),
+            '{{WRAPPER}} .bt-captain__since',
+            [],
+            [],
+            ['show_since' => 'yes']
+        );
 
-        $this->add_control('name_color', [
-            'label'     => __('Couleur', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-captain__name' => 'color: {{VALUE}}'],
-        ]);
-
-        $this->end_controls_section();
-
-        // Style — Bio
-        $this->start_controls_section('style_bio', [
-            'label' => __('Style — Bio', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
-        ]);
-
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
-            'name'     => 'bio_typography',
-            'label'    => __('Typographie', 'blacktenderscore'),
-            'selector' => '{{WRAPPER}} .bt-captain__bio',
-        ]);
-
-        $this->add_control('bio_color', [
-            'label'     => __('Couleur', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-captain__bio' => 'color: {{VALUE}}'],
-        ]);
-
-        $this->end_controls_section();
+        $this->register_typography_section(
+            'bio',
+            __('Style — Bio', 'blacktenderscore'),
+            '{{WRAPPER}} .bt-captain__bio',
+            [],
+            [],
+            ['show_bio' => 'yes']
+        );
     }
 
     // ── Render ───────────────────────────────────────────────────────────────
@@ -186,7 +244,6 @@ class Captain extends AbstractBtWidget {
         $since = get_field(sanitize_text_field($s['since_acf_field'] ?: 'boat_captain_since'), $post_id);
         $bio   = get_field(sanitize_text_field($s['bio_acf_field']   ?: 'boat_captain_bio'),   $post_id);
 
-        // Rien à afficher
         if (!$name && !$bio && !$photo) {
             if ($this->is_edit_mode()) {
                 $this->render_placeholder(__('Aucune donnée capitaine trouvée (nom, bio, photo).', 'blacktenderscore'));
@@ -220,12 +277,13 @@ class Captain extends AbstractBtWidget {
         }
 
         if ($s['show_since'] === 'yes' && $since) {
-            $prefix = esc_html($s['since_prefix'] ?: 'Skipper depuis');
-            echo '<p class="bt-captain__since">' . $prefix . ' ' . esc_html($since) . '</p>';
+            $prefix = esc_html($s['since_prefix'] ?: __('Skipper depuis', 'blacktenderscore'));
+            echo '<p class="bt-captain__since">' . $prefix . ' <strong>' . esc_html($since) . '</strong></p>';
         }
 
         if ($s['show_bio'] === 'yes' && $bio) {
-            echo '<p class="bt-captain__bio">' . esc_html($bio) . '</p>';
+            // wp_kses_post pour préserver le formatage HTML (p, strong, em...) de l'ACF
+            echo '<div class="bt-captain__bio">' . wp_kses_post($bio) . '</div>';
         }
 
         echo '</div>'; // .bt-captain__info

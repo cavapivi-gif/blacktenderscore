@@ -26,20 +26,21 @@ class BoatSpecs extends AbstractBtWidget {
     }
 
     // ── Définition des specs disponibles ─────────────────────────────────────
+    // 'no_zero' => true : masque la spec si la valeur numérique est vide ou <= 0
 
     private function specs_definition(): array {
         return [
-            'pax_max'         => ['field' => 'boat_pax_max',         'default_label' => 'Passagers max (légal)', 'default_icon' => '👥', 'suffix' => 'pax'],
-            'pax_comfort'     => ['field' => 'boat_pax_comfort',     'default_label' => 'Passagers confort',      'default_icon' => '🪑', 'suffix' => 'pax'],
-            'cabins'          => ['field' => 'boat_cabins',          'default_label' => 'Cabines',                'default_icon' => '🛏',  'suffix' => ''],
-            'bathrooms'       => ['field' => 'boat_bathrooms',       'default_label' => 'Salles de bain',         'default_icon' => '🚿',  'suffix' => ''],
+            'pax_max'         => ['field' => 'boat_pax_max',         'default_label' => 'Passagers max (légal)', 'default_icon' => '👥', 'suffix' => 'pax', 'no_zero' => true],
+            'pax_comfort'     => ['field' => 'boat_pax_comfort',     'default_label' => 'Passagers confort',      'default_icon' => '🪑', 'suffix' => 'pax', 'no_zero' => true],
+            'cabins'          => ['field' => 'boat_cabins',          'default_label' => 'Cabines',                'default_icon' => '🛏',  'suffix' => '', 'no_zero' => true],
+            'bathrooms'       => ['field' => 'boat_bathrooms',       'default_label' => 'Salles de bain',         'default_icon' => '🚿',  'suffix' => '', 'no_zero' => true],
             'captain'         => ['field' => 'boat_captain',         'default_label' => 'Capitaine à bord',       'default_icon' => '⚓',  'suffix' => '', 'type' => 'bool'],
-            'crew'            => ['field' => 'boat_crew_number',     'default_label' => 'Crew à disposition',     'default_icon' => '👨‍✈️', 'suffix' => ''],
-            'enginepower'     => ['field' => 'boat_enginepower',     'default_label' => 'Motorisation',           'default_icon' => '⚡',  'suffix' => 'CV'],
-            'speed'           => ['field' => 'boat_speed',           'default_label' => 'Vitesse max',            'default_icon' => '💨',  'suffix' => 'nœuds'],
-            'cruising_speed'  => ['field' => 'boat_cruising_speed',  'default_label' => 'Vitesse croisière',      'default_icon' => '🚢',  'suffix' => 'nœuds'],
+            'crew'            => ['field' => 'boat_crew_number',     'default_label' => 'Crew à disposition',     'default_icon' => '👨‍✈️', 'suffix' => '', 'no_zero' => true],
+            'enginepower'     => ['field' => 'boat_enginepower',     'default_label' => 'Motorisation',           'default_icon' => '⚡',  'suffix' => 'CV', 'no_zero' => true],
+            'speed'           => ['field' => 'boat_speed',           'default_label' => 'Vitesse max',            'default_icon' => '💨',  'suffix' => 'nœuds', 'no_zero' => true],
+            'cruising_speed'  => ['field' => 'boat_cruising_speed',  'default_label' => 'Vitesse croisière',      'default_icon' => '🚢',  'suffix' => 'nœuds', 'no_zero' => true],
             'fuel'            => ['field' => 'boat_fuel',            'default_label' => 'Carburant',              'default_icon' => '⛽',  'suffix' => '', 'type' => 'taxonomy'],
-            'fuel_consumption'=> ['field' => 'boat_fuel_consumption','default_label' => 'Consommation',           'default_icon' => '🔋',  'suffix' => 'L/h'],
+            'fuel_consumption'=> ['field' => 'boat_fuel_consumption','default_label' => 'Consommation',           'default_icon' => '🔋',  'suffix' => 'L/h', 'no_zero' => true],
             'fuel_included'   => ['field' => 'boat_fuel_included',   'default_label' => 'Carburant inclus',       'default_icon' => '✅',  'suffix' => '', 'type' => 'bool'],
             'year'            => ['field' => 'boat_year',            'default_label' => 'Année de construction',  'default_icon' => '📅',  'suffix' => ''],
             'length'          => ['field' => 'boat_length',          'default_label' => 'Longueur',               'default_icon' => '📏',  'suffix' => '', 'type' => 'taxonomy'],
@@ -72,15 +73,15 @@ class BoatSpecs extends AbstractBtWidget {
         ]);
 
         $this->add_responsive_control('columns', [
-            'label'     => __('Colonnes', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::NUMBER,
-            'min'       => 1,
-            'max'       => 6,
-            'default'   => 3,
+            'label'          => __('Colonnes', 'blacktenderscore'),
+            'type'           => \Elementor\Controls_Manager::NUMBER,
+            'min'            => 1,
+            'max'            => 6,
+            'default'        => 3,
             'tablet_default' => 2,
             'mobile_default' => 2,
-            'selectors' => ['{{WRAPPER}} .bt-bspecs__grid' => 'grid-template-columns: repeat({{VALUE}}, 1fr)'],
-            'condition' => ['layout' => 'grid'],
+            'selectors'      => ['{{WRAPPER}} .bt-bspecs__grid' => 'grid-template-columns: repeat({{VALUE}}, 1fr)'],
+            'condition'      => ['layout' => 'grid'],
         ]);
 
         $this->add_control('bool_yes_label', [
@@ -135,11 +136,12 @@ class BoatSpecs extends AbstractBtWidget {
 
         $this->end_controls_section();
 
+        // ── STYLE ─────────────────────────────────────────────────────────
+
         $this->register_section_title_style('{{WRAPPER}} .bt-bspecs__title');
 
         $this->register_box_style('item', 'Style — Cartes éléments', '{{WRAPPER}} .bt-bspecs__item', ['padding' => 16]);
 
-        // ── Style — Items ─────────────────────────────────────────────────
         $this->start_controls_section('style_items', [
             'label' => __('Style — Éléments', 'blacktenderscore'),
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
@@ -166,31 +168,20 @@ class BoatSpecs extends AbstractBtWidget {
             'selectors'  => ['{{WRAPPER}} .bt-bspecs__item-icon' => 'font-size: {{SIZE}}{{UNIT}}'],
         ]);
 
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
-            'name'     => 'label_typography',
-            'label'    => __('Typographie label', 'blacktenderscore'),
-            'selector' => '{{WRAPPER}} .bt-bspecs__item-label',
-        ]);
-
-        $this->add_control('label_color', [
-            'label'     => __('Couleur label', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-bspecs__item-label' => 'color: {{VALUE}}'],
-        ]);
-
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
-            'name'     => 'value_typography',
-            'label'    => __('Typographie valeur', 'blacktenderscore'),
-            'selector' => '{{WRAPPER}} .bt-bspecs__item-value',
-        ]);
-
-        $this->add_control('value_color', [
-            'label'     => __('Couleur valeur', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-bspecs__item-value' => 'color: {{VALUE}}'],
-        ]);
-
         $this->end_controls_section();
+
+        // Typographies via composants globaux
+        $this->register_typography_section(
+            'label',
+            'Style — Label',
+            '{{WRAPPER}} .bt-bspecs__item-label'
+        );
+
+        $this->register_typography_section(
+            'value',
+            'Style — Valeur',
+            '{{WRAPPER}} .bt-bspecs__item-value'
+        );
     }
 
     // ── Render ───────────────────────────────────────────────────────────────
@@ -215,7 +206,7 @@ class BoatSpecs extends AbstractBtWidget {
             $label  = esc_html($s["label_{$key}"] ?: $def['default_label']);
             $icon   = esc_html($s["icon_{$key}"]  ?: $def['default_icon']);
 
-            $display = $this->resolve_display_value($raw, $type, $yes_lbl, $no_lbl, $suffix);
+            $display = $this->resolve_display_value($raw, $type, $yes_lbl, $no_lbl, $suffix, $def);
             if ($display === null) continue;
 
             $items[] = compact('label', 'icon', 'display');
@@ -229,8 +220,7 @@ class BoatSpecs extends AbstractBtWidget {
         }
 
         $layout   = $s['layout'] ?: 'grid';
-        $wrap_cls = 'bt-bspecs__grid';
-        if ($layout === 'list') $wrap_cls = 'bt-bspecs__list';
+        $wrap_cls = $layout === 'list' ? 'bt-bspecs__list' : 'bt-bspecs__grid';
 
         echo '<div class="bt-bspecs">';
 
@@ -252,7 +242,7 @@ class BoatSpecs extends AbstractBtWidget {
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private function resolve_display_value($raw, string $type, string $yes_lbl, string $no_lbl, string $suffix): ?string {
+    private function resolve_display_value($raw, string $type, string $yes_lbl, string $no_lbl, string $suffix, array $def): ?string {
         if ($raw === null || $raw === '') return null;
 
         switch ($type) {
@@ -274,7 +264,9 @@ class BoatSpecs extends AbstractBtWidget {
 
             default: // scalar (number, text)
                 $val = (string) $raw;
-                if ($val === '' || ($val === '0' && $suffix === 'pax')) return null;
+                if ($val === '') return null;
+                // Masquer les valeurs <= 0 pour les specs marquées no_zero (pax, cabines, etc.)
+                if (!empty($def['no_zero']) && is_numeric($val) && (float) $val <= 0) return null;
                 return esc_html($val . ($suffix ? ' ' . $suffix : ''));
         }
     }
