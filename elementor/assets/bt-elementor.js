@@ -121,6 +121,44 @@
         }
       });
     });
+
+    // Breakpoint accordion: when tablist is hidden via CSS, show all panels
+    initBreakpointAccordion(root, tablist);
+  }
+
+  function initBreakpointAccordion(root, tablist) {
+    // Find the Elementor widget wrapper that may have bt-tabs-bp-* class
+    var widget = root.closest('[class*="bt-tabs-bp-"]');
+    if (!widget) return;
+
+    var panelCls = root.getAttribute('data-bt-panel-class');
+    var panels = root.querySelectorAll('[role="tabpanel"]');
+
+    function checkBreakpoint() {
+      var tablistHidden = window.getComputedStyle(tablist).display === 'none';
+      panels.forEach(function (panel) {
+        if (tablistHidden) {
+          // Show all panels in accordion mode
+          if (panelCls) {
+            panel.classList.add(panelCls + '--active');
+          } else {
+            panel.style.display = 'block';
+          }
+        } else {
+          // Restore tab behavior — only active panel visible
+          if (panelCls) {
+            var tab = tablist.querySelector('[aria-controls="' + panel.id + '"]');
+            var isActive = tab && tab.getAttribute('aria-selected') === 'true';
+            panel.classList.toggle(panelCls + '--active', isActive);
+          } else {
+            panel.style.display = '';
+          }
+        }
+      });
+    }
+
+    checkBreakpoint();
+    window.addEventListener('resize', checkBreakpoint);
   }
 
   /* ── Pricing Buttons layout — pill selection ────────────────────────────── */
