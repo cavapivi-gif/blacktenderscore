@@ -295,6 +295,18 @@ class Gallery extends AbstractBtWidget {
             'selectors'  => ['{{WRAPPER}} .bt-gallery__item' => 'border-radius: {{SIZE}}{{UNIT}}; overflow: hidden'],
         ]);
 
+        $this->add_control('img_fit', [
+            'label'     => __('Remplissage des images', 'blacktenderscore'),
+            'type'      => Controls_Manager::SELECT,
+            'options'   => [
+                'cover'   => __('Couverture — rogne pour remplir (cover)', 'blacktenderscore'),
+                'contain' => __('Contenu — affiche tout (contain)', 'blacktenderscore'),
+                'fill'    => __('Étirement (fill)', 'blacktenderscore'),
+            ],
+            'default'   => 'cover',
+            'selectors' => ['{{WRAPPER}} .bt-gallery__img' => 'object-fit: {{VALUE}}'],
+        ]);
+
         $this->add_control('img_position', [
             'label'     => __('Point focal des images', 'blacktenderscore'),
             'type'      => Controls_Manager::SELECT,
@@ -306,6 +318,7 @@ class Gallery extends AbstractBtWidget {
                 'right center'  => __('Droite', 'blacktenderscore'),
             ],
             'default'   => 'center center',
+            'condition' => ['img_fit' => 'cover'],
             'selectors' => ['{{WRAPPER}} .bt-gallery__img' => 'object-position: {{VALUE}}'],
         ]);
 
@@ -401,8 +414,7 @@ class Gallery extends AbstractBtWidget {
 
         $max_visible = max(1, (int) ($s['max_visible'] ?? 5));
         $visible     = array_slice($all_images, 0, $max_visible);
-        $hidden      = array_slice($all_images, $max_visible);
-        $remaining   = count($hidden);
+        $remaining   = count($all_images) - count($visible);
 
         $layout     = $s['layout'] ?: 'airbnb';
         $lightbox   = ($s['enable_lightbox'] ?? 'yes') === 'yes';
@@ -426,7 +438,25 @@ class Gallery extends AbstractBtWidget {
             $wrap_cls .= ' bt-gallery--' . esc_attr($s['aspect_ratio'] ?? 'landscape');
         }
 
-        echo '<div class="' . esc_attr($wrap_cls) . '">';
+        // Build JSON image list for custom lightbox (all images, including hidden)
+        $lb_data = [];
+        if ($lightbox) {
+            foreach ($all_images as $img) {
+                if (!is_array($img) || empty($img['url'])) continue;
+                $lb_data[] = [
+                    'src'     => $img['url'],
+                    'thumb'   => $img['sizes']['medium'] ?? ($img['sizes']['thumbnail'] ?? $img['url']),
+                    'alt'     => $img['alt']     ?? ($img['title'] ?? ''),
+                    'caption' => $img['caption'] ?? '',
+                ];
+            }
+        }
+
+        $data_attr = $lightbox
+            ? ' data-bt-gallery="' . esc_attr($group_id) . '" data-bt-gallery-images="' . esc_attr(wp_json_encode($lb_data)) . '"'
+            : '';
+
+        echo '<div class="' . esc_attr($wrap_cls) . '"' . $data_attr . '>';
 
         $this->render_section_title($s, 'bt-gallery__title');
 
@@ -451,14 +481,9 @@ class Gallery extends AbstractBtWidget {
             echo '<figure class="' . esc_attr($item_cls) . '">';
 
             if ($lightbox && $full_url) {
-                // Overlay clique → ouvre lightbox depuis le début
-                $lb_index = ($has_over && $remaining > 0) ? 0 : $i;
                 echo '<a class="bt-gallery__link"'
                     . ' href="' . esc_url($full_url) . '"'
-                    . ' data-elementor-open-lightbox="yes"'
-                    . ' data-elementor-lightbox-slideshow="' . esc_attr($group_id) . '"'
-                    . ' data-elementor-lightbox-index="' . (int) $lb_index . '"'
-                    . ($caption ? ' data-elementor-lightbox-title="' . esc_attr($caption) . '"' : '')
+                    . ' data-bt-lb-index="' . (int) $i . '"'
                     . '>';
             } else {
                 echo '<span class="bt-gallery__link">';
@@ -483,14 +508,8 @@ class Gallery extends AbstractBtWidget {
 
             // Bouton "Voir toutes les photos" sur l'image principale (airbnb uniquement)
             if ($is_main && $show_btn) {
-                $lb_attr = ($lightbox && $full_url)
-                    ? ' href="' . esc_url($full_url) . '"'
-                      . ' data-elementor-open-lightbox="yes"'
-                      . ' data-elementor-lightbox-slideshow="' . esc_attr($group_id) . '"'
-                      . ' data-elementor-lightbox-index="0"'
-                    : ' href="#"';
-
-                echo '<a class="bt-gallery__allphotos-btn bt-gallery__allphotos-btn--' . esc_attr($btn_pos) . '"' . $lb_attr . '>';
+                $lb_open = $lightbox ? ' data-bt-lb-open' : '';
+                echo '<a class="bt-gallery__allphotos-btn bt-gallery__allphotos-btn--' . esc_attr($btn_pos) . '" href="#"' . $lb_open . '>';
                 echo '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> ';
                 echo $btn_label;
                 echo '</a>';
@@ -506,24 +525,6 @@ class Gallery extends AbstractBtWidget {
         }
 
         echo '</div>'; // .bt-gallery__grid
-
-        // Éléments cachés pour lightbox complète (toutes les images de la galerie)
-        if ($lightbox && !empty($hidden)) {
-            echo '<div class="bt-gallery__lightbox-hidden" aria-hidden="true" style="display:none">';
-            foreach ($hidden as $j => $img) {
-                if (!is_array($img) || empty($img['url'])) continue;
-                $caption = $img['caption'] ?? '';
-                echo '<a'
-                    . ' href="' . esc_url($img['url']) . '"'
-                    . ' data-elementor-open-lightbox="yes"'
-                    . ' data-elementor-lightbox-slideshow="' . esc_attr($group_id) . '"'
-                    . ' data-elementor-lightbox-index="' . (int) ($max_visible + $j) . '"'
-                    . ($caption ? ' data-elementor-lightbox-title="' . esc_attr($caption) . '"' : '')
-                    . '></a>';
-            }
-            echo '</div>';
-        }
-
         echo '</div>'; // .bt-gallery
     }
 
