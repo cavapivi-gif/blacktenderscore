@@ -138,19 +138,6 @@ class RestApi {
         $client   = new Client();
         $products = $client->get_products($locale);
 
-        // Enrichit avec le post WP lié (si sync déjà fait)
-        foreach ($products as &$p) {
-            $posts = get_posts([
-                'post_type'  => get_option('bt_post_types', ['excursion']),
-                'meta_key'   => '_bt_regiondo_product_id',
-                'meta_value' => $p['product_id'],
-                'numberposts'=> 1,
-                'fields'     => 'ids',
-            ]);
-            $p['wp_post_id']  = $posts[0] ?? null;
-            $p['wp_post_url'] = $posts[0] ? get_edit_post_link($posts[0], 'raw') : null;
-        }
-
         return rest_ensure_response(['data' => $products, 'total' => count($products)]);
     }
 
