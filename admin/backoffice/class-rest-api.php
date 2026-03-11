@@ -96,6 +96,13 @@ class RestApi {
             'permission_callback' => $auth,
         ]);
 
+        // Diagnostic complet (réponses brutes de chaque endpoint)
+        register_rest_route(self::NS, '/diagnostic', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'run_diagnostic'],
+            'permission_callback' => $auth,
+        ]);
+
         // Réglages
         register_rest_route(self::NS, '/settings', [
             'methods'             => 'GET',
@@ -343,6 +350,32 @@ class RestApi {
                 'message' => 'Erreur : ' . $e->getMessage(),
             ]);
         }
+    }
+
+    public function run_diagnostic(): \WP_REST_Response {
+        $client = new Client();
+
+        $endpoints = [
+            ['label' => 'Products',            'path' => 'products',              'params' => ['limit' => 5, 'store_locale' => 'fr-FR']],
+            ['label' => 'Partner Bookings',     'path' => 'partner/bookings',      'params' => ['limit' => 5, 'type' => 'offline_reservation,booking,voucher,redeem']],
+            ['label' => 'Supplier Bookings',    'path' => 'supplier/bookings',     'params' => ['limit' => 5, 'type' => 'offline_reservation,booking,voucher,redeem']],
+            ['label' => 'Partner Sold Items',   'path' => 'partner/solditems',     'params' => ['limit' => 5]],
+            ['label' => 'Supplier Sold Items',  'path' => 'supplier/solditems',    'params' => ['limit' => 5]],
+            ['label' => 'Partner CRM',          'path' => 'partner/crmcustomers',  'params' => ['limit' => 5]],
+            ['label' => 'Reviews',              'path' => 'reviews',               'params' => ['limit' => 5]],
+            ['label' => 'Categories',           'path' => 'categories',            'params' => ['limit' => 5]],
+            ['label' => 'Account Locale',       'path' => 'account/locale',        'params' => []],
+        ];
+
+        $results = [];
+        foreach ($endpoints as $ep) {
+            $results[] = array_merge(
+                ['label' => $ep['label']],
+                $client->raw_request($ep['path'], $ep['params'])
+            );
+        }
+
+        return rest_ensure_response(['endpoints' => $results]);
     }
 
     public function get_settings(): \WP_REST_Response {

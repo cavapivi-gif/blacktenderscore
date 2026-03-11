@@ -39,6 +39,7 @@ export const api = {
   sync:        (id)     => api.post('/sync', id ? { product_id: id } : {}),
   newsletter:  (email, subscribed) => api.put('/customers/newsletter', { email, subscribed }),
   testConnection: ()    => api.get('/test-connection'),
+  diagnostic:    ()    => api.get('/diagnostic'),
 }
 
 function toQuery(params) {
