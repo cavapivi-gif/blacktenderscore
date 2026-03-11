@@ -166,6 +166,44 @@ class Highlights extends AbstractBtWidget {
             'selectors' => ['{{WRAPPER}} .bt-highlights__item' => 'flex-direction: {{VALUE}}'],
         ]);
 
+        $this->add_control('icon_valign', [
+            'label'   => __('Alignement vertical icône', 'blacktenderscore'),
+            'type'    => Controls_Manager::CHOOSE,
+            'options' => [
+                'flex-start' => ['title' => __('Haut', 'blacktenderscore'), 'icon' => 'eicon-v-align-top'],
+                'center'     => ['title' => __('Centre', 'blacktenderscore'), 'icon' => 'eicon-v-align-middle'],
+                'flex-end'   => ['title' => __('Bas', 'blacktenderscore'), 'icon' => 'eicon-v-align-bottom'],
+            ],
+            'default'   => 'flex-start',
+            'condition' => ['show_icon' => 'yes', 'icon_position' => 'row'],
+            'selectors' => ['{{WRAPPER}} .bt-highlights__item' => 'align-items: {{VALUE}}'],
+        ]);
+
+        $this->add_control('content_align', [
+            'label'   => __('Alignement du texte', 'blacktenderscore'),
+            'type'    => Controls_Manager::CHOOSE,
+            'options' => [
+                'left'   => ['title' => __('Gauche', 'blacktenderscore'), 'icon' => 'eicon-text-align-left'],
+                'center' => ['title' => __('Centre', 'blacktenderscore'), 'icon' => 'eicon-text-align-center'],
+                'right'  => ['title' => __('Droite', 'blacktenderscore'), 'icon' => 'eicon-text-align-right'],
+            ],
+            'default'   => '',
+            'condition' => ['icon_position' => 'column'],
+            'selectors' => [
+                '{{WRAPPER}} .bt-highlights__item' => 'align-items: {{VALUE}}; text-align: {{VALUE}}',
+            ],
+        ]);
+
+        $this->add_responsive_control('icon_spacing', [
+            'label'      => __('Espacement icône ↔ texte', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px', 'em'],
+            'range'      => ['px' => ['min' => 0, 'max' => 40]],
+            'default'    => ['size' => 12, 'unit' => 'px'],
+            'condition'  => ['show_icon' => 'yes'],
+            'selectors'  => ['{{WRAPPER}} .bt-highlights__item' => 'gap: {{SIZE}}{{UNIT}}'],
+        ]);
+
         $this->end_controls_section();
 
         // ── Styles via traits ─────────────────────────────────────────────
@@ -292,7 +330,7 @@ class Highlights extends AbstractBtWidget {
             }
 
             if ($s['show_desc'] === 'yes' && $desc) {
-                echo '<p class="bt-highlights__desc">' . esc_html($desc) . '</p>';
+                echo '<div class="bt-highlights__desc">' . wp_kses_post($desc) . '</div>';
             }
 
             echo '</div>'; // .bt-highlights__content
