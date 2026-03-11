@@ -123,28 +123,32 @@
     });
   }
 
-  /* ── Onboarding — Sélection créneaux ────────────────────────────────────── */
+  /* ── Pricing Buttons layout — pill selection ────────────────────────────── */
 
-  function initOnboarding(el) {
-    el.querySelectorAll('[data-bt-onboarding]:not([data-bt-ob-init])').forEach(function (ob) {
-      ob.setAttribute('data-bt-ob-init', '1');
+  function initPricingButtons(el) {
+    el.querySelectorAll('[data-bt-pricing-buttons]:not([data-bt-pb-init])').forEach(function (root) {
+      root.setAttribute('data-bt-pb-init', '1');
 
-      var panel  = ob.closest('.bt-pricing__panel, .bt-bprice__panel');
-      var reveal = panel ? panel.querySelector('.bt-pricing__booking-reveal') : null;
+      var slots   = Array.from(root.querySelectorAll('.bt-pricing__slot'));
+      var panels  = Array.from(root.querySelectorAll('[data-slot-panel]'));
+      var reveal  = root.querySelector('.bt-pricing__booking-reveal');
 
-      ob.querySelectorAll('.bt-pricing__slot').forEach(function (slot) {
+      slots.forEach(function (slot) {
         slot.addEventListener('click', function () {
-          // Marque le créneau actif
-          ob.querySelectorAll('.bt-pricing__slot').forEach(function (s) {
-            s.classList.remove('bt-pricing__slot--active');
-          });
+          var idx = slot.getAttribute('data-slot-index');
+
+          // Toggle active slot
+          slots.forEach(function (s) { s.classList.remove('bt-pricing__slot--active'); });
           slot.classList.add('bt-pricing__slot--active');
 
-          // Révèle le widget de réservation
+          // Show matching panel, hide others
+          panels.forEach(function (p) {
+            p.classList.toggle('bt-pricing__panel--active', p.getAttribute('data-slot-panel') === idx);
+          });
+
+          // Reveal booking widget
           if (reveal) {
-            reveal.style.removeProperty('display');
             reveal.classList.add('bt-pricing__booking-reveal--visible');
-            // Scroll fluide vers le widget
             setTimeout(function () {
               reveal.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }, 80);
@@ -168,7 +172,7 @@
       root.setAttribute('data-bt-init', '1');
       initTabs(root);
     });
-    initOnboarding(el);
+    initPricingButtons(el);
     el.querySelectorAll('[data-bt-share]:not([data-bt-share-init])').forEach(function (btn) {
       btn.setAttribute('data-bt-share-init', '1');
       var url    = btn.getAttribute('data-bt-url')    || window.location.href;
