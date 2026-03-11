@@ -38,6 +38,7 @@ export const api = {
   flushCache:  ()       => api.post('/cache/flush', {}),
   sync:        (id)     => api.post('/sync', id ? { product_id: id } : {}),
   newsletter:  (email, subscribed) => api.put('/customers/newsletter', { email, subscribed }),
+  testConnection: ()    => api.get('/test-connection'),
 }
 
 function toQuery(params) {

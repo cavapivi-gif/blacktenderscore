@@ -2,41 +2,69 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Design Tokens (shadcn-like, scoped to our WP root) ── */
+#bt-backoffice-root {
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+  --primary: #0a0a0a;
+  --primary-foreground: #fafafa;
+  --secondary: #f5f5f5;
+  --secondary-foreground: #0a0a0a;
+  --muted: #f5f5f5;
+  --muted-foreground: #737373;
+  --accent: #f5f5f5;
+  --accent-foreground: #0a0a0a;
+  --destructive: #dc2626;
+  --destructive-foreground: #fafafa;
+  --border: #e5e5e5;
+  --input: #e5e5e5;
+  --ring: #a3a3a3;
+  --radius: 0.5rem;
+}
+
+/* ── Root scope: prevent WP admin CSS bleed ── */
 #bt-backoffice-root {
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
   font-size: 14px;
   line-height: 1.5;
-  color: #000;
-  background: #fff;
-  min-height: 100vh;
+  color: var(--foreground);
+  background: var(--background);
+  position: fixed;
+  top: 32px;   /* WP admin bar height */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 99;
+  overflow-x: hidden;
+  overflow-y: auto;
   -webkit-font-smoothing: antialiased;
 }
 
 #bt-backoffice-root * {
   box-sizing: border-box;
+  border-color: var(--border);
 }
 
 /* Reset WP admin interference */
-#bt-backoffice-root h1,
-#bt-backoffice-root h2,
-#bt-backoffice-root h3,
-#bt-backoffice-root p {
+#bt-backoffice-root :where(h1, h2, h3, p) {
   margin: 0;
   padding: 0;
-  font-weight: 400;
 }
 
-#bt-backoffice-root button {
+#bt-backoffice-root :where(a) {
+  color: inherit;
+  text-decoration: inherit;
+}
+
+#bt-backoffice-root :where(button) {
   cursor: pointer;
   font-family: inherit;
-  font-size: 13px;
 }
 
-#bt-backoffice-root input,
-#bt-backoffice-root select,
-#bt-backoffice-root textarea {
+#bt-backoffice-root :where(input, select, textarea) {
   font-family: inherit;
-  font-size: 13px;
 }
 
 /* Force SVG visibility — WP admin sometimes hides/resets SVGs */

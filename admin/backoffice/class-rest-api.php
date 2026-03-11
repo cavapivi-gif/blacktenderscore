@@ -82,6 +82,13 @@ class RestApi {
             'permission_callback' => $auth,
         ]);
 
+        // Test connexion
+        register_rest_route(self::NS, '/test-connection', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'test_connection'],
+            'permission_callback' => $auth,
+        ]);
+
         // Réglages
         register_rest_route(self::NS, '/settings', [
             'methods'             => 'GET',
@@ -181,8 +188,33 @@ class RestApi {
             'page'     => (int) ($req->get_param('page') ?: 1),
             'per_page' => (int) ($req->get_param('per_page') ?: 50),
         ];
-        $client = new Client();
-        return rest_ensure_response($client->get_crm_customers($params));
+        $client   = new Client();
+        $result   = $client->get_crm_customers($params);
+
+        // Enrich with avis count from sj_avis CPT if available
+        if (!empty($result['data']) && post_type_exists('sj_avis')) {
+            foreach ($result['data'] as &$customer) {
+                $email = $customer['email'] ?? '';
+                if ($email) {
+                    $count = (new \WP_Query([
+                        'post_type'      => 'sj_avis',
+                        'posts_per_page' => -1,
+                        'fields'         => 'ids',
+                        'meta_query'     => [
+                            [
+                                'key'   => 'avis_customer_email',
+                                'value' => $email,
+                            ],
+                        ],
+                    ]))->found_posts;
+                    $customer['avis_count'] = $count;
+                } else {
+                    $customer['avis_count'] = 0;
+                }
+            }
+        }
+
+        return rest_ensure_response($result);
     }
 
     public function update_newsletter(\WP_REST_Request $req): \WP_REST_Response {
@@ -201,20 +233,100 @@ class RestApi {
     public function get_dashboard(\WP_REST_Request $req): \WP_REST_Response {
         $client = new Client();
 
-        $products  = $client->get_products('fr-FR');
-        $bookings  = $client->get_bookings([
-            'per_page' => 10,
+        // Test API connection first
+        $api_status = 'ok';
+        $api_error  = null;
+
+        try {
+            $products = $client->get_products('fr-FR');
+        } catch (\Throwable $e) {
+            $products   = [];
+            $api_status = 'error';
+            $api_error  = $e->getMessage();
+        }
+
+        // Get bookings for current month — try multiple approaches
+        $bookings = $client->get_bookings([
+            'per_page' => 50,
             'from'     => date('Y-m-01'),
             'to'       => date('Y-m-t'),
         ]);
+
+        // If no bookings from partner endpoint, try sold items as fallback
+        if (empty($bookings['data']) && ($bookings['total'] ?? 0) === 0) {
+            $sold = $client->get_sold_items([
+                'per_page' => 50,
+                'from'     => date('Y-m-01'),
+                'to'       => date('Y-m-t'),
+            ]);
+
+            if (!empty($sold['data'])) {
+                $bookings = [
+                    'data'  => array_map(function($item) {
+                        return [
+                            'booking_ref'   => $item['order_number'] ?? $item['reference_id'] ?? '',
+                            'product_name'  => $item['product_name'] ?? $item['name'] ?? '',
+                            'booking_date'  => $item['date'] ?? $item['created_at'] ?? '',
+                            'customer_name' => trim(($item['first_name'] ?? '') . ' ' . ($item['last_name'] ?? '')),
+                            'total_price'   => $item['total'] ?? $item['price'] ?? null,
+                            'currency_code' => $item['currency'] ?? $item['currency_code'] ?? 'EUR',
+                            'status'        => $item['status'] ?? 'confirmed',
+                        ];
+                    }, $sold['data']),
+                    'total' => $sold['total'] ?? count($sold['data']),
+                ];
+            }
+        }
+
+        // Calculate revenue from confirmed bookings
+        $revenue_month = 0;
+        foreach (($bookings['data'] ?? []) as $b) {
+            $status = $b['status'] ?? '';
+            if ($status === 'confirmed' || $status === '') {
+                $revenue_month += floatval($b['total_price'] ?? 0);
+            }
+        }
+
         $customers = $client->get_crm_customers(['per_page' => 1]);
 
         return rest_ensure_response([
             'products_count'   => count($products),
             'bookings_month'   => $bookings['total'] ?? 0,
+            'revenue_month'    => round($revenue_month, 2),
             'customers_total'  => $customers['total'] ?? 0,
             'recent_bookings'  => array_slice($bookings['data'] ?? [], 0, 8),
+            'api_status'       => $api_status,
+            'api_error'        => $api_error,
         ]);
+    }
+
+    public function test_connection(): \WP_REST_Response {
+        $client = new Client();
+
+        try {
+            $products = $client->get_products('fr-FR');
+
+            if (empty($products)) {
+                // Could be empty account or wrong keys — try account endpoint
+                $account = $client->get_account_locale();
+                if (empty($account)) {
+                    return rest_ensure_response([
+                        'success' => false,
+                        'message' => 'Clés API invalides ou compte non trouvé.',
+                    ]);
+                }
+            }
+
+            return rest_ensure_response([
+                'success' => true,
+                'message' => 'Connexion réussie — ' . count($products) . ' produit(s) trouvé(s).',
+            ]);
+        } catch (\Throwable $e) {
+            return rest_ensure_response([
+                'success' => false,
+                'message' => 'Erreur : ' . $e->getMessage(),
+            ]);
+        }
     }
 
     public function get_settings(): \WP_REST_Response {
@@ -259,8 +371,20 @@ class RestApi {
         }
         if (isset($body['widget_map']) && is_array($body['widget_map'])) {
             $clean = [];
-            foreach ($body['widget_map'] as $pid => $wid) {
-                $clean[absint($pid)] = sanitize_text_field($wid);
+            foreach ($body['widget_map'] as $pid => $value) {
+                $pid_clean = absint($pid);
+                if (is_array($value)) {
+                    $clean[$pid_clean] = [
+                        'widget_id'  => sanitize_text_field($value['widget_id'] ?? ''),
+                        'custom_css' => wp_strip_all_tags($value['custom_css'] ?? ''),
+                    ];
+                } else {
+                    // Backward compat: string value = widget_id only
+                    $clean[$pid_clean] = [
+                        'widget_id'  => sanitize_text_field($value),
+                        'custom_css' => '',
+                    ];
+                }
             }
             update_option('bt_widget_map', $clean);
         }

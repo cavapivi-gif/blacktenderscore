@@ -452,20 +452,28 @@ class PricingTabs extends AbstractBtWidget {
             self::$regiondo_script_printed = true;
         }
 
+        // Load custom CSS from widget_map settings
+        $custom_css = '';
+        $widget_map = get_option('bt_widget_map', []);
+        foreach ($widget_map as $pid => $config) {
+            $wid = is_array($config) ? ($config['widget_id'] ?? '') : $config;
+            if ($wid === $uuid && is_array($config) && !empty($config['custom_css'])) {
+                $custom_css = $config['custom_css'];
+                break;
+            }
+        }
+
         ob_start(); ?>
         <div class="bt-pricing__booking">
-            <template id="<?= $style_id ?>">
+            <booking-widget widget-id="<?= $widget_id ?>">
                 <style>
                     .regiondo-booking-widget { max-width: 100% !important; }
                     .regiondo-widget .regiondo-button-addtocart,
                     .regiondo-widget .regiondo-button-checkout { border-radius: 40px; }
+                    <?php if ($custom_css): ?>
+                    <?= wp_strip_all_tags($custom_css) ?>
+                    <?php endif; ?>
                 </style>
-            </template>
-            <booking-widget
-                styles-template-id="<?= esc_attr($style_id) ?>"
-                widget-id="<?= $widget_id ?>"
-                data-wid="1"
-                tabindex="0">
             </booking-widget>
             <?= $script ?>
         </div>

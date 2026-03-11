@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { api } from '../lib/api'
-import { PageHeader, Table, Input, Pagination, Notice, Spinner } from '../components/ui'
+import { PageHeader, Table, Pagination, Notice, Spinner, Badge } from '../components/ui'
 
 export default function Customers() {
   const [data, setData]       = useState([])
@@ -25,17 +25,34 @@ export default function Customers() {
     {
       key: 'name',
       label: 'Nom',
-      render: r => `${r.first_name ?? ''} ${r.last_name ?? ''}`.trim() || '—',
+      render: r => {
+        const name = `${r.first_name ?? ''} ${r.last_name ?? ''}`.trim() || '—'
+        return (
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center text-xs text-muted-foreground font-medium">
+              {name[0]?.toUpperCase() ?? '?'}
+            </div>
+            <span>{name}</span>
+          </div>
+        )
+      },
     },
     { key: 'email', label: 'Email' },
     {
       key: 'newsletter',
       label: 'Newsletter',
       render: r => (
-        <span className={`text-xs ${r.newsletter ? 'text-gray-700' : 'text-gray-400'}`}>
+        <Badge variant={r.newsletter ? 'ok' : 'default'}>
           {r.newsletter ? 'Abonné' : 'Non abonné'}
-        </span>
+        </Badge>
       ),
+    },
+    {
+      key: 'avis_count',
+      label: 'Avis',
+      render: r => r.avis_count > 0
+        ? <Badge variant="ok">{r.avis_count} avis</Badge>
+        : <span className="text-xs text-muted-foreground">—</span>,
     },
   ]
 
@@ -43,14 +60,15 @@ export default function Customers() {
     <div>
       <PageHeader
         title="Clients"
+        subtitle="Données CRM Regiondo"
         actions={
-          <span className="text-xs text-gray-400">{total} client{total > 1 ? 's' : ''}</span>
+          <span className="text-xs text-muted-foreground">{total} client{total > 1 ? 's' : ''}</span>
         }
       />
 
-      {error && <div className="px-8 pt-5"><Notice type="error">{error}</Notice></div>}
+      {error && <div className="px-6 pt-5"><Notice type="error">{error}</Notice></div>}
 
-      <div className="mx-8 mt-6 border border-gray-200">
+      <div className="mx-6 mt-5 rounded-lg border overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-20"><Spinner size={20} /></div>
         ) : (
