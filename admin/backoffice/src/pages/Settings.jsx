@@ -34,34 +34,144 @@ function getCssWarnings(raw) {
   return warnings
 }
 
-/* ── CSS Syntax Highlighter ────────────────────────────────────── */
+/* ── CSS Tokenizer + Highlighter (single-pass, no regex overlap) ── */
+const CSS_COLORS = {
+  comment:  '#6a737d',
+  string:   '#032f62',
+  selector: '#22863a',
+  property: '#6f42c1',
+  value:    '#222',
+  number:   '#005cc5',
+  hex:      '#e36209',
+  brace:    '#586069',
+  colon:    '#999',
+  semi:     '#999',
+  atrule:   '#d73a49',
+}
+
+function esc(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+function span(color, text) {
+  return `<span style="color:${color}">${text}</span>`
+}
+
 function highlightCss(code) {
   if (!code) return ''
-  // Escape HTML first
-  let html = code
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
+  let out = ''
+  let i = 0
+  const len = code.length
+  // Track whether we're inside { } to distinguish selectors from properties
+  let inBlock = 0
 
-  // Comments
-  html = html.replace(/(\/\*[\s\S]*?\*\/)/g, '<span style="color:var(--css-comment,#6a737d)">$1</span>')
-  // Strings
-  html = html.replace(/(["'])(?:(?!\1).)*?\1/g, '<span style="color:var(--css-string,#032f62)">$1</span>')
-  // Properties (word before colon inside braces context)
-  html = html.replace(/([a-z-]+)(\s*:)/gi, '<span style="color:var(--css-property,#6f42c1)">$1</span>$2')
-  // Values: numbers + units
-  html = html.replace(/:\s*([^;}{]+)/g, (m, val) => {
-    const colored = val
-      .replace(/(#[0-9a-fA-F]{3,8})/g, '<span style="color:var(--css-color,#e36209)">$1</span>')
-      .replace(/(\b\d+\.?\d*)(px|em|rem|%|vh|vw|s|ms|deg|fr)?\b/g, '<span style="color:var(--css-number,#005cc5)">$1$2</span>')
-    return ': ' + colored
-  })
-  // Selectors (lines that end with {)
-  html = html.replace(/^([^{}/*]+?)(\s*\{)/gm, '<span style="color:var(--css-selector,#22863a)">$1</span>$2')
-  // Braces
-  html = html.replace(/([{}])/g, '<span style="color:var(--css-brace,#586069)">$1</span>')
+  while (i < len) {
+    // ── Comment /* ... */
+    if (code[i] === '/' && code[i + 1] === '*') {
+      const end = code.indexOf('*/', i + 2)
+      const slice = end === -1 ? code.slice(i) : code.slice(i, end + 2)
+      out += span(CSS_COLORS.comment, esc(slice))
+      i += slice.length
+      continue
+    }
 
-  return html
+    // ── String "..." or '...'
+    if (code[i] === '"' || code[i] === "'") {
+      const q = code[i]
+      let j = i + 1
+      while (j < len && code[j] !== q) { if (code[j] === '\\') j++; j++ }
+      const slice = code.slice(i, j + 1)
+      out += span(CSS_COLORS.string, esc(slice))
+      i = j + 1
+      continue
+    }
+
+    // ── Braces
+    if (code[i] === '{') { inBlock++; out += span(CSS_COLORS.brace, '{'); i++; continue }
+    if (code[i] === '}') { inBlock = Math.max(0, inBlock - 1); out += span(CSS_COLORS.brace, '}'); i++; continue }
+
+    // ── Semicolon
+    if (code[i] === ';') { out += span(CSS_COLORS.semi, ';'); i++; continue }
+
+    // ── Inside a block: property: value;
+    if (inBlock > 0) {
+      // Whitespace / newlines — pass through
+      if (/\s/.test(code[i])) { out += esc(code[i]); i++; continue }
+
+      // Property name (word-chars and hyphens before a colon)
+      const propMatch = code.slice(i).match(/^([a-zA-Z-]+)(\s*)(:\s*)/)
+      if (propMatch) {
+        out += span(CSS_COLORS.property, esc(propMatch[1]))
+        out += esc(propMatch[2])
+        out += span(CSS_COLORS.colon, esc(propMatch[3]))
+        i += propMatch[0].length
+
+        // Now consume the value until ; or } or end
+        let val = ''
+        while (i < len && code[i] !== ';' && code[i] !== '}') {
+          // Nested comment in value
+          if (code[i] === '/' && code[i + 1] === '*') {
+            // Flush accumulated value
+            if (val) { out += colorizeValue(val); val = '' }
+            const cEnd = code.indexOf('*/', i + 2)
+            const cSlice = cEnd === -1 ? code.slice(i) : code.slice(i, cEnd + 2)
+            out += span(CSS_COLORS.comment, esc(cSlice))
+            i += cSlice.length
+            continue
+          }
+          // String in value
+          if (code[i] === '"' || code[i] === "'") {
+            if (val) { out += colorizeValue(val); val = '' }
+            const q = code[i]
+            let j = i + 1
+            while (j < len && code[j] !== q) { if (code[j] === '\\') j++; j++ }
+            out += span(CSS_COLORS.string, esc(code.slice(i, j + 1)))
+            i = j + 1
+            continue
+          }
+          val += code[i]
+          i++
+        }
+        if (val) out += colorizeValue(val)
+        continue
+      }
+
+      // Fallback: just output the char
+      out += esc(code[i]); i++; continue
+    }
+
+    // ── Outside block: selector or at-rule
+    // @-rule
+    if (code[i] === '@') {
+      let j = i
+      while (j < len && code[j] !== '{' && code[j] !== ';' && code[j] !== '\n') j++
+      out += span(CSS_COLORS.atrule, esc(code.slice(i, j)))
+      i = j
+      continue
+    }
+
+    // Selector: everything until {
+    if (/[a-zA-Z.#:\[\]_*>,~+\-]/.test(code[i])) {
+      let j = i
+      while (j < len && code[j] !== '{' && code[j] !== '}') j++
+      out += span(CSS_COLORS.selector, esc(code.slice(i, j)))
+      i = j
+      continue
+    }
+
+    // Anything else (whitespace, newlines outside blocks)
+    out += esc(code[i]); i++
+  }
+
+  return out
+}
+
+// Colorize a CSS value fragment — highlight #hex and numbers
+function colorizeValue(val) {
+  return esc(val)
+    .replace(/(#[0-9a-fA-F]{3,8})\b/g, `<span style="color:${CSS_COLORS.hex}">$1</span>`)
+    .replace(/\b(\d+\.?\d*)(px|em|rem|%|vh|vw|vmin|vmax|s|ms|deg|fr|ch|ex)?\b/g,
+      `<span style="color:${CSS_COLORS.number}">$1$2</span>`)
 }
 
 /* ── CssEditor Component ───────────────────────────────────────── */
