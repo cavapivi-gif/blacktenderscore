@@ -138,50 +138,46 @@ class Client {
     // ─── RÉSERVATIONS / REPORTING ────────────────────────────────────────────
 
     /**
-     * Fetch bookings — tries supplier endpoint first, then partner fallback.
+     * Fetch bookings via GET /supplier/bookings (official Regiondo endpoint).
      *
-     * @param array $params Keys: page, per_page, from (YYYY-MM-DD), to, product_id, order_number
+     * @param array $params Keys: from (YYYY-MM-DD), to, product_id, status, limit, offset
      */
     public function get_bookings(array $params = []): array {
-        $defaults = ['page' => 1, 'per_page' => 50];
-        $params   = array_merge($defaults, $params);
+        // Convert our params to Regiondo API format
+        $query = [
+            'limit'  => $params['per_page'] ?? $params['limit'] ?? 250,
+            'offset' => isset($params['page']) ? (($params['page'] - 1) * ($params['per_page'] ?? 250)) : ($params['offset'] ?? 0),
+            // Include all booking types by default (not just "booking")
+            'type'   => $params['type'] ?? 'offline_reservation,booking,voucher,redeem',
+        ];
 
-        // Try supplier endpoint first (bookings)
-        $url  = self::BASE_URL . 'bookings?' . http_build_query($params);
-        $data = $this->request($url);
-
-        if (!empty($data['data']) || !empty($data['bookings'])) {
-            $items = $data['data'] ?? $data['bookings'] ?? [];
-            return [
-                'data'  => $this->normalize_bookings($items),
-                'total' => $data['total'] ?? $data['count'] ?? count($items),
-                'page'  => $data['page'] ?? 1,
-            ];
+        // Date range filter
+        if (!empty($params['from']) || !empty($params['to'])) {
+            $from = $params['from'] ?? '2020-01-01';
+            $to   = $params['to']   ?? date('Y-m-d');
+            $query['date_range']    = $from . ',' . $to;
+            $query['date_range_by'] = $params['date_range_by'] ?? 'date_bought';
         }
 
-        // Fallback: partner/bookings
-        $url  = self::BASE_URL . 'partner/bookings?' . http_build_query($params);
-        $data = $this->request($url);
-
-        if (!empty($data['data']) || !empty($data['bookings'])) {
-            $items = $data['data'] ?? $data['bookings'] ?? [];
-            return [
-                'data'  => $this->normalize_bookings($items),
-                'total' => $data['total'] ?? $data['count'] ?? count($items),
-                'page'  => $data['page'] ?? 1,
-            ];
+        if (!empty($params['product_id'])) {
+            $query['product_ids'] = $params['product_id'];
+        }
+        if (!empty($params['order_number'])) {
+            $query['order_ids'] = $params['order_number'];
+        }
+        if (!empty($params['status'])) {
+            $query['status'] = $params['status'];
         }
 
-        // Fallback: orders endpoint
-        $url  = self::BASE_URL . 'orders?' . http_build_query($params);
+        $url  = self::BASE_URL . 'supplier/bookings?' . http_build_query($query);
         $data = $this->request($url);
 
-        if (!empty($data['data']) || !empty($data['orders'])) {
-            $items = $data['data'] ?? $data['orders'] ?? [];
+        if (!empty($data['data'])) {
+            $items = $data['data'];
             return [
                 'data'  => $this->normalize_bookings($items),
-                'total' => $data['total'] ?? $data['count'] ?? count($items),
-                'page'  => $data['page'] ?? 1,
+                'total' => $data['total'] ?? count($items),
+                'page'  => ($params['page'] ?? 1),
             ];
         }
 
@@ -207,39 +203,81 @@ class Client {
     }
 
     public function get_sold_items(array $params = []): array {
-        $defaults = ['page' => 1, 'per_page' => 50];
-        $params   = array_merge($defaults, $params);
-        $url      = self::BASE_URL . 'partner/solditems?' . http_build_query($params);
-        $data     = $this->request($url);
+        $query = [
+            'limit'  => $params['per_page'] ?? $params['limit'] ?? 250,
+            'offset' => isset($params['page']) ? (($params['page'] - 1) * ($params['per_page'] ?? 250)) : ($params['offset'] ?? 0),
+        ];
+
+        if (!empty($params['from']) || !empty($params['to'])) {
+            $from = $params['from'] ?? '2020-01-01';
+            $to   = $params['to']   ?? date('Y-m-d');
+            $query['date_range']    = $from . ',' . $to;
+            $query['date_range_by'] = $params['date_range_by'] ?? 'date_bought';
+        }
+
+        $url  = self::BASE_URL . 'supplier/solditems?' . http_build_query($query);
+        $data = $this->request($url);
         return [
             'data'  => $data['data']  ?? [],
             'total' => $data['total'] ?? 0,
         ];
     }
 
+    /**
+     * Extract unique customers from bookings data.
+     * Regiondo API has no dedicated customers endpoint —
+     * we derive customers from supplier/bookings.
+     */
     public function get_crm_customers(array $params = []): array {
-        $defaults = ['page' => 1, 'per_page' => 50];
-        $params   = array_merge($defaults, $params);
-
-        // Try supplier CRM endpoint first
-        $url  = self::BASE_URL . 'customers?' . http_build_query($params);
-        $data = $this->request($url);
-
-        if (!empty($data['data']) || !empty($data['customers'])) {
-            $items = $data['data'] ?? $data['customers'] ?? [];
+        $cache_key = 'bt_regiondo_customers';
+        $cached    = $this->cache->get($cache_key);
+        if ($cached !== false) {
+            $total = count($cached);
+            $page  = (int) ($params['page'] ?? 1);
+            $per   = (int) ($params['per_page'] ?? 50);
             return [
-                'data'  => $items,
-                'total' => $data['total'] ?? $data['count'] ?? count($items),
+                'data'  => array_slice($cached, ($page - 1) * $per, $per),
+                'total' => $total,
             ];
         }
 
-        // Fallback: partner CRM endpoint
-        $url  = self::BASE_URL . 'partner/crmcustomers?' . http_build_query($params);
-        $data = $this->request($url);
+        // Fetch all bookings to extract customers
+        $bookings = $this->get_bookings(['limit' => 250, 'type' => 'offline_reservation,booking,voucher,redeem']);
+        $by_email = [];
+
+        foreach ($bookings['data'] as $b) {
+            $email = $b['customer_email'] ?? '';
+            $name  = $b['customer_name'] ?? '';
+            if (empty($email) && empty($name)) continue;
+
+            $key = $email ?: sanitize_title($name);
+            if (!isset($by_email[$key])) {
+                $by_email[$key] = [
+                    'email'          => $email,
+                    'name'           => $name,
+                    'bookings_count' => 0,
+                    'total_spent'    => 0,
+                    'currency'       => $b['currency_code'] ?? 'EUR',
+                    'last_booking'   => $b['booking_date'] ?? '',
+                ];
+            }
+            $by_email[$key]['bookings_count']++;
+            $by_email[$key]['total_spent'] += floatval($b['total_price'] ?? 0);
+            if (($b['booking_date'] ?? '') > $by_email[$key]['last_booking']) {
+                $by_email[$key]['last_booking'] = $b['booking_date'];
+            }
+        }
+
+        $customers = array_values($by_email);
+        $this->cache->set($cache_key, $customers);
+
+        $total = count($customers);
+        $page  = (int) ($params['page'] ?? 1);
+        $per   = (int) ($params['per_page'] ?? 50);
 
         return [
-            'data'  => $data['data']  ?? [],
-            'total' => $data['total'] ?? 0,
+            'data'  => array_slice($customers, ($page - 1) * $per, $per),
+            'total' => $total,
         ];
     }
 
@@ -248,6 +286,25 @@ class Client {
         $body = json_encode(['email' => $email, 'newsletter' => $subscribed]);
         $data = $this->request($url, 'PUT', $body);
         return !empty($data);
+    }
+
+    // ─── AVIS ─────────────────────────────────────────────────────────────────
+
+    public function get_reviews(array $params = []): array {
+        $query = ['limit' => $params['limit'] ?? 250];
+        if (!empty($params['product_id'])) {
+            $query['product_id'] = $params['product_id'];
+        }
+        if (isset($params['offset'])) {
+            $query['offset'] = $params['offset'];
+        }
+
+        $url  = self::BASE_URL . 'reviews?' . http_build_query($query);
+        $data = $this->request($url);
+        return [
+            'data'  => $data['data'] ?? [],
+            'total' => $data['total'] ?? 0,
+        ];
     }
 
     // ─── COMPTE ───────────────────────────────────────────────────────────────
