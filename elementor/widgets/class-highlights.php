@@ -94,14 +94,25 @@ class Highlights extends AbstractBtWidget {
             'condition' => ['data_source' => 'acf'],
         ]);
 
+        $this->add_control('icon_fallback_mode', [
+            'label'     => __('Quand l\'icône ACF est vide', 'blacktenderscore'),
+            'type'      => Controls_Manager::SELECT,
+            'options'   => [
+                'icon' => __('Afficher une icône par défaut', 'blacktenderscore'),
+                'none' => __('Ne rien afficher', 'blacktenderscore'),
+            ],
+            'default'   => 'icon',
+            'separator' => 'before',
+            'condition' => ['data_source' => 'acf'],
+        ]);
+
         $this->add_control('default_icon', [
             'label'       => __('Icône de fallback', 'blacktenderscore'),
             'description' => __('Affiché si le sous-champ icône ACF est vide.', 'blacktenderscore'),
             'type'        => Controls_Manager::ICONS,
             'default'     => ['value' => 'fas fa-check', 'library' => 'fa-solid'],
             'skin'        => 'inline',
-            'separator'   => 'before',
-            'condition'   => ['data_source' => 'acf'],
+            'condition'   => ['data_source' => 'acf', 'icon_fallback_mode' => 'icon'],
         ]);
 
         // ── Mode manuel (Repeater natif) ──────────────────────────────────
@@ -358,21 +369,18 @@ class Highlights extends AbstractBtWidget {
             echo '<div class="bt-highlights__item">';
 
             if ($s['show_icon'] === 'yes') {
-                echo '<span class="bt-highlights__icon" aria-hidden="true">';
-                if (is_array($icon) && !empty($icon['value'])) {
-                    // Elementor ICONS array (repeater statique or ICONS fallback)
-                    Icons_Manager::render_icon($icon, ['aria-hidden' => 'true']);
-                } elseif (is_string($icon) && $icon !== '') {
-                    // Emoji / text from ACF or legacy TEXT fallback
-                    echo esc_html($icon);
-                } else {
-                    // Nothing resolved — hard fallback
-                    Icons_Manager::render_icon(
-                        ['value' => 'fas fa-check', 'library' => 'fa-solid'],
-                        ['aria-hidden' => 'true']
-                    );
+                $has_icon = (is_array($icon) && !empty($icon['value']))
+                         || (is_string($icon) && $icon !== '');
+
+                if ($has_icon || $icon !== null) {
+                    echo '<span class="bt-highlights__icon" aria-hidden="true">';
+                    if (is_array($icon) && !empty($icon['value'])) {
+                        Icons_Manager::render_icon($icon, ['aria-hidden' => 'true']);
+                    } elseif (is_string($icon) && $icon !== '') {
+                        echo esc_html($icon);
+                    }
+                    echo '</span>';
                 }
-                echo '</span>';
             }
 
             echo '<div class="bt-highlights__content">';
@@ -410,17 +418,19 @@ class Highlights extends AbstractBtWidget {
         $sf_icon  = sanitize_text_field($s['sf_icon']  ?: 'highlight_icon');
         $sf_title = sanitize_text_field($s['sf_title'] ?: 'highlight_title');
         $sf_desc  = sanitize_text_field($s['sf_desc']  ?: 'highlight_desc');
-        // Normalize fallback: could be ICONS array, legacy string, or empty
-        $fallback_raw = $s['default_icon'] ?? [];
-        if (is_string($fallback_raw) && $fallback_raw !== '') {
-            // Legacy TEXT control value (emoji/text) — keep as string
-            $fallback = $fallback_raw;
-        } elseif (is_array($fallback_raw) && !empty($fallback_raw['value'])) {
-            // ICONS control value — keep as array for Icons_Manager
-            $fallback = $fallback_raw;
+        // Normalize fallback based on mode
+        $fallback_mode = $s['icon_fallback_mode'] ?? 'icon';
+        if ($fallback_mode === 'none') {
+            $fallback = null;
         } else {
-            // Empty / invalid — default FA check
-            $fallback = ['value' => 'fas fa-check', 'library' => 'fa-solid'];
+            $fallback_raw = $s['default_icon'] ?? [];
+            if (is_string($fallback_raw) && $fallback_raw !== '') {
+                $fallback = $fallback_raw;
+            } elseif (is_array($fallback_raw) && !empty($fallback_raw['value'])) {
+                $fallback = $fallback_raw;
+            } else {
+                $fallback = ['value' => 'fas fa-check', 'library' => 'fa-solid'];
+            }
         }
 
         $rows = [];
