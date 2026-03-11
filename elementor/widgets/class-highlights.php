@@ -287,6 +287,17 @@ class Highlights extends AbstractBtWidget {
             'selectors'  => ['{{WRAPPER}} .bt-highlights__item' => 'gap: {{SIZE}}{{UNIT}}'],
         ]);
 
+        // Espace titre ↔ description
+        $this->add_responsive_control('content_spacing', [
+            'label'      => __('Espace titre ↔ description', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px', 'em'],
+            'range'      => ['px' => ['min' => 0, 'max' => 40]],
+            'default'    => ['size' => 4, 'unit' => 'px'],
+            'selectors'  => ['{{WRAPPER}} .bt-highlights__desc' => 'margin-top: {{SIZE}}{{UNIT}}'],
+            'condition'  => ['show_desc' => 'yes'],
+        ]);
+
         $this->end_controls_section();
 
         // ── Styles via traits ─────────────────────────────────────────────
@@ -359,6 +370,12 @@ class Highlights extends AbstractBtWidget {
                 } elseif (is_string($icon) && $icon !== '') {
                     // Emoji ou texte brut depuis ACF
                     echo esc_html($icon);
+                } else {
+                    // Aucune icône ACF et pas de fallback → icône par défaut
+                    $fallback = $s['default_icon'] ?? ['value' => 'fas fa-check', 'library' => 'fa-solid'];
+                    if (is_array($fallback) && !empty($fallback['value'])) {
+                        Icons_Manager::render_icon($fallback, ['aria-hidden' => 'true']);
+                    }
                 }
                 echo '</span>';
             }
@@ -402,10 +419,12 @@ class Highlights extends AbstractBtWidget {
 
         $rows = [];
         foreach (array_slice($raw, 0, $max) as $row) {
-            $icon = $row[$sf_icon] ?? '';
+            $icon_raw = $row[$sf_icon] ?? '';
+            // Trim to catch whitespace-only values from ACF
+            $icon_str = is_string($icon_raw) ? trim($icon_raw) : '';
             $rows[] = [
-                // Priorité : valeur ACF (string) → icône Elementor de fallback
-                'icon'  => ($icon !== '') ? $icon : $fallback,
+                // Priorité : valeur ACF (string non vide) → icône Elementor de fallback
+                'icon'  => ($icon_str !== '') ? $icon_str : $fallback,
                 'title' => $row[$sf_title] ?? '',
                 'desc'  => $row[$sf_desc]  ?? '',
             ];

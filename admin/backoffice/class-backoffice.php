@@ -37,18 +37,22 @@ class Backoffice {
 
         if (!is_dir($build_dir)) return;
 
+        // Cache-bust based on actual file modification time
+        $css_ver = file_exists($build_dir . 'index.css') ? filemtime($build_dir . 'index.css') : BT_VERSION;
+        $js_ver  = file_exists($build_dir . 'index.js')  ? filemtime($build_dir . 'index.js')  : BT_VERSION;
+
         wp_enqueue_style(
             'bt-backoffice',
             $build_url . 'index.css',
             [],
-            BT_VERSION
+            $css_ver
         );
 
         wp_enqueue_script(
             'bt-backoffice',
             $build_url . 'index.js',
             [],
-            BT_VERSION,
+            $js_ver,
             true
         );
 
