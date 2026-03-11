@@ -217,14 +217,21 @@ class BoatPricing extends AbstractBtWidget {
 
         $this->register_box_style('card', 'Style — Cartes / Tableau', '{{WRAPPER}} .bt-bprice__card', ['padding' => 24]);
 
+        $this->start_controls_section('style_cards_gap', [
+            'label'     => __('Style — Espacement cartes', 'blacktenderscore'),
+            'tab'       => \Elementor\Controls_Manager::TAB_STYLE,
+            'condition' => ['layout' => 'cards'],
+        ]);
+
         $this->add_responsive_control('cards_gap_extra', [
             'label'      => __('Espacement entre cartes', 'blacktenderscore'),
             'type'       => \Elementor\Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'default'    => ['size' => 16, 'unit' => 'px'],
             'selectors'  => ['{{WRAPPER}} .bt-bprice__cards' => 'gap: {{SIZE}}{{UNIT}}'],
-            'condition'  => ['layout' => 'cards'],
         ]);
+
+        $this->end_controls_section();
 
         $this->register_typography_section(
             'card_label',
