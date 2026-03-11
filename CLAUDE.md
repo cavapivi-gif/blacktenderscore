@@ -275,6 +275,58 @@ To migrate an existing widget to use the shared system:
 
 ---
 
+## Elementor Control Types — Pitfalls & Patterns
+
+### ICONS control returns an array, not a string!
+`Controls_Manager::ICONS` stores `['value' => 'fas fa-check', 'library' => 'fa-solid']`.
+`Controls_Manager::TEXT` stores a plain string.
+
+**Never mix them.** If you change a control from TEXT to ICONS (or vice versa), previously saved data in the DB will still be the old type. Always normalize in the render/resolve logic:
+
+```php
+$icon = $settings['my_icon'] ?? [];
+if (is_array($icon) && !empty($icon['value'])) {
+    Icons_Manager::render_icon($icon, ['aria-hidden' => 'true']);
+} elseif (is_string($icon) && $icon !== '') {
+    echo esc_html($icon);  // legacy TEXT value or emoji
+}
+```
+
+### "Can't unselect" — Mode selector pattern
+Elementor's ICONS picker has no "none" option — once an icon is selected, you can't clear it. When the user needs an explicit "show nothing" choice, **add a SELECT control as a mode gate**:
+
+```php
+$this->add_control('icon_fallback_mode', [
+    'type'    => Controls_Manager::SELECT,
+    'options' => [
+        'icon' => __('Show a default icon'),
+        'none' => __('Show nothing'),
+    ],
+    'default' => 'icon',
+]);
+
+$this->add_control('default_icon', [
+    'type'      => Controls_Manager::ICONS,
+    'condition' => ['icon_fallback_mode' => 'icon'],  // hidden when mode = 'none'
+]);
+```
+
+Then in resolve/render, check the mode before falling back:
+```php
+$fallback = ($s['icon_fallback_mode'] ?? 'icon') === 'none' ? null : $s['default_icon'];
+```
+
+### CSS Grid: height vs aspect-ratio conflict
+When using CSS Grid with `aspect-ratio` on items, **never set `height: 100%` on the same element** — it overrides the aspect-ratio. Use `height: 100%` only when the grid has a fixed height (e.g. airbnb layout). For ratio-driven grids, use absolute positioning inside the item:
+
+```css
+.grid-item { aspect-ratio: 4/3; position: relative; }
+.grid-item__link { position: absolute; inset: 0; }
+.grid-item__img  { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+```
+
+---
+
 ## For Other Plugins
 
 This architecture is portable. To use it in another plugin:
