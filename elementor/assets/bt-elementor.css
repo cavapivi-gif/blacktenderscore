@@ -1247,6 +1247,13 @@
   height: 100%;
 }
 
+.bt-gallery--airbnb .bt-gallery__link,
+.bt-gallery--airbnb .bt-gallery__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 /*
  * Grid: aspect-ratio drives item sizing.
  * Link + img fill the item via absolute positioning so they
