@@ -239,19 +239,7 @@ class IncludedExcluded extends AbstractBtWidget {
                 echo '<ul class="bt-inclexcl__list">';
 
                 foreach ((array) $included_terms as $term) {
-                    $term_name = '';
-                    $term_desc = '';
-
-                    if ($term instanceof \WP_Term) {
-                        $term_name = $term->name;
-                        $term_desc = $term->description;
-                    } elseif (is_array($term)) {
-                        $term_name = $term['name'] ?? $term['label'] ?? '';
-                        $term_desc = $term['description'] ?? '';
-                    } elseif (is_string($term)) {
-                        $term_name = $term;
-                    }
-
+                    [$term_name, $term_desc] = $this->resolve_term($term);
                     if (!$term_name) continue;
 
                     echo '<li class="bt-inclexcl__item">';
@@ -288,19 +276,7 @@ class IncludedExcluded extends AbstractBtWidget {
                 echo '<ul class="bt-inclexcl__list">';
 
                 foreach ((array) $excluded_terms as $term) {
-                    $term_name = '';
-                    $term_desc = '';
-
-                    if ($term instanceof \WP_Term) {
-                        $term_name = $term->name;
-                        $term_desc = $term->description;
-                    } elseif (is_array($term)) {
-                        $term_name = $term['name'] ?? $term['label'] ?? '';
-                        $term_desc = $term['description'] ?? '';
-                    } elseif (is_string($term)) {
-                        $term_name = $term;
-                    }
-
+                    [$term_name, $term_desc] = $this->resolve_term($term);
                     if (!$term_name) continue;
 
                     echo '<li class="bt-inclexcl__item">';
@@ -326,5 +302,50 @@ class IncludedExcluded extends AbstractBtWidget {
 
         echo '</div>'; // .bt-inclexcl__grid
         echo '</div>'; // .bt-inclexcl
+    }
+
+    /**
+     * Résout un terme ACF en [name, description].
+     * Gère : WP_Term, term ID (int/numeric string), array, plain string.
+     *
+     * @param mixed $term
+     * @return array{0: string, 1: string} [name, description]
+     */
+    private function resolve_term(mixed $term): array {
+        // WP_Term object (return format "Term Object")
+        if ($term instanceof \WP_Term) {
+            return [$term->name, $term->description];
+        }
+
+        // Term ID (return format "Term ID") — int or numeric string
+        if (is_numeric($term)) {
+            $t = get_term((int) $term);
+            if ($t && !is_wp_error($t)) {
+                return [$t->name, $t->description];
+            }
+            return ['', ''];
+        }
+
+        // Array (repeater sub-row or term-like array)
+        if (is_array($term)) {
+            // Could be a term array with 'term_id'
+            if (isset($term['term_id'])) {
+                $t = get_term((int) $term['term_id']);
+                if ($t && !is_wp_error($t)) {
+                    return [$t->name, $t->description];
+                }
+            }
+            return [
+                $term['name'] ?? $term['label'] ?? '',
+                $term['description'] ?? '',
+            ];
+        }
+
+        // Plain string
+        if (is_string($term) && $term !== '') {
+            return [$term, ''];
+        }
+
+        return ['', ''];
     }
 }

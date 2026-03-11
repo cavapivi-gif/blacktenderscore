@@ -8,16 +8,16 @@ use Elementor\Controls_Manager;
 defined('ABSPATH') || exit;
 
 /**
- * Widget Elementor — Tarification par forfait avec tabs.
+ * Widget Elementor — Tarification par forfait.
  *
  * Lit le repeater ACF `tarification_par_forfait` du post courant.
- * Chaque ligne = un tab dont le titre est le nom du terme ACF exp_time.
- * Format: "1h30 — 45 €" (durée + prix).
+ * Chaque ligne = un forfait (durée via exp_time + prix).
  *
- * Mode Onboarding (optionnel) :
- *   Affiche un titre "Choisissez vos dispo" + les créneaux horaires disponibles
- *   (champ ACF configurable) avant de révéler le widget de réservation Regiondo.
- *   Le widget Regiondo se charge au clic sur un créneau (lazy-reveal).
+ * Deux layouts mutuellement exclusifs :
+ *   - `tabs`    : onglets classiques, un panneau par forfait
+ *   - `buttons` : boutons pill (durée), clic révèle prix + booking
+ *
+ * Les deux lisent la MÊME source : le repeater tarification_par_forfait.
  */
 class PricingTabs extends AbstractBtWidget {
     use BtSharedControls;
@@ -27,7 +27,7 @@ class PricingTabs extends AbstractBtWidget {
             'id'       => 'bt-pricing-tabs',
             'title'    => 'BT — Tarification',
             'icon'     => 'eicon-price-table',
-            'keywords' => ['tarif', 'prix', 'forfait', 'réservation', 'booking', 'créneau', 'horaire', 'bt'],
+            'keywords' => ['tarif', 'prix', 'forfait', 'réservation', 'booking', 'bt'],
             'js'       => ['bt-elementor'],
         ];
     }
@@ -47,11 +47,21 @@ class PricingTabs extends AbstractBtWidget {
 
         $this->register_section_title_controls();
 
+        $this->add_control('layout', [
+            'label'   => __('Format d\'affichage', 'blacktenderscore'),
+            'type'    => Controls_Manager::SELECT,
+            'options' => [
+                'tabs'    => __('Onglets (tabs)', 'blacktenderscore'),
+                'buttons' => __('Boutons pill', 'blacktenderscore'),
+            ],
+            'default' => 'tabs',
+        ]);
+
         $this->add_control('acf_field', [
             'label'   => __('Champ ACF repeater', 'blacktenderscore'),
             'type'    => Controls_Manager::SELECT,
             'options' => [
-                'tarification_par_forfait' => __('Tarification par forfait (tarification_par_forfait)', 'blacktenderscore'),
+                'tarification_par_forfait' => __('Tarification par forfait', 'blacktenderscore'),
             ],
             'default' => 'tarification_par_forfait',
         ]);
@@ -60,13 +70,6 @@ class PricingTabs extends AbstractBtWidget {
             'label'   => __('Symbole devise', 'blacktenderscore'),
             'type'    => Controls_Manager::TEXT,
             'default' => '€',
-        ]);
-
-        $this->add_control('show_note', [
-            'label'        => __('Note tarifaire', 'blacktenderscore'),
-            'type'         => Controls_Manager::SWITCHER,
-            'return_value' => 'yes',
-            'default'      => 'yes',
         ]);
 
         $this->add_control('show_per_label', [
@@ -84,7 +87,7 @@ class PricingTabs extends AbstractBtWidget {
         ]);
 
         $this->add_control('show_deposit', [
-            'label'        => __('Acompte', 'blacktenderscore'),
+            'label'        => __('Afficher l\'acompte', 'blacktenderscore'),
             'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
@@ -95,6 +98,45 @@ class PricingTabs extends AbstractBtWidget {
             'type'      => Controls_Manager::TEXT,
             'default'   => __('Acompte :', 'blacktenderscore'),
             'condition' => ['show_deposit' => 'yes'],
+        ]);
+
+        $this->add_control('show_note', [
+            'label'        => __('Afficher la note tarifaire', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => 'yes',
+        ]);
+
+        $this->end_controls_section();
+
+        // ── Buttons layout — configuration ──────────────────────────────
+        $this->start_controls_section('section_buttons_config', [
+            'label'     => __('Boutons — Configuration', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_CONTENT,
+            'condition' => ['layout' => 'buttons'],
+        ]);
+
+        $this->add_control('buttons_title', [
+            'label'   => __('Titre au-dessus des boutons', 'blacktenderscore'),
+            'type'    => Controls_Manager::TEXT,
+            'default' => __('Choisissez votre forfait', 'blacktenderscore'),
+            'dynamic' => ['active' => true],
+        ]);
+
+        $this->add_control('buttons_title_tag', [
+            'label'     => __('Balise titre', 'blacktenderscore'),
+            'type'      => Controls_Manager::SELECT,
+            'options'   => ['h3' => 'H3', 'h4' => 'H4', 'h5' => 'H5', 'p' => 'p', 'span' => 'span'],
+            'default'   => 'h4',
+            'condition' => ['buttons_title!' => ''],
+        ]);
+
+        $this->add_control('buttons_show_price', [
+            'label'        => __('Afficher le prix dans le bouton', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'description'  => __('Ajoute le prix à côté de la durée dans chaque bouton pill.', 'blacktenderscore'),
+            'return_value' => 'yes',
+            'default'      => '',
         ]);
 
         $this->end_controls_section();
@@ -142,74 +184,6 @@ class PricingTabs extends AbstractBtWidget {
 
         $this->end_controls_section();
 
-        // ── Onboarding — Choisissez vos dispo ────────────────────────────
-        $this->start_controls_section('section_onboarding', [
-            'label'     => __('Onboarding — Sélection créneaux', 'blacktenderscore'),
-            'tab'       => Controls_Manager::TAB_CONTENT,
-            'condition' => ['show_booking' => 'yes'],
-        ]);
-
-        $this->add_control('show_onboarding', [
-            'label'        => __('Afficher les créneaux avant réservation', 'blacktenderscore'),
-            'type'         => Controls_Manager::SWITCHER,
-            'description'  => __('Montre les horaires disponibles. Le widget Regiondo se révèle au clic sur un créneau.', 'blacktenderscore'),
-            'return_value' => 'yes',
-            'default'      => '',
-        ]);
-
-        $this->add_control('onboarding_title', [
-            'label'     => __('Titre "Choisissez vos dispo"', 'blacktenderscore'),
-            'type'      => Controls_Manager::TEXT,
-            'default'   => __('Choisissez vos dispo', 'blacktenderscore'),
-            'dynamic'   => ['active' => true],
-            'condition' => ['show_onboarding' => 'yes'],
-        ]);
-
-        $this->add_control('onboarding_title_tag', [
-            'label'     => __('Balise titre', 'blacktenderscore'),
-            'type'      => Controls_Manager::SELECT,
-            'options'   => ['h3' => 'H3', 'h4' => 'H4', 'h5' => 'H5', 'p' => 'p', 'span' => 'span'],
-            'default'   => 'h4',
-            'condition' => ['show_onboarding' => 'yes', 'onboarding_title!' => ''],
-        ]);
-
-        $this->add_control('slot_layout', [
-            'label'     => __('Disposition créneaux', 'blacktenderscore'),
-            'type'      => Controls_Manager::SELECT,
-            'options'   => [
-                'flex'   => __('Ligne (flex wrap)', 'blacktenderscore'),
-                'grid-2' => __('Grille 2 colonnes', 'blacktenderscore'),
-                'grid-3' => __('Grille 3 colonnes', 'blacktenderscore'),
-            ],
-            'default'   => 'flex',
-            'condition' => ['show_onboarding' => 'yes'],
-        ]);
-
-        $this->add_control('onboarding_slots_field', [
-            'label'       => __('Champ ACF créneaux (repeater)', 'blacktenderscore'),
-            'type'        => Controls_Manager::TEXT,
-            'default'     => 'exp_departure_times',
-            'description' => __('Repeater ACF avec les horaires. Défaut : exp_departure_times.', 'blacktenderscore'),
-            'condition'   => ['show_onboarding' => 'yes'],
-        ]);
-
-        $this->add_control('onboarding_slot_subfield', [
-            'label'     => __('Sous-champ heure', 'blacktenderscore'),
-            'type'      => Controls_Manager::TEXT,
-            'default'   => 'time',
-            'condition' => ['show_onboarding' => 'yes'],
-        ]);
-
-        $this->add_control('onboarding_fallback_label', [
-            'label'       => __('Bouton de repli (si aucun créneau)', 'blacktenderscore'),
-            'type'        => Controls_Manager::TEXT,
-            'default'     => __('Voir les disponibilités', 'blacktenderscore'),
-            'description' => __('Affiché si le champ ACF est vide ou introuvable.', 'blacktenderscore'),
-            'condition'   => ['show_onboarding' => 'yes'],
-        ]);
-
-        $this->end_controls_section();
-
         // ══ STYLE ══════════════════════════════════════════════════════════════
 
         $this->register_box_style('container', 'Style — Conteneur', '{{WRAPPER}} .bt-pricing');
@@ -241,20 +215,20 @@ class PricingTabs extends AbstractBtWidget {
         $this->register_section_title_style('{{WRAPPER}} .bt-pricing__section-title');
 
         $this->register_typography_section(
-            'ob_title',
-            'Style — Titre onboarding',
-            '{{WRAPPER}} .bt-pricing__ob-title',
+            'btn_title',
+            'Style — Titre boutons',
+            '{{WRAPPER}} .bt-pricing__btn-title',
             [],
             [],
-            ['show_onboarding' => 'yes']
+            ['layout' => 'buttons']
         );
 
         $this->register_button_style(
             'slot',
-            'Style — Créneaux',
+            'Style — Boutons pill',
             '{{WRAPPER}} .bt-pricing__slot',
             [],
-            ['show_onboarding' => 'yes']
+            ['layout' => 'buttons']
         );
     }
 
@@ -272,26 +246,47 @@ class PricingTabs extends AbstractBtWidget {
         );
         if (!$rows) return;
 
-        // UUID global (fallback si pas per-tab)
+        $layout = $s['layout'] ?? 'tabs';
+
+        // ── Résolution UUID (une seule fois) ─────────────────────────────
         $global_uuid = '';
-        if ($s['show_booking'] === 'yes' && $s['booking_per_tab'] !== 'yes') {
-            $global_uuid = (string) get_field($s['booking_field'], $post_id);
+        $tab_uuids   = [];
+
+        if ($s['show_booking'] === 'yes') {
+            if ($s['booking_per_tab'] === 'yes') {
+                $subfield = $s['booking_uuid_subfield'] ?: 'exp_booking_uuid';
+                foreach ($rows as $row) {
+                    $tab_uuids[] = (string) ($row[$subfield] ?? '');
+                }
+            } else {
+                $global_uuid = (string) get_field($s['booking_field'], $post_id);
+            }
         }
 
-        // Créneaux onboarding (lus une seule fois — partagés entre tous les tabs)
-        $slots = [];
-        if ($s['show_onboarding'] === 'yes') {
-            $slots = $this->resolve_onboarding_slots($s, $post_id);
+        $active_uuid = $global_uuid ?: ($tab_uuids[0] ?? '');
+        $currency    = esc_html($s['currency'] ?: '€');
+        $uid         = 'bt-pricing-' . $this->get_id();
+
+        if ($layout === 'buttons') {
+            $this->render_buttons_layout($s, $rows, $uid, $currency, $tab_uuids, $active_uuid, $post_id);
+        } else {
+            $this->render_tabs_layout($s, $rows, $uid, $currency, $tab_uuids, $active_uuid, $post_id);
+        }
+    }
+
+    // ── Layout: Tabs ──────────────────────────────────────────────────────
+
+    private function render_tabs_layout(array $s, array $rows, string $uid, string $currency, array $tab_uuids, string $active_uuid, int $post_id): void {
+        $uuids_attr = '';
+        if (!empty($tab_uuids)) {
+            $uuids_attr = " data-tab-uuids='" . esc_attr(wp_json_encode($tab_uuids)) . "'";
         }
 
-        $currency = esc_html($s['currency'] ?: '€');
-        $uid      = 'bt-pricing-' . $this->get_id();
-
-        echo "<div class=\"bt-pricing\" id=\"{$uid}\" data-bt-tabs data-bt-panel-class=\"bt-pricing__panel\">";
+        echo "<div class=\"bt-pricing bt-pricing--tabs\" id=\"{$uid}\" data-bt-tabs data-bt-panel-class=\"bt-pricing__panel\"{$uuids_attr}>";
 
         $this->render_section_title($s, 'bt-pricing__section-title');
 
-        // ── Tab bar ───────────────────────────────────────────────────────
+        // Tab bar
         echo '<div class="bt-pricing__tablist" role="tablist">';
         foreach ($rows as $i => $row) {
             $label  = $this->get_tab_label($row, $i);
@@ -306,125 +301,122 @@ class PricingTabs extends AbstractBtWidget {
         }
         echo '</div>';
 
-        // ── Panels ────────────────────────────────────────────────────────
+        // Panels
         foreach ($rows as $i => $row) {
-            $tab_id      = "{$uid}-tab-{$i}";
-            $pan_id      = "{$uid}-panel-{$i}";
-            $active_cls  = $i === 0 ? ' bt-pricing__panel--active' : '';
-            $price       = $row['exp_price']        ?? '';
-            $note        = $row['exp_pricing_note'] ?? '';
-            $deposit     = $row['exp_deposit']      ?? '';
-
-            // UUID per-tab ou global
-            $uuid = $global_uuid;
-            if ($s['show_booking'] === 'yes' && $s['booking_per_tab'] === 'yes') {
-                $uuid = (string) ($row[$s['booking_uuid_subfield']] ?? '');
-            }
+            $tab_id     = "{$uid}-tab-{$i}";
+            $pan_id     = "{$uid}-panel-{$i}";
+            $active_cls = $i === 0 ? ' bt-pricing__panel--active' : '';
 
             echo "<div class=\"bt-pricing__panel{$active_cls}\" id=\"{$pan_id}\" role=\"tabpanel\" aria-labelledby=\"{$tab_id}\">";
+            $this->render_price_block($s, $row, $currency);
+            echo '</div>';
+        }
 
-            // Prix principal
-            if ($price !== '') {
-                echo '<div class="bt-pricing__price-block">';
-                if ($note && $s['show_note'] === 'yes') {
-                    echo '<span class="bt-pricing__note">' . esc_html($note) . ' </span>';
+        // Booking — shared, outside panels
+        $this->render_booking_section($s, $active_uuid, $post_id);
+
+        echo '</div>'; // .bt-pricing
+    }
+
+    // ── Layout: Buttons (pills) ──────────────────────────────────────────
+
+    private function render_buttons_layout(array $s, array $rows, string $uid, string $currency, array $tab_uuids, string $active_uuid, int $post_id): void {
+        $uuids_json = !empty($tab_uuids) ? wp_json_encode($tab_uuids) : '';
+
+        echo "<div class=\"bt-pricing bt-pricing--buttons\" id=\"{$uid}\" data-bt-pricing-buttons";
+        if ($uuids_json) {
+            echo " data-tab-uuids='" . esc_attr($uuids_json) . "'";
+        }
+        echo '>';
+
+        $this->render_section_title($s, 'bt-pricing__section-title');
+
+        // Title
+        $title = $s['buttons_title'] ?? '';
+        if ($title) {
+            $tag = esc_attr($s['buttons_title_tag'] ?: 'h4');
+            echo "<{$tag} class=\"bt-pricing__btn-title\">" . esc_html($title) . "</{$tag}>";
+        }
+
+        // Pill buttons — one per repeater row (same data as tabs)
+        echo '<div class="bt-pricing__slots">';
+        foreach ($rows as $i => $row) {
+            $label = $this->get_tab_label($row, $i);
+            $uuid  = $tab_uuids[$i] ?? $active_uuid;
+
+            // Optionally append price to button label
+            if (($s['buttons_show_price'] ?? '') === 'yes') {
+                $price = $row['exp_price'] ?? '';
+                if ($price !== '') {
+                    $label .= ' — ' . number_format((float) $price, 0, ',', ' ') . ' ' . ($s['currency'] ?? '€');
                 }
-                echo '<span class="bt-pricing__price">' . esc_html(number_format((float) $price, 0, ',', ' ')) . ' ' . $currency . '</span>';
-                if ($s['show_per_label'] === 'yes') {
-                    $per_lbl = esc_html($s['per_label'] ?: __('/ pers.', 'blacktenderscore'));
-                    echo '<span class="bt-pricing__per"> ' . $per_lbl . '</span>';
-                }
-                echo '</div>';
             }
 
-            // Acompte
-            if ($deposit && $s['show_deposit'] === 'yes') {
-                $dep_lbl = esc_html($s['deposit_label'] ?: __('Acompte :', 'blacktenderscore'));
-                echo '<p class="bt-pricing__deposit">' . $dep_lbl . ' <strong>' . esc_html($deposit) . ' ' . $currency . '</strong></p>';
-            }
+            echo '<button type="button" class="bt-pricing__slot" data-slot-index="' . $i . '" data-uuid="' . esc_attr($uuid) . '">';
+            echo esc_html($label);
+            echo '</button>';
+        }
+        echo '</div>'; // .bt-pricing__slots
 
-            // Booking
-            if ($s['show_booking'] === 'yes') {
-                if ($s['show_onboarding'] === 'yes') {
-                    $this->render_onboarding_block($s, $slots, $uuid, $post_id, $i);
-                } elseif ($uuid) {
-                    echo $this->render_booking_widget($uuid, $post_id, $i);
-                } elseif ($this->is_edit_mode()) {
-                    echo '<div class="bt-widget-placeholder">Widget de réservation Regiondo (UUID requis)</div>';
-                }
-            }
+        // Price panels — hidden by default, revealed on slot click
+        foreach ($rows as $i => $row) {
+            $panel_id = "{$uid}-panel-{$i}";
+            echo "<div class=\"bt-pricing__panel\" id=\"{$panel_id}\" data-slot-panel=\"{$i}\">";
+            $this->render_price_block($s, $row, $currency);
+            echo '</div>';
+        }
 
-            echo '</div>'; // .bt-pricing__panel
+        // Booking — shared, revealed on slot click
+        if ($s['show_booking'] === 'yes') {
+            echo '<div class="bt-pricing__booking-reveal">';
+            if ($active_uuid) {
+                echo $this->render_booking_widget($active_uuid, $post_id, 0);
+            } elseif ($this->is_edit_mode()) {
+                echo '<div class="bt-widget-placeholder">Widget de réservation Regiondo (UUID requis)</div>';
+            }
+            echo '</div>';
         }
 
         echo '</div>'; // .bt-pricing
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // ── Shared render helpers ─────────────────────────────────────────────
 
-    /**
-     * Lit les créneaux depuis le champ ACF configurable.
-     * Retourne un tableau de labels (strings).
-     */
-    private function resolve_onboarding_slots(array $s, int $post_id): array {
-        $field_name = sanitize_text_field($s['onboarding_slots_field'] ?: 'exp_departure_times');
-        $subfield   = sanitize_key($s['onboarding_slot_subfield'] ?: 'time');
-        $rows       = get_field($field_name, $post_id);
+    private function render_price_block(array $s, array $row, string $currency): void {
+        $price   = $row['exp_price']        ?? '';
+        $note    = $row['exp_pricing_note'] ?? '';
+        $deposit = $row['exp_deposit']      ?? '';
 
-        if (empty($rows) || !is_array($rows)) return [];
-
-        $labels = [];
-        foreach ($rows as $row) {
-            $t = is_array($row) ? ($row[$subfield] ?? '') : (string) $row;
-            if ($t !== '') $labels[] = (string) $t;
+        if ($price !== '') {
+            echo '<div class="bt-pricing__price-block">';
+            if ($note && $s['show_note'] === 'yes') {
+                echo '<span class="bt-pricing__note">' . esc_html($note) . ' </span>';
+            }
+            echo '<span class="bt-pricing__price">' . esc_html(number_format((float) $price, 0, ',', ' ')) . ' ' . $currency . '</span>';
+            if ($s['show_per_label'] === 'yes') {
+                $per_lbl = esc_html($s['per_label'] ?: __('/ pers.', 'blacktenderscore'));
+                echo '<span class="bt-pricing__per"> ' . $per_lbl . '</span>';
+            }
+            echo '</div>';
         }
-        return $labels;
+
+        if ($deposit && $s['show_deposit'] === 'yes') {
+            $dep_lbl = esc_html($s['deposit_label'] ?: __('Acompte :', 'blacktenderscore'));
+            echo '<p class="bt-pricing__deposit">' . $dep_lbl . ' <strong>' . esc_html($deposit) . ' ' . $currency . '</strong></p>';
+        }
     }
 
-    /**
-     * Rend le bloc onboarding (titre + créneaux + booking révélé au clic).
-     */
-    private function render_onboarding_block(array $s, array $slots, string $uuid, int $post_id, int $index): void {
-        echo '<div class="bt-pricing__onboarding" data-bt-onboarding>';
+    private function render_booking_section(array $s, string $active_uuid, int $post_id): void {
+        if ($s['show_booking'] !== 'yes') return;
 
-        // Titre "Choisissez vos dispo"
-        $ob_title = $s['onboarding_title'] ?? '';
-        if ($ob_title) {
-            $tag = esc_attr($s['onboarding_title_tag'] ?: 'h4');
-            echo "<{$tag} class=\"bt-pricing__ob-title\">" . esc_html($ob_title) . "</{$tag}>";
-        }
-
-        // Créneaux
-        $slot_layout_cls = match ($s['slot_layout'] ?? 'flex') {
-            'grid-2' => ' bt-pricing__slots--grid-2',
-            'grid-3' => ' bt-pricing__slots--grid-3',
-            default  => '',
-        };
-        echo '<div class="bt-pricing__slots' . $slot_layout_cls . '">';
-        if (!empty($slots)) {
-            foreach ($slots as $slot_label) {
-                echo '<button type="button" class="bt-pricing__slot" data-uuid="' . esc_attr($uuid) . '">';
-                echo esc_html($slot_label);
-                echo '</button>';
-            }
-        } else {
-            // Fallback CTA si aucun créneau trouvé
-            $fallback = esc_html($s['onboarding_fallback_label'] ?: __('Voir les disponibilités', 'blacktenderscore'));
-            echo '<button type="button" class="bt-pricing__slot bt-pricing__slot--cta" data-uuid="' . esc_attr($uuid) . '">' . $fallback . '</button>';
-        }
-        echo '</div>'; // .bt-pricing__slots
-
-        echo '</div>'; // .bt-pricing__onboarding
-
-        // Widget Regiondo — révélé avec animation au clic sur un créneau
-        if ($uuid) {
-            echo '<div class="bt-pricing__booking-reveal">';
-            echo $this->render_booking_widget($uuid, $post_id, $index);
-            echo '</div>';
+        if ($active_uuid) {
+            echo $this->render_booking_widget($active_uuid, $post_id, 0);
         } elseif ($this->is_edit_mode()) {
             echo '<div class="bt-widget-placeholder">Widget de réservation Regiondo (UUID requis)</div>';
         }
     }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private function get_tab_label(array $row, int $i): string {
         $term_val = $row['exp_time'] ?? null;

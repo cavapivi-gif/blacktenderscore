@@ -381,38 +381,36 @@
   margin: 0;
 }
 
-/* ── Onboarding — Sélection créneaux ───────────────────── */
-.bt-pricing__onboarding {
+/* ── Booking ────────────────────────────────────────────── */
+.bt-pricing__booking {
   margin-top: 20px;
 }
 
-.bt-pricing__ob-title {
-  font-size: 1em;
-  font-weight: 600;
-  margin: 0 0 12px;
-  color: inherit;
+/* ── Buttons layout (pills) ─────────────────────────────── */
+.bt-pricing--buttons .bt-pricing__btn-title {
+  margin: 0 0 16px;
 }
 
 .bt-pricing__slots {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-bottom: 16px;
 }
 
 .bt-pricing__slot {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  padding: 8px 18px;
-  border-radius: 40px;
+  gap: 6px;
+  padding: 10px 20px;
   border: 1.5px solid var(--bt-border-light, #e0e0e0);
+  border-radius: 999px;
   background: transparent;
-  font-size: .9375em;
-  font-weight: 500;
   cursor: pointer;
-  transition: background .2s, border-color .2s, color .2s;
+  font: inherit;
+  font-weight: 500;
   white-space: nowrap;
-  color: inherit;
+  transition: background .2s, border-color .2s, color .2s;
 }
 
 .bt-pricing__slot:hover {
@@ -426,55 +424,26 @@
   color: #fff;
 }
 
-/* CTA de repli (fallback sans créneaux ACF) */
-.bt-pricing__slot--cta {
-  width: 100%;
-  max-width: 300px;
-  padding: 12px 24px;
-  font-size: 1em;
-  font-weight: 600;
-  background: #09142a;
-  border-color: #09142a;
-  color: #fff;
+/* In buttons layout, panels are hidden until a slot is clicked */
+.bt-pricing--buttons .bt-pricing__panel {
+  display: none;
 }
 
-.bt-pricing__slot--cta:hover {
-  opacity: .88;
+.bt-pricing--buttons .bt-pricing__panel--active {
+  display: block;
 }
 
-/* Grilles de créneaux */
-.bt-pricing__slots--grid-2 {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.bt-pricing__slots--grid-3 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-}
-
-@media (max-width: 600px) {
-  .bt-pricing__slots--grid-3 {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* ── Booking ────────────────────────────────────────────── */
-.bt-pricing__booking {
-  margin-top: 20px;
-}
-
-/* Reveal animé : JS ajoute .bt-reveal--visible au clic sur un créneau */
+/* Booking reveal — hidden by default, animated on show */
 .bt-pricing__booking-reveal {
-  overflow: hidden;
-  transition: opacity .35s ease, max-height .4s ease;
-  opacity: 0;
   max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height .4s ease, opacity .3s ease;
 }
 
-.bt-pricing__booking-reveal.bt-pricing__booking-reveal--visible {
+.bt-pricing__booking-reveal--visible {
+  max-height: 900px;
   opacity: 1;
-  max-height: 900px; /* assez grand pour le widget Regiondo */
 }
 
 
