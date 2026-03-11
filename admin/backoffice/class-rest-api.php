@@ -361,8 +361,9 @@ class RestApi {
             'post_types'     => get_option('bt_post_types', ['excursion']),
             'sync_interval'  => (int) get_option('bt_regiondo_sync_interval', 0),
             'sync_next_run'  => $next ?: null,
-            'widget_map'     => get_option('bt_widget_map', []),
-            'products'       => $products,
+            'widget_map'          => get_option('bt_widget_map', []),
+            'booking_custom_css'  => get_option('bt_booking_custom_css', ''),
+            'products'            => $products,
             'all_post_types' => array_values(array_map(fn($pt) => [
                 'name'  => $pt->name,
                 'label' => $pt->label,
@@ -403,6 +404,9 @@ class RestApi {
                 }
             }
             update_option('bt_widget_map', $clean);
+        }
+        if (isset($body['booking_custom_css'])) {
+            update_option('bt_booking_custom_css', wp_strip_all_tags($body['booking_custom_css']));
         }
         if (isset($body['sync_interval'])) {
             $interval = absint($body['sync_interval']);

@@ -42,13 +42,16 @@ export default function Settings() {
     setSettings(prev => ({ ...prev, [key]: value }))
   }
 
-  function setWidgetConfig(productId, key, value) {
+  function setWidgetId(productId, value) {
     setSettings(prev => {
       const map = { ...prev.widget_map }
-      if (typeof map[productId] === 'string') {
-        map[productId] = { widget_id: map[productId], custom_css: '' }
+      const existing = map[productId]
+      // Keep custom_css if it was per-product (backward compat), but we don't use it anymore
+      if (typeof existing === 'object') {
+        map[productId] = { ...existing, widget_id: value }
+      } else {
+        map[productId] = { widget_id: value, custom_css: '' }
       }
-      map[productId] = { ...(map[productId] ?? { widget_id: '', custom_css: '' }), [key]: value }
       return { ...prev, widget_map: map }
     })
   }
@@ -57,12 +60,6 @@ export default function Settings() {
     const v = settings?.widget_map?.[productId]
     if (typeof v === 'string') return v
     return v?.widget_id ?? ''
-  }
-
-  function getCustomCss(productId) {
-    const v = settings?.widget_map?.[productId]
-    if (typeof v === 'string') return ''
-    return v?.custom_css ?? ''
   }
 
   async function handleSave() {
@@ -205,11 +202,11 @@ export default function Settings() {
 
         <Divider />
 
-        {/* ── Widget map + Custom CSS ─────────────────────────── */}
+        {/* ── Widget map ───────────────────────────────────────── */}
         <section id="widgets">
-          <SectionTitle>Tarification — Widget ID & Custom CSS</SectionTitle>
+          <SectionTitle>Widgets Regiondo — ID par produit</SectionTitle>
           <p className="text-sm text-muted-foreground mt-1 mb-4">
-            Associez chaque produit à son Widget ID Regiondo et personnalisez le CSS du widget de réservation.
+            Associez chaque produit à son Widget ID Regiondo.
             <br />
             <span className="text-xs">Regiondo → Shop Config → Website Integration → Booking Widgets</span>
           </p>
@@ -218,46 +215,44 @@ export default function Settings() {
             <Notice type="warn">Aucun produit. Vérifiez la clé API puis enregistrez.</Notice>
           )}
 
-          <div className="space-y-6">
+          <div className="space-y-3">
             {(settings.products ?? []).map(p => (
-              <div key={p.product_id} className="rounded-lg border bg-card p-4 space-y-3">
-                <div className="flex items-center gap-3">
-                  {p.thumbnail_url && (
-                    <img src={p.thumbnail_url} alt="" className="w-10 h-10 rounded-md object-cover border" />
-                  )}
-                  <div>
-                    <div className="text-sm font-medium">{p.name}</div>
-                    <code className="text-xs text-muted-foreground">#{p.product_id}</code>
-                  </div>
-                </div>
-
-                <Input
-                  label="Widget ID"
-                  value={getWidgetId(p.product_id)}
-                  onChange={e => setWidgetConfig(p.product_id, 'widget_id', e.target.value)}
-                  placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-                  className="font-mono text-xs"
-                />
-
-                <Textarea
-                  label="Custom CSS"
-                  value={getCustomCss(p.product_id)}
-                  onChange={e => setWidgetConfig(p.product_id, 'custom_css', e.target.value)}
-                  placeholder={`.regiondo-widget {\n  background: bisque;\n}`}
-                  className="font-mono text-xs min-h-[60px]"
-                />
-
-                {getWidgetId(p.product_id) && (
-                  <div className="text-xs text-muted-foreground">
-                    <span className="font-medium">Aperçu front :</span>{' '}
-                    <code className="bg-muted px-1.5 py-0.5 rounded text-[11px]">
-                      {'<booking-widget widget-id="'}{getWidgetId(p.product_id)}{'">'}
-                    </code>
-                  </div>
+              <div key={p.product_id} className="flex items-center gap-3 rounded-lg border bg-card px-4 py-3">
+                {p.thumbnail_url && (
+                  <img src={p.thumbnail_url} alt="" className="w-8 h-8 rounded object-cover border shrink-0" />
                 )}
+                <div className="shrink-0 w-40">
+                  <div className="text-sm font-medium truncate">{p.name}</div>
+                  <code className="text-[11px] text-muted-foreground">#{p.product_id}</code>
+                </div>
+                <div className="flex-1">
+                  <Input
+                    value={getWidgetId(p.product_id)}
+                    onChange={e => setWidgetId(p.product_id, e.target.value)}
+                    placeholder="Widget ID (UUID)"
+                    className="font-mono text-xs"
+                  />
+                </div>
               </div>
             ))}
           </div>
+        </section>
+
+        <Divider />
+
+        {/* ── Global Custom CSS for booking widgets ──────────── */}
+        <section id="widget-css">
+          <SectionTitle>Custom CSS — Widgets de réservation</SectionTitle>
+          <p className="text-sm text-muted-foreground mt-1 mb-4">
+            Ce CSS sera injecté dans chaque <code className="bg-muted px-1 py-0.5 rounded text-[11px]">{'<booking-widget>'}</code> sur le front.
+            Il s'applique à tous les widgets de réservation Regiondo.
+          </p>
+          <Textarea
+            value={settings.booking_custom_css ?? ''}
+            onChange={e => set('booking_custom_css', e.target.value)}
+            placeholder={`.regiondo-widget .regiondo-button-addtocart {\n  border-radius: 40px;\n  background: #222;\n}`}
+            className="font-mono text-xs min-h-[120px]"
+          />
         </section>
 
         <Divider />

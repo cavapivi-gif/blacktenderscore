@@ -14,7 +14,8 @@ import {
 const SETTINGS_CHILDREN = [
   { hash: '#api',     label: 'Connexion API' },
   { hash: '#sync',    label: 'Synchronisation' },
-  { hash: '#widgets', label: 'Widgets & CSS' },
+  { hash: '#widgets', label: 'Widgets' },
+  { hash: '#widget-css', label: 'Custom CSS' },
   { hash: '#cache',   label: 'Cache' },
 ]
 
@@ -35,7 +36,7 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="w-52 shrink-0 border-r flex flex-col bg-card h-full overflow-y-auto">
+    <aside className="w-52 shrink-0 border-r flex flex-col bg-card sticky top-0 self-start min-h-full overflow-y-auto" style={{ minHeight: 'calc(100vh - 32px)' }}>
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-5 py-5 border-b">
         <Compass width={18} height={18} strokeWidth={1.5} />

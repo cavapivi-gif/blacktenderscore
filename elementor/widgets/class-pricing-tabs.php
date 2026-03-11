@@ -452,16 +452,8 @@ class PricingTabs extends AbstractBtWidget {
             self::$regiondo_script_printed = true;
         }
 
-        // Load custom CSS from widget_map settings
-        $custom_css = '';
-        $widget_map = get_option('bt_widget_map', []);
-        foreach ($widget_map as $pid => $config) {
-            $wid = is_array($config) ? ($config['widget_id'] ?? '') : $config;
-            if ($wid === $uuid && is_array($config) && !empty($config['custom_css'])) {
-                $custom_css = $config['custom_css'];
-                break;
-            }
-        }
+        // Load global custom CSS for all booking widgets
+        $custom_css = get_option('bt_booking_custom_css', '');
 
         ob_start(); ?>
         <div class="bt-pricing__booking">
