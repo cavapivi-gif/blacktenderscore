@@ -75,6 +75,13 @@ class RestApi {
             'permission_callback' => $auth,
         ]);
 
+        // Avis Regiondo
+        register_rest_route(self::NS, '/reviews', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'get_reviews'],
+            'permission_callback' => $auth,
+        ]);
+
         // Dashboard (agrégation)
         register_rest_route(self::NS, '/dashboard', [
             'methods'             => 'GET',
@@ -230,6 +237,15 @@ class RestApi {
         return rest_ensure_response(['success' => $success]);
     }
 
+    public function get_reviews(\WP_REST_Request $req): \WP_REST_Response {
+        $client = new Client();
+        $data   = $client->get_reviews(array_filter([
+            'product_id' => $req->get_param('product_id'),
+            'limit'      => (int) ($req->get_param('limit') ?: 250),
+        ]));
+        return rest_ensure_response($data);
+    }
+
     public function get_dashboard(\WP_REST_Request $req): \WP_REST_Response {
         $client = new Client();
 
@@ -278,11 +294,11 @@ class RestApi {
             }
         }
 
-        // Calculate revenue from confirmed bookings
+        // Calculate revenue (exclude canceled/rejected)
         $revenue_month = 0;
         foreach (($bookings['data'] ?? []) as $b) {
-            $status = $b['status'] ?? '';
-            if ($status === 'confirmed' || $status === '') {
+            $status = strtolower($b['status'] ?? '');
+            if (!in_array($status, ['canceled', 'rejected', 'cancelled'], true)) {
                 $revenue_month += floatval($b['total_price'] ?? 0);
             }
         }
