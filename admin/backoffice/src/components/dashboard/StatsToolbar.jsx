@@ -95,12 +95,12 @@ export function StatsToolbar({ from, to, granularity, showCompare, onApply }) {
           className={cn(
             'flex items-center gap-2 px-3 py-1 rounded text-xs font-medium border transition-colors',
             localCompare
-              ? 'bg-card border-primary/30 text-foreground'
+              ? 'bg-indigo-500 border-indigo-500 text-white'
               : 'bg-card border-border text-muted-foreground hover:text-foreground',
           )}
         >
           <span className={cn('w-3 h-0.5 rounded-full inline-block',
-            localCompare ? 'bg-indigo-500' : 'bg-muted-foreground')} />
+            localCompare ? 'bg-white' : 'bg-muted-foreground')} />
           Comparer la période préc.
         </button>
       </div>
