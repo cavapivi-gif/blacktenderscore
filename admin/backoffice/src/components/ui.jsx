@@ -252,3 +252,20 @@ export function SectionTitle({ children }) {
 export function Divider() {
   return <hr className="border-border" />
 }
+
+export function DangerModal({ open, onClose, onConfirm, title, children, confirmLabel = 'Confirmer', loading }) {
+  if (!open) return null
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative bg-card rounded-lg border shadow-xl max-w-md w-full mx-4 p-6">
+        {title && <h3 className="text-base font-semibold mb-3">{title}</h3>}
+        <div className="text-sm text-muted-foreground mb-5">{children}</div>
+        <div className="flex items-center justify-end gap-2">
+          <Btn variant="secondary" size="sm" onClick={onClose}>Annuler</Btn>
+          <Btn variant="danger" size="sm" loading={loading} onClick={onConfirm}>{confirmLabel}</Btn>
+        </div>
+      </div>
+    </div>
+  )
+}

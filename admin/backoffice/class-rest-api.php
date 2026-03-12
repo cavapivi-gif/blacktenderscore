@@ -1,6 +1,7 @@
 <?php
 namespace BlackTenders\Admin\Backoffice;
 
+// Imports cross-namespace uniquement (les classes dans le même namespace n'ont pas besoin de `use`)
 use BlackTenders\Api\Regiondo\Client;
 use BlackTenders\Api\Regiondo\Cache;
 
@@ -129,6 +130,98 @@ class RestApi {
             'callback'            => [$this, 'sync_products'],
             'permission_callback' => $auth,
         ]);
+
+        // Stats réservations (charts dashboard — lit depuis la DB locale)
+        register_rest_route(self::NS, '/bookings/stats', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'get_bookings_stats'],
+            'permission_callback' => $auth,
+        ]);
+
+        // Planificateur (réservations groupées par date — lit depuis la DB locale)
+        register_rest_route(self::NS, '/planner', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'get_planner'],
+            'permission_callback' => $auth,
+        ]);
+
+        // Sync réservations → DB
+        register_rest_route(self::NS, '/bookings/sync', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'sync_bookings'],
+            'permission_callback' => $auth,
+        ]);
+
+        // Statut de sync + stats DB
+        register_rest_route(self::NS, '/bookings/sync/status', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'get_sync_status'],
+            'permission_callback' => $auth,
+        ]);
+
+        // Reset DB réservations (vide la table + repart de zéro)
+        register_rest_route(self::NS, '/bookings/sync/reset', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'reset_bookings_db'],
+            'permission_callback' => $auth,
+        ]);
+
+        // Import solditems (réservations enrichies) → DB locale
+        register_rest_route(self::NS, '/reservations', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'get_reservations'],
+            'permission_callback' => $auth,
+        ]);
+
+        register_rest_route(self::NS, '/reservations/import', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'import_reservations'],
+            'permission_callback' => $auth,
+        ]);
+
+        register_rest_route(self::NS, '/reservations/import/status', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'get_reservations_import_status'],
+            'permission_callback' => $auth,
+        ]);
+
+        register_rest_route(self::NS, '/reservations/import/reset', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'reset_reservations_db'],
+            'permission_callback' => $auth,
+        ]);
+
+        // Import CSV — reçoit un batch de lignes déjà parsées côté JS
+        register_rest_route(self::NS, '/reservations/import/csv', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'import_reservations_csv'],
+            'permission_callback' => $auth,
+        ]);
+
+        // Onboarding wizard
+        register_rest_route(self::NS, '/onboarding/status', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'get_onboarding_status'],
+            'permission_callback' => $auth,
+        ]);
+
+        register_rest_route(self::NS, '/onboarding/setup', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'run_onboarding_setup'],
+            'permission_callback' => $auth,
+        ]);
+
+        register_rest_route(self::NS, '/onboarding/complete', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'complete_onboarding'],
+            'permission_callback' => $auth,
+        ]);
+
+        register_rest_route(self::NS, '/onboarding/reset', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'reset_onboarding'],
+            'permission_callback' => $auth,
+        ]);
     }
 
     // ─── Handlers ─────────────────────────────────────────────────────────────
@@ -171,17 +264,30 @@ class RestApi {
         return rest_ensure_response(['data' => $data]);
     }
 
+    /**
+     * Liste paginée des réservations depuis la DB locale.
+     * Paramètres : page, per_page, from, to, status, product_id, search (ou order_number legacy).
+     */
     public function get_bookings(\WP_REST_Request $req): \WP_REST_Response {
-        $params = array_filter([
-            'page'         => (int) ($req->get_param('page') ?: 1),
-            'per_page'     => (int) ($req->get_param('per_page') ?: 50),
-            'from'         => $req->get_param('from'),
-            'to'           => $req->get_param('to'),
-            'product_id'   => $req->get_param('product_id'),
-            'order_number' => $req->get_param('order_number'),
+        $db     = new Db();
+        $result = $db->query_bookings([
+            'page'       => (int)    ($req->get_param('page')     ?: 1),
+            'per_page'   => (int)    ($req->get_param('per_page') ?: 50),
+            'from'       => (string) ($req->get_param('from')       ?: ''),
+            'to'         => (string) ($req->get_param('to')         ?: ''),
+            'status'     => (string) ($req->get_param('status')     ?: ''),
+            'product_id' => (string) ($req->get_param('product_id') ?: ''),
+            // Support 'search' (nouveau) et 'order_number' (legacy)
+            'search'     => (string) ($req->get_param('search') ?: $req->get_param('order_number') ?: ''),
         ]);
-        $client = new Client();
-        return rest_ensure_response($client->get_bookings($params));
+
+        // Ajouter booking_date comme alias de activity_date pour compat frontend
+        $result['data'] = array_map(function (array $row): array {
+            $row['booking_date'] = $row['activity_date'] ?? null;
+            return $row;
+        }, $result['data']);
+
+        return rest_ensure_response($result);
     }
 
     public function get_customers(\WP_REST_Request $req): \WP_REST_Response {
@@ -255,56 +361,20 @@ class RestApi {
             $api_error  = $e->getMessage();
         }
 
-        // Get bookings for current month — try multiple approaches
-        $bookings = $client->get_bookings([
-            'per_page' => 50,
-            'from'     => date('Y-m-01'),
-            'to'       => date('Y-m-t'),
-        ]);
-
-        // If no bookings from partner endpoint, try sold items as fallback
-        if (empty($bookings['data']) && ($bookings['total'] ?? 0) === 0) {
-            $sold = $client->get_sold_items([
-                'per_page' => 50,
-                'from'     => date('Y-m-01'),
-                'to'       => date('Y-m-t'),
-            ]);
-
-            if (!empty($sold['data'])) {
-                $bookings = [
-                    'data'  => array_map(function($item) {
-                        return [
-                            'booking_ref'   => $item['order_number'] ?? $item['reference_id'] ?? '',
-                            'product_name'  => $item['product_name'] ?? $item['name'] ?? '',
-                            'booking_date'  => $item['date'] ?? $item['created_at'] ?? '',
-                            'customer_name' => trim(($item['first_name'] ?? '') . ' ' . ($item['last_name'] ?? '')),
-                            'total_price'   => $item['total'] ?? $item['price'] ?? null,
-                            'currency_code' => $item['currency'] ?? $item['currency_code'] ?? 'EUR',
-                            'status'        => $item['status'] ?? 'confirmed',
-                        ];
-                    }, $sold['data']),
-                    'total' => $sold['total'] ?? count($sold['data']),
-                ];
-            }
-        }
-
-        // Calculate revenue (exclude canceled/rejected)
-        $revenue_month = 0;
-        foreach (($bookings['data'] ?? []) as $b) {
-            $status = strtolower($b['status'] ?? '');
-            if (!in_array($status, ['canceled', 'rejected', 'cancelled'], true)) {
-                $revenue_month += floatval($b['total_price'] ?? 0);
-            }
-        }
+        // Stats depuis la DB locale (bt_reservations — solditems importés)
+        // Plus fiable et instantané que l'API Regiondo.
+        $local_db = new ReservationDb();
+        $summary  = $local_db->get_summary();
 
         $customers = $client->get_crm_customers(['per_page' => 1]);
 
         return rest_ensure_response([
             'products_count'   => count($products),
-            'bookings_month'   => $bookings['total'] ?? 0,
-            'revenue_month'    => round($revenue_month, 2),
+            'bookings_month'   => $summary['bookings_month'],
+            'total_in_db'      => $summary['total_in_db'],
+            'revenue_month'    => $summary['revenue_month'],
             'customers_total'  => $customers['total'] ?? 0,
-            'recent_bookings'  => array_slice($bookings['data'] ?? [], 0, 8),
+            'recent_bookings'  => $summary['recent_bookings'],
             'api_status'       => $api_status,
             'api_error'        => $api_error,
         ]);
@@ -383,6 +453,9 @@ class RestApi {
             'sync_next_run'  => $next ?: null,
             'widget_map'          => get_option('bt_widget_map', []),
             'booking_custom_css'  => get_option('bt_booking_custom_css', ''),
+            'booking_custom_js'   => get_option('bt_booking_custom_js', ''),
+            'map_style_json'      => get_option('bt_map_style_json', ''),
+            'map_presets'         => get_option('bt_map_presets', []),
             'products'            => $products,
             'all_post_types' => array_values(array_map(fn($pt) => [
                 'name'  => $pt->name,
@@ -436,10 +509,34 @@ class RestApi {
             $css = preg_replace('/@import\s+url/i', '/* blocked */', $css);
             update_option('bt_booking_custom_css', $css);
         }
+        if (isset($body['booking_custom_js'])) {
+            // Champ admin uniquement — on neutralise juste la balise fermante </script>
+            // pour éviter une injection HTML dans le output. Pas de strip_tags : ça détruirait le JS.
+            $js = str_replace('</script', '<\\/script', (string) $body['booking_custom_js']);
+            update_option('bt_booking_custom_js', $js);
+        }
         if (isset($body['sync_interval'])) {
             $interval = absint($body['sync_interval']);
             update_option('bt_regiondo_sync_interval', $interval);
             $this->reschedule_cron($interval);
+        }
+        if (isset($body['map_style_json'])) {
+            $json = wp_strip_all_tags($body['map_style_json']);
+            $decoded = json_decode($json, true);
+            update_option('bt_map_style_json', is_array($decoded) ? $json : '');
+        }
+        if (isset($body['map_presets']) && is_array($body['map_presets'])) {
+            $clean = [];
+            foreach ($body['map_presets'] as $p) {
+                if (empty($p['id']) || empty($p['name']) || empty($p['json'])) continue;
+                $id      = sanitize_key($p['id']);
+                $name    = sanitize_text_field($p['name']);
+                $json    = wp_strip_all_tags($p['json']);
+                $decoded = json_decode($json, true);
+                if (!$id || !$name || !is_array($decoded)) continue;
+                $clean[] = ['id' => $id, 'name' => $name, 'json' => $json];
+            }
+            update_option('bt_map_presets', $clean);
         }
 
         return rest_ensure_response(['success' => true]);
@@ -463,8 +560,523 @@ class RestApi {
         }
     }
 
+    /**
+     * Retourne les stats de réservations pour les charts du dashboard.
+     * Lit depuis la DB locale (wp_bt_bookings) — rapide, pas d'appel API.
+     *
+     * Paramètres GET supportés:
+     *   from         YYYY-MM-DD (défaut: premier jour d'il y a 11 mois)
+     *   to           YYYY-MM-DD (défaut: aujourd'hui)
+     *   granularity  day|week|month (défaut: month)
+     *   compare_from YYYY-MM-DD — début de la période de comparaison (optionnel)
+     *   compare_to   YYYY-MM-DD — fin de la période de comparaison (optionnel)
+     */
+    public function get_bookings_stats(\WP_REST_Request $req): \WP_REST_Response {
+        $db = new ReservationDb(); // lit bt_reservations (solditems importés)
+
+        // ── Validation des paramètres ──────────────────────────────────────
+        $granularity = in_array($req->get_param('granularity'), ['day', 'week', 'month'], true)
+            ? $req->get_param('granularity')
+            : 'month';
+
+        $from = $req->get_param('from');
+        $to   = $req->get_param('to');
+        if (!$from || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $from)) {
+            $from = date('Y-m-d', strtotime('first day of -11 months'));
+        }
+        if (!$to || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $to)) {
+            $to = date('Y-m-d');
+        }
+
+        $compare_from = $req->get_param('compare_from');
+        $compare_to   = $req->get_param('compare_to');
+        $has_compare  = $compare_from && $compare_to
+            && preg_match('/^\d{4}-\d{2}-\d{2}$/', $compare_from)
+            && preg_match('/^\d{4}-\d{2}-\d{2}$/', $compare_to);
+
+        // ── Lecture depuis la DB locale ────────────────────────────────────
+        $raw_rows = $db->query_stats($from, $to, $granularity);
+        $top_raw  = $db->query_top_products($from, $to, 8);
+        // Use enhanced KPIs if available
+        $include_raw = $req->get_param('include') ?? '';
+        $includes = $include_raw ? array_map('trim', explode(',', $include_raw)) : [];
+        $kpis = (empty($includes) || in_array('enhanced_kpis', $includes))
+            ? $db->query_enhanced_kpis($from, $to)
+            : $db->query_period_kpis($from, $to);
+        $by_chan  = $db->query_by_channel($from, $to, 10);
+        $by_wday  = $db->query_by_weekday($from, $to);
+
+        // Indexer les résultats DB par période
+        $db_by_key = [];
+        $total_bookings = 0;
+        foreach ($raw_rows as $row) {
+            $db_by_key[$row['period_key']] = [
+                'bookings'   => (int)   $row['bookings'],
+                'revenue'    => (float) $row['revenue'],
+                'cancelled'  => (int)   $row['cancelled'],
+                'avg_basket' => $row['avg_basket'] !== null ? (float) $row['avg_basket'] : null,
+            ];
+            $total_bookings += (int) $row['bookings'];
+        }
+
+        // ── Construire les périodes (toutes, y compris celles sans données) ─
+        $periods        = $this->build_periods($from, $to, $granularity);
+        $result_periods = [];
+        $peak_bookings  = 0;
+        $peak_revenue   = 0.0;
+        $peak_basket    = 0.0;
+
+        foreach ($periods as $p) {
+            $b  = $db_by_key[$p['key']]['bookings']   ?? 0;
+            $r  = $db_by_key[$p['key']]['revenue']    ?? 0.0;
+            $ab = $db_by_key[$p['key']]['avg_basket'] ?? null;
+            $ca = $db_by_key[$p['key']]['cancelled']  ?? 0;
+            $result_periods[] = [
+                'key'        => $p['key'],
+                'label'      => $p['label'],
+                'bookings'   => $b,
+                'revenue'    => round($r, 2),
+                'cancelled'  => $ca,
+                'avg_basket' => $ab !== null ? round($ab, 2) : null,
+            ];
+            $peak_bookings = max($peak_bookings, $b);
+            $peak_revenue  = max($peak_revenue,  $r);
+            if ($ab !== null) $peak_basket = max($peak_basket, $ab);
+        }
+
+        // ── Période de comparaison ─────────────────────────────────────────
+        $compare_periods = [];
+        $kpis_cmp = [];
+        if ($has_compare) {
+            $cmp_raw    = $db->query_stats($compare_from, $compare_to, $granularity);
+            $kpis_cmp   = $db->query_period_kpis($compare_from, $compare_to);
+            $cmp_by_key = [];
+            foreach ($cmp_raw as $row) {
+                $cmp_by_key[$row['period_key']] = [
+                    'bookings'   => (int)   $row['bookings'],
+                    'revenue'    => (float) $row['revenue'],
+                    'cancelled'  => (int)   $row['cancelled'],
+                    'avg_basket' => $row['avg_basket'] !== null ? (float) $row['avg_basket'] : null,
+                ];
+            }
+            foreach ($this->build_periods($compare_from, $compare_to, $granularity) as $p) {
+                $compare_periods[] = [
+                    'key'        => $p['key'],
+                    'label'      => $p['label'],
+                    'bookings'   => $cmp_by_key[$p['key']]['bookings']   ?? 0,
+                    'revenue'    => round($cmp_by_key[$p['key']]['revenue']    ?? 0.0, 2),
+                    'cancelled'  => $cmp_by_key[$p['key']]['cancelled']  ?? 0,
+                    'avg_basket' => isset($cmp_by_key[$p['key']]['avg_basket'])
+                        ? round($cmp_by_key[$p['key']]['avg_basket'], 2)
+                        : null,
+                ];
+            }
+        }
+
+        // ── Top produits avec revenue ──────────────────────────────────────
+        $top_products = array_map(fn($r) => [
+            'name'    => $r['name'],
+            'count'   => (int) $r['count'],
+            'revenue' => (float) $r['revenue'],
+        ], $top_raw);
+
+        // ── Jours de semaine : normalise DOW vers libellés FR ─────────────
+        $dow_labels = [1 => 'Dim', 2 => 'Lun', 3 => 'Mar', 4 => 'Mer', 5 => 'Jeu', 6 => 'Ven', 7 => 'Sam'];
+        $by_weekday = array_map(fn($r) => [
+            'dow'      => (int) $r['dow'],
+            'label'    => $dow_labels[(int) $r['dow']] ?? $r['dow'],
+            'bookings' => (int) $r['bookings'],
+            'revenue'  => (float) $r['revenue'],
+        ], $by_wday);
+
+        // ── Canaux de vente ────────────────────────────────────────────────
+        $by_channel = array_map(fn($r) => [
+            'channel'  => $r['channel'],
+            'bookings' => (int) $r['bookings'],
+            'revenue'  => (float) $r['revenue'],
+        ], $by_chan);
+
+        return rest_ensure_response([
+            // Données de chart par période
+            'periods'        => $result_periods,
+            'compare'        => $compare_periods,
+            // KPIs globaux période principale
+            'kpis'           => $kpis,
+            'kpis_compare'   => $kpis_cmp ?: null,
+            // Distributions
+            'by_product'     => $top_products,
+            'by_channel'     => $by_channel,
+            'by_weekday'     => $by_weekday,
+            // Pics
+            'total'          => $total_bookings,
+            'peak_bookings'  => $peak_bookings,
+            'peak_revenue'   => round($peak_revenue, 2),
+            'peak_basket'    => round($peak_basket, 2),
+            // Meta
+            'granularity'    => $granularity,
+            'period_start'   => $from,
+            'period_end'     => $to,
+            'monthly'        => $result_periods, // compat legacy
+            // ── Optional data modules (loaded via ?include=...) ──────────────
+            'heatmap'        => in_array('heatmap', $includes) ? $db->query_heatmap($from, $to) : null,
+            'payments'       => in_array('payments', $includes) ? [
+                'by_method' => $db->query_by_payment_method($from, $to),
+                'by_status' => $db->query_by_payment_status($from, $to),
+            ] : null,
+            'booking_hours'  => in_array('booking_hours', $includes) ? $db->query_booking_hours($from, $to) : null,
+            'lead_time'      => in_array('lead_time', $includes) ? $db->query_lead_time($from, $to) : null,
+            'repeat_customers' => in_array('repeat_customers', $includes) ? $db->query_repeat_customers($from, $to) : null,
+            'product_mix'    => in_array('product_mix', $includes) ? $db->query_product_mix($from, $to, $granularity) : null,
+            'channel_status' => in_array('channel_status', $includes) ? $db->query_channel_status($from, $to) : null,
+            'yoy'            => in_array('yoy', $includes) ? $db->query_yoy($from, $to) : null,
+            'cumulative'     => in_array('cumulative', $includes) ? $db->query_cumulative($from, $to, $granularity) : null,
+        ]);
+    }
+
+    /**
+     * Construit la liste des périodes (clé + libellé) entre $from et $to.
+     *
+     * @param string $from        YYYY-MM-DD
+     * @param string $to          YYYY-MM-DD
+     * @param string $granularity day|week|month
+     * @return array<array{key: string, label: string}>
+     */
+    private function build_periods(string $from, string $to, string $granularity): array {
+        $periods = [];
+        $cursor  = new \DateTime($from);
+        $end     = new \DateTime($to);
+
+        while ($cursor <= $end) {
+            $key = $this->period_key($cursor->format('Y-m-d'), $granularity);
+            if (empty($periods) || end($periods)['key'] !== $key) {
+                $periods[] = [
+                    'key'   => $key,
+                    'label' => $this->format_period_label($key, $granularity),
+                ];
+            }
+            $cursor->modify($granularity === 'day' ? '+1 day' : ($granularity === 'week' ? '+1 week' : '+1 month'));
+        }
+
+        return $periods;
+    }
+
+    /**
+     * Retourne la clé de période pour une date donnée.
+     *
+     * @param string $date        YYYY-MM-DD (peut être tronqué)
+     * @param string $granularity day|week|month
+     * @return string Ex: "2026-03-12" | "2026-W10" | "2026-03"
+     */
+    private function period_key(string $date, string $granularity): string {
+        if (strlen($date) < 10) return '';
+        $ts = strtotime($date);
+        if (!$ts) return '';
+        return match ($granularity) {
+            'day'   => date('Y-m-d', $ts),
+            'week'  => date('Y', $ts) . '-W' . date('W', $ts),
+            default => date('Y-m', $ts),
+        };
+    }
+
+    /**
+     * Retourne un libellé court français pour l'axe X des charts.
+     *
+     * @param string $key         Clé de période (YYYY-MM-DD | YYYY-Wnn | YYYY-MM)
+     * @param string $granularity day|week|month
+     */
+    private function format_period_label(string $key, string $granularity): string {
+        static $month_labels = [
+            '01' => 'Jan', '02' => 'Fév', '03' => 'Mar', '04' => 'Avr',
+            '05' => 'Mai', '06' => 'Jun', '07' => 'Jul', '08' => 'Aoû',
+            '09' => 'Sep', '10' => 'Oct', '11' => 'Nov', '12' => 'Déc',
+        ];
+
+        if ($granularity === 'day') {
+            // YYYY-MM-DD → "12 Mar"
+            $ts = strtotime($key);
+            return $ts ? date('j', $ts) . ' ' . ($month_labels[date('m', $ts)] ?? '') : $key;
+        }
+
+        if ($granularity === 'week') {
+            // YYYY-Wnn → "S10 '26"
+            [$year, $week] = explode('-W', $key . '-W');
+            return 'S' . ltrim($week, '0') . " '" . substr($year, 2);
+        }
+
+        // month: YYYY-MM → "Mar 26"
+        [$year, $month_num] = explode('-', $key . '-');
+        return ($month_labels[$month_num] ?? $month_num) . ' ' . substr($year, 2);
+    }
+
+    /**
+     * Planificateur — réservations groupées par date d'activité.
+     * Lit depuis la DB locale (wp_bt_bookings) — pas d'appel API.
+     *
+     * Accepte soit ?from=YYYY-MM-DD&to=YYYY-MM-DD (navigation mensuelle)
+     * soit ?days=N (horizon glissant, 7-90, défaut 30).
+     */
+    public function get_planner(\WP_REST_Request $req): \WP_REST_Response {
+        $db   = new ReservationDb(); // lit bt_reservations (solditems importés)
+        $from = $req->get_param('from');
+        $to   = $req->get_param('to');
+
+        if ($from && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $from)) $from = null;
+        if ($to   && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $to))   $to   = null;
+
+        if (!$from || !$to) {
+            $days = (int) ($req->get_param('days') ?: 30);
+            $days = min(90, max(7, $days));
+            $from = date('Y-m-01');
+            $to   = date('Y-m-t', strtotime("+$days days"));
+        }
+
+        $calendar = $db->query_calendar($from, $to);
+        $total    = array_sum(array_column($calendar, 'count'));
+
+        return rest_ensure_response([
+            'calendar' => $calendar,
+            'total'    => $total,
+            'from'     => $from,
+            'to'       => $to,
+        ]);
+    }
+
+    /**
+     * Lance la synchronisation d'une période vers la DB.
+     * Appelé par le frontend année par année pour la sync complète.
+     *
+     * Body JSON: { "from": "YYYY-MM-DD", "to": "YYYY-MM-DD" }
+     * Ou :       { "year": 2023 }
+     */
+    public function sync_bookings(\WP_REST_Request $req): \WP_REST_Response {
+        $body = $req->get_json_params();
+        $db   = new Db();
+
+        // Résoudre la plage
+        if (!empty($body['year'])) {
+            $y    = (int) $body['year'];
+            $from = "{$y}-01-01";
+            $to   = "{$y}-12-31";
+        } else {
+            $from = sanitize_text_field($body['from'] ?? '');
+            $to   = sanitize_text_field($body['to']   ?? '');
+        }
+
+        if (!$from || !$to
+            || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $from)
+            || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $to)
+        ) {
+            return new \WP_REST_Response(['error' => 'Paramètres from/to ou year requis.'], 400);
+        }
+
+        $sync   = new BookingSync();
+        $result = $sync->sync_period($from, $to);
+
+        // Mise à jour du statut global
+        $status = $db->get_sync_status();
+        $years  = $status['years_synced'] ?? [];
+        if (!empty($body['year'])) {
+            $years[] = (int) $body['year'];
+            $years   = array_unique($years);
+            sort($years);
+            $db->update_sync_status(['years_synced' => $years]);
+        }
+        $db->update_sync_status(['last_full' => current_time('mysql', true)]);
+
+        return rest_ensure_response(array_merge($result, ['db' => $db->get_sync_status()]));
+    }
+
+    /** Retourne les stats de la DB locale et le statut de la dernière sync. */
+    public function get_sync_status(): \WP_REST_Response {
+        return rest_ensure_response((new Db())->get_sync_status());
+    }
+
+    /** Vide complètement la table bt_bookings et remet le statut à zéro. */
+    public function reset_bookings_db(): \WP_REST_Response {
+        (new Db())->truncate();
+        return rest_ensure_response(['success' => true]);
+    }
+
+    // ─── Handlers — Import réservations (solditems) ────────────────────────────
+
+    /**
+     * Liste paginée des articles vendus depuis la DB locale.
+     * Paramètres : page, per_page, from, to, status, search.
+     */
+    public function get_reservations(\WP_REST_Request $req): \WP_REST_Response {
+        $db     = new ReservationDb();
+        $result = $db->query([
+            'page'     => (int)    ($req->get_param('page')     ?: 1),
+            'per_page' => (int)    ($req->get_param('per_page') ?: 50),
+            'from'     => (string) ($req->get_param('from')     ?: ''),
+            'to'       => (string) ($req->get_param('to')       ?: ''),
+            'status'   => (string) ($req->get_param('status')   ?: ''),
+            'search'   => (string) ($req->get_param('search')   ?: ''),
+        ]);
+        return rest_ensure_response($result);
+    }
+
+    /**
+     * Lance l'import d'une période de solditems vers la DB.
+     * Body JSON : { "year": 2023 } ou { "from": "YYYY-MM-DD", "to": "YYYY-MM-DD" }.
+     */
+    public function import_reservations(\WP_REST_Request $req): \WP_REST_Response {
+        $body = $req->get_json_params();
+        $db   = new ReservationDb();
+
+        if (!empty($body['year'])) {
+            $y    = (int) $body['year'];
+            $from = "{$y}-01-01";
+            $to   = "{$y}-12-31";
+        } else {
+            $from = sanitize_text_field($body['from'] ?? '');
+            $to   = sanitize_text_field($body['to']   ?? '');
+        }
+
+        if (!$from || !$to
+            || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $from)
+            || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $to)
+        ) {
+            return new \WP_REST_Response(['error' => 'Paramètres from/to ou year requis.'], 400);
+        }
+
+        $sync   = new ReservationSync();
+        $result = $sync->import_period($from, $to);
+
+        // Mémoriser l'année synchronisée
+        $status = $db->get_sync_status();
+        $years  = $status['years_synced'] ?? [];
+        if (!empty($body['year'])) {
+            $years[] = (int) $body['year'];
+            $years   = array_unique($years);
+            sort($years);
+            $db->update_sync_status(['years_synced' => $years]);
+        }
+        $db->update_sync_status(['last_import' => current_time('mysql', true)]);
+
+        return rest_ensure_response(array_merge($result, ['db' => $db->get_sync_status()]));
+    }
+
+    /** Retourne le statut de la dernière importation de réservations. */
+    public function get_reservations_import_status(): \WP_REST_Response {
+        return rest_ensure_response((new ReservationDb())->get_sync_status());
+    }
+
+    /** Vide complètement la table bt_reservations. */
+    public function reset_reservations_db(): \WP_REST_Response {
+        (new ReservationDb())->truncate();
+        return rest_ensure_response(['success' => true]);
+    }
+
+    /**
+     * Importe un batch de lignes parsées côté JS (export CSV Regiondo).
+     * Body JSON attendu : { "items": [ { calendar_sold_id, … }, … ] }
+     * Délégue l'upsert à ReservationDb::upsert().
+     */
+    public function import_reservations_csv(\WP_REST_Request $req): \WP_REST_Response {
+        $body  = $req->get_json_params();
+        $items = $body['items'] ?? [];
+
+        if (!is_array($items) || empty($items)) {
+            return new \WP_REST_Response(['error' => 'Aucune ligne reçue.'], 400);
+        }
+        if (count($items) > 1000) {
+            return new \WP_REST_Response(['error' => 'Trop de lignes par batch (max 1000).'], 400);
+        }
+
+        $sanitized = [];
+        foreach ($items as $item) {
+            if (!is_array($item)) continue;
+            $cal_id = trim($item['calendar_sold_id'] ?? '');
+            if (empty($cal_id)) continue;
+
+            $sanitized[] = [
+                'calendar_sold_id'   => sanitize_text_field($cal_id),
+                'order_increment_id' => sanitize_text_field($item['order_increment_id'] ?? '') ?: null,
+                'created_at'         => sanitize_text_field($item['created_at'] ?? ''),
+                'offer_raw'          => wp_strip_all_tags($item['offer_raw'] ?? ''),
+                'product_name'       => sanitize_text_field($item['product_name'] ?? ''),
+                'quantity'           => max(1, (int) ($item['quantity'] ?? 1)),
+                'price_total'        => ($item['price_total'] ?? null) !== null ? (float) $item['price_total'] : null,
+                'buyer_name'         => sanitize_text_field($item['buyer_name'] ?? ''),
+                'buyer_email'        => sanitize_email($item['buyer_email'] ?? ''),
+                'appointment_date'   => sanitize_text_field($item['appointment_date'] ?? ''),
+                'channel'            => sanitize_text_field($item['channel'] ?? ''),
+                'booking_status'     => sanitize_text_field($item['booking_status'] ?? ''),
+                'payment_method'     => sanitize_text_field($item['payment_method'] ?? ''),
+                'payment_status'     => sanitize_text_field($item['payment_status'] ?? ''),
+                'booking_key'        => sanitize_text_field($item['booking_key'] ?? ''),
+            ];
+        }
+
+        if (empty($sanitized)) {
+            return new \WP_REST_Response(['error' => 'Aucune ligne valide (calendar_sold_id manquant ?).'], 400);
+        }
+
+        return rest_ensure_response((new ReservationDb())->upsert($sanitized));
+    }
+
     public function flush_cache(): \WP_REST_Response {
         (new Cache())->flush();
+        return rest_ensure_response(['success' => true]);
+    }
+
+    // ─── Onboarding ───────────────────────────────────────────────────────────
+
+    /**
+     * Retourne le statut de chaque prérequis.
+     * Utilisé par le wizard pour afficher les checks visuels.
+     */
+    public function get_onboarding_status(): \WP_REST_Response {
+        global $wpdb;
+
+        $table = $wpdb->prefix . 'bt_reservations';
+
+        return rest_ensure_response([
+            'php_version'    => [
+                'ok'    => version_compare(PHP_VERSION, '8.0', '>='),
+                'value' => PHP_VERSION,
+            ],
+            'openssl'        => ['ok' => function_exists('openssl_encrypt')],
+            'db_table'       => [
+                'ok' => $wpdb->get_var("SHOW TABLES LIKE '{$table}'") === $table,
+            ],
+            'encryption_key' => [
+                'ok' => defined('BT_ENCRYPTION_KEY') && strlen(BT_ENCRYPTION_KEY) >= 32,
+            ],
+            'api_key'        => ['ok' => !empty(get_option('bt_public_key', ''))],
+            'done'           => (bool) get_option('bt_onboarding_done', false),
+        ]);
+    }
+
+    /**
+     * Crée la table bt_reservations + sauvegarde les clés API si fournies.
+     * Body JSON optionnel : { "public_key": "...", "secret_key": "..." }
+     */
+    public function run_onboarding_setup(\WP_REST_Request $req): \WP_REST_Response {
+        (new ReservationDb())->ensure_table();
+
+        $body = $req->get_json_params();
+
+        if (!empty($body['public_key'])) {
+            update_option('bt_public_key', sanitize_text_field($body['public_key']));
+        }
+        if (!empty($body['secret_key'])) {
+            update_option('bt_secret_key', sanitize_text_field($body['secret_key']));
+        }
+
+        return rest_ensure_response(['success' => true]);
+    }
+
+    /** Marque l'onboarding comme terminé (sauvegarde l'option bt_onboarding_done). */
+    public function complete_onboarding(): \WP_REST_Response {
+        update_option('bt_onboarding_done', true, false);
+        return rest_ensure_response(['success' => true]);
+    }
+
+    /** Réinitialise l'onboarding — le wizard réapparaît au prochain chargement de la page. */
+    public function reset_onboarding(): \WP_REST_Response {
+        update_option('bt_onboarding_done', false, false);
         return rest_ensure_response(['success' => true]);
     }
 
