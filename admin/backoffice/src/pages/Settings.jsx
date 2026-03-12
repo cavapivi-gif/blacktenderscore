@@ -157,6 +157,56 @@ const INTERVALS = [
   { value: 1440, label: 'Une fois par jour' },
 ]
 
+// ── Re-parse prices button ──────────────────────────────────────────────────────
+
+function ReparsePricesButton() {
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState(null)
+  const [error, setError] = useState(null)
+
+  async function handleReparse() {
+    setLoading(true)
+    setError(null)
+    setResult(null)
+    try {
+      let total = 0
+      let remaining = 1
+      // Loop until all records are processed (5000 per batch)
+      while (remaining > 0) {
+        const res = await api.reparsePrices()
+        total += res.updated ?? 0
+        remaining = res.remaining ?? 0
+      }
+      setResult({ updated: total })
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <button
+        type="button"
+        onClick={handleReparse}
+        disabled={loading}
+        className="px-3 py-1.5 text-xs font-medium rounded-md border bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:pointer-events-none transition-colors"
+      >
+        {loading ? 'Re-parsing en cours...' : 'Lancer le re-parse'}
+      </button>
+      {result && (
+        <Notice type="success">
+          {result.updated > 0
+            ? `${result.updated.toLocaleString('fr-FR')} enregistrements corrigés.`
+            : 'Aucun enregistrement à corriger — tous les prix sont déjà renseignés.'}
+        </Notice>
+      )}
+      {error && <Notice type="error">{error}</Notice>}
+    </div>
+  )
+}
+
 // ── Main component ─────────────────────────────────────────────────────────────
 // ── Section Installation ───────────────────────────────────────────────────────
 
@@ -970,6 +1020,14 @@ export default function Settings() {
             <CsvImporter
               onDone={() => api.importReservationsStatus().then(setRSyncStatus).catch(() => {})}
             />
+
+            <Divider />
+            <SectionTitle>Corriger les prix manquants</SectionTitle>
+            <p className="text-sm text-muted-foreground -mt-2">
+              Re-parse les enregistrements existants dont le prix est manquant (NULL)
+              à partir du champ offer_raw. Utile après un import CSV qui n'avait pas parsé le prix.
+            </p>
+            <ReparsePricesButton />
           </div>
         )
       }

@@ -1052,4 +1052,66 @@ class ReservationDb {
             'top3_concentration'  => $total > 0 ? round((int) $top3_count / $total * 100, 1) : 0,
         ]);
     }
+
+    // ─── Customers from local DB ────────────────────────────────────────────
+
+    /**
+     * Derive customer list from bt_reservations (buyer_email_hash based grouping).
+     * Replaces the failing Regiondo CRM API.
+     */
+    public function query_customers(int $page = 1, int $per_page = 50, ?string $search = null): array {
+        global $wpdb;
+
+        $enc = new Encryption();
+
+        // Count unique customers by email hash
+        $where = "buyer_email_hash IS NOT NULL AND buyer_email_hash != ''";
+        $values = [];
+
+        if ($search) {
+            $hash = $enc->blind_hash($search);
+            $like = '%' . $wpdb->esc_like($search) . '%';
+            $where .= $wpdb->prepare(
+                ' AND (buyer_email_hash = %s OR buyer_name_hash = %s OR product_name LIKE %s)',
+                $hash, $hash, $like
+            );
+        }
+
+        $total = (int) $wpdb->get_var(
+            "SELECT COUNT(DISTINCT buyer_email_hash) FROM `{$this->table}` WHERE {$where}"
+        );
+
+        $offset = ($page - 1) * $per_page;
+
+        $rows = $wpdb->get_results(
+            "SELECT
+                buyer_email_hash,
+                buyer_name,
+                buyer_email,
+                COUNT(*) AS bookings_count,
+                COALESCE(SUM(CASE WHEN booking_status NOT IN ('canceled','cancelled','rejected')
+                             THEN price_total ELSE 0 END), 0) AS total_spent,
+                MAX(appointment_date) AS last_booking
+             FROM `{$this->table}`
+             WHERE {$where}
+             GROUP BY buyer_email_hash
+             ORDER BY last_booking DESC
+             LIMIT {$per_page} OFFSET {$offset}",
+            ARRAY_A
+        );
+
+        $data = [];
+        foreach ($rows ?: [] as $r) {
+            $data[] = [
+                'email'          => $enc->decrypt($r['buyer_email'] ?? ''),
+                'name'           => $enc->decrypt($r['buyer_name']  ?? ''),
+                'bookings_count' => (int) $r['bookings_count'],
+                'total_spent'    => round((float) $r['total_spent'], 2),
+                'currency'       => 'EUR',
+                'last_booking'   => $r['last_booking'],
+            ];
+        }
+
+        return ['data' => $data, 'total' => $total];
+    }
 }
