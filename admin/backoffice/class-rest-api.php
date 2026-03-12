@@ -1106,10 +1106,17 @@ class RestApi {
      */
     public function reparse_prices(): \WP_REST_Response {
         global $wpdb;
-        $db    = new ReservationDb();
         $table = $wpdb->prefix . 'bt_reservations';
 
-        // Get rows with NULL price_total but non-empty offer_raw
+        // ── Phase 1: Fix appointment_date NULL → use created_at ──────────
+        $dates_fixed = (int) $wpdb->query(
+            "UPDATE `{$table}`
+             SET appointment_date = DATE(created_at)
+             WHERE appointment_date IS NULL
+               AND created_at IS NOT NULL"
+        );
+
+        // ── Phase 2: Parse price_total from offer_raw ────────────────────
         // Small batch (200) to avoid Cloudflare 525 timeout
         $rows = $wpdb->get_results(
             "SELECT id, offer_raw FROM `{$table}`
@@ -1118,50 +1125,54 @@ class RestApi {
             ARRAY_A
         );
 
-        if (empty($rows)) {
-            return rest_ensure_response(['updated' => 0, 'message' => 'Aucune ligne à corriger.']);
+        $prices_fixed = 0;
+        if (!empty($rows)) {
+            foreach ($rows as $row) {
+                $raw   = $row['offer_raw'];
+                $price = self::parse_price_from_offer_raw($raw);
+                if ($price === null) continue;
+
+                $sets   = ['price_total = %f'];
+                $values = [$price];
+
+                $qty = self::parse_quantity_from_offer_raw($raw);
+                if ($qty !== null) {
+                    $sets[]   = 'quantity = %d';
+                    $values[] = $qty;
+                }
+
+                $name = self::parse_product_from_offer_raw($raw);
+                if ($name !== null) {
+                    $sets[]   = 'product_name = %s';
+                    $values[] = $name;
+                }
+
+                $values[] = (int) $row['id'];
+                $wpdb->query($wpdb->prepare(
+                    "UPDATE `{$table}` SET " . implode(', ', $sets) . " WHERE id = %d",
+                    ...$values
+                ));
+                $prices_fixed++;
+            }
         }
 
-        $updated = 0;
-        foreach ($rows as $row) {
-            $raw   = $row['offer_raw'];
-            $price = self::parse_price_from_offer_raw($raw);
-            if ($price === null) continue;
-
-            $sets   = ['price_total = %f'];
-            $values = [$price];
-
-            $qty = self::parse_quantity_from_offer_raw($raw);
-            if ($qty !== null) {
-                $sets[]   = 'quantity = %d';
-                $values[] = $qty;
-            }
-
-            $name = self::parse_product_from_offer_raw($raw);
-            if ($name !== null) {
-                $sets[]   = 'product_name = %s';
-                $values[] = $name;
-            }
-
-            $values[] = (int) $row['id'];
-            $wpdb->query($wpdb->prepare(
-                "UPDATE `{$table}` SET " . implode(', ', $sets) . " WHERE id = %d",
-                ...$values
-            ));
-            $updated++;
-        }
-
-        // Check if there are more to process
-        $remaining = (int) $wpdb->get_var(
+        // Check remaining
+        $remaining_prices = (int) $wpdb->get_var(
             "SELECT COUNT(*) FROM `{$table}` WHERE price_total IS NULL AND offer_raw IS NOT NULL AND offer_raw != ''"
         );
+        $remaining_dates = (int) $wpdb->get_var(
+            "SELECT COUNT(*) FROM `{$table}` WHERE appointment_date IS NULL AND created_at IS NOT NULL"
+        );
+        $remaining = $remaining_prices + $remaining_dates;
 
         return rest_ensure_response([
-            'updated'   => $updated,
-            'remaining' => $remaining,
-            'message'   => $remaining > 0
-                ? "Corrigé {$updated} lignes, encore {$remaining} à traiter."
-                : "Terminé — {$updated} lignes corrigées.",
+            'updated'      => $prices_fixed + $dates_fixed,
+            'prices_fixed' => $prices_fixed,
+            'dates_fixed'  => $dates_fixed,
+            'remaining'    => $remaining,
+            'message'      => $remaining > 0
+                ? "Corrigé {$prices_fixed} prix + {$dates_fixed} dates, encore {$remaining} à traiter."
+                : "Terminé — {$prices_fixed} prix + {$dates_fixed} dates corrigés.",
         ]);
     }
 

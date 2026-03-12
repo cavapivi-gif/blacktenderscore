@@ -19,6 +19,13 @@ class ReservationDb {
     private string $table;
     private string $option_key = 'bt_reservation_sync_status';
 
+    /**
+     * SQL expression for the "effective date" of a record.
+     * Uses appointment_date if available, otherwise falls back to created_at.
+     * This prevents 0-result queries when appointment_date is NULL.
+     */
+    private const EDATE = 'COALESCE(appointment_date, DATE(created_at))';
+
     public function __construct() {
         global $wpdb;
         $this->table = $wpdb->prefix . 'bt_reservations';
@@ -328,7 +335,7 @@ class ReservationDb {
         $bookings_month = (int) $wpdb->get_var(
             $wpdb->prepare(
                 "SELECT COUNT(*) FROM `{$this->table}`
-                 WHERE appointment_date BETWEEN %s AND %s",
+                 WHERE " . self::EDATE . " BETWEEN %s AND %s",
                 $month_start,
                 $month_end,
             )
@@ -337,7 +344,7 @@ class ReservationDb {
         $revenue_month = (float) $wpdb->get_var(
             $wpdb->prepare(
                 "SELECT COALESCE(SUM(price_total), 0) FROM `{$this->table}`
-                 WHERE appointment_date BETWEEN %s AND %s
+                 WHERE " . self::EDATE . " BETWEEN %s AND %s
                    AND booking_status NOT IN ('canceled','cancelled','rejected')",
                 $month_start,
                 $month_end,
@@ -400,7 +407,7 @@ class ReservationDb {
         $rows = $wpdb->get_results(
             $wpdb->prepare(
                 "SELECT
-                    DATE_FORMAT(appointment_date, %s) AS period_key,
+                    DATE_FORMAT(" . self::EDATE . ", %s) AS period_key,
                     COUNT(*)                           AS bookings,
                     SUM(CASE WHEN booking_status NOT IN ('canceled','cancelled','rejected')
                              THEN COALESCE(price_total, 0) ELSE 0 END) AS revenue,
@@ -410,8 +417,8 @@ class ReservationDb {
                               AND price_total IS NOT NULL AND price_total > 0
                               THEN price_total ELSE NULL END), 2) AS avg_basket
                  FROM `{$this->table}`
-                 WHERE appointment_date BETWEEN %s AND %s
-                   AND appointment_date IS NOT NULL
+                 WHERE " . self::EDATE . " BETWEEN %s AND %s
+                   AND " . self::EDATE . " IS NOT NULL
                  GROUP BY period_key
                  ORDER BY period_key ASC",
                 $format,
@@ -443,8 +450,8 @@ class ReservationDb {
                     ROUND(SUM(CASE WHEN booking_status NOT IN ('canceled','cancelled','rejected')
                               THEN COALESCE(price_total, 0) ELSE 0 END), 2) AS revenue
                  FROM `{$this->table}`
-                 WHERE appointment_date BETWEEN %s AND %s
-                   AND appointment_date IS NOT NULL
+                 WHERE " . self::EDATE . " BETWEEN %s AND %s
+                   AND " . self::EDATE . " IS NOT NULL
                  GROUP BY product_name
                  ORDER BY `count` DESC
                  LIMIT %d",
@@ -477,8 +484,8 @@ class ReservationDb {
                     ROUND(SUM(CASE WHEN booking_status NOT IN ('canceled','cancelled','rejected')
                               THEN COALESCE(price_total, 0) ELSE 0 END), 2) AS revenue
                  FROM `{$this->table}`
-                 WHERE appointment_date BETWEEN %s AND %s
-                   AND appointment_date IS NOT NULL
+                 WHERE " . self::EDATE . " BETWEEN %s AND %s
+                   AND " . self::EDATE . " IS NOT NULL
                  GROUP BY channel
                  ORDER BY bookings DESC
                  LIMIT %d",
@@ -505,13 +512,13 @@ class ReservationDb {
         $rows = $wpdb->get_results(
             $wpdb->prepare(
                 "SELECT
-                    DAYOFWEEK(appointment_date) AS dow,
+                    DAYOFWEEK(" . self::EDATE . ") AS dow,
                     COUNT(*) AS bookings,
                     ROUND(SUM(CASE WHEN booking_status NOT IN ('canceled','cancelled','rejected')
                               THEN COALESCE(price_total, 0) ELSE 0 END), 2) AS revenue
                  FROM `{$this->table}`
-                 WHERE appointment_date BETWEEN %s AND %s
-                   AND appointment_date IS NOT NULL
+                 WHERE " . self::EDATE . " BETWEEN %s AND %s
+                   AND " . self::EDATE . " IS NOT NULL
                  GROUP BY dow
                  ORDER BY dow",
                 $from,
@@ -546,10 +553,10 @@ class ReservationDb {
                     ROUND(SUM(CASE WHEN price_total < 0 THEN price_total ELSE 0 END), 2) AS refunds_total,
                     SUM(CASE WHEN price_total IS NOT NULL AND price_total > 0 THEN 1 ELSE 0 END) AS paid_bookings,
                     COUNT(DISTINCT product_name) AS unique_products,
-                    COUNT(DISTINCT DATE_FORMAT(appointment_date,'%%Y-%%m')) AS active_months
+                    COUNT(DISTINCT DATE_FORMAT(" . self::EDATE . ",'%%Y-%%m')) AS active_months
                  FROM `{$this->table}`
-                 WHERE appointment_date BETWEEN %s AND %s
-                   AND appointment_date IS NOT NULL",
+                 WHERE " . self::EDATE . " BETWEEN %s AND %s
+                   AND " . self::EDATE . " IS NOT NULL",
                 $from,
                 $to,
             ),
@@ -591,7 +598,7 @@ class ReservationDb {
         $rows = $wpdb->get_results(
             $wpdb->prepare(
                 "SELECT
-                    DATE_FORMAT(appointment_date, '%%Y-%%m-%%d') AS booking_date,
+                    DATE_FORMAT(" . self::EDATE . ", '%%Y-%%m-%%d') AS booking_date,
                     order_increment_id AS booking_ref,
                     product_name,
                     buyer_name,
@@ -599,8 +606,8 @@ class ReservationDb {
                     price_total        AS total_price,
                     booking_status     AS status
                  FROM `{$this->table}`
-                 WHERE appointment_date BETWEEN %s AND %s
-                   AND appointment_date IS NOT NULL
+                 WHERE " . self::EDATE . " BETWEEN %s AND %s
+                   AND " . self::EDATE . " IS NOT NULL
                  ORDER BY appointment_date ASC, id ASC",
                 $from,
                 $to,
@@ -647,14 +654,14 @@ class ReservationDb {
         $rows = $wpdb->get_results(
             $wpdb->prepare(
                 "SELECT
-                    DATE_FORMAT(appointment_date, '%%Y-%%m') AS month,
-                    DAYOFWEEK(appointment_date) AS dow,
+                    DATE_FORMAT(" . self::EDATE . ", '%%Y-%%m') AS month,
+                    DAYOFWEEK(" . self::EDATE . ") AS dow,
                     COUNT(*) AS total,
                     ROUND(SUM(CASE WHEN booking_status NOT IN ('canceled','cancelled','rejected')
                               THEN COALESCE(price_total, 0) ELSE 0 END), 2) AS revenue
                  FROM `{$this->table}`
-                 WHERE appointment_date BETWEEN %s AND %s
-                   AND appointment_date IS NOT NULL
+                 WHERE " . self::EDATE . " BETWEEN %s AND %s
+                   AND " . self::EDATE . " IS NOT NULL
                  GROUP BY month, dow
                  ORDER BY month, dow",
                 $from, $to
@@ -676,8 +683,8 @@ class ReservationDb {
                     ROUND(SUM(CASE WHEN booking_status NOT IN ('canceled','cancelled','rejected')
                               THEN COALESCE(price_total, 0) ELSE 0 END), 2) AS revenue
                  FROM `{$this->table}`
-                 WHERE appointment_date BETWEEN %s AND %s
-                   AND appointment_date IS NOT NULL
+                 WHERE " . self::EDATE . " BETWEEN %s AND %s
+                   AND " . self::EDATE . " IS NOT NULL
                  GROUP BY method
                  ORDER BY bookings DESC
                  LIMIT %d",
@@ -700,8 +707,8 @@ class ReservationDb {
                     ROUND(SUM(CASE WHEN booking_status NOT IN ('canceled','cancelled','rejected')
                               THEN COALESCE(price_total, 0) ELSE 0 END), 2) AS revenue
                  FROM `{$this->table}`
-                 WHERE appointment_date BETWEEN %s AND %s
-                   AND appointment_date IS NOT NULL
+                 WHERE " . self::EDATE . " BETWEEN %s AND %s
+                   AND " . self::EDATE . " IS NOT NULL
                  GROUP BY status
                  ORDER BY bookings DESC",
                 $from, $to
@@ -723,7 +730,7 @@ class ReservationDb {
                     ROUND(SUM(CASE WHEN booking_status NOT IN ('canceled','cancelled','rejected')
                               THEN COALESCE(price_total, 0) ELSE 0 END), 2) AS revenue
                  FROM `{$this->table}`
-                 WHERE appointment_date BETWEEN %s AND %s
+                 WHERE " . self::EDATE . " BETWEEN %s AND %s
                    AND created_at IS NOT NULL
                  GROUP BY hour
                  ORDER BY hour",
@@ -747,9 +754,9 @@ class ReservationDb {
                     MIN(DATEDIFF(appointment_date, DATE(created_at))) AS min_lead_days,
                     MAX(DATEDIFF(appointment_date, DATE(created_at))) AS max_lead_days
                  FROM `{$this->table}`
-                 WHERE appointment_date BETWEEN %s AND %s
+                 WHERE " . self::EDATE . " BETWEEN %s AND %s
                    AND created_at IS NOT NULL
-                   AND appointment_date IS NOT NULL
+                   AND " . self::EDATE . " IS NOT NULL
                    AND DATEDIFF(appointment_date, DATE(created_at)) >= 0
                  GROUP BY product_name
                  ORDER BY bookings DESC
@@ -785,7 +792,7 @@ class ReservationDb {
                             ELSE '5+ visites (VIP)'
                         END AS freq_bucket
                     FROM `{$this->table}`
-                    WHERE appointment_date BETWEEN %s AND %s
+                    WHERE " . self::EDATE . " BETWEEN %s AND %s
                       AND buyer_email_hash IS NOT NULL
                       AND buyer_email_hash != ''
                     GROUP BY buyer_email_hash
@@ -815,8 +822,8 @@ class ReservationDb {
             $wpdb->prepare(
                 "SELECT product_name
                  FROM `{$this->table}`
-                 WHERE appointment_date BETWEEN %s AND %s
-                   AND appointment_date IS NOT NULL
+                 WHERE " . self::EDATE . " BETWEEN %s AND %s
+                   AND " . self::EDATE . " IS NOT NULL
                  GROUP BY product_name
                  ORDER BY COUNT(*) DESC
                  LIMIT %d",
@@ -833,14 +840,14 @@ class ReservationDb {
         $rows = $wpdb->get_results(
             $wpdb->prepare(
                 "SELECT
-                    DATE_FORMAT(appointment_date, %s) AS period_key,
+                    DATE_FORMAT(" . self::EDATE . ", %s) AS period_key,
                     product_name AS name,
                     COUNT(*) AS bookings,
                     ROUND(SUM(CASE WHEN booking_status NOT IN ('canceled','cancelled','rejected')
                               THEN COALESCE(price_total, 0) ELSE 0 END), 2) AS revenue
                  FROM `{$this->table}`
-                 WHERE appointment_date BETWEEN %s AND %s
-                   AND appointment_date IS NOT NULL
+                 WHERE " . self::EDATE . " BETWEEN %s AND %s
+                   AND " . self::EDATE . " IS NOT NULL
                    AND product_name IN ({$placeholders})
                  GROUP BY period_key, product_name
                  ORDER BY period_key, revenue DESC",
@@ -864,8 +871,8 @@ class ReservationDb {
                     COUNT(*) AS bookings,
                     ROUND(SUM(COALESCE(price_total, 0)), 2) AS revenue
                  FROM `{$this->table}`
-                 WHERE appointment_date BETWEEN %s AND %s
-                   AND appointment_date IS NOT NULL
+                 WHERE " . self::EDATE . " BETWEEN %s AND %s
+                   AND " . self::EDATE . " IS NOT NULL
                  GROUP BY channel, booking_status
                  ORDER BY channel, bookings DESC",
                 $from, $to
@@ -891,8 +898,8 @@ class ReservationDb {
                               AND price_total IS NOT NULL AND price_total > 0
                               THEN price_total ELSE NULL END), 2) AS avg_basket
                  FROM `{$this->table}`
-                 WHERE appointment_date BETWEEN %s AND %s
-                   AND appointment_date IS NOT NULL
+                 WHERE " . self::EDATE . " BETWEEN %s AND %s
+                   AND " . self::EDATE . " IS NOT NULL
                  GROUP BY year_num, month_num
                  ORDER BY year_num, month_num",
                 $from, $to
@@ -943,7 +950,7 @@ class ReservationDb {
             $wpdb->prepare(
                 "SELECT ROUND(AVG(DATEDIFF(appointment_date, DATE(created_at))), 1)
                  FROM `{$this->table}`
-                 WHERE appointment_date BETWEEN %s AND %s
+                 WHERE " . self::EDATE . " BETWEEN %s AND %s
                    AND created_at IS NOT NULL
                    AND DATEDIFF(appointment_date, DATE(created_at)) >= 0",
                 $from, $to
@@ -959,7 +966,7 @@ class ReservationDb {
                  FROM (
                     SELECT buyer_email_hash, COUNT(*) AS cnt
                     FROM `{$this->table}`
-                    WHERE appointment_date BETWEEN %s AND %s
+                    WHERE " . self::EDATE . " BETWEEN %s AND %s
                       AND buyer_email_hash IS NOT NULL
                       AND buyer_email_hash != ''
                     GROUP BY buyer_email_hash
@@ -973,7 +980,7 @@ class ReservationDb {
             $wpdb->prepare(
                 "SELECT ROUND(AVG(quantity), 1)
                  FROM `{$this->table}`
-                 WHERE appointment_date BETWEEN %s AND %s
+                 WHERE " . self::EDATE . " BETWEEN %s AND %s
                    AND quantity > 0",
                 $from, $to
             )
@@ -984,7 +991,7 @@ class ReservationDb {
             $wpdb->prepare(
                 "SELECT COUNT(*)
                  FROM `{$this->table}`
-                 WHERE appointment_date BETWEEN %s AND %s
+                 WHERE " . self::EDATE . " BETWEEN %s AND %s
                    AND (payment_status IS NULL OR TRIM(payment_status) = '' OR payment_status NOT IN ('paid','completed','succeeded'))",
                 $from, $to
             )
@@ -993,11 +1000,11 @@ class ReservationDb {
         // Peak weekday
         $peak_dow = $wpdb->get_var(
             $wpdb->prepare(
-                "SELECT DAYOFWEEK(appointment_date)
+                "SELECT DAYOFWEEK(" . self::EDATE . ")
                  FROM `{$this->table}`
-                 WHERE appointment_date BETWEEN %s AND %s
-                   AND appointment_date IS NOT NULL
-                 GROUP BY DAYOFWEEK(appointment_date)
+                 WHERE " . self::EDATE . " BETWEEN %s AND %s
+                   AND " . self::EDATE . " IS NOT NULL
+                 GROUP BY DAYOFWEEK(" . self::EDATE . ")
                  ORDER BY COUNT(*) DESC
                  LIMIT 1",
                 $from, $to
@@ -1010,8 +1017,8 @@ class ReservationDb {
             $wpdb->prepare(
                 "SELECT product_name
                  FROM `{$this->table}`
-                 WHERE appointment_date BETWEEN %s AND %s
-                   AND appointment_date IS NOT NULL
+                 WHERE " . self::EDATE . " BETWEEN %s AND %s
+                   AND " . self::EDATE . " IS NOT NULL
                  GROUP BY product_name
                  ORDER BY COUNT(*) DESC
                  LIMIT 1",
@@ -1025,7 +1032,7 @@ class ReservationDb {
                 "SELECT SUM(cnt) FROM (
                     SELECT COUNT(*) AS cnt
                     FROM `{$this->table}`
-                    WHERE appointment_date BETWEEN %s AND %s
+                    WHERE " . self::EDATE . " BETWEEN %s AND %s
                     GROUP BY product_name
                     ORDER BY cnt DESC
                     LIMIT 3
