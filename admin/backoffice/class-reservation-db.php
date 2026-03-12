@@ -98,12 +98,9 @@ class ReservationDb {
         $stats = ['inserted' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []];
         $now   = current_time('mysql', true);
         $enc   = new Encryption();
+        $conn  = $wpdb->dbh;
 
-        // On bypasse $wpdb->query() : son check post-vsprintf rejette les valeurs
-        // contenant %s/%d/%f dans le texte (ex: libellé produit). On utilise
-        // mysqli_real_escape_string() directement sur la connexion.
-        $conn = $wpdb->dbh;
-        $q    = function(?string $v) use ($conn): string {
+        $q = function(?string $v) use ($conn): string {
             if ($v === null || $v === '') return 'NULL';
             $escaped = ($conn instanceof \mysqli)
                 ? mysqli_real_escape_string($conn, $v)
@@ -111,95 +108,87 @@ class ReservationDb {
             return "'" . $escaped . "'";
         };
 
+        // ── Crypto row-by-row, puis bulk INSERT en une seule requête ─────────
+        $values = [];
         foreach ($items as $item) {
             $ref = trim($item['calendar_sold_id'] ?? '');
-            if (empty($ref)) {
-                $stats['skipped']++;
-                continue;
-            }
+            if (empty($ref)) { $stats['skipped']++; continue; }
 
-            // ── Chiffrement des données personnelles (RGPD) ──────────────────
             $buyer_name  = (string) ($item['buyer_name']  ?? '');
             $buyer_email = (string) ($item['buyer_email'] ?? '');
             $booking_key = (string) ($item['booking_key'] ?? '');
 
-            $buyer_name_enc  = $buyer_name  !== '' ? $enc->encrypt($buyer_name)  : '';
-            $buyer_email_enc = $buyer_email !== '' ? $enc->encrypt($buyer_email) : '';
-            $booking_key_enc = $booking_key !== '' ? $enc->encrypt($booking_key) : '';
-
-            // Blind index HMAC pour recherche exacte sans déchiffrement SQL
-            $buyer_name_hash  = $buyer_name  !== '' ? $enc->blind_hash($buyer_name)  : null;
-            $buyer_email_hash = $buyer_email !== '' ? $enc->blind_hash($buyer_email) : null;
-
             $price_total = $item['price_total'] ?? null;
             $price_sql   = ($price_total !== null) ? number_format((float) $price_total, 2, '.', '') : 'NULL';
 
-            // ON DUPLICATE KEY UPDATE : 1 = insert, 2 = update, 0 = no-op
-            $sql = "INSERT INTO `{$this->table}`
-                        (calendar_sold_id, order_increment_id, created_at, offer_raw,
-                         product_name, quantity, price_total,
-                         buyer_name, buyer_name_hash, buyer_email, buyer_email_hash,
-                         appointment_date, channel, booking_status, payment_method,
-                         payment_status, booking_key, buyer_country, imported_at)
-                     VALUES (
-                        {$q($ref)},
-                        {$q(trim($item['order_increment_id'] ?? ''))},
-                        {$q(trim($item['created_at']         ?? ''))},
-                        {$q((string) ($item['offer_raw']      ?? ''))},
-                        {$q((string) ($item['product_name']   ?? ''))},
-                        " . (int) ($item['quantity'] ?? 1) . ",
-                        {$price_sql},
-                        {$q($buyer_name_enc)},
-                        {$q($buyer_name_hash)},
-                        {$q($buyer_email_enc)},
-                        {$q($buyer_email_hash)},
-                        {$q(trim($item['appointment_date']   ?? ''))},
-                        {$q((string) ($item['channel']        ?? ''))},
-                        {$q((string) ($item['booking_status'] ?? ''))},
-                        {$q((string) ($item['payment_method'] ?? ''))},
-                        {$q((string) ($item['payment_status'] ?? ''))},
-                        {$q($booking_key_enc)},
-                        {$q((string) ($item['buyer_country']  ?? ''))},
-                        {$q($now)}
-                     )
-                     ON DUPLICATE KEY UPDATE
-                        order_increment_id = VALUES(order_increment_id),
-                        created_at         = VALUES(created_at),
-                        offer_raw          = VALUES(offer_raw),
-                        product_name       = VALUES(product_name),
-                        quantity           = VALUES(quantity),
-                        price_total        = VALUES(price_total),
-                        buyer_name         = VALUES(buyer_name),
-                        buyer_name_hash    = VALUES(buyer_name_hash),
-                        buyer_email        = VALUES(buyer_email),
-                        buyer_email_hash   = VALUES(buyer_email_hash),
-                        appointment_date   = VALUES(appointment_date),
-                        channel            = VALUES(channel),
-                        booking_status     = VALUES(booking_status),
-                        payment_method     = VALUES(payment_method),
-                        payment_status     = VALUES(payment_status),
-                        buyer_country      = VALUES(buyer_country),
-                        booking_key        = VALUES(booking_key),
-                        imported_at        = VALUES(imported_at)";
+            $values[] = sprintf(
+                "(%s,%s,%s,%s,%s,%d,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                $q($ref),
+                $q(trim($item['order_increment_id'] ?? '')),
+                $q(trim($item['created_at']         ?? '')),
+                $q((string) ($item['offer_raw']      ?? '')),
+                $q((string) ($item['product_name']   ?? '')),
+                (int) ($item['quantity'] ?? 1),
+                $price_sql,
+                $q($buyer_name  !== '' ? $enc->encrypt($buyer_name)  : ''),
+                $q($buyer_name  !== '' ? $enc->blind_hash($buyer_name)  : null),
+                $q($buyer_email !== '' ? $enc->encrypt($buyer_email) : ''),
+                $q($buyer_email !== '' ? $enc->blind_hash($buyer_email) : null),
+                $q(trim($item['appointment_date']   ?? '')),
+                $q((string) ($item['channel']        ?? '')),
+                $q((string) ($item['booking_status'] ?? '')),
+                $q((string) ($item['payment_method'] ?? '')),
+                $q((string) ($item['payment_status'] ?? '')),
+                $q($booking_key !== '' ? $enc->encrypt($booking_key) : ''),
+                $q((string) ($item['buyer_country']  ?? '')),
+                $q($now)
+            );
+        }
 
-            if ($conn instanceof \mysqli) {
-                $conn->query($sql);
-                $affected = $conn->errno ? false : $conn->affected_rows;
-                $db_error = $conn->error;
-            } else {
-                $affected = $wpdb->query($sql);
-                $db_error = $wpdb->last_error;
-            }
+        if (empty($values)) return $stats;
 
-            if ($affected === false) {
-                $stats['errors'][] = "calendar_sold_id={$ref}: " . ($db_error ?: 'query failed');
-            } elseif ($affected === 2) {
-                $stats['updated']++;
-            } elseif ($affected === 1) {
-                $stats['inserted']++;
-            } else {
-                $stats['skipped']++; // no-op : ligne identique
-            }
+        $cols = "(calendar_sold_id, order_increment_id, created_at, offer_raw,
+                  product_name, quantity, price_total,
+                  buyer_name, buyer_name_hash, buyer_email, buyer_email_hash,
+                  appointment_date, channel, booking_status, payment_method,
+                  payment_status, booking_key, buyer_country, imported_at)";
+
+        $sql = "INSERT INTO `{$this->table}` {$cols} VALUES "
+             . implode(',', $values)
+             . " ON DUPLICATE KEY UPDATE
+                  order_increment_id = VALUES(order_increment_id),
+                  created_at         = VALUES(created_at),
+                  offer_raw          = VALUES(offer_raw),
+                  product_name       = VALUES(product_name),
+                  quantity           = VALUES(quantity),
+                  price_total        = VALUES(price_total),
+                  buyer_name         = VALUES(buyer_name),
+                  buyer_name_hash    = VALUES(buyer_name_hash),
+                  buyer_email        = VALUES(buyer_email),
+                  buyer_email_hash   = VALUES(buyer_email_hash),
+                  appointment_date   = VALUES(appointment_date),
+                  channel            = VALUES(channel),
+                  booking_status     = VALUES(booking_status),
+                  payment_method     = VALUES(payment_method),
+                  payment_status     = VALUES(payment_status),
+                  buyer_country      = VALUES(buyer_country),
+                  booking_key        = VALUES(booking_key),
+                  imported_at        = VALUES(imported_at)";
+
+        if ($conn instanceof \mysqli) {
+            $conn->query($sql);
+            $affected = $conn->errno ? false : (int) $conn->affected_rows;
+            if ($affected === false) $stats['errors'][] = $conn->error;
+        } else {
+            $affected = $wpdb->query($sql);
+            if ($affected === false) $stats['errors'][] = $wpdb->last_error;
+        }
+
+        if ($affected !== false) {
+            // MySQL: affected_rows = inserts*1 + updates*2 → inserts = 2n - affected
+            $n = count($values);
+            $stats['updated']  = max(0, (int) $affected - $n);
+            $stats['inserted'] = max(0, $n - $stats['updated']);
         }
 
         return $stats;
@@ -969,6 +958,32 @@ class ReservationDb {
         }
 
         return $result;
+    }
+
+    /**
+     * Top N dates par volume de réservation (pour le widget "Top jours").
+     *
+     * @param string $from  Date de début YYYY-MM-DD
+     * @param string $to    Date de fin YYYY-MM-DD
+     * @param int    $limit Nombre de dates à retourner (défaut 7)
+     * @return array [{date, count}]
+     */
+    public function query_top_dates(string $from, string $to, int $limit = 7): array {
+        global $wpdb;
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT " . self::EDATE . " AS date,
+                        COUNT(*) AS count
+                 FROM `{$this->table}`
+                 WHERE " . self::EDATE . " BETWEEN %s AND %s
+                   AND " . self::EDATE . " IS NOT NULL
+                 GROUP BY date
+                 ORDER BY count DESC
+                 LIMIT %d",
+                $from, $to, $limit
+            ), ARRAY_A
+        );
+        return $rows ?: [];
     }
 
     /**
