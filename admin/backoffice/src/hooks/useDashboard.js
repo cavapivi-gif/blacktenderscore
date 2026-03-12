@@ -79,7 +79,7 @@ export function useDashboard() {
       key: p.key,
       bookings: p.bookings,
       revenue: p.revenue,
-      avg_basket: p.avg_basket,
+      avg_basket: p.avg_basket ?? 0,
       cancelled: p.cancelled,
       bookings_prev: cmpMap[i]?.bookings ?? null,
       revenue_prev: cmpMap[i]?.revenue ?? null,

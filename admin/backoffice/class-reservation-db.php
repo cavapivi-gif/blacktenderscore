@@ -647,16 +647,16 @@ class ReservationDb {
         $rows = $wpdb->get_results(
             $wpdb->prepare(
                 "SELECT
-                    MONTH(appointment_date) AS month_num,
+                    DATE_FORMAT(appointment_date, '%%Y-%%m') AS month,
                     DAYOFWEEK(appointment_date) AS dow,
-                    COUNT(*) AS bookings,
+                    COUNT(*) AS total,
                     ROUND(SUM(CASE WHEN booking_status NOT IN ('canceled','cancelled','rejected')
                               THEN COALESCE(price_total, 0) ELSE 0 END), 2) AS revenue
                  FROM `{$this->table}`
                  WHERE appointment_date BETWEEN %s AND %s
                    AND appointment_date IS NOT NULL
-                 GROUP BY month_num, dow
-                 ORDER BY month_num, dow",
+                 GROUP BY month, dow
+                 ORDER BY month, dow",
                 $from, $to
             ), ARRAY_A
         );
@@ -718,15 +718,15 @@ class ReservationDb {
         $rows = $wpdb->get_results(
             $wpdb->prepare(
                 "SELECT
-                    HOUR(created_at) AS hour_num,
+                    HOUR(created_at) AS hour,
                     COUNT(*) AS bookings,
                     ROUND(SUM(CASE WHEN booking_status NOT IN ('canceled','cancelled','rejected')
                               THEN COALESCE(price_total, 0) ELSE 0 END), 2) AS revenue
                  FROM `{$this->table}`
                  WHERE appointment_date BETWEEN %s AND %s
                    AND created_at IS NOT NULL
-                 GROUP BY hour_num
-                 ORDER BY hour_num",
+                 GROUP BY hour
+                 ORDER BY hour",
                 $from, $to
             ), ARRAY_A
         );
