@@ -11,6 +11,7 @@ import {
   OpenNewWindow,
   Calendar,
   Tools,
+  Star,
 } from 'iconoir-react'
 
 // ── Settings sub-navigation ───────────────────────────────────────────────────
@@ -37,6 +38,7 @@ const nav = [
   { to: '/bookings',  label: 'Réservations',    icon: Book           },
   { to: '/planner',   label: 'Planificateur',   icon: Calendar       },
   { to: '/customers', label: 'Clients',         icon: Group          },
+  { to: '/reviews',   label: 'Avis',            icon: Star           },
   {
     to: '/settings', label: 'Réglages', icon: Settings,
     groups: [

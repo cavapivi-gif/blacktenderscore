@@ -205,6 +205,50 @@ class RestApi {
             'permission_callback' => $auth,
         ]);
 
+        // ── Avis clients (import CSV Regiondo) ────────────────────────────────
+        register_rest_route(self::NS, '/avis', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'get_avis'],
+            'permission_callback' => $auth,
+        ]);
+
+        register_rest_route(self::NS, '/avis/stats', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'get_avis_stats'],
+            'permission_callback' => $auth,
+        ]);
+
+        register_rest_route(self::NS, '/avis/import/csv', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'import_avis_csv'],
+            'permission_callback' => $auth,
+        ]);
+
+        register_rest_route(self::NS, '/avis/reset', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'reset_avis_db'],
+            'permission_callback' => $auth,
+        ]);
+
+        // Import participations (stats externes) → DB locale
+        register_rest_route(self::NS, '/participations/import/csv', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'import_participations_csv'],
+            'permission_callback' => $auth,
+        ]);
+
+        register_rest_route(self::NS, '/participations/import/status', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'get_participations_import_status'],
+            'permission_callback' => $auth,
+        ]);
+
+        register_rest_route(self::NS, '/participations/import/reset', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'reset_participations_db'],
+            'permission_callback' => $auth,
+        ]);
+
         // Onboarding wizard
         register_rest_route(self::NS, '/onboarding/status', [
             'methods'             => 'GET',
@@ -470,6 +514,7 @@ class RestApi {
             'booking_custom_js'   => get_option('bt_booking_custom_js', ''),
             'map_style_json'      => get_option('bt_map_style_json', ''),
             'map_presets'         => get_option('bt_map_presets', []),
+            'maps_api_key'        => get_option('elementor_google_maps_api_key', ''),
             'products'            => $products,
             'all_post_types' => array_values(array_map(fn($pt) => [
                 'name'  => $pt->name,
@@ -751,7 +796,7 @@ class RestApi {
                 'by_method' => $db->query_by_payment_method($from, $to),
                 'by_status' => $db->query_by_payment_status($from, $to),
             ] : null,
-            'booking_hours'  => in_array('booking_hours', $includes) ? $db->query_booking_hours($from, $to) : null,
+            'lead_time_buckets' => in_array('lead_time_buckets', $includes) ? $db->query_lead_time_buckets($from, $to) : null,
             'lead_time'      => in_array('lead_time', $includes) ? $db->query_lead_time($from, $to) : null,
             'repeat_customers' => in_array('repeat_customers', $includes) ? $db->query_repeat_customers($from, $to) : null,
             'product_mix'    => in_array('product_mix', $includes) ? $db->query_product_mix($from, $to, $granularity) : null,
@@ -858,14 +903,16 @@ class RestApi {
             $to   = date('Y-m-t', strtotime("+$days days"));
         }
 
-        $calendar = $db->query_calendar($from, $to);
-        $total    = array_sum(array_column($calendar, 'count'));
+        $calendar           = $db->query_calendar($from, $to);
+        $total              = array_sum(array_column($calendar, 'count'));
+        $lead_time_buckets  = $db->query_lead_time_buckets($from, $to);
 
         return rest_ensure_response([
-            'calendar' => $calendar,
-            'total'    => $total,
-            'from'     => $from,
-            'to'       => $to,
+            'calendar'          => $calendar,
+            'total'             => $total,
+            'from'              => $from,
+            'to'                => $to,
+            'lead_time_buckets' => $lead_time_buckets,
         ]);
     }
 
@@ -1300,6 +1347,124 @@ class RestApi {
     /** Réinitialise l'onboarding — le wizard réapparaît au prochain chargement de la page. */
     public function reset_onboarding(): \WP_REST_Response {
         update_option('bt_onboarding_done', false, false);
+        return rest_ensure_response(['success' => true]);
+    }
+
+    // ── Avis ──────────────────────────────────────────────────────────────────
+
+    /**
+     * Liste paginée des avis importés depuis bt_reviews.
+     * Params : page, per_page, search, product, rating, from, to, sort, dir
+     */
+    public function get_avis(\WP_REST_Request $req): \WP_REST_Response {
+        $db     = new ReviewsDb();
+        $result = $db->get_reviews([
+            'page'     => (int)    ($req->get_param('page')     ?: 1),
+            'per_page' => (int)    ($req->get_param('per_page') ?: 50),
+            'search'   => (string) ($req->get_param('search')   ?: ''),
+            'product'  => (string) ($req->get_param('product')  ?: ''),
+            'rating'   => $req->get_param('rating') !== null ? (int) $req->get_param('rating') : null,
+            'from'     => (string) ($req->get_param('from') ?: ''),
+            'to'       => (string) ($req->get_param('to')   ?: ''),
+            'sort'     => (string) ($req->get_param('sort') ?: 'review_date'),
+            'dir'      => (string) ($req->get_param('dir')  ?: 'DESC'),
+        ]);
+        return rest_ensure_response($result);
+    }
+
+    /** Statistiques agrégées : total, avg, distribution, tendance mensuelle, projection 4.8★. */
+    public function get_avis_stats(\WP_REST_Request $req): \WP_REST_Response {
+        $db     = new ReviewsDb();
+        $result = $db->get_stats([
+            'from'    => (string) ($req->get_param('from')    ?: ''),
+            'to'      => (string) ($req->get_param('to')      ?: ''),
+            'product' => (string) ($req->get_param('product') ?: ''),
+        ]);
+        return rest_ensure_response($result);
+    }
+
+    /**
+     * Import CSV avis — reçoit un batch de lignes déjà parsées côté JS.
+     * Crée la table si elle n'existe pas encore.
+     */
+    public function import_avis_csv(\WP_REST_Request $req): \WP_REST_Response {
+        $db    = new ReviewsDb();
+        $db->ensure_table();
+
+        $items = $req->get_json_params()['items'] ?? [];
+        if (!is_array($items)) {
+            return new \WP_REST_Response(['error' => 'Payload invalide'], 400);
+        }
+
+        return rest_ensure_response($db->import_batch($items));
+    }
+
+    /** Vide la table bt_reviews. */
+    public function reset_avis_db(): \WP_REST_Response {
+        (new ReviewsDb())->truncate();
+        return rest_ensure_response(['success' => true]);
+    }
+
+    // ── Participations ────────────────────────────────────────────────────────
+
+    /**
+     * Import CSV participations — reçoit un batch de lignes parsées côté JS.
+     * Colonnes attendues : participation_date, product_name, buyer_firstname,
+     *   buyer_lastname, buyer_email, price_net, price_gross, phone.
+     * Crée la table si elle n'existe pas encore.
+     */
+    public function import_participations_csv(\WP_REST_Request $req): \WP_REST_Response {
+        $body  = $req->get_json_params();
+        $items = $body['items'] ?? [];
+
+        if (!is_array($items) || empty($items)) {
+            return new \WP_REST_Response(['error' => 'Aucune ligne reçue.'], 400);
+        }
+        if (count($items) > 1000) {
+            return new \WP_REST_Response(['error' => 'Trop de lignes par batch (max 1000).'], 400);
+        }
+
+        $db = new ParticipationDb();
+        $db->ensure_table();
+
+        $sanitized = [];
+        foreach ($items as $item) {
+            if (!is_array($item)) continue;
+            $product = sanitize_text_field($item['product_name'] ?? '');
+            if ($product === '') continue;
+
+            $price_net_raw   = $item['price_net']   ?? null;
+            $price_gross_raw = $item['price_gross']  ?? null;
+
+            $sanitized[] = [
+                'participation_date' => sanitize_text_field($item['participation_date'] ?? ''),
+                'product_name'       => $product,
+                'buyer_firstname'    => sanitize_text_field($item['buyer_firstname'] ?? ''),
+                'buyer_lastname'     => sanitize_text_field($item['buyer_lastname']  ?? ''),
+                'buyer_email'        => sanitize_email($item['buyer_email'] ?? ''),
+                'price_net'          => $price_net_raw   !== null ? (float) $price_net_raw   : null,
+                'price_gross'        => $price_gross_raw !== null ? (float) $price_gross_raw : null,
+                'phone'              => sanitize_text_field($item['phone'] ?? ''),
+            ];
+        }
+
+        if (empty($sanitized)) {
+            return new \WP_REST_Response(['error' => 'Aucune ligne valide (product_name manquant ?).'], 400);
+        }
+
+        return rest_ensure_response($db->upsert($sanitized));
+    }
+
+    /** Retourne le statut de la table bt_participations (crée si inexistante). */
+    public function get_participations_import_status(): \WP_REST_Response {
+        $db = new ParticipationDb();
+        $db->ensure_table();
+        return rest_ensure_response($db->get_status());
+    }
+
+    /** Vide la table bt_participations. */
+    public function reset_participations_db(): \WP_REST_Response {
+        (new ParticipationDb())->truncate();
         return rest_ensure_response(['success' => true]);
     }
 

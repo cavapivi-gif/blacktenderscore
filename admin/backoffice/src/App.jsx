@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard'
 import Products from './pages/Products'
 import Bookings from './pages/Bookings'
 import Customers from './pages/Customers'
+import Reviews from './pages/Reviews'
 import Planner from './pages/Planner'
 import Settings from './pages/Settings'
 import Onboarding from './pages/Onboarding'
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="/products"          element={<Products />} />
         <Route path="/bookings"          element={<Bookings />} />
         <Route path="/customers"         element={<Customers />} />
+        <Route path="/reviews"           element={<Reviews />} />
         <Route path="/planner"           element={<Planner />} />
         {/* Settings : redirect racine → première section */}
         <Route path="/settings"          element={<Navigate to="/settings/api" replace />} />

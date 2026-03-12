@@ -58,6 +58,12 @@ export const api = {
   // Re-parse offer_raw → price_total pour les lignes existantes avec price NULL
   reparsePrices:            ()       => api.post('/reservations/reparse-prices', {}),
 
+  // Avis clients (import CSV Regiondo)
+  avis:          (params) => api.get('/avis' + toQuery(params)),
+  avisStats:     (params) => api.get('/avis/stats' + toQuery(params)),
+  importAvisCsv: (items)  => api.post('/avis/import/csv', { items }),
+  resetAvis:     ()       => api.post('/avis/reset', {}),
+
   // Onboarding wizard
   onboardingStatus:   ()     => api.get('/onboarding/status'),
   onboardingSetup:    (body) => api.post('/onboarding/setup', body),
