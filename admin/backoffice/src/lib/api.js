@@ -55,6 +55,8 @@ export const api = {
   resetReservationsDb:      ()       => api.post('/reservations/import/reset', {}),
   // Import CSV : envoie un batch de lignes parsées côté JS
   importReservationsCsv:    (items)  => api.post('/reservations/import/csv', { items }),
+  // Re-parse offer_raw → price_total pour les lignes existantes avec price NULL
+  reparsePrices:            ()       => api.post('/reservations/reparse-prices', {}),
 
   // Onboarding wizard
   onboardingStatus:   ()     => api.get('/onboarding/status'),
