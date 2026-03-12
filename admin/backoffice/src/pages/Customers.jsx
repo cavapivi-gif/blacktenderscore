@@ -51,11 +51,16 @@ export default function Customers() {
 
   const load = useCallback(() => {
     setLoading(true)
-    api.customers({ page, per_page: perPage, search: search || undefined })
+    api.customers({
+      page, per_page: perPage,
+      search: search || undefined,
+      sort_key: sort.key || 'last_booking',
+      sort_dir: sort.dir,
+    })
       .then(r => { setData(r.data ?? []); setTotal(r.total ?? 0) })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false))
-  }, [page, search])
+  }, [page, search, sort])
 
   useEffect(() => { load() }, [load])
   useEffect(() => {
@@ -63,21 +68,16 @@ export default function Customers() {
     return () => clearTimeout(t)
   }, [q])
 
-  const onSort = key => setSort(s => ({ key, dir: s.key === key && s.dir === 'asc' ? 'desc' : 'asc' }))
+  const onSort = key => {
+    setSort(s => ({ key, dir: s.key === key && s.dir === 'asc' ? 'desc' : 'asc' }))
+    setPage(1)
+  }
 
-  // Tri + filtre segment côté client sur la page courante
-  const sorted = useMemo(() => {
-    let d = segFilter ? data.filter(r => getSegment(r).label === segFilter) : [...data]
-    if (!sort.key) return d
-    const val = r => sort.key === 'name'         ? (r.name ?? '').toLowerCase()
-                   : sort.key === 'last_booking' ? (r.last_booking ?? '')
-                   : (r[sort.key] ?? 0)
-    return d.sort((a, b) => {
-      const [va, vb] = [val(a), val(b)]
-      return sort.dir === 'asc' ? (va < vb ? -1 : va > vb ? 1 : 0)
-                                : (va > vb ? -1 : va < vb ? 1 : 0)
-    })
-  }, [data, sort, segFilter])
+  // Filtre segment côté client (pas de sort — géré côté SQL)
+  const sorted = useMemo(
+    () => segFilter ? data.filter(r => getSegment(r).label === segFilter) : data,
+    [data, segFilter]
+  )
 
   const columns = [
     {

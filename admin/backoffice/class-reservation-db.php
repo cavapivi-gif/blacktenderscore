@@ -1103,14 +1103,18 @@ class ReservationDb {
      * Derive customer list from bt_reservations (buyer_email_hash based grouping).
      * Replaces the failing Regiondo CRM API.
      */
-    public function query_customers(int $page = 1, int $per_page = 50, ?string $search = null): array {
+    public function query_customers(int $page = 1, int $per_page = 50, ?string $search = null, string $sort_key = 'last_booking', string $sort_dir = 'desc'): array {
         global $wpdb;
 
         $enc = new Encryption();
 
+        // Whitelist sort columns to prevent SQL injection
+        $allowed_sort = ['last_booking' => 'last_booking', 'bookings_count' => 'bookings_count', 'total_spent' => 'total_spent', 'name' => 'buyer_name'];
+        $order_col = $allowed_sort[$sort_key] ?? 'last_booking';
+        $order_dir = strtoupper($sort_dir) === 'ASC' ? 'ASC' : 'DESC';
+
         // Count unique customers by email hash
         $where = "buyer_email_hash IS NOT NULL AND buyer_email_hash != ''";
-        $values = [];
 
         if ($search) {
             $hash = $enc->blind_hash($search);
@@ -1139,7 +1143,7 @@ class ReservationDb {
              FROM `{$this->table}`
              WHERE {$where}
              GROUP BY buyer_email_hash
-             ORDER BY last_booking DESC
+             ORDER BY {$order_col} {$order_dir}
              LIMIT {$per_page} OFFSET {$offset}",
             ARRAY_A
         );

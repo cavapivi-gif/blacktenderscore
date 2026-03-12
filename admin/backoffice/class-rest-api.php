@@ -351,10 +351,12 @@ class RestApi {
         $page     = (int) ($req->get_param('page') ?: 1);
         $per_page = (int) ($req->get_param('per_page') ?: 50);
         $search   = $req->get_param('search') ?: null;
+        $sort_key = $req->get_param('sort_key') ?: 'last_booking';
+        $sort_dir = $req->get_param('sort_dir') ?: 'desc';
 
         // Use local DB (bt_reservations) — Regiondo CRM API returns 404 for supplier accounts
         $db     = new ReservationDb();
-        $result = $db->query_customers($page, $per_page, $search);
+        $result = $db->query_customers($page, $per_page, $search, $sort_key, $sort_dir);
 
         // Enrich with avis count from sj_avis CPT if available
         if (!empty($result['data']) && post_type_exists('sj_avis')) {
