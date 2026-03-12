@@ -57,9 +57,10 @@ class Backoffice {
         );
 
         wp_localize_script('bt-backoffice', 'btBackoffice', [
-            'rest_url' => rest_url('bt-regiondo/v1'),
-            'nonce'    => wp_create_nonce('wp_rest'),
-            'version'  => BT_VERSION,
+            'rest_url'        => rest_url('bt-regiondo/v1'),
+            'nonce'           => wp_create_nonce('wp_rest'),
+            'version'         => BT_VERSION,
+            'onboarding_done' => (bool) get_option('bt_onboarding_done', false),
         ]);
 
         // Page en plein écran, fond blanc uniforme

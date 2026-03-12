@@ -40,6 +40,27 @@ export const api = {
   newsletter:  (email, subscribed) => api.put('/customers/newsletter', { email, subscribed }),
   testConnection: ()    => api.get('/test-connection'),
   diagnostic:    ()    => api.get('/diagnostic'),
+  bookingsStats: (params) => api.get('/bookings/stats' + toQuery(params)),
+  planner:       (from, to) => api.get('/planner' + toQuery({ from, to })),
+
+  // Sync réservations (bookings) → DB locale
+  syncBookings:       (body) => api.post('/bookings/sync', body),
+  syncBookingsStatus: ()     => api.get('/bookings/sync/status'),
+  resetBookingsDb:    ()     => api.post('/bookings/sync/reset', {}),
+
+  // Import solditems (réservations enrichies) → DB locale
+  reservations:             (params) => api.get('/reservations' + toQuery(params)),
+  importReservations:       (body)   => api.post('/reservations/import', body),
+  importReservationsStatus: ()       => api.get('/reservations/import/status'),
+  resetReservationsDb:      ()       => api.post('/reservations/import/reset', {}),
+  // Import CSV : envoie un batch de lignes parsées côté JS
+  importReservationsCsv:    (items)  => api.post('/reservations/import/csv', { items }),
+
+  // Onboarding wizard
+  onboardingStatus:   ()     => api.get('/onboarding/status'),
+  onboardingSetup:    (body) => api.post('/onboarding/setup', body),
+  onboardingComplete: ()     => api.post('/onboarding/complete', {}),
+  onboardingReset:    ()     => api.post('/onboarding/reset', {}),
 }
 
 function toQuery(params) {
