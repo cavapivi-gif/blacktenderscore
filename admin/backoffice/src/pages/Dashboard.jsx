@@ -8,7 +8,7 @@ import { STATUS_MAP } from '../lib/status'
 import { useDashboard } from '../hooks/useDashboard'
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/Tabs'
-import { TooltipProvider, Tooltip as UiTooltip } from '../components/Tooltip'
+import { TooltipProvider } from '../components/Tooltip'
 import { PageHeader, StatCard, Table, Notice, Spinner, Badge } from '../components/ui'
 
 import {
@@ -113,36 +113,20 @@ export default function Dashboard() {
         {/* ── Row 1: Static overview cards ─────────────────────────────── */}
         {!loading && (
           <div className="mx-6 mt-5 grid grid-cols-2 lg:grid-cols-4 gap-px bg-border border rounded-lg overflow-hidden">
-            <UiTooltip content="Produits synchronisés depuis Regiondo">
-              <div>
-                <StatCard
-                  label="Produits"
-                  value={data?.products_count ?? 0}
-                  sub={<button onClick={() => navigate('/products')} className="text-xs underline">Voir tout</button>}
-                />
-              </div>
-            </UiTooltip>
-            <UiTooltip content="Clients dans le CRM Regiondo">
-              <div>
-                <StatCard label="Clients CRM" value={data?.customers_total ?? 0}
-                  sub={<button onClick={() => navigate('/customers')} className="text-xs underline">Voir tout</button>} />
-              </div>
-            </UiTooltip>
-            <UiTooltip content="Total de réservations en base de données">
-              <div>
-                <StatCard label="Total en DB" value={fmtNum(data?.total_in_db ?? data?.bookings_total ?? 0)}
-                  sub="Réservations importées" />
-              </div>
-            </UiTooltip>
-            <UiTooltip content="Statut de la connexion API Regiondo">
-              <div>
-                <StatCard
-                  label="API Regiondo"
-                  value={data?.api_status === 'ok' ? '✓ OK' : '✗ Erreur'}
-                  sub={data?.api_status === 'ok' ? 'Connexion active' : data?.api_error ?? 'Vérifier les clés'}
-                />
-              </div>
-            </UiTooltip>
+            <StatCard
+              label="Produits"
+              value={data?.products_count ?? 0}
+              sub={<button onClick={() => navigate('/products')} className="text-xs underline">Voir tout</button>}
+            />
+            <StatCard label="Clients CRM" value={data?.customers_total ?? 0}
+              sub={<button onClick={() => navigate('/customers')} className="text-xs underline">Voir tout</button>} />
+            <StatCard label="Total en DB" value={fmtNum(data?.total_in_db ?? data?.bookings_total ?? 0)}
+              sub="Réservations importées" />
+            <StatCard
+              label="API Regiondo"
+              value={data?.api_status === 'ok' ? '✓ OK' : '✗ Erreur'}
+              sub={data?.api_status === 'ok' ? 'Connexion active' : data?.api_error ?? 'Vérifier les clés'}
+            />
           </div>
         )}
 
@@ -318,16 +302,12 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* ── Heatmap ──────────────────────────────────────────────────── */}
-        {!statsLoading && stats?.heatmap?.length > 0 && (
-          <div className="mx-6 mt-4">
-            <HeatmapChart data={stats.heatmap} />
-          </div>
-        )}
-
-        {/* ── Advanced analytics: Booking hours + Top products ──────────── */}
-        {!statsLoading && (
-          <div className="mx-6 mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* ── Heatmap + Booking Hours + Top Products (33/33/33) ──────── */}
+        {!statsLoading && (stats?.heatmap?.length > 0 || stats?.booking_hours?.length > 0 || stats?.by_product?.length > 0) && (
+          <div className="mx-6 mt-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {stats?.heatmap?.length > 0 && (
+              <HeatmapChart data={stats.heatmap} />
+            )}
             {stats?.booking_hours?.length > 0 && (
               <BookingHoursChart data={stats.booking_hours} />
             )}

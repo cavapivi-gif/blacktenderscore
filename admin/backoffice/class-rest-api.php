@@ -600,9 +600,8 @@ class RestApi {
         // Use enhanced KPIs if available
         $include_raw = $req->get_param('include') ?? '';
         $includes = $include_raw ? array_map('trim', explode(',', $include_raw)) : [];
-        $kpis = (empty($includes) || in_array('enhanced_kpis', $includes))
-            ? $db->query_enhanced_kpis($from, $to)
-            : $db->query_period_kpis($from, $to);
+        // Always use enhanced KPIs (includes unique_customers, repeat_rate, etc.)
+        $kpis = $db->query_enhanced_kpis($from, $to);
         $by_chan  = $db->query_by_channel($from, $to, 10);
         $by_wday  = $db->query_by_weekday($from, $to);
 
@@ -689,12 +688,27 @@ class RestApi {
             'revenue'  => (float) $r['revenue'],
         ], $by_wday);
 
-        // ── Canaux de vente ────────────────────────────────────────────────
-        $by_channel = array_map(fn($r) => [
-            'channel'  => $r['channel'],
-            'bookings' => (int) $r['bookings'],
-            'revenue'  => (float) $r['revenue'],
-        ], $by_chan);
+        // ── Canaux de vente (normalize: strip trailing IDs/codes) ─────────
+        // "Funbooker 35409", "Funbooker 35410" → "Funbooker"
+        // "GetYourGuide Deutschland GmbH GYGZG2LHHQG" → "GetYourGuide Deutschland GmbH"
+        $chan_grouped = [];
+        foreach ($by_chan as $r) {
+            $name = trim($r['channel']);
+            // Strip trailing alphanumeric ID (e.g. "Funbooker 35409" or "GYG GYGZG2LHHQG")
+            $normalized = preg_replace('/\s+[A-Z0-9]{5,}$/i', '', $name);
+            // Also strip trailing pure numeric IDs (e.g. "Funbooker 35409")
+            $normalized = preg_replace('/\s+\d+$/', '', $normalized);
+            $normalized = trim($normalized) ?: $name;
+
+            if (!isset($chan_grouped[$normalized])) {
+                $chan_grouped[$normalized] = ['channel' => $normalized, 'bookings' => 0, 'revenue' => 0.0];
+            }
+            $chan_grouped[$normalized]['bookings'] += (int) $r['bookings'];
+            $chan_grouped[$normalized]['revenue']  += (float) $r['revenue'];
+        }
+        // Re-sort by bookings desc
+        usort($chan_grouped, fn($a, $b) => $b['bookings'] <=> $a['bookings']);
+        $by_channel = array_values($chan_grouped);
 
         return rest_ensure_response([
             // Données de chart par période
