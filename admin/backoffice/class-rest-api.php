@@ -877,41 +877,11 @@ class RestApi {
      * Ou :       { "year": 2023 }
      */
     public function sync_bookings(\WP_REST_Request $req): \WP_REST_Response {
-        $body = $req->get_json_params();
-        $db   = new Db();
-
-        // Résoudre la plage
-        if (!empty($body['year'])) {
-            $y    = (int) $body['year'];
-            $from = "{$y}-01-01";
-            $to   = "{$y}-12-31";
-        } else {
-            $from = sanitize_text_field($body['from'] ?? '');
-            $to   = sanitize_text_field($body['to']   ?? '');
-        }
-
-        if (!$from || !$to
-            || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $from)
-            || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $to)
-        ) {
-            return new \WP_REST_Response(['error' => 'Paramètres from/to ou year requis.'], 400);
-        }
-
-        $sync   = new BookingSync();
-        $result = $sync->sync_period($from, $to);
-
-        // Mise à jour du statut global
-        $status = $db->get_sync_status();
-        $years  = $status['years_synced'] ?? [];
-        if (!empty($body['year'])) {
-            $years[] = (int) $body['year'];
-            $years   = array_unique($years);
-            sort($years);
-            $db->update_sync_status(['years_synced' => $years]);
-        }
-        $db->update_sync_status(['last_full' => current_time('mysql', true)]);
-
-        return rest_ensure_response(array_merge($result, ['db' => $db->get_sync_status()]));
+        // Deprecated: /partner/bookings returns 401 for supplier accounts.
+        // Use Import solditems (/reservations/import) instead.
+        return new \WP_REST_Response([
+            'error' => 'Endpoint désactivé. L\'API /partner/bookings retourne 401 pour les comptes supplier. Utilisez Import solditems à la place.',
+        ], 410); // 410 Gone
     }
 
     /** Retourne les stats de la DB locale et le statut de la dernière sync. */
@@ -1053,6 +1023,7 @@ class RestApi {
                 'payment_method'     => sanitize_text_field($item['payment_method'] ?? ''),
                 'payment_status'     => sanitize_text_field($item['payment_status'] ?? ''),
                 'booking_key'        => sanitize_text_field($item['booking_key'] ?? ''),
+                'buyer_country'      => strtoupper(substr(sanitize_text_field($item['buyer_country'] ?? ''), 0, 5)),
             ];
         }
 
@@ -1106,10 +1077,17 @@ class RestApi {
      */
     public function reparse_prices(): \WP_REST_Response {
         global $wpdb;
-        $db    = new ReservationDb();
         $table = $wpdb->prefix . 'bt_reservations';
 
-        // Get rows with NULL price_total but non-empty offer_raw
+        // ── Phase 1: Fix appointment_date NULL → use created_at ──────────
+        $dates_fixed = (int) $wpdb->query(
+            "UPDATE `{$table}`
+             SET appointment_date = DATE(created_at)
+             WHERE appointment_date IS NULL
+               AND created_at IS NOT NULL"
+        );
+
+        // ── Phase 2: Parse price_total from offer_raw ────────────────────
         // Small batch (200) to avoid Cloudflare 525 timeout
         $rows = $wpdb->get_results(
             "SELECT id, offer_raw FROM `{$table}`
@@ -1118,50 +1096,54 @@ class RestApi {
             ARRAY_A
         );
 
-        if (empty($rows)) {
-            return rest_ensure_response(['updated' => 0, 'message' => 'Aucune ligne à corriger.']);
+        $prices_fixed = 0;
+        if (!empty($rows)) {
+            foreach ($rows as $row) {
+                $raw   = $row['offer_raw'];
+                $price = self::parse_price_from_offer_raw($raw);
+                if ($price === null) continue;
+
+                $sets   = ['price_total = %f'];
+                $values = [$price];
+
+                $qty = self::parse_quantity_from_offer_raw($raw);
+                if ($qty !== null) {
+                    $sets[]   = 'quantity = %d';
+                    $values[] = $qty;
+                }
+
+                $name = self::parse_product_from_offer_raw($raw);
+                if ($name !== null) {
+                    $sets[]   = 'product_name = %s';
+                    $values[] = $name;
+                }
+
+                $values[] = (int) $row['id'];
+                $wpdb->query($wpdb->prepare(
+                    "UPDATE `{$table}` SET " . implode(', ', $sets) . " WHERE id = %d",
+                    ...$values
+                ));
+                $prices_fixed++;
+            }
         }
 
-        $updated = 0;
-        foreach ($rows as $row) {
-            $raw   = $row['offer_raw'];
-            $price = self::parse_price_from_offer_raw($raw);
-            if ($price === null) continue;
-
-            $sets   = ['price_total = %f'];
-            $values = [$price];
-
-            $qty = self::parse_quantity_from_offer_raw($raw);
-            if ($qty !== null) {
-                $sets[]   = 'quantity = %d';
-                $values[] = $qty;
-            }
-
-            $name = self::parse_product_from_offer_raw($raw);
-            if ($name !== null) {
-                $sets[]   = 'product_name = %s';
-                $values[] = $name;
-            }
-
-            $values[] = (int) $row['id'];
-            $wpdb->query($wpdb->prepare(
-                "UPDATE `{$table}` SET " . implode(', ', $sets) . " WHERE id = %d",
-                ...$values
-            ));
-            $updated++;
-        }
-
-        // Check if there are more to process
-        $remaining = (int) $wpdb->get_var(
+        // Check remaining
+        $remaining_prices = (int) $wpdb->get_var(
             "SELECT COUNT(*) FROM `{$table}` WHERE price_total IS NULL AND offer_raw IS NOT NULL AND offer_raw != ''"
         );
+        $remaining_dates = (int) $wpdb->get_var(
+            "SELECT COUNT(*) FROM `{$table}` WHERE appointment_date IS NULL AND created_at IS NOT NULL"
+        );
+        $remaining = $remaining_prices + $remaining_dates;
 
         return rest_ensure_response([
-            'updated'   => $updated,
-            'remaining' => $remaining,
-            'message'   => $remaining > 0
-                ? "Corrigé {$updated} lignes, encore {$remaining} à traiter."
-                : "Terminé — {$updated} lignes corrigées.",
+            'updated'      => $prices_fixed + $dates_fixed,
+            'prices_fixed' => $prices_fixed,
+            'dates_fixed'  => $dates_fixed,
+            'remaining'    => $remaining,
+            'message'      => $remaining > 0
+                ? "Corrigé {$prices_fixed} prix + {$dates_fixed} dates, encore {$remaining} à traiter."
+                : "Terminé — {$prices_fixed} prix + {$dates_fixed} dates corrigés.",
         ]);
     }
 
