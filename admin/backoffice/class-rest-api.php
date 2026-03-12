@@ -1110,10 +1110,11 @@ class RestApi {
         $table = $wpdb->prefix . 'bt_reservations';
 
         // Get rows with NULL price_total but non-empty offer_raw
+        // Small batch (200) to avoid Cloudflare 525 timeout
         $rows = $wpdb->get_results(
             "SELECT id, offer_raw FROM `{$table}`
              WHERE price_total IS NULL AND offer_raw IS NOT NULL AND offer_raw != ''
-             LIMIT 5000",
+             LIMIT 200",
             ARRAY_A
         );
 

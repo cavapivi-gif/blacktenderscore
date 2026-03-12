@@ -161,6 +161,7 @@ const INTERVALS = [
 
 function ReparsePricesButton() {
   const [loading, setLoading] = useState(false)
+  const [progress, setProgress] = useState(null) // { updated, remaining }
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
 
@@ -168,16 +169,19 @@ function ReparsePricesButton() {
     setLoading(true)
     setError(null)
     setResult(null)
+    setProgress(null)
     try {
       let total = 0
       let remaining = 1
-      // Loop until all records are processed (5000 per batch)
+      // Loop: 200 rows per batch to avoid Cloudflare 525 timeout
       while (remaining > 0) {
         const res = await api.reparsePrices()
         total += res.updated ?? 0
         remaining = res.remaining ?? 0
+        setProgress({ updated: total, remaining })
       }
       setResult({ updated: total })
+      setProgress(null)
     } catch (e) {
       setError(e.message)
     } finally {
@@ -195,6 +199,11 @@ function ReparsePricesButton() {
       >
         {loading ? 'Re-parsing en cours...' : 'Lancer le re-parse'}
       </button>
+      {progress && (
+        <p className="text-xs text-muted-foreground">
+          {progress.updated.toLocaleString('fr-FR')} corrigés, {progress.remaining.toLocaleString('fr-FR')} restants...
+        </p>
+      )}
       {result && (
         <Notice type="success">
           {result.updated > 0
@@ -819,100 +828,19 @@ export default function Settings() {
           </div>
         )
 
-      // ── Sync réservations ─────────────────────────────────────────────────
+      // ── Sync réservations (deprecated — partner/bookings API returns 401) ──
       case 'bookings-sync': {
-        const pct = bSyncProgress
-          ? Math.round((bSyncProgress.current / bSyncProgress.total) * 100)
-          : 0
-
         return (
           <div className="space-y-5">
-            {/* Stats DB */}
-            <div className="rounded-lg border bg-card p-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div>
-                <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-0.5">Dans la DB</p>
-                <p className="text-xl font-semibold tabular-nums">
-                  {bSyncStatus ? bSyncStatus.total_in_db.toLocaleString('fr-FR') : '—'}
-                </p>
-              </div>
-              <div>
-                <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-0.5">Première rés.</p>
-                <p className="text-sm font-medium">{bSyncStatus?.date_min ?? '—'}</p>
-              </div>
-              <div>
-                <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-0.5">Dernière rés.</p>
-                <p className="text-sm font-medium">{bSyncStatus?.date_max ?? '—'}</p>
-              </div>
-              <div>
-                <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-0.5">Dernière sync</p>
-                <p className="text-xs text-muted-foreground">
-                  {bSyncStatus?.last_full
-                    ? new Date(bSyncStatus.last_full).toLocaleString('fr-FR')
-                    : 'Jamais'}
-                </p>
-              </div>
-            </div>
-
+            <Notice type="warn">
+              Cette section est désactivée. L'API Regiondo <code>/partner/bookings</code> retourne 401
+              pour les comptes de type « supplier ». Utilisez <strong>Import solditems</strong> à la place —
+              c'est la source de données principale pour le dashboard.
+            </Notice>
             <p className="text-sm text-muted-foreground">
-              La <strong>sync complète</strong> télécharge toutes les réservations depuis 2019 jusqu'à aujourd'hui,
-              année par année. Elle peut prendre quelques minutes.
-              La <strong>sync incrémentale</strong> ne récupère que les 30 derniers jours (utilisée aussi par le cron horaire).
+              Les données de réservation (CA, canaux, heatmap…) proviennent de la table <code>bt_reservations</code>,
+              alimentée par l'import CSV ou l'import API solditems.
             </p>
-
-            {/* Actions */}
-            <div className="flex flex-wrap gap-3">
-              <Btn loading={bSyncLoading} onClick={handleFullSync} disabled={bSyncLoading}>
-                <RefreshDouble width={14} height={14} />
-                Sync complète (2019 → aujourd'hui)
-              </Btn>
-              <Btn variant="secondary" loading={bSyncLoading} onClick={handleIncrSync} disabled={bSyncLoading}>
-                <RefreshDouble width={14} height={14} />
-                Sync incrémentale (30 j.)
-              </Btn>
-              <Btn variant="ghost" loading={bResetLoading} onClick={handleResetDb} disabled={bSyncLoading || bResetLoading}
-                className="text-destructive hover:text-destructive"
-              >
-                Vider la DB
-              </Btn>
-            </div>
-
-            {/* Barre de progression */}
-            {bSyncProgress && !bSyncProgress.done && (
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>
-                    {bSyncProgress.year
-                      ? `Synchronisation ${bSyncProgress.year}…`
-                      : 'Démarrage…'}
-                  </span>
-                  <span>{bSyncProgress.current}/{bSyncProgress.total} années</span>
-                </div>
-                <div className="h-2 rounded-full bg-muted overflow-hidden">
-                  <div
-                    className="h-full bg-primary transition-all duration-300 rounded-full"
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-              </div>
-            )}
-
-            {bSyncProgress?.done && (
-              <Notice type="success">
-                Sync complète terminée — {bSyncProgress.total_synced?.toLocaleString('fr-FR') ?? '?'} réservations en DB.
-              </Notice>
-            )}
-
-            {/* Log */}
-            {bSyncLog.length > 0 && (
-              <div className="rounded-lg border bg-muted/30 divide-y divide-border max-h-64 overflow-y-auto text-xs">
-                {bSyncLog.map((entry, i) => (
-                  <div key={i} className={`flex items-center gap-2 px-3 py-2 ${entry.ok ? '' : 'text-destructive'}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${entry.ok ? 'bg-emerald-500' : 'bg-destructive'}`} />
-                    {entry.msg}
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         )
       }
