@@ -20,11 +20,13 @@ class ReservationDb {
     private string $option_key = 'bt_reservation_sync_status';
 
     /**
-     * SQL expression for the "effective date" of a record.
-     * Uses appointment_date if non-null and non-zero, otherwise falls back to created_at.
-     * NULLIF handles '0000-00-00' (invalid MySQL date stored when French date parsing fails).
+     * SQL expression for the "effective date" used in revenue/KPI stats.
+     * Uses DATE(created_at) — the booking date — which is when revenue is captured.
+     * appointment_date (activity date) is intentionally excluded here: a booking made
+     * today for a June excursion must appear in today's CA, not in June's.
+     * The Planner view uses appointment_date directly via its own queries.
      */
-    private const EDATE = "COALESCE(NULLIF(appointment_date, '0000-00-00'), DATE(created_at))";
+    private const EDATE = 'DATE(created_at)';
 
     public function __construct() {
         global $wpdb;
