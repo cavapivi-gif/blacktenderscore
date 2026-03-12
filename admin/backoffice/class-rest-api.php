@@ -877,41 +877,11 @@ class RestApi {
      * Ou :       { "year": 2023 }
      */
     public function sync_bookings(\WP_REST_Request $req): \WP_REST_Response {
-        $body = $req->get_json_params();
-        $db   = new Db();
-
-        // Résoudre la plage
-        if (!empty($body['year'])) {
-            $y    = (int) $body['year'];
-            $from = "{$y}-01-01";
-            $to   = "{$y}-12-31";
-        } else {
-            $from = sanitize_text_field($body['from'] ?? '');
-            $to   = sanitize_text_field($body['to']   ?? '');
-        }
-
-        if (!$from || !$to
-            || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $from)
-            || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $to)
-        ) {
-            return new \WP_REST_Response(['error' => 'Paramètres from/to ou year requis.'], 400);
-        }
-
-        $sync   = new BookingSync();
-        $result = $sync->sync_period($from, $to);
-
-        // Mise à jour du statut global
-        $status = $db->get_sync_status();
-        $years  = $status['years_synced'] ?? [];
-        if (!empty($body['year'])) {
-            $years[] = (int) $body['year'];
-            $years   = array_unique($years);
-            sort($years);
-            $db->update_sync_status(['years_synced' => $years]);
-        }
-        $db->update_sync_status(['last_full' => current_time('mysql', true)]);
-
-        return rest_ensure_response(array_merge($result, ['db' => $db->get_sync_status()]));
+        // Deprecated: /partner/bookings returns 401 for supplier accounts.
+        // Use Import solditems (/reservations/import) instead.
+        return new \WP_REST_Response([
+            'error' => 'Endpoint désactivé. L\'API /partner/bookings retourne 401 pour les comptes supplier. Utilisez Import solditems à la place.',
+        ], 410); // 410 Gone
     }
 
     /** Retourne les stats de la DB locale et le statut de la dernière sync. */
