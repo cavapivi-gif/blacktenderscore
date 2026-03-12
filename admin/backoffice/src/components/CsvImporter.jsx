@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from 'react'
 import { api } from '../lib/api'
 import { CSV_COLUMN_MAP } from '../lib/constants'
 
-const BATCH_SIZE = 500
+const BATCH_SIZE = 200
 
 // ── Normalize booking_status: French Regiondo values → English canonical ────
 const BOOKING_STATUS_MAP = {

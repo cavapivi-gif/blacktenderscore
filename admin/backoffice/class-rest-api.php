@@ -812,6 +812,7 @@ class RestApi {
             'channel_status' => in_array('channel_status', $includes) ? $db->query_channel_status($from, $to) : null,
             'yoy'            => in_array('yoy', $includes) ? $db->query_yoy($from, $to) : null,
             'cumulative'     => in_array('cumulative', $includes) ? $db->query_cumulative($from, $to, $granularity) : null,
+            'top_dates'      => in_array('top_dates', $includes) ? $db->query_top_dates($from, $to) : null,
         ]);
     }
 
@@ -1028,6 +1029,9 @@ class RestApi {
      * Délégue l'upsert à ReservationDb::upsert().
      */
     public function import_reservations_csv(\WP_REST_Request $req): \WP_REST_Response {
+        // Évite le timeout PHP (30s par défaut) sur les gros batches
+        @set_time_limit(120);
+
         $body  = $req->get_json_params();
         $items = $body['items'] ?? [];
 
