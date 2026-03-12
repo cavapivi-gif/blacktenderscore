@@ -5,6 +5,35 @@
 
 ---
 
+## Table of Contents
+
+| # | Section | When to jump here |
+|---|---------|-------------------|
+| 1 | [Git Workflow](#git-workflow) | Before any `git` operation |
+| 2 | [Project Overview](#project-overview) | First time reading the project |
+| 3 | [Directory Structure](#directory-structure) | Finding where a file lives |
+| 4 | [How to Create a New Elementor Widget](#how-to-create-a-new-elementor-widget) | Adding a new widget (4 steps) |
+| 5 | [SharedControls Trait — Available Methods](#sharedcontrols-trait--available-methods) | Adding style controls to a widget |
+| 6 | [SjWidgetBase — What It Provides](#sjwidgetbase--what-it-provides) | Understanding base class features |
+| 7 | [Key Conventions](#key-conventions) | Naming, selectors, data flow, helpers |
+| 8 | [Adding SharedControls to Legacy Widgets](#adding-sharedcontrols-to-legacy-widgets) | Migrating an old widget |
+| 9 | [Elementor Control Types — Pitfalls & Patterns](#elementor-control-types--pitfalls--patterns) | ICONS bug, mode selector, CSS grid |
+| 10 | [For Other Plugins](#for-other-plugins) | Porting this architecture elsewhere |
+
+---
+
+## Git Workflow
+
+- ALWAYS commit directly to `main` (or the current active branch)
+- NEVER create new branches under any circumstance
+- NEVER use `git checkout -b`, `git switch -c`, or any branch creation command
+- NEVER create branches named `claude/*`, `fix/*`, `feature/*` or similar
+- Commit directly: `git add` → `git commit` → done
+- If asked to "fix", "refactor", or "implement" anything: commit to current branch, no new branch
+- Do NOT open pull requests — push directly
+
+---
+
 ## Project Overview
 
 **Type:** WordPress plugin (Elementor + ACF integration)
