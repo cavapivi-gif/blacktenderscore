@@ -198,6 +198,13 @@ class RestApi {
             'permission_callback' => $auth,
         ]);
 
+        // Re-parse offer_raw → price_total for existing records with NULL price
+        register_rest_route(self::NS, '/reservations/reparse-prices', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'reparse_prices'],
+            'permission_callback' => $auth,
+        ]);
+
         // Onboarding wizard
         register_rest_route(self::NS, '/onboarding/status', [
             'methods'             => 'GET',
@@ -291,12 +298,13 @@ class RestApi {
     }
 
     public function get_customers(\WP_REST_Request $req): \WP_REST_Response {
-        $params = [
-            'page'     => (int) ($req->get_param('page') ?: 1),
-            'per_page' => (int) ($req->get_param('per_page') ?: 50),
-        ];
-        $client   = new Client();
-        $result   = $client->get_crm_customers($params);
+        $page     = (int) ($req->get_param('page') ?: 1);
+        $per_page = (int) ($req->get_param('per_page') ?: 50);
+        $search   = $req->get_param('search') ?: null;
+
+        // Use local DB (bt_reservations) — Regiondo CRM API returns 404 for supplier accounts
+        $db     = new ReservationDb();
+        $result = $db->query_customers($page, $per_page, $search);
 
         // Enrich with avis count from sj_avis CPT if available
         if (!empty($result['data']) && post_type_exists('sj_avis')) {
@@ -366,7 +374,8 @@ class RestApi {
         $local_db = new ReservationDb();
         $summary  = $local_db->get_summary();
 
-        $customers = $client->get_crm_customers(['per_page' => 1]);
+        // Customer count from local DB (Regiondo CRM API returns 404 for supplier accounts)
+        $customers = $local_db->query_customers(1, 1);
 
         return rest_ensure_response([
             'products_count'   => count($products),
@@ -412,14 +421,19 @@ class RestApi {
     public function run_diagnostic(): \WP_REST_Response {
         $client = new Client();
 
+        // Get first product ID for reviews test (reviews API requires product_id)
+        $first_product_id = null;
+        try {
+            $products = $client->get_products('fr-FR');
+            if (!empty($products[0]['product_id'])) {
+                $first_product_id = $products[0]['product_id'];
+            }
+        } catch (\Throwable $e) {}
+
         $endpoints = [
             ['label' => 'Products',            'path' => 'products',              'params' => ['limit' => 5, 'store_locale' => 'fr-FR']],
-            ['label' => 'Partner Bookings',     'path' => 'partner/bookings',      'params' => ['limit' => 5, 'type' => 'offline_reservation,booking,voucher,redeem']],
-            ['label' => 'Supplier Bookings',    'path' => 'supplier/bookings',     'params' => ['limit' => 5, 'type' => 'offline_reservation,booking,voucher,redeem']],
-            ['label' => 'Partner Sold Items',   'path' => 'partner/solditems',     'params' => ['limit' => 5]],
             ['label' => 'Supplier Sold Items',  'path' => 'supplier/solditems',    'params' => ['limit' => 5]],
-            ['label' => 'Partner CRM',          'path' => 'partner/crmcustomers',  'params' => ['limit' => 5]],
-            ['label' => 'Reviews',              'path' => 'reviews',               'params' => ['limit' => 5]],
+            ['label' => 'Reviews',              'path' => 'reviews',               'params' => array_filter(['limit' => 5, 'product_id' => $first_product_id])],
             ['label' => 'Categories',           'path' => 'categories',            'params' => ['limit' => 5]],
             ['label' => 'Account Locale',       'path' => 'account/locale',        'params' => []],
         ];
@@ -1004,14 +1018,33 @@ class RestApi {
             $cal_id = trim($item['calendar_sold_id'] ?? '');
             if (empty($cal_id)) continue;
 
+            $offer_raw    = wp_strip_all_tags($item['offer_raw'] ?? '');
+            $price_total  = ($item['price_total'] ?? null) !== null ? (float) $item['price_total'] : null;
+            $product_name = sanitize_text_field($item['product_name'] ?? '');
+            $quantity     = max(1, (int) ($item['quantity'] ?? 1));
+
+            // PHP-side fallback: parse offer_raw if JS didn't extract fields
+            if ($offer_raw !== '') {
+                if ($price_total === null) {
+                    $price_total = self::parse_price_from_offer_raw($offer_raw);
+                }
+                if ($product_name === '') {
+                    $product_name = self::parse_product_from_offer_raw($offer_raw) ?? '';
+                }
+                $parsed_qty = self::parse_quantity_from_offer_raw($offer_raw);
+                if ($parsed_qty !== null && ($item['quantity'] ?? null) === null) {
+                    $quantity = $parsed_qty;
+                }
+            }
+
             $sanitized[] = [
                 'calendar_sold_id'   => sanitize_text_field($cal_id),
                 'order_increment_id' => sanitize_text_field($item['order_increment_id'] ?? '') ?: null,
                 'created_at'         => sanitize_text_field($item['created_at'] ?? ''),
-                'offer_raw'          => wp_strip_all_tags($item['offer_raw'] ?? ''),
-                'product_name'       => sanitize_text_field($item['product_name'] ?? ''),
-                'quantity'           => max(1, (int) ($item['quantity'] ?? 1)),
-                'price_total'        => ($item['price_total'] ?? null) !== null ? (float) $item['price_total'] : null,
+                'offer_raw'          => $offer_raw,
+                'product_name'       => $product_name,
+                'quantity'           => $quantity,
+                'price_total'        => $price_total,
                 'buyer_name'         => sanitize_text_field($item['buyer_name'] ?? ''),
                 'buyer_email'        => sanitize_email($item['buyer_email'] ?? ''),
                 'appointment_date'   => sanitize_text_field($item['appointment_date'] ?? ''),
@@ -1028,6 +1061,107 @@ class RestApi {
         }
 
         return rest_ensure_response((new ReservationDb())->upsert($sanitized));
+    }
+
+    /**
+     * Parse "Montant total: 55,00 €" from offer_raw string → float price.
+     */
+    private static function parse_price_from_offer_raw(string $raw): ?float {
+        if (preg_match('/Montant\s+total\s*:\s*([\d\s.,]+)\s*€/i', $raw, $m)) {
+            $price_str = str_replace([' ', ','], ['', '.'], $m[1]);
+            $val = (float) $price_str;
+            return $val > 0 ? $val : null;
+        }
+        return null;
+    }
+
+    /**
+     * Parse quantity from offer_raw: "1 ×" or "2 x"
+     */
+    private static function parse_quantity_from_offer_raw(string $raw): ?int {
+        if (preg_match('/(\d+)\s*[×x]/i', $raw, $m)) {
+            return max(1, (int) $m[1]);
+        }
+        return null;
+    }
+
+    /**
+     * Parse product name from offer_raw: text before "N ×"
+     */
+    private static function parse_product_from_offer_raw(string $raw): ?string {
+        if (preg_match('/^(.+?)\s+\d+\s*[×x]\s/i', $raw, $m)) {
+            return trim(preg_replace('/\s+/', ' ', $m[1]));
+        }
+        // Fallback: text before "Montant total"
+        $parts = preg_split('/Montant\s+total/i', $raw);
+        if (!empty($parts[0])) {
+            return trim(preg_replace('/[\s,]+$/', '', preg_replace('/\s+/', ' ', $parts[0])));
+        }
+        return null;
+    }
+
+    /**
+     * Re-parse offer_raw → price_total/product_name/quantity for rows where price_total IS NULL.
+     * This fixes historical imports that didn't parse _produit_raw.
+     */
+    public function reparse_prices(): \WP_REST_Response {
+        global $wpdb;
+        $db    = new ReservationDb();
+        $table = $wpdb->prefix . 'bt_reservations';
+
+        // Get rows with NULL price_total but non-empty offer_raw
+        $rows = $wpdb->get_results(
+            "SELECT id, offer_raw FROM `{$table}`
+             WHERE price_total IS NULL AND offer_raw IS NOT NULL AND offer_raw != ''
+             LIMIT 5000",
+            ARRAY_A
+        );
+
+        if (empty($rows)) {
+            return rest_ensure_response(['updated' => 0, 'message' => 'Aucune ligne à corriger.']);
+        }
+
+        $updated = 0;
+        foreach ($rows as $row) {
+            $raw   = $row['offer_raw'];
+            $price = self::parse_price_from_offer_raw($raw);
+            if ($price === null) continue;
+
+            $sets   = ['price_total = %f'];
+            $values = [$price];
+
+            $qty = self::parse_quantity_from_offer_raw($raw);
+            if ($qty !== null) {
+                $sets[]   = 'quantity = %d';
+                $values[] = $qty;
+            }
+
+            $name = self::parse_product_from_offer_raw($raw);
+            if ($name !== null) {
+                $sets[]   = 'product_name = %s';
+                $values[] = $name;
+            }
+
+            $values[] = (int) $row['id'];
+            $wpdb->query($wpdb->prepare(
+                "UPDATE `{$table}` SET " . implode(', ', $sets) . " WHERE id = %d",
+                ...$values
+            ));
+            $updated++;
+        }
+
+        // Check if there are more to process
+        $remaining = (int) $wpdb->get_var(
+            "SELECT COUNT(*) FROM `{$table}` WHERE price_total IS NULL AND offer_raw IS NOT NULL AND offer_raw != ''"
+        );
+
+        return rest_ensure_response([
+            'updated'   => $updated,
+            'remaining' => $remaining,
+            'message'   => $remaining > 0
+                ? "Corrigé {$updated} lignes, encore {$remaining} à traiter."
+                : "Terminé — {$updated} lignes corrigées.",
+        ]);
     }
 
     public function flush_cache(): \WP_REST_Response {
