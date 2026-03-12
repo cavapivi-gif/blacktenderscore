@@ -667,13 +667,13 @@ export default function Settings() {
             </p>
             <Tabs defaultValue="css">
               <TabsList className="rounded-b-none border border-b-0 border-border bg-muted w-full justify-start gap-0 p-0 h-auto">
-                <TabsTrigger value="css" className="rounded-none rounded-tl-md px-4 py-2 text-xs data-[state=active]:shadow-none data-[state=active]:border-b data-[state=active]:border-b-white data-[state=active]:bg-white">
+                <TabsTrigger value="css" className="rounded-none rounded-tl-md px-4 py-2 text-xs data-[state=active]:shadow-none data-[state=active]:border-b data-[state=active]:border-b-white data-[state=active]:bg-white data-[state=active]:text-foreground">
                   CSS
                   {settings.booking_custom_css?.trim() && (
                     <span className="ml-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="js" className="rounded-none rounded-tr-md px-4 py-2 text-xs data-[state=active]:shadow-none data-[state=active]:border-b data-[state=active]:border-b-white data-[state=active]:bg-white">
+                <TabsTrigger value="js" className="rounded-none rounded-tr-md px-4 py-2 text-xs data-[state=active]:shadow-none data-[state=active]:border-b data-[state=active]:border-b-white data-[state=active]:bg-white data-[state=active]:text-foreground">
                   JavaScript
                   {settings.booking_custom_js?.trim() && (
                     <span className="ml-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
