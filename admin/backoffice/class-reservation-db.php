@@ -60,7 +60,12 @@ class ReservationDb {
             KEY appointment_date   (appointment_date),
             KEY booking_status     (booking_status),
             KEY buyer_email_hash   (buyer_email_hash),
-            KEY buyer_name_hash    (buyer_name_hash)
+            KEY buyer_name_hash    (buyer_name_hash),
+            KEY idx_stats (appointment_date, booking_status, price_total),
+            KEY idx_channel_date (channel, appointment_date),
+            KEY idx_product_date (product_name(100), appointment_date),
+            KEY idx_created_hour (created_at),
+            KEY idx_payment (payment_method, payment_status)
         ) ENGINE=InnoDB {$charset};";
 
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
@@ -318,6 +323,8 @@ class ReservationDb {
         $month_start = date('Y-m-01');
         $month_end   = date('Y-m-t');
 
+        $total_in_db = (int) $wpdb->get_var("SELECT COUNT(*) FROM `{$this->table}`");
+
         $bookings_month = (int) $wpdb->get_var(
             $wpdb->prepare(
                 "SELECT COUNT(*) FROM `{$this->table}`
@@ -362,6 +369,7 @@ class ReservationDb {
         }
 
         return [
+            'total_in_db'     => $total_in_db,
             'bookings_month'  => $bookings_month,
             'revenue_month'   => round($revenue_month, 2),
             'recent_bookings' => $recent,
@@ -627,5 +635,421 @@ class ReservationDb {
         }
 
         return $calendar;
+    }
+
+    // ─── Lecture — Advanced analytics ────────────────────────────────────────────
+
+    /**
+     * Heatmap: mois × jour de semaine.
+     */
+    public function query_heatmap(string $from, string $to): array {
+        global $wpdb;
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT
+                    MONTH(appointment_date) AS month_num,
+                    DAYOFWEEK(appointment_date) AS dow,
+                    COUNT(*) AS bookings,
+                    ROUND(SUM(CASE WHEN booking_status NOT IN ('canceled','cancelled','rejected')
+                              THEN COALESCE(price_total, 0) ELSE 0 END), 2) AS revenue
+                 FROM `{$this->table}`
+                 WHERE appointment_date BETWEEN %s AND %s
+                   AND appointment_date IS NOT NULL
+                 GROUP BY month_num, dow
+                 ORDER BY month_num, dow",
+                $from, $to
+            ), ARRAY_A
+        );
+        return $rows ?: [];
+    }
+
+    /**
+     * Répartition par méthode de paiement.
+     */
+    public function query_by_payment_method(string $from, string $to, int $limit = 10): array {
+        global $wpdb;
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT
+                    COALESCE(NULLIF(TRIM(payment_method),''), 'Non renseigné') AS method,
+                    COUNT(*) AS bookings,
+                    ROUND(SUM(CASE WHEN booking_status NOT IN ('canceled','cancelled','rejected')
+                              THEN COALESCE(price_total, 0) ELSE 0 END), 2) AS revenue
+                 FROM `{$this->table}`
+                 WHERE appointment_date BETWEEN %s AND %s
+                   AND appointment_date IS NOT NULL
+                 GROUP BY method
+                 ORDER BY bookings DESC
+                 LIMIT %d",
+                $from, $to, $limit
+            ), ARRAY_A
+        );
+        return $rows ?: [];
+    }
+
+    /**
+     * Répartition par statut de paiement.
+     */
+    public function query_by_payment_status(string $from, string $to): array {
+        global $wpdb;
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT
+                    COALESCE(NULLIF(TRIM(payment_status),''), 'Non renseigné') AS status,
+                    COUNT(*) AS bookings,
+                    ROUND(SUM(CASE WHEN booking_status NOT IN ('canceled','cancelled','rejected')
+                              THEN COALESCE(price_total, 0) ELSE 0 END), 2) AS revenue
+                 FROM `{$this->table}`
+                 WHERE appointment_date BETWEEN %s AND %s
+                   AND appointment_date IS NOT NULL
+                 GROUP BY status
+                 ORDER BY bookings DESC",
+                $from, $to
+            ), ARRAY_A
+        );
+        return $rows ?: [];
+    }
+
+    /**
+     * Distribution par heure de réservation (created_at).
+     */
+    public function query_booking_hours(string $from, string $to): array {
+        global $wpdb;
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT
+                    HOUR(created_at) AS hour_num,
+                    COUNT(*) AS bookings,
+                    ROUND(SUM(CASE WHEN booking_status NOT IN ('canceled','cancelled','rejected')
+                              THEN COALESCE(price_total, 0) ELSE 0 END), 2) AS revenue
+                 FROM `{$this->table}`
+                 WHERE appointment_date BETWEEN %s AND %s
+                   AND created_at IS NOT NULL
+                 GROUP BY hour_num
+                 ORDER BY hour_num",
+                $from, $to
+            ), ARRAY_A
+        );
+        return $rows ?: [];
+    }
+
+    /**
+     * Lead time moyen par produit (jours entre created_at et appointment_date).
+     */
+    public function query_lead_time(string $from, string $to, int $limit = 10): array {
+        global $wpdb;
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT
+                    product_name AS name,
+                    COUNT(*) AS bookings,
+                    ROUND(AVG(DATEDIFF(appointment_date, DATE(created_at))), 1) AS avg_lead_days,
+                    MIN(DATEDIFF(appointment_date, DATE(created_at))) AS min_lead_days,
+                    MAX(DATEDIFF(appointment_date, DATE(created_at))) AS max_lead_days
+                 FROM `{$this->table}`
+                 WHERE appointment_date BETWEEN %s AND %s
+                   AND created_at IS NOT NULL
+                   AND appointment_date IS NOT NULL
+                   AND DATEDIFF(appointment_date, DATE(created_at)) >= 0
+                 GROUP BY product_name
+                 ORDER BY bookings DESC
+                 LIMIT %d",
+                $from, $to, $limit
+            ), ARRAY_A
+        );
+        return $rows ?: [];
+    }
+
+    /**
+     * Fréquence client (repeat customers via buyer_email_hash).
+     */
+    public function query_repeat_customers(string $from, string $to): array {
+        global $wpdb;
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT
+                    freq_bucket,
+                    COUNT(*) AS customers,
+                    SUM(total_bookings) AS bookings,
+                    ROUND(SUM(total_revenue), 2) AS revenue
+                 FROM (
+                    SELECT
+                        buyer_email_hash,
+                        COUNT(*) AS total_bookings,
+                        SUM(CASE WHEN booking_status NOT IN ('canceled','cancelled','rejected')
+                                 THEN COALESCE(price_total, 0) ELSE 0 END) AS total_revenue,
+                        CASE
+                            WHEN COUNT(*) = 1 THEN '1 visite'
+                            WHEN COUNT(*) = 2 THEN '2 visites'
+                            WHEN COUNT(*) BETWEEN 3 AND 4 THEN '3-4 visites'
+                            ELSE '5+ visites (VIP)'
+                        END AS freq_bucket
+                    FROM `{$this->table}`
+                    WHERE appointment_date BETWEEN %s AND %s
+                      AND buyer_email_hash IS NOT NULL
+                      AND buyer_email_hash != ''
+                    GROUP BY buyer_email_hash
+                 ) AS sub
+                 GROUP BY freq_bucket
+                 ORDER BY FIELD(freq_bucket, '1 visite', '2 visites', '3-4 visites', '5+ visites (VIP)')",
+                $from, $to
+            ), ARRAY_A
+        );
+        return $rows ?: [];
+    }
+
+    /**
+     * Product mix over time (top N products × period).
+     */
+    public function query_product_mix(string $from, string $to, string $granularity = 'month', int $top_n = 5): array {
+        global $wpdb;
+
+        $format = match ($granularity) {
+            'day'   => '%Y-%m-%d',
+            'week'  => '%x-W%v',
+            default => '%Y-%m',
+        };
+
+        // Get top N products first
+        $top = $wpdb->get_col(
+            $wpdb->prepare(
+                "SELECT product_name
+                 FROM `{$this->table}`
+                 WHERE appointment_date BETWEEN %s AND %s
+                   AND appointment_date IS NOT NULL
+                 GROUP BY product_name
+                 ORDER BY COUNT(*) DESC
+                 LIMIT %d",
+                $from, $to, $top_n
+            )
+        );
+
+        if (empty($top)) return [];
+
+        // Build IN clause safely
+        $placeholders = implode(',', array_fill(0, count($top), '%s'));
+        $params = array_merge([$format, $from, $to], $top);
+
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT
+                    DATE_FORMAT(appointment_date, %s) AS period_key,
+                    product_name AS name,
+                    COUNT(*) AS bookings,
+                    ROUND(SUM(CASE WHEN booking_status NOT IN ('canceled','cancelled','rejected')
+                              THEN COALESCE(price_total, 0) ELSE 0 END), 2) AS revenue
+                 FROM `{$this->table}`
+                 WHERE appointment_date BETWEEN %s AND %s
+                   AND appointment_date IS NOT NULL
+                   AND product_name IN ({$placeholders})
+                 GROUP BY period_key, product_name
+                 ORDER BY period_key, revenue DESC",
+                ...$params
+            ), ARRAY_A
+        );
+
+        return ['products' => $top, 'data' => $rows ?: []];
+    }
+
+    /**
+     * Matrice canal × statut de réservation.
+     */
+    public function query_channel_status(string $from, string $to): array {
+        global $wpdb;
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT
+                    COALESCE(NULLIF(TRIM(channel),''), 'Non renseigné') AS channel,
+                    booking_status AS status,
+                    COUNT(*) AS bookings,
+                    ROUND(SUM(COALESCE(price_total, 0)), 2) AS revenue
+                 FROM `{$this->table}`
+                 WHERE appointment_date BETWEEN %s AND %s
+                   AND appointment_date IS NOT NULL
+                 GROUP BY channel, booking_status
+                 ORDER BY channel, bookings DESC",
+                $from, $to
+            ), ARRAY_A
+        );
+        return $rows ?: [];
+    }
+
+    /**
+     * Saisonnalité Year-over-Year (même mois, années différentes).
+     */
+    public function query_yoy(string $from, string $to): array {
+        global $wpdb;
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT
+                    YEAR(appointment_date) AS year_num,
+                    MONTH(appointment_date) AS month_num,
+                    COUNT(*) AS bookings,
+                    ROUND(SUM(CASE WHEN booking_status NOT IN ('canceled','cancelled','rejected')
+                              THEN COALESCE(price_total, 0) ELSE 0 END), 2) AS revenue,
+                    ROUND(AVG(CASE WHEN booking_status NOT IN ('canceled','cancelled','rejected')
+                              AND price_total IS NOT NULL AND price_total > 0
+                              THEN price_total ELSE NULL END), 2) AS avg_basket
+                 FROM `{$this->table}`
+                 WHERE appointment_date BETWEEN %s AND %s
+                   AND appointment_date IS NOT NULL
+                 GROUP BY year_num, month_num
+                 ORDER BY year_num, month_num",
+                $from, $to
+            ), ARRAY_A
+        );
+        return $rows ?: [];
+    }
+
+    /**
+     * Revenue cumulé par période (running sum calculé en PHP pour compat MySQL 5.7).
+     */
+    public function query_cumulative(string $from, string $to, string $granularity = 'month'): array {
+        $stats = $this->query_stats($from, $to, $granularity);
+        $cumulative_revenue  = 0;
+        $cumulative_bookings = 0;
+        $result = [];
+
+        foreach ($stats as $row) {
+            $revenue = (float) $row['revenue'];
+            $bookings = (int) $row['bookings'];
+            $cumulative_revenue  += $revenue;
+            $cumulative_bookings += $bookings;
+            $result[] = [
+                'period_key'          => $row['period_key'],
+                'revenue'             => $revenue,
+                'bookings'            => $bookings,
+                'cumulative_revenue'  => round($cumulative_revenue, 2),
+                'cumulative_bookings' => $cumulative_bookings,
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * KPIs enrichis : ajoute lead time, repeat rate, revenue/jour, etc.
+     */
+    public function query_enhanced_kpis(string $from, string $to): array {
+        global $wpdb;
+
+        $base = $this->query_period_kpis($from, $to);
+        if (empty($base)) return $base;
+
+        $days = max(1, (int) round((strtotime($to) - strtotime($from)) / 86400) + 1);
+
+        // Lead time moyen global
+        $avg_lead = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT ROUND(AVG(DATEDIFF(appointment_date, DATE(created_at))), 1)
+                 FROM `{$this->table}`
+                 WHERE appointment_date BETWEEN %s AND %s
+                   AND created_at IS NOT NULL
+                   AND DATEDIFF(appointment_date, DATE(created_at)) >= 0",
+                $from, $to
+            )
+        );
+
+        // Repeat rate
+        $customer_stats = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT
+                    COUNT(DISTINCT buyer_email_hash) AS unique_customers,
+                    SUM(CASE WHEN cnt > 1 THEN 1 ELSE 0 END) AS repeat_customers
+                 FROM (
+                    SELECT buyer_email_hash, COUNT(*) AS cnt
+                    FROM `{$this->table}`
+                    WHERE appointment_date BETWEEN %s AND %s
+                      AND buyer_email_hash IS NOT NULL
+                      AND buyer_email_hash != ''
+                    GROUP BY buyer_email_hash
+                 ) sub",
+                $from, $to
+            ), ARRAY_A
+        );
+
+        // Avg quantity
+        $avg_qty = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT ROUND(AVG(quantity), 1)
+                 FROM `{$this->table}`
+                 WHERE appointment_date BETWEEN %s AND %s
+                   AND quantity > 0",
+                $from, $to
+            )
+        );
+
+        // Unpaid rate
+        $unpaid = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT COUNT(*)
+                 FROM `{$this->table}`
+                 WHERE appointment_date BETWEEN %s AND %s
+                   AND (payment_status IS NULL OR TRIM(payment_status) = '' OR payment_status NOT IN ('paid','completed','succeeded'))",
+                $from, $to
+            )
+        );
+
+        // Peak weekday
+        $peak_dow = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT DAYOFWEEK(appointment_date)
+                 FROM `{$this->table}`
+                 WHERE appointment_date BETWEEN %s AND %s
+                   AND appointment_date IS NOT NULL
+                 GROUP BY DAYOFWEEK(appointment_date)
+                 ORDER BY COUNT(*) DESC
+                 LIMIT 1",
+                $from, $to
+            )
+        );
+        $dow_labels = [1 => 'Dim', 2 => 'Lun', 3 => 'Mar', 4 => 'Mer', 5 => 'Jeu', 6 => 'Ven', 7 => 'Sam'];
+
+        // Top product name
+        $top_prod = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT product_name
+                 FROM `{$this->table}`
+                 WHERE appointment_date BETWEEN %s AND %s
+                   AND appointment_date IS NOT NULL
+                 GROUP BY product_name
+                 ORDER BY COUNT(*) DESC
+                 LIMIT 1",
+                $from, $to
+            )
+        );
+
+        // Top 3 concentration
+        $top3_count = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT SUM(cnt) FROM (
+                    SELECT COUNT(*) AS cnt
+                    FROM `{$this->table}`
+                    WHERE appointment_date BETWEEN %s AND %s
+                    GROUP BY product_name
+                    ORDER BY cnt DESC
+                    LIMIT 3
+                 ) sub",
+                $from, $to
+            )
+        );
+
+        $unique_cust = (int) ($customer_stats['unique_customers'] ?? 0);
+        $repeat_cust = (int) ($customer_stats['repeat_customers'] ?? 0);
+        $total = $base['total_bookings'] ?? 0;
+
+        return array_merge($base, [
+            'revenue_per_day'     => $days > 0 ? round(($base['total_revenue'] ?? 0) / $days, 2) : 0,
+            'bookings_per_day'    => $days > 0 ? round($total / $days, 1) : 0,
+            'avg_lead_time_days'  => $avg_lead !== null ? (float) $avg_lead : null,
+            'unique_customers'    => $unique_cust,
+            'repeat_customers'    => $repeat_cust,
+            'repeat_rate'         => $unique_cust > 0 ? round($repeat_cust / $unique_cust * 100, 1) : 0,
+            'avg_quantity'        => $avg_qty !== null ? (float) $avg_qty : null,
+            'unpaid_rate'         => $total > 0 ? round((int) $unpaid / $total * 100, 1) : 0,
+            'peak_weekday'        => $dow_labels[(int) $peak_dow] ?? null,
+            'top_product_name'    => $top_prod,
+            'top3_concentration'  => $total > 0 ? round((int) $top3_count / $total * 100, 1) : 0,
+        ]);
     }
 }

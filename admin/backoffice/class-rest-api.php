@@ -371,6 +371,7 @@ class RestApi {
         return rest_ensure_response([
             'products_count'   => count($products),
             'bookings_month'   => $summary['bookings_month'],
+            'total_in_db'      => $summary['total_in_db'],
             'revenue_month'    => $summary['revenue_month'],
             'customers_total'  => $customers['total'] ?? 0,
             'recent_bookings'  => $summary['recent_bookings'],
@@ -596,7 +597,12 @@ class RestApi {
         // ── Lecture depuis la DB locale ────────────────────────────────────
         $raw_rows = $db->query_stats($from, $to, $granularity);
         $top_raw  = $db->query_top_products($from, $to, 8);
-        $kpis     = $db->query_period_kpis($from, $to);
+        // Use enhanced KPIs if available
+        $include_raw = $req->get_param('include') ?? '';
+        $includes = $include_raw ? array_map('trim', explode(',', $include_raw)) : [];
+        $kpis = (empty($includes) || in_array('enhanced_kpis', $includes))
+            ? $db->query_enhanced_kpis($from, $to)
+            : $db->query_period_kpis($from, $to);
         $by_chan  = $db->query_by_channel($from, $to, 10);
         $by_wday  = $db->query_by_weekday($from, $to);
 
@@ -711,6 +717,19 @@ class RestApi {
             'period_start'   => $from,
             'period_end'     => $to,
             'monthly'        => $result_periods, // compat legacy
+            // ── Optional data modules (loaded via ?include=...) ──────────────
+            'heatmap'        => in_array('heatmap', $includes) ? $db->query_heatmap($from, $to) : null,
+            'payments'       => in_array('payments', $includes) ? [
+                'by_method' => $db->query_by_payment_method($from, $to),
+                'by_status' => $db->query_by_payment_status($from, $to),
+            ] : null,
+            'booking_hours'  => in_array('booking_hours', $includes) ? $db->query_booking_hours($from, $to) : null,
+            'lead_time'      => in_array('lead_time', $includes) ? $db->query_lead_time($from, $to) : null,
+            'repeat_customers' => in_array('repeat_customers', $includes) ? $db->query_repeat_customers($from, $to) : null,
+            'product_mix'    => in_array('product_mix', $includes) ? $db->query_product_mix($from, $to, $granularity) : null,
+            'channel_status' => in_array('channel_status', $includes) ? $db->query_channel_status($from, $to) : null,
+            'yoy'            => in_array('yoy', $includes) ? $db->query_yoy($from, $to) : null,
+            'cumulative'     => in_array('cumulative', $includes) ? $db->query_cumulative($from, $to, $granularity) : null,
         ]);
     }
 
