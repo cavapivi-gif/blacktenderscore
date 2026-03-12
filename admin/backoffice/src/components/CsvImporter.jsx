@@ -4,6 +4,67 @@ import { CSV_COLUMN_MAP } from '../lib/constants'
 
 const BATCH_SIZE = 500
 
+// ── Normalize booking_status: French Regiondo values → English canonical ────
+const BOOKING_STATUS_MAP = {
+  'confirmé':                         'confirmed',
+  'confirmé (bon enregistré)':        'confirmed',
+  'confirmé (bon cadeau)':            'confirmed',
+  'annulé':                           'cancelled',
+  'annulé (commercial)':              'cancelled',
+  'annulé (regiondo)':                'cancelled',
+  'annulé (paiement non effectué)':   'cancelled',
+  'refusé':                           'rejected',
+  'échu':                             'expired',
+  'en attente':                       'pending',
+  'remboursé':                        'refunded',
+}
+function normalizeBookingStatus(raw) {
+  if (!raw) return raw
+  const key = raw.trim().toLowerCase()
+  return BOOKING_STATUS_MAP[key] ?? raw
+}
+
+// ── Normalize payment_status: extract canonical state ────────────────────────
+function normalizePaymentStatus(raw) {
+  if (!raw) return raw
+  const lower = raw.trim().toLowerCase()
+  if (lower.startsWith('payé') || lower.startsWith('paid') || lower === 'completed' || lower === 'succeeded') return 'paid'
+  if (lower.includes('non payé') || lower.includes('impayé') || lower === 'unpaid') return 'unpaid'
+  if (lower.startsWith('remboursé') || lower.startsWith('refunded')) return 'refunded'
+  if (lower.startsWith('en attente') || lower.startsWith('pending') || lower.startsWith('processing')) return 'pending'
+  return raw
+}
+
+// ── Sanitize channel: strip HTML </br> and booking ref codes ─────────────────
+// "GetYourGuide Deutschland GmbH </br>GYGRFQWKLZWK" → "GetYourGuide Deutschland GmbH"
+function sanitizeChannel(raw) {
+  if (!raw) return raw
+  return raw.replace(/<\/?\s*br\s*\/?>.*/si, '').replace(/<[^>]+>/g, '').trim()
+}
+
+// ── Parse French appointment date to ISO YYYY-MM-DD ──────────────────────────
+// Handles: "01 juin 2026 18:00", "1 juin 2026", "01/06/2026", ISO dates
+const FR_MONTHS = {
+  janvier:'01', février:'02', fevrier:'02', mars:'03', avril:'04',
+  mai:'05', juin:'06', juillet:'07', août:'08', aout:'08',
+  septembre:'09', octobre:'10', novembre:'11', décembre:'12', decembre:'12',
+}
+function parseFrenchDate(raw) {
+  if (!raw) return raw
+  // Already ISO YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0, 10)
+  // "01 juin 2026 18:00" or "1 juin 2026"
+  const m = raw.match(/(\d{1,2})\s+(\S+)\s+(\d{4})/i)
+  if (m) {
+    const month = FR_MONTHS[m[2].toLowerCase()]
+    if (month) return `${m[3]}-${month}-${m[1].padStart(2, '0')}`
+  }
+  // "01/06/2026"
+  const d = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/)
+  if (d) return `${d[3]}-${d[2].padStart(2, '0')}-${d[1].padStart(2, '0')}`
+  return raw
+}
+
 // ── Parse the "Produit" / "_produit_raw" column ─────────────────────────────
 // Example input:
 //   "Essential Estérel Calanques 1.5-Hour 1 × Essential Calanques Estérel 2026 ,
@@ -88,6 +149,12 @@ function parseCsvText(text) {
       if (parsed.offer_raw) row.offer_raw = parsed.offer_raw
       delete row._produit_raw
     }
+
+    // Normalize/sanitize fields from Regiondo CSV exports
+    if (row.appointment_date) row.appointment_date = parseFrenchDate(row.appointment_date)
+    if (row.booking_status)   row.booking_status   = normalizeBookingStatus(row.booking_status)
+    if (row.payment_status)   row.payment_status   = normalizePaymentStatus(row.payment_status)
+    if (row.channel)          row.channel          = sanitizeChannel(row.channel)
 
     rows.push(row)
   }

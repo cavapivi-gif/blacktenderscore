@@ -13,7 +13,6 @@ import MapPresets from '../components/MapPresets'
 const SECTIONS = {
   api:         { title: 'Connexion API',      subtitle: 'Clés d\'accès à l\'API Regiondo',                        hasSave: true  },
   sync:        { title: 'Synchronisation',    subtitle: 'Import automatique des produits Regiondo vers WordPress', hasSave: true  },
-  widgets:     { title: 'Widgets',            subtitle: 'Associez chaque produit à son Widget ID Regiondo',        hasSave: true  },
   css:         { title: 'Custom CSS & JS',     subtitle: 'CSS et JS injectés dans chaque widget de réservation',    hasSave: true  },
   map:         { title: 'Map Style',          subtitle: 'Style JSON Google Maps pour les widgets carte',           hasSave: true  },
   cache:       { title: 'Cache API',          subtitle: 'Durée de mise en cache des réponses Regiondo',           hasSave: true  },
@@ -632,39 +631,6 @@ export default function Settings() {
           </div>
         )
 
-      // ── Widgets ───────────────────────────────────────────────────────────
-      case 'widgets':
-        return (
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Associez chaque produit à son Widget ID Regiondo.{' '}
-              <span className="text-xs">Regiondo → Shop Config → Website Integration → Booking Widgets</span>
-            </p>
-            {(settings.products ?? []).length === 0 && (
-              <Notice type="warn">Aucun produit. Vérifiez la clé API puis enregistrez.</Notice>
-            )}
-            {(settings.products ?? []).map(p => (
-              <div key={p.product_id} className="flex items-center gap-3 rounded-lg border bg-card px-4 py-3">
-                {p.thumbnail_url && (
-                  <img src={p.thumbnail_url} alt="" className="w-8 h-8 rounded object-cover border shrink-0" />
-                )}
-                <div className="shrink-0 w-40">
-                  <div className="text-sm font-medium truncate">{p.name}</div>
-                  <code className="text-[11px] text-muted-foreground">#{p.product_id}</code>
-                </div>
-                <div className="flex-1">
-                  <Input
-                    value={getWidgetId(p.product_id)}
-                    onChange={e => setWidgetId(p.product_id, e.target.value)}
-                    placeholder="Widget ID (UUID)"
-                    className="font-mono text-xs"
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        )
-
       // ── Custom CSS & JS ───────────────────────────────────────────────────
       case 'css':
         return (
@@ -895,9 +861,8 @@ export default function Settings() {
                 <RefreshDouble width={14} height={14} />
                 Import incrémental (30 j.)
               </Btn>
-              <Btn variant="ghost" loading={rResetLoading} onClick={() => setShowResetModal(true)}
+              <Btn variant="danger" loading={rResetLoading} onClick={() => setShowResetModal(true)}
                 disabled={rSyncLoading || rResetLoading}
-                className="text-destructive hover:text-destructive"
               >
                 Vider la DB
               </Btn>
@@ -987,18 +952,17 @@ export default function Settings() {
         {renderSection()}
       </div>
 
-      {showResetModal && (
-        <DangerModal
-          title="Vider la table wp_bt_reservations"
-          description={`Toutes les réservations importées (${
-            rSyncStatus?.total_in_db?.toLocaleString('fr-FR') ?? '?'
-          } lignes) seront supprimées définitivement. Cette action est irréversible.`}
-          confirmWord="SUPPRIMER"
-          loading={rResetLoading}
-          onConfirm={handleResetReservationsDb}
-          onCancel={() => setShowResetModal(false)}
-        />
-      )}
+      <DangerModal
+        open={showResetModal}
+        title="Vider la table bt_reservations"
+        onClose={() => setShowResetModal(false)}
+        onConfirm={handleResetReservationsDb}
+        confirmLabel="Supprimer définitivement"
+        loading={rResetLoading}
+      >
+        Toutes les réservations importées ({rSyncStatus?.total_in_db?.toLocaleString('fr-FR') ?? '?'} lignes)
+        seront supprimées définitivement. Cette action est irréversible.
+      </DangerModal>
     </div>
   )
 }

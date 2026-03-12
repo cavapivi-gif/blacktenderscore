@@ -94,7 +94,7 @@ class Base extends \ReyCore\Modules\ModuleBase {
 
 		$hide_parent = $this->get_settings('hide_parents');
 
-		if ( strripos( $clauses['where'], 'wp_wc_product_attributes_lookup' ) ) {
+		if ( strripos( $clauses['where'], $wpdb->prefix . 'wc_product_attributes_lookup' ) ) {
 
 			if ( $hide_parent ) {
 				$clauses['where'] = str_replace( 'product_or_parent_id', 'product_id', $clauses['where'] );
@@ -107,7 +107,7 @@ class Base extends \ReyCore\Modules\ModuleBase {
 						continue;
 					}
 
-					$data_requests[ $key ] .= ' UNION SELECT product_id FROM wp_wc_product_attributes_lookup lt ' . strrchr( $request, 'WHERE' );
+					$data_requests[ $key ] .= ' UNION SELECT product_id FROM ' . $wpdb->prefix . 'wc_product_attributes_lookup lt ' . strrchr( $request, 'WHERE' );
 				}
 				$clauses['where'] = implode( ') temp )', $data_requests );
 			}

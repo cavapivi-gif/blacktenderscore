@@ -1017,11 +1017,11 @@ class RestApi {
                 'price_total'        => $price_total,
                 'buyer_name'         => sanitize_text_field($item['buyer_name'] ?? ''),
                 'buyer_email'        => sanitize_email($item['buyer_email'] ?? ''),
-                'appointment_date'   => sanitize_text_field($item['appointment_date'] ?? ''),
-                'channel'            => sanitize_text_field($item['channel'] ?? ''),
-                'booking_status'     => sanitize_text_field($item['booking_status'] ?? ''),
+                'appointment_date'   => self::parse_appointment_date(sanitize_text_field($item['appointment_date'] ?? '')),
+                'channel'            => self::sanitize_channel(sanitize_text_field($item['channel'] ?? '')),
+                'booking_status'     => self::normalize_booking_status(sanitize_text_field($item['booking_status'] ?? '')),
                 'payment_method'     => sanitize_text_field($item['payment_method'] ?? ''),
-                'payment_status'     => sanitize_text_field($item['payment_status'] ?? ''),
+                'payment_status'     => self::normalize_payment_status(sanitize_text_field($item['payment_status'] ?? '')),
                 'booking_key'        => sanitize_text_field($item['booking_key'] ?? ''),
                 'buyer_country'      => strtoupper(substr(sanitize_text_field($item['buyer_country'] ?? ''), 0, 5)),
             ];
@@ -1032,6 +1032,98 @@ class RestApi {
         }
 
         return rest_ensure_response((new ReservationDb())->upsert($sanitized));
+    }
+
+    /**
+     * Parse French appointment date to MySQL DATE.
+     * Handles: "01 juin 2026 18:00", "1 juin 2026", "01/06/2026", ISO dates.
+     * Returns empty string if unparseable (DB will store NULL).
+     */
+    private static function parse_appointment_date(string $raw): string {
+        if (empty($raw)) return '';
+
+        // Already ISO format YYYY-MM-DD
+        if (preg_match('/^\d{4}-\d{2}-\d{2}/', $raw)) {
+            return substr($raw, 0, 10);
+        }
+
+        // French month names → number
+        static $months = [
+            'janvier'=>'01','février'=>'02','fevrier'=>'02','mars'=>'03',
+            'avril'=>'04','mai'=>'05','juin'=>'06','juillet'=>'07',
+            'août'=>'08','aout'=>'08','septembre'=>'09','octobre'=>'10',
+            'novembre'=>'11','décembre'=>'12','decembre'=>'12',
+        ];
+
+        // "01 juin 2026 18:00" or "1 juin 2026"
+        if (preg_match('/(\d{1,2})\s+(\S+)\s+(\d{4})/u', strtolower($raw), $m)) {
+            $month = $months[$m[2]] ?? null;
+            if ($month) {
+                return $m[3] . '-' . $month . '-' . str_pad($m[1], 2, '0', STR_PAD_LEFT);
+            }
+        }
+
+        // "01/06/2026" or "1/6/2026"
+        if (preg_match('#^(\d{1,2})/(\d{1,2})/(\d{4})#', $raw, $m)) {
+            return $m[3] . '-' . str_pad($m[2], 2, '0', STR_PAD_LEFT) . '-' . str_pad($m[1], 2, '0', STR_PAD_LEFT);
+        }
+
+        return '';
+    }
+
+    /**
+     * Normalize booking_status: handles French values from Regiondo CSV exports.
+     */
+    private static function normalize_booking_status(string $status): string {
+        static $map = [
+            'confirmé'                          => 'confirmed',
+            'confirmé (bon enregistré)'         => 'confirmed',
+            'confirmé (bon cadeau)'             => 'confirmed',
+            'annulé'                            => 'cancelled',
+            'annulé (commercial)'               => 'cancelled',
+            'annulé (regiondo)'                 => 'cancelled',
+            'annulé (paiement non effectué)'    => 'cancelled',
+            'refusé'                            => 'rejected',
+            'échu'                              => 'expired',
+            'en attente'                        => 'pending',
+            'remboursé'                         => 'refunded',
+        ];
+
+        $lower = mb_strtolower(trim($status), 'UTF-8');
+        return $map[$lower] ?? $status;
+    }
+
+    /**
+     * Sanitize channel: strip HTML </br> tags and booking reference codes appended by Regiondo.
+     * "GetYourGuide Deutschland GmbH </br>GYGRFQWKLZWK" → "GetYourGuide Deutschland GmbH"
+     */
+    private static function sanitize_channel(string $channel): string {
+        // Strip from </br> onwards (Regiondo appends booking ref this way)
+        $channel = preg_replace('/<\/?\s*br\s*\/?>.*/si', '', $channel);
+        // Strip any remaining HTML tags
+        $channel = wp_strip_all_tags($channel);
+        return trim($channel);
+    }
+
+    /**
+     * Normalize payment_status: extract canonical state from descriptive strings.
+     * "Payé (Carte de crédit) xxxx 2975" → "paid"
+     */
+    private static function normalize_payment_status(string $status): string {
+        $lower = mb_strtolower(trim($status), 'UTF-8');
+        if (str_starts_with($lower, 'payé') || str_starts_with($lower, 'paid') || str_starts_with($lower, 'completed') || str_starts_with($lower, 'succeeded')) {
+            return 'paid';
+        }
+        if (str_contains($lower, 'non payé') || str_contains($lower, 'impayé') || $lower === 'unpaid') {
+            return 'unpaid';
+        }
+        if (str_starts_with($lower, 'remboursé') || str_starts_with($lower, 'refunded')) {
+            return 'refunded';
+        }
+        if (str_starts_with($lower, 'en attente') || str_starts_with($lower, 'pending') || str_starts_with($lower, 'processing')) {
+            return 'pending';
+        }
+        return $status;
     }
 
     /**
@@ -1079,11 +1171,11 @@ class RestApi {
         global $wpdb;
         $table = $wpdb->prefix . 'bt_reservations';
 
-        // ── Phase 1: Fix appointment_date NULL → use created_at ──────────
+        // ── Phase 1: Fix appointment_date NULL / 0000-00-00 → use created_at ────
         $dates_fixed = (int) $wpdb->query(
             "UPDATE `{$table}`
              SET appointment_date = DATE(created_at)
-             WHERE appointment_date IS NULL
+             WHERE (appointment_date IS NULL OR appointment_date = '0000-00-00')
                AND created_at IS NOT NULL"
         );
 
@@ -1132,7 +1224,7 @@ class RestApi {
             "SELECT COUNT(*) FROM `{$table}` WHERE price_total IS NULL AND offer_raw IS NOT NULL AND offer_raw != ''"
         );
         $remaining_dates = (int) $wpdb->get_var(
-            "SELECT COUNT(*) FROM `{$table}` WHERE appointment_date IS NULL AND created_at IS NOT NULL"
+            "SELECT COUNT(*) FROM `{$table}` WHERE (appointment_date IS NULL OR appointment_date = '0000-00-00') AND created_at IS NOT NULL"
         );
         $remaining = $remaining_prices + $remaining_dates;
 

@@ -98,13 +98,14 @@ export function Select({ label, children, className = '', ...props }) {
   )
 }
 
-export function Toggle({ label, checked, onChange }) {
+export function Toggle({ label, checked, onChange, disabled }) {
   return (
-    <label className="flex items-center gap-3 cursor-pointer select-none">
+    <label className={cn('flex items-center gap-3 cursor-pointer select-none', disabled && 'opacity-50 pointer-events-none')}>
       <button
         type="button"
         role="switch"
         aria-checked={checked}
+        disabled={disabled}
         onClick={() => onChange(!checked)}
         className={cn(
           'relative inline-flex h-6 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200',
@@ -162,7 +163,7 @@ export function PageHeader({ title, subtitle, actions }) {
   )
 }
 
-export function Table({ columns, data, loading, empty = 'Aucune donnée.' }) {
+export function Table({ columns, data, loading, empty = 'Aucune donnée.', onRowClick }) {
   if (loading) return <div className="px-6 py-12 text-center text-sm text-muted-foreground">Chargement…</div>
   if (!data?.length) return <div className="px-6 py-12 text-center text-sm text-muted-foreground">{empty}</div>
 
@@ -180,7 +181,11 @@ export function Table({ columns, data, loading, empty = 'Aucune donnée.' }) {
         </thead>
         <tbody>
           {data.map((row, i) => (
-            <tr key={row.id ?? i} className="border-b transition-colors hover:bg-muted/50">
+            <tr
+              key={row.id ?? i}
+              onClick={() => onRowClick?.(row)}
+              className={cn('border-b transition-colors hover:bg-muted/50', onRowClick && 'cursor-pointer')}
+            >
               {columns.map(col => (
                 <td key={col.key} className="px-4 py-3">
                   {col.render ? col.render(row) : row[col.key] ?? '—'}

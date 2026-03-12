@@ -18,7 +18,6 @@ import {
 const SETTINGS_CONFIG = [
   { path: '/settings/api',         label: 'Connexion API'    },
   { path: '/settings/sync',        label: 'Synchronisation'  },
-  { path: '/settings/widgets',     label: 'Widgets'          },
   { path: '/settings/css',         label: 'CSS & JS'         },
   { path: '/settings/map',         label: 'Map Style'        },
   { path: '/settings/cache',       label: 'Cache'            },

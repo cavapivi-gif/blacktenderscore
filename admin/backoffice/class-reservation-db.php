@@ -21,10 +21,10 @@ class ReservationDb {
 
     /**
      * SQL expression for the "effective date" of a record.
-     * Uses appointment_date if available, otherwise falls back to created_at.
-     * This prevents 0-result queries when appointment_date is NULL.
+     * Uses appointment_date if non-null and non-zero, otherwise falls back to created_at.
+     * NULLIF handles '0000-00-00' (invalid MySQL date stored when French date parsing fails).
      */
-    private const EDATE = 'COALESCE(appointment_date, DATE(created_at))';
+    private const EDATE = "COALESCE(NULLIF(appointment_date, '0000-00-00'), DATE(created_at))";
 
     public function __construct() {
         global $wpdb;
