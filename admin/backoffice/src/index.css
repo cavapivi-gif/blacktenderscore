@@ -69,6 +69,11 @@
   vertical-align: middle;
 }
 
+/* Reset pre/code background for code editors — WP admin sets gray bg */
+#bt-backoffice-root :where(pre, code) {
+  background: transparent;
+}
+
 /* Scrollbar minimal */
 #bt-backoffice-root ::-webkit-scrollbar       { width: 4px; height: 4px; }
 #bt-backoffice-root ::-webkit-scrollbar-track { background: transparent; }
