@@ -1053,6 +1053,7 @@ class RestApi {
                 'payment_method'     => sanitize_text_field($item['payment_method'] ?? ''),
                 'payment_status'     => sanitize_text_field($item['payment_status'] ?? ''),
                 'booking_key'        => sanitize_text_field($item['booking_key'] ?? ''),
+                'buyer_country'      => strtoupper(substr(sanitize_text_field($item['buyer_country'] ?? ''), 0, 5)),
             ];
         }
 

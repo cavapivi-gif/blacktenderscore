@@ -60,6 +60,7 @@ class ReservationDb {
             payment_method     varchar(100)        DEFAULT NULL,
             payment_status     varchar(50)         DEFAULT NULL,
             booking_key        text                DEFAULT NULL,
+            buyer_country      varchar(5)          DEFAULT NULL,
             imported_at        datetime            NOT NULL,
             PRIMARY KEY  (id),
             UNIQUE KEY calendar_sold_id (calendar_sold_id),
@@ -137,7 +138,7 @@ class ReservationDb {
                          product_name, quantity, price_total,
                          buyer_name, buyer_name_hash, buyer_email, buyer_email_hash,
                          appointment_date, channel, booking_status, payment_method,
-                         payment_status, booking_key, imported_at)
+                         payment_status, booking_key, buyer_country, imported_at)
                      VALUES (
                         {$q($ref)},
                         {$q(trim($item['order_increment_id'] ?? ''))},
@@ -156,6 +157,7 @@ class ReservationDb {
                         {$q((string) ($item['payment_method'] ?? ''))},
                         {$q((string) ($item['payment_status'] ?? ''))},
                         {$q($booking_key_enc)},
+                        {$q((string) ($item['buyer_country']  ?? ''))},
                         {$q($now)}
                      )
                      ON DUPLICATE KEY UPDATE
@@ -174,6 +176,7 @@ class ReservationDb {
                         booking_status     = VALUES(booking_status),
                         payment_method     = VALUES(payment_method),
                         payment_status     = VALUES(payment_status),
+                        buyer_country      = VALUES(buyer_country),
                         booking_key        = VALUES(booking_key),
                         imported_at        = VALUES(imported_at)";
 
