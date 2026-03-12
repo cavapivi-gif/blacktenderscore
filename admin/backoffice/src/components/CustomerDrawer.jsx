@@ -4,6 +4,7 @@ import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { api } from '../lib/api'
 import { Badge, Spinner, Toggle } from './ui'
+import { avatarColor } from '../lib/colors'
 
 /** Mini carte KPI dans le drawer */
 function KpiCard({ icon: Icon, label, value }) {
@@ -20,9 +21,32 @@ function KpiCard({ icon: Icon, label, value }) {
 const fmtDate = d => (!d || d === '0000-00-00') ? '—' : format(new Date(d), 'd MMM yyyy', { locale: fr })
 const statusVariant = s => ({ confirmed: 'confirmed', cancelled: 'cancelled', rejected: 'cancelled' }[s] ?? 'pending')
 
-export default function CustomerDrawer({ customer: c, onClose, onUpdate }) {
+/**
+ * Drawer détail client. elevated=true monte les z-index pour s'empiler sur DayDrawer.
+ */
+/** Mini étoiles pour le drawer */
+function MiniStars({ value }) {
+  if (!value) return <span className="text-muted-foreground text-xs">—</span>
+  return (
+    <span className="flex items-center gap-0.5">
+      {[1,2,3,4,5].map(i => (
+        <svg key={i} width="10" height="10" viewBox="0 0 24 24"
+          fill={i <= value ? '#f59e0b' : 'none'}
+          stroke={i <= value ? '#f59e0b' : '#d1d5db'} strokeWidth="1.5">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+      ))}
+    </span>
+  )
+}
+
+export default function CustomerDrawer({ customer: c, onClose, onUpdate, elevated = false }) {
+  const zOverlay = elevated ? 'z-[60]' : 'z-40'
+  const zPanel   = elevated ? 'z-[70]' : 'z-50'
   const [bookings, setBookings]     = useState([])
+  const [reviews, setReviews]       = useState([])
   const [loadingBk, setLoadingBk]   = useState(true)
+  const [loadingRv, setLoadingRv]   = useState(true)
   const [newsletter, setNewsletter] = useState(c.newsletter ?? false)
   const [toggling, setToggling]     = useState(false)
 
@@ -31,6 +55,10 @@ export default function CustomerDrawer({ customer: c, onClose, onUpdate }) {
       .then(r => setBookings(r.data ?? []))
       .catch(() => {})
       .finally(() => setLoadingBk(false))
+    api.avisByEmail(c.email)
+      .then(r => setReviews(r.data ?? []))
+      .catch(() => {})
+      .finally(() => setLoadingRv(false))
   }, [c.email])
 
   async function handleNewsletter(val) {
@@ -49,15 +77,15 @@ export default function CustomerDrawer({ customer: c, onClose, onUpdate }) {
   return (
     <>
       {/* Overlay */}
-      <div className="fixed inset-0 bg-black/30 z-40" onClick={onClose} />
+      <div className={`fixed inset-0 bg-black/30 ${zOverlay}`} onClick={onClose} />
 
       {/* Panel slide-in */}
-      <div className="fixed right-0 top-0 bottom-0 w-[380px] bg-card border-l shadow-2xl z-50 flex flex-col overflow-hidden">
+      <div className={`fixed right-0 top-0 bottom-0 w-[380px] bg-card border-l shadow-2xl ${zPanel} flex flex-col overflow-hidden`}>
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b shrink-0">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-sm font-bold shrink-0">
+            <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0" style={avatarColor(c.name)}>
               {(c.name?.[0] ?? '?').toUpperCase()}
             </div>
             <div className="min-w-0">
@@ -86,9 +114,11 @@ export default function CustomerDrawer({ customer: c, onClose, onUpdate }) {
           <Toggle checked={newsletter} onChange={handleNewsletter} disabled={toggling} />
         </div>
 
-        {/* Dernières réservations */}
+        {/* Scroll area : réservations + avis */}
         <div className="flex-1 overflow-y-auto">
-          <div className="flex items-center gap-2 px-4 py-2.5 border-b sticky top-0 bg-card">
+
+          {/* Dernières réservations */}
+          <div className="flex items-center gap-2 px-4 py-2.5 border-b sticky top-0 bg-card z-10">
             <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
             <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Dernières réservations</span>
           </div>
@@ -111,6 +141,42 @@ export default function CustomerDrawer({ customer: c, onClose, onUpdate }) {
                         {b.booking_status || 'inconnu'}
                       </Badge>
                     </div>
+                  </div>
+                ))
+          }
+
+          {/* Avis clients */}
+          <div className="flex items-center gap-2 px-4 py-2.5 border-b border-t mt-0 sticky top-0 bg-card z-10">
+            <Star className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+              Avis ({reviews.length})
+            </span>
+          </div>
+
+          {loadingRv
+            ? <div className="flex justify-center py-6"><Spinner /></div>
+            : reviews.length === 0
+              ? <p className="px-4 py-6 text-sm text-muted-foreground text-center">Aucun avis importé pour ce client.</p>
+              : reviews.map((r, i) => (
+                  <div key={r.id ?? i} className="px-4 py-3 border-b last:border-0">
+                    <div className="flex items-start justify-between gap-2 mb-1">
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs font-medium text-muted-foreground truncate">{r.product_name || '—'}</div>
+                        {r.review_title && (
+                          <div className="text-sm font-medium leading-tight mt-0.5">{r.review_title}</div>
+                        )}
+                      </div>
+                      <div className="text-right shrink-0">
+                        <MiniStars value={r.rating} />
+                        <div className="text-[10px] text-muted-foreground mt-0.5">{fmtDate(r.review_date)}</div>
+                      </div>
+                    </div>
+                    {r.review_body && (
+                      <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{r.review_body}</p>
+                    )}
+                    {r.response && (
+                      <p className="text-xs text-primary/70 mt-1 line-clamp-1 italic">↩ {r.response}</p>
+                    )}
                   </div>
                 ))
           }

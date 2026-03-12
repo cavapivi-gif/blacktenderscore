@@ -746,6 +746,38 @@ class ReservationDb {
     }
 
     /**
+     * Distribution par avance de réservation (buckets : Jour J / 1-7j / 8-30j / 31-90j / +90j).
+     * Répond à : "est-ce que nos clients réservent à la dernière minute ou à l'avance ?"
+     */
+    public function query_lead_time_buckets(string $from, string $to): array {
+        global $wpdb;
+        // DATEDIFF(appointment_date, created_at) = nb jours entre la commande et la date d'activité
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT
+                    CASE
+                        WHEN DATEDIFF(appointment_date, DATE(created_at)) = 0 THEN 'Jour J'
+                        WHEN DATEDIFF(appointment_date, DATE(created_at)) BETWEEN 1 AND 7 THEN '1-7j'
+                        WHEN DATEDIFF(appointment_date, DATE(created_at)) BETWEEN 8 AND 30 THEN '8-30j'
+                        WHEN DATEDIFF(appointment_date, DATE(created_at)) BETWEEN 31 AND 90 THEN '31-90j'
+                        ELSE '+90j'
+                    END AS bucket,
+                    COUNT(*) AS bookings,
+                    ROUND(AVG(DATEDIFF(appointment_date, DATE(created_at))), 1) AS avg_days
+                 FROM `{$this->table}`
+                 WHERE " . self::EDATE . " BETWEEN %s AND %s
+                   AND created_at IS NOT NULL
+                   AND appointment_date IS NOT NULL
+                   AND DATEDIFF(appointment_date, DATE(created_at)) >= 0
+                 GROUP BY bucket
+                 ORDER BY MIN(DATEDIFF(appointment_date, DATE(created_at)))",
+                $from, $to
+            ), ARRAY_A
+        );
+        return $rows ?: [];
+    }
+
+    /**
      * Lead time moyen par produit (jours entre created_at et appointment_date).
      */
     public function query_lead_time(string $from, string $to, int $limit = 10): array {

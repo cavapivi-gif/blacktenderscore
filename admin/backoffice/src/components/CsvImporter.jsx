@@ -241,18 +241,18 @@ function ImportProgressModal({ progress, pct }) {
         {/* Compteurs live */}
         {(progress.inserted > 0 || progress.updated > 0) && (
           <div className="flex gap-3">
-            <div className="flex-1 rounded-lg bg-emerald-50 border border-emerald-100 px-3 py-2 text-center">
-              <p className="text-lg font-bold tabular-nums text-emerald-700">{progress.inserted.toLocaleString('fr-FR')}</p>
-              <p className="text-[11px] text-emerald-600">insérées</p>
+            <div className="flex-1 rounded-lg border border-border px-3 py-2 text-center">
+              <p className="text-lg font-bold tabular-nums">{progress.inserted.toLocaleString('fr-FR')}</p>
+              <p className="text-[11px] text-muted-foreground">insérées</p>
             </div>
-            <div className="flex-1 rounded-lg bg-sky-50 border border-sky-100 px-3 py-2 text-center">
-              <p className="text-lg font-bold tabular-nums text-sky-700">{progress.updated.toLocaleString('fr-FR')}</p>
-              <p className="text-[11px] text-sky-600">mises à jour</p>
+            <div className="flex-1 rounded-lg border border-border px-3 py-2 text-center">
+              <p className="text-lg font-bold tabular-nums text-muted-foreground">{progress.updated.toLocaleString('fr-FR')}</p>
+              <p className="text-[11px] text-muted-foreground">mises à jour</p>
             </div>
             {progress.errors?.length > 0 && (
-              <div className="flex-1 rounded-lg bg-red-50 border border-red-100 px-3 py-2 text-center">
-                <p className="text-lg font-bold tabular-nums text-red-600">{progress.errors.length}</p>
-                <p className="text-[11px] text-red-500">erreurs</p>
+              <div className="flex-1 rounded-lg border border-destructive/30 px-3 py-2 text-center">
+                <p className="text-lg font-bold tabular-nums text-destructive">{progress.errors.length}</p>
+                <p className="text-[11px] text-destructive/70">erreurs</p>
               </div>
             )}
           </div>
@@ -297,16 +297,16 @@ function ImportSuccessModal({ result, onClose }) {
 
         {/* Stats */}
         <div className="flex gap-3">
-          <div className="flex-1 rounded-lg bg-emerald-50 border border-emerald-100 px-3 py-2.5 text-center">
-            <p className="text-xl font-bold tabular-nums text-emerald-700">{result.inserted.toLocaleString('fr-FR')}</p>
-            <p className="text-[11px] text-emerald-600">nouvelles</p>
+          <div className="flex-1 rounded-lg border border-border px-3 py-2.5 text-center">
+            <p className="text-xl font-bold tabular-nums">{result.inserted.toLocaleString('fr-FR')}</p>
+            <p className="text-[11px] text-muted-foreground">nouvelles</p>
           </div>
-          <div className="flex-1 rounded-lg bg-sky-50 border border-sky-100 px-3 py-2.5 text-center">
-            <p className="text-xl font-bold tabular-nums text-sky-700">{result.updated.toLocaleString('fr-FR')}</p>
-            <p className="text-[11px] text-sky-600">mises à jour</p>
+          <div className="flex-1 rounded-lg border border-border px-3 py-2.5 text-center">
+            <p className="text-xl font-bold tabular-nums text-muted-foreground">{result.updated.toLocaleString('fr-FR')}</p>
+            <p className="text-[11px] text-muted-foreground">mises à jour</p>
           </div>
           {result.skipped > 0 && (
-            <div className="flex-1 rounded-lg bg-muted border px-3 py-2.5 text-center">
+            <div className="flex-1 rounded-lg border border-border px-3 py-2.5 text-center">
               <p className="text-xl font-bold tabular-nums text-muted-foreground">{result.skipped.toLocaleString('fr-FR')}</p>
               <p className="text-[11px] text-muted-foreground">ignorées</p>
             </div>

@@ -44,6 +44,8 @@ class Itinerary extends AbstractBtWidget {
         $this->section_style_text();
         $this->section_style_transport();
         $this->section_style_map();
+        // La section "Style de carte" TAB_ADVANCED est injectée automatiquement
+        // dans TOUS les widgets via ElementorManager::setup() (elementor/element/after_section_end)
     }
 
     // ── Section Contenu ───────────────────────────────────────────────────────
@@ -221,6 +223,24 @@ class Itinerary extends AbstractBtWidget {
             'default'      => '',
         ]);
 
+        $this->add_control('map_engine', [
+            'label'     => __('Moteur de carte', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::SELECT,
+            'options'   => [
+                'leaflet'    => __('Leaflet / OpenStreetMap (interactif, sans clé API)', 'blacktenderscore'),
+                'static_api' => __('Google Maps Static (image, clé API requise)', 'blacktenderscore'),
+            ],
+            'default'   => 'leaflet',
+            'condition' => ['show_map' => 'yes'],
+        ]);
+
+        $this->add_control('map_line_color', [
+            'label'     => __('Couleur de la route', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::COLOR,
+            'default'   => '#0066cc',
+            'condition' => ['show_map' => 'yes'],
+        ]);
+
         $this->add_control('map_acf_notice', [
             'type'            => \Elementor\Controls_Manager::RAW_HTML,
             'raw'             => implode('', [
@@ -346,11 +366,21 @@ class Itinerary extends AbstractBtWidget {
         ]);
 
         $this->add_control('line_color', [
-            'label'     => __('Couleur', 'blacktenderscore'),
+            'label'     => __('Couleur (étapes aller)', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'selectors' => [
                 // CSS var consommée par repeating-linear-gradient dans le CSS
                 '{{WRAPPER}} .bt-itin' => '--bt-itin-line-color: {{VALUE}}',
+            ],
+            'condition' => ['connector' => 'line'],
+        ]);
+
+        $this->add_control('return_line_color', [
+            'label'       => __('Couleur — étapes retour', 'blacktenderscore'),
+            'description' => __('Si vide, reprend la couleur aller.', 'blacktenderscore'),
+            'type'        => \Elementor\Controls_Manager::COLOR,
+            'selectors'   => [
+                '{{WRAPPER}} .bt-itin' => '--bt-itin-return-line-color: {{VALUE}}',
             ],
             'condition' => ['connector' => 'line'],
         ]);
@@ -900,15 +930,82 @@ class Itinerary extends AbstractBtWidget {
     }
 
     /**
-     * Rend la carte via Google Maps Static API → simple <img>.
+     * Dispatche vers Leaflet (interactif) ou Google Maps Static (image).
+     * Moteur choisi via le control Elementor `map_engine`.
+     */
+    private function render_map(array $rows, string $departure_zone, string $returning_zone, array $s, int $post_id): void {
+        if (($s['map_engine'] ?? 'leaflet') === 'static_api') {
+            $this->render_map_static($rows, $departure_zone, $returning_zone, $s, $post_id);
+        } else {
+            $this->render_map_leaflet($rows, $s, $post_id);
+        }
+    }
+
+    /**
+     * Carte interactive Leaflet / OpenStreetMap.
+     * Zéro clé API — tiles CartoDB Voyager, markers numérotés.
+     * Points GPS lus depuis step_coords (ACF Google Map) ou step_lat/step_lng.
+     */
+    private function render_map_leaflet(array $rows, array $s, int $post_id): void {
+        $points = [];
+        foreach ($rows as $idx => $row) {
+            $coords = $row['step_coords'] ?? null;
+            $lat = $lng = null;
+            if (is_array($coords) && !empty($coords['lat'])) {
+                $lat = (float) $coords['lat'];
+                $lng = (float) $coords['lng'];
+            } elseif (!empty($row['step_lat']) && !empty($row['step_lng'])) {
+                $lat = (float) $row['step_lat'];
+                $lng = (float) $row['step_lng'];
+            }
+            if ($lat === null) continue;
+            $points[] = [
+                'lat'    => $lat,
+                'lng'    => $lng,
+                'title'  => (string) ($row['step_title'] ?? ''),
+                'num'    => $idx + 1,
+                'return' => !empty($row['step_is_return']),
+            ];
+        }
+
+        if (empty($points)) {
+            if ($this->is_edit_mode()) {
+                echo '<div class="bt-itin__map-wrap"><p class="bt-widget-placeholder">';
+                echo esc_html__('Carte : aucune coordonnée GPS trouvée. Ajoutez <code>step_coords</code> (ACF Google Map) ou <code>step_lat</code> + <code>step_lng</code> dans le repeater.', 'blacktenderscore');
+                echo '</p></div>';
+            }
+            return;
+        }
+
+        // Chargement Leaflet à la demande (enregistré dans ElementorManager::enqueue_assets)
+        wp_enqueue_style('bt-leaflet-css');
+        wp_enqueue_script('bt-leaflet-init');
+
+        $uid        = 'bt-map-' . esc_attr($this->get_id());
+        $line_color = esc_attr($s['map_line_color'] ?? '#0066cc');
+
+        // --bt-itin-return-line-color est injectée via le control Elementor sur .bt-itin
+        // On la relit depuis le wrapper pour la passer au JS
+        $return_color = esc_attr($s['return_line_color'] ?? '');
+
+        echo '<div class="bt-itin__map-wrap">';
+        echo '<div id="' . $uid . '" class="bt-itin__map bt-itin__map--leaflet"'
+           . ' data-bt-points="' . esc_attr(wp_json_encode($points)) . '"'
+           . ' data-bt-line-color="' . $line_color . '"'
+           . ($return_color ? ' data-bt-return-color="' . $return_color . '"' : '')
+           . '></div>';
+        echo '</div>';
+    }
+
+    /**
+     * Carte Google Maps Static API → simple <img>.
      * Pins numérotés sur chaque stop + ligne droite entre eux (route maritime).
-     * Pas de calcul d'itinéraire routier — juste les coordonnées GPS brutes.
      * Résultat mis en cache (WP transient, invalidé à la sauvegarde du post).
      *
      * Clé API : Elementor → Réglages → Intégrations → Google Maps.
      * Activer "Maps Static API" dans Google Cloud Console.
      */
-    private function render_map(array $rows, string $departure_zone, string $returning_zone, array $s, int $post_id): void {
+    private function render_map_static(array $rows, string $departure_zone, string $returning_zone, array $s, int $post_id): void {
         $points = [];
 
         // Uniquement les étapes de visite (repeater ACF) — pas les zones départ/arrivée
@@ -943,9 +1040,15 @@ class Itinerary extends AbstractBtWidget {
             return;
         }
 
-        // Cache : clé basée sur le post + les coordonnées + le style
-        $maptype   = $s['map_type'] ?? 'roadmap';
-        $cache_key = 'bt_map_' . md5($post_id . serialize($points) . $maptype);
+        // Résolution du style : preset per-widget → global → aucun
+        $maptype    = $s['map_type'] ?? 'roadmap';
+        $preset_key = $s['bt_map_style_preset'] ?? '';
+        $style_json = $preset_key !== ''
+            ? ($this->resolve_bt_map_style($preset_key) ?? get_option('bt_map_style_json', ''))
+            : get_option('bt_map_style_json', '');
+
+        // Cache : clé basée sur le post + coordonnées + type + style actif
+        $cache_key = 'bt_map_' . md5($post_id . serialize($points) . $maptype . $style_json);
         $cached    = get_transient($cache_key);
 
         if (false !== $cached) {
@@ -975,6 +1078,12 @@ class Itinerary extends AbstractBtWidget {
         if ($total > 1) {
             $path    = implode('|', array_map(fn($p) => "{$p[0]},{$p[1]}", $points));
             $params .= '&path=' . rawurlencode('color:0x0066cccc|weight:3|' . $path);
+        }
+
+        // Applique le style JSON → paramètres Static Maps API
+        if (!empty($style_json)) {
+            $style_params = self::bt_map_json_to_static_params($style_json);
+            if ($style_params) $params .= '&' . $style_params;
         }
 
         $url  = 'https://maps.googleapis.com/maps/api/staticmap?' . $params;

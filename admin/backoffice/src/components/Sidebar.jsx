@@ -28,6 +28,7 @@ const SETTINGS_TOOLS = [
   { path: '/settings/manual-sync',        label: 'Sync produits'      },
   { path: '/settings/bookings-sync',      label: 'Sync réservations'  },
   { path: '/settings/reservations-import',label: 'Import solditems'   },
+  { path: '/settings/stats-import',       label: 'Import Stats'       },
   { path: '/settings/diagnostic',         label: 'Diagnostic'         },
   { path: '/settings/installation',       label: 'Installation'       },
 ]

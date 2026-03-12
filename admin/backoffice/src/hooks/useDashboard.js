@@ -25,7 +25,8 @@ export function useDashboard() {
   const [filterParams, setFilterParams] = useState(() => {
     const saved = loadPrefs()
     if (saved) return saved
-    const from = '2017-01-01', to = today()
+    // Default: last 12 months — keeps CA/jour and Rés/jour meaningful
+    const from = monthsAgo(11), to = today()
     const { cmpFrom, cmpTo } = prevPeriod(from, to)
     return { from, to, granularity: 'month', compareFrom: cmpFrom, compareTo: cmpTo }
   })
@@ -57,7 +58,7 @@ export function useDashboard() {
       from: filterParams.from,
       to: filterParams.to,
       granularity: filterParams.granularity,
-      include: 'periods,kpis,by_product,by_channel,by_weekday,heatmap,payments,booking_hours,lead_time,repeat_customers,product_mix,channel_status,yoy,cumulative',
+      include: 'periods,kpis,by_product,by_channel,by_weekday,heatmap,payments,lead_time_buckets,lead_time,repeat_customers,product_mix,channel_status,yoy,cumulative',
     }
     if (filterParams.compareFrom) p.compare_from = filterParams.compareFrom
     if (filterParams.compareTo) p.compare_to = filterParams.compareTo
@@ -109,6 +110,10 @@ export function useDashboard() {
     const from = '2017-01-01', to = today()
     const { cmpFrom, cmpTo } = prevPeriod(from, to)
     setFilterParams({ from, to, granularity: 'month', compareFrom: cmpFrom, compareTo: cmpTo })
+  }
+
+  function clearPrefs() {
+    try { localStorage.removeItem('bt-dashboard-prefs') } catch {}
   }
 
   function applyFilters(p) {

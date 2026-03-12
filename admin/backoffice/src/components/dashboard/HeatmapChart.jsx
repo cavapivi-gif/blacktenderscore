@@ -46,9 +46,12 @@ export function HeatmapChart({ data = [] }) {
 
   return (
     <div className="rounded-lg border bg-card p-5">
-      <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium mb-4">
-        Heatmap réservations
-      </p>
+      <div className="mb-4">
+        <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">
+          Heatmap réservations
+        </p>
+        <p className="text-[10px] text-muted-foreground mt-0.5">Mois × jour de semaine</p>
+      </div>
       <div className="overflow-x-auto">
         <div className="inline-flex gap-0.5">
           {/* Day labels */}
@@ -74,8 +77,8 @@ export function HeatmapChart({ data = [] }) {
                   />
                 )
               })}
-              <span className="text-[8px] text-muted-foreground text-center mt-0.5">
-                {month.slice(5)}
+              <span className="text-[8px] text-muted-foreground text-center mt-0.5 whitespace-nowrap">
+                {(([y, m]) => `${['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'][+m-1]} ${y.slice(2)}`)(month.split('-'))}
               </span>
             </div>
           ))}

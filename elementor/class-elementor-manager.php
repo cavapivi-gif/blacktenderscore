@@ -46,6 +46,73 @@ class ElementorManager {
         add_action('elementor/frontend/after_enqueue_styles',  [$this, 'enqueue_assets']);
         add_action('elementor/editor/after_enqueue_styles',    [$this, 'enqueue_assets']);
         add_action('elementor/editor/after_enqueue_styles',    [$this, 'enqueue_editor_extras']);
+
+        // ── Map Style : injecte la section "Style de carte" dans TOUS les widgets ──
+        // Utilise after_section_end avec static $injected pour n'ajouter la section qu'une fois par type.
+        add_action('elementor/element/after_section_end', static function(
+            \Elementor\Element_Base $element, string $section_id, array $args
+        ): void {
+            static $injected = [];
+            $name = $element->get_name();
+            if (isset($injected[$name])) return;
+            $injected[$name] = true;
+
+            $element->start_controls_section('section_bt_map_style', [
+                'label' => __('Style de carte (BT)', 'blacktenderscore'),
+                'tab'   => \Elementor\Controls_Manager::TAB_ADVANCED,
+            ]);
+
+            $element->add_control('bt_map_style_enabled', [
+                'label'        => __('Appliquer un style', 'blacktenderscore'),
+                'type'         => \Elementor\Controls_Manager::SWITCHER,
+                'label_on'     => __('Oui', 'blacktenderscore'),
+                'label_off'    => __('Non', 'blacktenderscore'),
+                'return_value' => 'yes',
+                'default'      => 'yes',
+                'description'  => __('Active le style global Google Maps sur ce widget. Désactivez pour garder le style par défaut Google.', 'blacktenderscore'),
+            ]);
+
+            $element->add_control('bt_map_style_preset', [
+                'label'     => __('Preset', 'blacktenderscore'),
+                'type'      => \Elementor\Controls_Manager::SELECT,
+                'options'   => AbstractBtWidget::get_bt_map_style_options(),
+                'default'   => '',
+                'condition' => ['bt_map_style_enabled' => 'yes'],
+            ]);
+
+            $element->end_controls_section();
+        }, 99, 3);
+
+        // ── Map Style : applique data-bt-map-style sur le wrapper du widget avant le rendu ──
+        // Lit les settings BT map style et écrit l'attribut sur le wrapper.
+        // Compatible avec tous les widgets (BT, Elementor natif, PowerPack, etc.)
+        // Le JS global (wp_footer) lit cet attribut via el.closest('[data-bt-map-style]').
+        add_action('elementor/frontend/element/before_render', static function(
+            \Elementor\Element_Base $element
+        ): void {
+            if (!($element instanceof \Elementor\Widget_Base)) return;
+
+            $settings = $element->get_settings();
+            $enabled  = $settings['bt_map_style_enabled'] ?? null;
+
+            // Le contrôle n'existe pas encore sur ce widget (cache vide → sera injecté au prochain rendu)
+            if ($enabled === null) return;
+
+            // Désactivé explicitement → sentinelle 'none' pour bloquer le style global JS
+            if ($enabled !== 'yes') {
+                $element->add_render_attribute('_wrapper', 'data-bt-map-style', 'none');
+                return;
+            }
+
+            // Preset spécifique choisi → mettre le JSON dans l'attribut
+            $preset = $settings['bt_map_style_preset'] ?? '';
+            if ($preset === '') return;  // '' = utiliser le style global (aucun attribut nécessaire)
+
+            $json = AbstractBtWidget::resolve_bt_map_style($preset);
+            if ($json !== null) {
+                $element->add_render_attribute('_wrapper', 'data-bt-map-style', $json);
+            }
+        }, 10);
     }
 
     // ── Invalidation transients ───────────────────────────────────────────────
@@ -160,5 +227,10 @@ class ElementorManager {
             BT_VERSION,
             true
         );
+
+        // Leaflet — enregistré seulement (enqueued à la demande dans render_map_leaflet)
+        wp_register_style('bt-leaflet-css', BT_URL . 'elementor/assets/leaflet.min.css', [], '1.9.4');
+        wp_register_script('bt-leaflet',     BT_URL . 'elementor/assets/leaflet.min.js',  [], '1.9.4', true);
+        wp_register_script('bt-leaflet-init', BT_URL . 'elementor/assets/bt-leaflet-init.js', ['bt-leaflet'], BT_VERSION, true);
     }
 }

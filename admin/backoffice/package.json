@@ -8,6 +8,13 @@
     "build": "vite build"
   },
   "dependencies": {
+    "@fullcalendar/core": "^6.1.20",
+    "@fullcalendar/daygrid": "^6.1.20",
+    "@fullcalendar/interaction": "^6.1.20",
+    "@fullcalendar/list": "^6.1.20",
+    "@fullcalendar/multimonth": "^6.1.20",
+    "@fullcalendar/react": "^6.1.20",
+    "@fullcalendar/timegrid": "^6.1.20",
     "@uiw/react-textarea-code-editor": "^3.1.1",
     "date-fns": "^4.1.0",
     "iconoir-react": "^7.9.0",

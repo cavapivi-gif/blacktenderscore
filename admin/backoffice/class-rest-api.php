@@ -230,6 +230,12 @@ class RestApi {
             'permission_callback' => $auth,
         ]);
 
+        register_rest_route(self::NS, '/avis/by-email', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'get_avis_by_email'],
+            'permission_callback' => $auth,
+        ]);
+
         // Import participations (stats externes) → DB locale
         register_rest_route(self::NS, '/participations/import/csv', [
             'methods'             => 'POST',
@@ -796,7 +802,8 @@ class RestApi {
                 'by_method' => $db->query_by_payment_method($from, $to),
                 'by_status' => $db->query_by_payment_status($from, $to),
             ] : null,
-            'lead_time_buckets' => in_array('lead_time_buckets', $includes) ? $db->query_lead_time_buckets($from, $to) : null,
+            'lead_time_buckets'         => in_array('lead_time_buckets', $includes) ? $db->query_lead_time_buckets($from, $to) : null,
+            'lead_time_buckets_compare' => (in_array('lead_time_buckets', $includes) && $has_compare) ? $db->query_lead_time_buckets($compare_from, $compare_to) : null,
             'lead_time'      => in_array('lead_time', $includes) ? $db->query_lead_time($from, $to) : null,
             'repeat_customers' => in_array('repeat_customers', $includes) ? $db->query_repeat_customers($from, $to) : null,
             'product_mix'    => in_array('product_mix', $includes) ? $db->query_product_mix($from, $to, $granularity) : null,
@@ -1403,6 +1410,15 @@ class RestApi {
     public function reset_avis_db(): \WP_REST_Response {
         (new ReviewsDb())->truncate();
         return rest_ensure_response(['success' => true]);
+    }
+
+    /** Retourne les avis d'un client par email (pour le drawer client). */
+    public function get_avis_by_email(\WP_REST_Request $req): \WP_REST_Response {
+        $email = sanitize_email($req->get_param('email') ?? '');
+        if (!$email) return new \WP_REST_Response(['data' => []], 200);
+        $db   = new ReviewsDb();
+        $data = $db->get_by_email($email);
+        return rest_ensure_response(['data' => $data]);
     }
 
     // ── Participations ────────────────────────────────────────────────────────

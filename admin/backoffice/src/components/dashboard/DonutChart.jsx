@@ -5,8 +5,16 @@ import { fmtNum } from '../../lib/utils'
 /**
  * Donut chart with legend — for channel breakdown, payment methods, etc.
  */
-export function DonutChart({ data = [], title, nameKey = 'name', valueKey = 'value', colors = COLORS.palette }) {
-  if (!data.length) return null
+export function DonutChart({ data = [], title, nameKey = 'name', valueKey = 'value', colors = COLORS.palette, showEmpty = false }) {
+  if (!data.length) {
+    if (!showEmpty) return null
+    return (
+      <div className="rounded-lg border bg-card p-5">
+        <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium mb-4">{title}</p>
+        <p className="text-sm text-muted-foreground py-6 text-center">Aucune donnée disponible</p>
+      </div>
+    )
+  }
 
   const total = data.reduce((s, d) => s + (d[valueKey] || 0), 0)
 

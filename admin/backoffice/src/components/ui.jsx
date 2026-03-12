@@ -163,7 +163,7 @@ export function PageHeader({ title, subtitle, actions }) {
   )
 }
 
-export function Table({ columns, data, loading, empty = 'Aucune donnée.', onRowClick }) {
+export function Table({ columns, data, loading, empty = 'Aucune donnée.', onRowClick, sortKey, sortDir, onSort }) {
   if (loading) return <div className="px-6 py-12 text-center text-sm text-muted-foreground">Chargement…</div>
   if (!data?.length) return <div className="px-6 py-12 text-center text-sm text-muted-foreground">{empty}</div>
 
@@ -173,8 +173,25 @@ export function Table({ columns, data, loading, empty = 'Aucune donnée.', onRow
         <thead>
           <tr className="border-b">
             {columns.map(col => (
-              <th key={col.key} className="px-4 py-3 text-left text-xs text-muted-foreground uppercase tracking-wider font-normal">
-                {col.label}
+              <th
+                key={col.key}
+                onClick={() => col.sortable && onSort?.(col.key)}
+                className={cn(
+                  'px-4 py-3 text-left text-xs text-muted-foreground uppercase tracking-wider font-normal',
+                  col.sortable && 'cursor-pointer select-none hover:text-foreground transition-colors'
+                )}
+              >
+                <span className="inline-flex items-center gap-1">
+                  {col.label}
+                  {col.sortable && (
+                    <span className="tabular-nums">
+                      {sortKey === col.key
+                        ? (sortDir === 'asc' ? ' ↑' : ' ↓')
+                        : <span className="opacity-25"> ↕</span>
+                      }
+                    </span>
+                  )}
+                </span>
               </th>
             ))}
           </tr>

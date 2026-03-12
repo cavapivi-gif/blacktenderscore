@@ -204,6 +204,35 @@ export default function Bookings() {
           />
         </div>
 
+        {/* ── Chips filtres actifs ─────────────────────────────────── */}
+        {(() => {
+          const chips = [
+            preset >= 0 && preset !== 5 && { label: PRESETS[preset].label, clear: () => applyPreset(5) },
+            statusFilter && { label: STATUS_OPTIONS.find(o => o.value === statusFilter)?.label, clear: () => { setStatusFilter(''); setPage(1) } },
+            search && { label: `"${search}"`, clear: () => { setSearch(''); setPage(1) } },
+          ].filter(Boolean)
+          if (!chips.length) return null
+          return (
+            <div className="px-6 py-2 border-b flex items-center gap-2 flex-wrap">
+              <span className="text-xs text-muted-foreground shrink-0">Filtres actifs :</span>
+              {chips.map((c, i) => (
+                <button key={i} onClick={c.clear}
+                  className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs bg-primary text-primary-foreground rounded-full hover:opacity-75 transition-opacity"
+                >
+                  {c.label} <span className="opacity-70">×</span>
+                </button>
+              ))}
+              {chips.length > 1 && (
+                <button onClick={() => { applyPreset(5); setStatusFilter(''); setSearch(''); setPage(1) }}
+                  className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 ml-1"
+                >
+                  Tout effacer
+                </button>
+              )}
+            </div>
+          )
+        })()}
+
         {error && <div className="px-6 pt-4"><Notice type="error">{error}</Notice></div>}
 
         {/* ── Table cliquable ─────────────────────────────────────────── */}

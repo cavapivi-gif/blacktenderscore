@@ -1033,6 +1033,45 @@
   }
 }
 
+/* ── Dots numérotés — CSS counter sur étapes sans icône ───────
+   counter-increment sur le <li> → counter(bt-step) lisible
+   depuis le pseudo-élément d'un descendant direct.              */
+.bt-itin__list {
+  counter-reset: bt-step;
+}
+
+.bt-itin__list > li:not(.bt-itin__step--transport) {
+  counter-increment: bt-step;
+}
+
+.bt-itin__list > li:not(.bt-itin__step--transport) .bt-itin__dot:not(.bt-itin__dot--icon) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bt-itin__list > li:not(.bt-itin__step--transport) .bt-itin__dot:not(.bt-itin__dot--icon)::after {
+  content: counter(bt-step);
+  font-size: 9px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+}
+
+/* ── Connecteur étapes retour — couleur via CSS var ───────────
+   Surcharge uniquement les <li class="bt-itin__step--return">.
+   Fallback : reprend --bt-itin-line-color si non défini.        */
+.bt-itin:not(.bt-itin--no-connector)
+  .bt-itin__list > li.bt-itin__step--return:not(:last-child):not(:has(+ .bt-itin__step--transport))::before {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--bt-itin-return-line-color, var(--bt-itin-line-color, #d0d0d0)) 0,
+    var(--bt-itin-return-line-color, var(--bt-itin-line-color, #d0d0d0)) 5px,
+    transparent 5px,
+    transparent 10px
+  );
+}
+
 /* ── Carte Google Maps Static API (<img>) ─────────────────── */
 .bt-itin__map-wrap {
   position: relative;
@@ -1045,6 +1084,29 @@
   height: 400px; /* override par le control Elementor map_height */
   object-fit: cover; /* recadre l'image dans la hauteur choisie */
   object-position: center;
+}
+
+/* ── Carte Leaflet interactive (<div>) ────────────────────── */
+.bt-itin__map--leaflet {
+  /* height fixée par le control Elementor map_height */
+  z-index: 1;
+}
+
+/* Marker custom — cercle numéroté, couleur injectée inline par JS */
+.bt-map-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .35);
+  line-height: 1;
+  cursor: pointer;
 }
 
 

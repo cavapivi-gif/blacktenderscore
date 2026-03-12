@@ -6,11 +6,13 @@ defined('ABSPATH') || exit;
 /**
  * Dynamic Tag — Durée(s) de l'excursion.
  *
- * Lit exp_time (taxonomy) depuis chaque ligne de tarification_par_forfait.
+ * Lit boat_half_day_time et boat_full_day_time (ACF), identiques aux champs
+ * utilisés par le widget BT — Tarifs bateau.
  * Peut afficher la durée minimale, maximale, ou toutes en liste.
  *
  * Options :
  *  - mode      : min / max / all (toutes, séparées)
+ *  - suffix    : suffixe affiché après chaque valeur (ex: " h")
  *  - separator : si mode = all
  *  - fallback  : texte si aucune durée
  */
@@ -33,6 +35,12 @@ class Tag_Exp_Duration extends Abstract_BT_Tag {
             'default' => 'min',
         ]);
 
+        $this->add_control('suffix', [
+            'label'   => __('Suffixe (ex: " h")', 'blacktenderscore'),
+            'type'    => \Elementor\Controls_Manager::TEXT,
+            'default' => ' h',
+        ]);
+
         $this->add_control('separator', [
             'label'     => __('Séparateur (mode "toutes")', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::TEXT,
@@ -48,50 +56,37 @@ class Tag_Exp_Duration extends Abstract_BT_Tag {
     }
 
     public function render(): void {
-        $rows = $this->acf('tarification_par_forfait');
-        if (empty($rows)) {
-            echo esc_html($this->get_settings('fallback') ?? '');
-            return;
-        }
+        $post_id = get_the_ID();
 
-        // Collecter les noms de termes exp_time (taxonomy) de chaque ligne
+        // Même source que le widget BT — Tarifs bateau (class-boat-pricing.php)
+        $half = get_field('boat_half_day_time', $post_id);
+        $full = get_field('boat_full_day_time', $post_id);
+
+        // Collecte ordonnée : demi-journée en premier (plus courte), journée en second
         $durations = [];
-        foreach ((array) $rows as $row) {
-            $term_val = $row['exp_time'] ?? null;
-            if (!$term_val) continue;
+        if ($half !== null && $half !== '') $durations[] = (string) $half;
+        if ($full !== null && $full !== '') $durations[] = (string) $full;
 
-            $name = $this->resolve_term_name($term_val);
-            if ($name && !in_array($name, $durations, true)) {
-                $durations[] = $name;
-            }
-        }
+        // Déduplique au cas où les deux valeurs seraient identiques
+        $durations = array_values(array_unique($durations));
 
         if (empty($durations)) {
             echo esc_html($this->get_settings('fallback') ?? '');
             return;
         }
 
-        $mode = $this->get_settings('mode') ?: 'min';
+        $mode   = $this->get_settings('mode') ?: 'min';
+        $suffix = $this->get_settings('suffix') ?? ' h';
 
         $output = match ($mode) {
-            'max'   => end($durations),
-            'all'   => implode($this->get_settings('separator') ?: ' · ', $durations),
-            default => $durations[0],
+            'max'   => end($durations) . $suffix,
+            'all'   => implode(
+                            $this->get_settings('separator') ?: ' · ',
+                            array_map(fn($d) => $d . $suffix, $durations)
+                        ),
+            default => $durations[0] . $suffix,
         };
 
         echo esc_html($output);
-    }
-
-    private function resolve_term_name(mixed $val): string {
-        if ($val instanceof \WP_Term) return $val->name;
-        if (is_array($val)) {
-            $first = reset($val);
-            return $this->resolve_term_name($first);
-        }
-        if (is_numeric($val)) {
-            $t = get_term((int) $val);
-            return ($t && !is_wp_error($t)) ? $t->name : '';
-        }
-        return (string) $val;
     }
 }

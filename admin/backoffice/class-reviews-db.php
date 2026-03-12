@@ -251,10 +251,69 @@ class ReviewsDb {
         // Projection : nombre d'avis 5★ supplémentaires pour atteindre 4.8
         $reviews_needed_4_8 = null;
         if ($avg !== null && $avg < 4.8 && $total_rated > 0) {
-            // (sum + 5n) / (total + n) = 4.8 → n = (4.8·total - sum) / (5 - 4.8)
             $current_sum        = $avg * $total_rated;
             $reviews_needed_4_8 = (int) ceil((4.8 * $total_rated - $current_sum) / 0.2);
         }
+
+        // Par jour de la semaine (0=Dimanche … 6=Samedi)
+        $by_weekday = $wpdb->get_results(
+            "SELECT DAYOFWEEK(review_date) - 1 as weekday,
+                    COUNT(*) as count,
+                    ROUND(AVG(rating), 2) as avg_rating
+             {$base_rated}
+             AND review_date IS NOT NULL
+             GROUP BY weekday ORDER BY weekday ASC",
+            ARRAY_A
+        );
+
+        // Par produit (top 15, triés par nombre d'avis)
+        $by_product = $wpdb->get_results(
+            "SELECT product_name,
+                    COUNT(*) as count,
+                    ROUND(AVG(rating), 2) as avg_rating
+             {$base_rated}
+             AND product_name != '' AND product_name IS NOT NULL
+             GROUP BY product_name
+             ORDER BY count DESC
+             LIMIT 15",
+            ARRAY_A
+        );
+
+        // Lead time : délai entre event_date et review_date (en jours)
+        $lead_time_row = $wpdb->get_row(
+            "SELECT ROUND(AVG(DATEDIFF(review_date, event_date)), 1) as avg_days
+             {$base_rated}
+             AND event_date IS NOT NULL
+             AND review_date IS NOT NULL
+             AND review_date >= event_date",
+            ARRAY_A
+        );
+
+        // Buckets lead time
+        $lead_time_buckets_raw = $wpdb->get_results(
+            "SELECT
+               CASE
+                 WHEN DATEDIFF(review_date, event_date) < 7    THEN '<7j'
+                 WHEN DATEDIFF(review_date, event_date) < 30   THEN '7-30j'
+                 WHEN DATEDIFF(review_date, event_date) < 90   THEN '30-90j'
+                 WHEN DATEDIFF(review_date, event_date) < 180  THEN '90-180j'
+                 ELSE '>180j'
+               END as bucket,
+               COUNT(*) as count
+             {$base_rated}
+             AND event_date IS NOT NULL
+             AND review_date IS NOT NULL
+             AND review_date >= event_date
+             GROUP BY bucket",
+            ARRAY_A
+        );
+        // Ordonner les buckets
+        $bucket_order = ['<7j', '7-30j', '30-90j', '90-180j', '>180j'];
+        $buckets_indexed = array_column($lead_time_buckets_raw ?? [], 'count', 'bucket');
+        $lead_time_buckets = array_map(
+            fn($b) => ['bucket' => $b, 'count' => (int) ($buckets_indexed[$b] ?? 0)],
+            $bucket_order
+        );
 
         return [
             'total'              => $total_all,
@@ -266,7 +325,32 @@ class ReviewsDb {
             'monthly'            => $monthly,
             'products'           => $products,
             'reviews_needed_4_8' => $reviews_needed_4_8,
+            'by_weekday'         => $by_weekday,
+            'by_product'         => $by_product,
+            'avg_lead_time_days' => $lead_time_row['avg_days'] ?? null,
+            'lead_time_buckets'  => $lead_time_buckets,
         ];
+    }
+
+    /**
+     * Retourne les avis d'un client donné par email (pour le drawer client).
+     *
+     * @return array  Tableau d'avis triés par review_date DESC
+     */
+    public function get_by_email(string $email, int $limit = 10): array {
+        global $wpdb;
+        $email = sanitize_email($email);
+        if (!$email) return [];
+
+        return $wpdb->get_results($wpdb->prepare(
+            "SELECT id, order_number, product_name, rating, review_title, review_body, review_date, response
+             FROM {$this->table}
+             WHERE customer_email = %s
+             ORDER BY review_date DESC
+             LIMIT %d",
+            $email,
+            $limit
+        ), ARRAY_A) ?: [];
     }
 
     /** Vide la table bt_reviews. */

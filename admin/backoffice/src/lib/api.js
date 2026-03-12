@@ -58,11 +58,17 @@ export const api = {
   // Re-parse offer_raw → price_total pour les lignes existantes avec price NULL
   reparsePrices:            ()       => api.post('/reservations/reparse-prices', {}),
 
+  // Import participations (stats externes) → DB locale
+  importParticipationsCsv:    (items)  => api.post('/participations/import/csv', { items }),
+  participationsImportStatus: ()       => api.get('/participations/import/status'),
+  resetParticipationsDb:      ()       => api.post('/participations/import/reset', {}),
+
   // Avis clients (import CSV Regiondo)
-  avis:          (params) => api.get('/avis' + toQuery(params)),
-  avisStats:     (params) => api.get('/avis/stats' + toQuery(params)),
-  importAvisCsv: (items)  => api.post('/avis/import/csv', { items }),
-  resetAvis:     ()       => api.post('/avis/reset', {}),
+  avis:            (params) => api.get('/avis' + toQuery(params)),
+  avisStats:       (params) => api.get('/avis/stats' + toQuery(params)),
+  avisByEmail:     (email)  => api.get('/avis/by-email' + toQuery({ email })),
+  importAvisCsv:   (items)  => api.post('/avis/import/csv', { items }),
+  resetAvis:       ()       => api.post('/avis/reset', {}),
 
   // Onboarding wizard
   onboardingStatus:   ()     => api.get('/onboarding/status'),

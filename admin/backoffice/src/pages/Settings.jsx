@@ -4,6 +4,7 @@ import { RefreshDouble } from 'iconoir-react'
 import { api } from '../lib/api'
 import { PageHeader, Input, Btn, Notice, Spinner, SectionTitle, Divider, Badge, DangerModal } from '../components/ui'
 import CsvImporter from '../components/CsvImporter'
+import CsvImporterStats from '../components/CsvImporterStats'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/Tabs'
 import CodeEditor from '@uiw/react-textarea-code-editor'
 import '@uiw/react-textarea-code-editor/dist.css'
@@ -19,6 +20,7 @@ const SECTIONS = {
   'manual-sync':        { title: 'Sync produits',        subtitle: 'Synchronisation immédiate des produits Regiondo → WordPress',                   hasSave: false },
   'bookings-sync':      { title: 'Sync réservations',   subtitle: 'Importe toutes les réservations Regiondo dans la base de données',               hasSave: false },
   'reservations-import':{ title: 'Import solditems',    subtitle: 'Importe les articles vendus enrichis (solditems) — CA réel, remboursements…',    hasSave: false },
+  'stats-import':       { title: 'Import Stats',        subtitle: 'Importe les participations depuis un CSV externe (OTA, billetterie…)',            hasSave: false },
   diagnostic:           { title: 'Diagnostic API',      subtitle: 'Teste chaque endpoint et affiche les réponses brutes',                            hasSave: false },
   installation:         { title: 'Installation',        subtitle: 'Relancer le wizard de configuration initiale du plugin',                          hasSave: false },
 }
@@ -325,6 +327,10 @@ export default function Settings() {
   const [rSyncLog,       setRSyncLog]       = useState([])
   const [rResetLoading,  setRResetLoading]  = useState(false)
   const [showResetModal, setShowResetModal] = useState(false)
+  // Participations import (stats externes) state
+  const [pImportStatus,    setPImportStatus]    = useState(null)
+  const [pResetLoading,    setPResetLoading]    = useState(false)
+  const [showPResetModal,  setShowPResetModal]  = useState(false)
 
   useEffect(() => {
     api.settings()
@@ -343,6 +349,12 @@ export default function Settings() {
   useEffect(() => {
     if (section !== 'reservations-import') return
     api.importReservationsStatus().then(setRSyncStatus).catch(() => {})
+  }, [section])
+
+  // Charge le statut import participations (stats externes)
+  useEffect(() => {
+    if (section !== 'stats-import') return
+    api.participationsImportStatus().then(setPImportStatus).catch(() => {})
   }, [section])
 
   function set(key, value) {
@@ -537,6 +549,20 @@ export default function Settings() {
     }
   }
 
+  async function handleResetParticipationsDb() {
+    setShowPResetModal(false)
+    setPResetLoading(true)
+    try {
+      await api.resetParticipationsDb()
+      const status = await api.participationsImportStatus().catch(() => null)
+      if (status) setPImportStatus(status)
+    } catch (e) {
+      console.error('Reset participations error:', e.message)
+    } finally {
+      setPResetLoading(false)
+    }
+  }
+
   async function handleDiagnostic() {
     setDiagLoading(true); setDiagData(null)
     try {
@@ -688,6 +714,7 @@ export default function Settings() {
             <MapPresets
               presets={settings.map_presets ?? []}
               activeJson={settings.map_style_json ?? ''}
+              apiKey={settings.maps_api_key ?? ''}
               onPresetsChange={v => set('map_presets', v)}
               onActivate={v => set('map_style_json', v)}
             />
@@ -925,6 +952,71 @@ export default function Settings() {
         )
       }
 
+      // ── Import participations (stats externes) ────────────────────────────
+      case 'stats-import': {
+        return (
+          <div className="space-y-5">
+            {/* Stats DB */}
+            <div className="rounded-lg border bg-card p-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div>
+                <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-0.5">Dans la DB</p>
+                <p className="text-xl font-semibold tabular-nums">
+                  {pImportStatus ? pImportStatus.total_in_db.toLocaleString('fr-FR') : '—'}
+                </p>
+              </div>
+              <div>
+                <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-0.5">Première date</p>
+                <p className="text-sm font-medium">{pImportStatus?.date_min ?? '—'}</p>
+              </div>
+              <div>
+                <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-0.5">Dernière date</p>
+                <p className="text-sm font-medium">{pImportStatus?.date_max ?? '—'}</p>
+              </div>
+              <div>
+                <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-0.5">Dernier import</p>
+                <p className="text-xs text-muted-foreground">
+                  {pImportStatus?.last_import
+                    ? new Date(pImportStatus.last_import).toLocaleString('fr-FR')
+                    : 'Jamais'}
+                </p>
+              </div>
+            </div>
+
+            <p className="text-sm text-muted-foreground">
+              Importe les <strong>participations</strong> depuis un CSV externe (OTA, billetterie…).
+              Colonnes attendues : <code>Date de la participation</code>, <code>Nom du produit</code>,
+              prénom/nom/email client, prix net/brut, téléphone.
+            </p>
+
+            <Notice type="warn">
+              <strong>Déduplication :</strong> chaque ligne est identifiée par la combinaison
+              date + produit + email + prix brut. Deux achats identiques sur ces quatre champs
+              seront comptés comme un seul — si vos exports manquent de dates, réimportez
+              après avoir corrigé la source.
+            </Notice>
+
+            <Divider />
+            <SectionTitle>Import CSV</SectionTitle>
+            <CsvImporterStats
+              onDone={() => api.participationsImportStatus().then(setPImportStatus).catch(() => {})}
+            />
+
+            <Divider />
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">Vider la table</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Supprime toutes les participations importées. Réimportez ensuite depuis le CSV.
+                </p>
+              </div>
+              <Btn variant="danger" loading={pResetLoading} onClick={() => setShowPResetModal(true)}>
+                Vider la DB
+              </Btn>
+            </div>
+          </div>
+        )
+      }
+
       case 'installation': {
         return <InstallationSection />
       }
@@ -961,6 +1053,18 @@ export default function Settings() {
         loading={rResetLoading}
       >
         Toutes les réservations importées ({rSyncStatus?.total_in_db?.toLocaleString('fr-FR') ?? '?'} lignes)
+        seront supprimées définitivement. Cette action est irréversible.
+      </DangerModal>
+
+      <DangerModal
+        open={showPResetModal}
+        title="Vider la table bt_participations"
+        onClose={() => setShowPResetModal(false)}
+        onConfirm={handleResetParticipationsDb}
+        confirmLabel="Supprimer définitivement"
+        loading={pResetLoading}
+      >
+        Toutes les participations importées ({pImportStatus?.total_in_db?.toLocaleString('fr-FR') ?? '?'} lignes)
         seront supprimées définitivement. Cette action est irréversible.
       </DangerModal>
     </div>

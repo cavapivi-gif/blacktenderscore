@@ -3,140 +3,105 @@ import { api } from '../lib/api'
 
 const BATCH_SIZE = 500
 
-// ── Mapping colonnes CSV Regiondo "Avis" → champs internes ───────────────────
-// Colonnes Regiondo (après trim des espaces) :
-//   "Évaluation"              → rating  (numérique 1-5, E majuscule + accent)
-//   "évaluation"              → review_body (corps texte, e minuscule + accent)
-//   "Date d'évaluation"       → review_date (avec espace final dans certains exports)
-//   "Résumé de l'évaluation"  → review_title (idem)
-const REVIEWS_COLUMN_MAP = {
-  'Produit':                   'product_name',
-  'Catégorie':                 'category',
-  'Categorie':                 'category',
-  'Guide':                     'guide',
-  "N° de commande":            'order_number',
-  'Date de réservation':       'booking_date',
-  'Date de reservation':       'booking_date',
-  "Date de l'évènement":       'event_date',
-  "Date de l'evenement":       'event_date',
-  "Date d'évaluation":         'review_date',
-  "Date d'evaluation":         'review_date',
-  'Nom du client':             'customer_name',
-  'Customer email':            'customer_email',
-  'Customer phone':            'customer_phone',
-  // Note: "Évaluation" (É majuscule) = note numérique
-  '\u00c9valuation':           'rating',        // Évaluation
-  // Note: "évaluation" (é minuscule) = texte de l'avis
-  '\u00e9valuation':           'review_body',   // évaluation
-  "Résumé de l'évaluation":   'review_title',
-  "Resume de l'evaluation":    'review_title',
-  'Statut':                    'review_status',
-  'Employee Name':             'employee_name',
-  'Response':                  'response',
+// ── Mapping colonnes CSV → champs internes ────────────────────────────────────
+// Supporte les exports en français et en anglais.
+const STATS_COLUMN_MAP = {
+  // Français
+  'Date de la participation': 'participation_date',
+  'Nom du produit':           'product_name',
+  'Prénom du client':         'buyer_firstname',
+  'Nom du client':            'buyer_lastname',
+  'Adresse E-mail du client': 'buyer_email',
+  'Prix (net)':               'price_net',
+  'Prix (brut)':              'price_gross',
+  'Téléphone':                'phone',
+  // Anglais (fallbacks)
+  'Participation Date':       'participation_date',
+  'Product Name':             'product_name',
+  'Customer First Name':      'buyer_firstname',
+  'Customer Last Name':       'buyer_lastname',
+  'Customer Email':           'buyer_email',
+  'Net Price':                'price_net',
+  'Gross Price':              'price_gross',
+  'Phone':                    'phone',
 }
 
-// ── Helpers date ──────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
 const FR_MONTHS = {
   janvier:'01', février:'02', fevrier:'02', mars:'03', avril:'04',
   mai:'05', juin:'06', juillet:'07', août:'08', aout:'08',
   septembre:'09', octobre:'10', novembre:'11', décembre:'12', decembre:'12',
 }
+
+/** Convertit une date française ou ISO en YYYY-MM-DD. Retourne '' si vide. */
 function parseFrenchDate(raw) {
-  if (!raw) return raw
-  if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0, 10)
-  const m = raw.match(/(\d{1,2})\s+(\S+)\s+(\d{4})/i)
+  if (!raw || !raw.trim()) return ''
+  const s = raw.trim()
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10)
+  const m = s.match(/(\d{1,2})\s+(\S+)\s+(\d{4})/i)
   if (m) {
     const month = FR_MONTHS[m[2].toLowerCase()]
     if (month) return `${m[3]}-${month}-${m[1].padStart(2, '0')}`
   }
-  const d = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/)
+  const d = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/)
   if (d) return `${d[3]}-${d[2].padStart(2, '0')}-${d[1].padStart(2, '0')}`
-  return raw
+  return s
 }
 
-// ── Parseur CSV RFC-4180 complet (gère les sauts de ligne dans les champs quotés) ──
-/**
- * Parse le texte CSV caractère par caractère.
- * Les sauts de ligne DANS les champs entre guillemets sont correctement ignorés.
- * Retourne un tableau de tableaux de chaînes (lignes × cellules).
- */
-function parseFullCsv(text, sep) {
-  const rows = []
-  let cells = []
+/** Parse un prix : "109,09" ou "109.09" → 109.09 ; null si invalide. */
+function parsePrice(raw) {
+  if (raw === null || raw === undefined || raw === '') return null
+  const cleaned = String(raw).trim().replace(/\s/g, '').replace(',', '.')
+  const val = parseFloat(cleaned)
+  return isNaN(val) ? null : val
+}
+
+// ── Parser CSV ────────────────────────────────────────────────────────────────
+
+/** Découpe une ligne CSV en respectant les guillemets (RFC 4180). */
+function parseCsvLine(line, sep) {
+  const cells = []
   let current = ''
   let inQuotes = false
-
-  for (let i = 0; i <= text.length; i++) {
-    const ch = i < text.length ? text[i] : null
-
-    if (ch === null) {
-      // Fin du texte — flush la dernière cellule
-      cells.push(current)
-      if (cells.some(c => c !== '')) rows.push(cells)
-      break
-    }
-
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i]
     if (inQuotes) {
       if (ch === '"') {
-        if (text[i + 1] === '"') { current += '"'; i++ } // guillemet échappé
+        if (line[i + 1] === '"') { current += '"'; i++ }
         else inQuotes = false
-      } else {
-        current += ch // \n et \r inclus dans le champ
-      }
-    } else {
-      if (ch === '"') {
-        inQuotes = true
-      } else if (ch === sep) {
-        cells.push(current)
-        current = ''
-      } else if (ch === '\r') {
-        // ignoré (partie de \r\n)
-      } else if (ch === '\n') {
-        cells.push(current)
-        current = ''
-        if (cells.some(c => c !== '')) rows.push(cells)
-        cells = []
       } else {
         current += ch
       }
+    } else {
+      if (ch === '"') { inQuotes = true }
+      else if (ch === sep) { cells.push(current); current = '' }
+      else { current += ch }
     }
   }
-
-  return rows
+  cells.push(current)
+  return cells
 }
 
-function parseReviewsCsv(text) {
-  // Détection du séparateur sur la première ligne
-  const firstLineEnd = text.indexOf('\n')
-  const firstLine = firstLineEnd >= 0 ? text.slice(0, firstLineEnd).replace(/\r$/, '') : text
+/**
+ * Parse le texte CSV et retourne un tableau de lignes normalisées.
+ * Filtre les lignes sans product_name.
+ */
+function parseCsvText(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim())
+  if (lines.length < 2) return []
+
+  const firstLine = lines[0]
   let sep = ','
   if (firstLine.split(';').length > firstLine.split(',').length) sep = ';'
   if (firstLine.split('\t').length > firstLine.split(sep).length) sep = '\t'
 
-  const allRows = parseFullCsv(text, sep)
-  if (allRows.length < 2) return []
-
-  // En-têtes : trim + gestion doublons Évaluation/évaluation
-  const rawHeaders = allRows[0].map(h => h.trim())
-  const seenEval = { upper: false, lower: false }
-  const fieldMap = rawHeaders.map(h => {
-    const hLower = h.toLowerCase()
-    // Évaluation (É majuscule, U+00C9) = note numérique
-    if (h.charCodeAt(0) === 0xc9 && hLower === '\u00e9valuation') {
-      if (!seenEval.upper) { seenEval.upper = true; return 'rating' }
-      return null
-    }
-    // évaluation (é minuscule, U+00E9) = texte de l'avis
-    if (h.charCodeAt(0) === 0xe9 && hLower === '\u00e9valuation') {
-      if (!seenEval.lower) { seenEval.lower = true; return 'review_body' }
-      return null
-    }
-    return REVIEWS_COLUMN_MAP[h] || null
-  })
+  const headers  = parseCsvLine(firstLine, sep).map(h => h.trim())
+  const fieldMap = headers.map(h => STATS_COLUMN_MAP[h] || null)
 
   const rows = []
-  for (let i = 1; i < allRows.length; i++) {
-    const cells = allRows[i]
+  for (let i = 1; i < lines.length; i++) {
+    const cells = parseCsvLine(lines[i], sep)
     if (cells.length < 2) continue
 
     const row = {}
@@ -145,15 +110,12 @@ function parseReviewsCsv(text) {
       if (field) row[field] = val.trim()
     })
 
-    if (!row.order_number) continue
+    // Filtre : le produit est obligatoire (identifiant minimal)
+    if (!row.product_name) continue
 
-    // Normalisation des dates
-    if (row.booking_date) row.booking_date = parseFrenchDate(row.booking_date)
-    if (row.event_date)   row.event_date   = parseFrenchDate(row.event_date)
-    if (row.review_date)  row.review_date  = parseFrenchDate(row.review_date)
-
-    // Rating : convertir en entier
-    if (row.rating !== undefined) row.rating = parseInt(row.rating, 10) || null
+    if (row.participation_date) row.participation_date = parseFrenchDate(row.participation_date)
+    if (row.price_net   !== undefined) row.price_net   = parsePrice(row.price_net)
+    if (row.price_gross !== undefined) row.price_gross = parsePrice(row.price_gross)
 
     rows.push(row)
   }
@@ -161,7 +123,8 @@ function parseReviewsCsv(text) {
   return rows
 }
 
-// ── ImportProgressModal ───────────────────────────────────────────────────────
+// ── Modales (reprises de CsvImporter) ────────────────────────────────────────
+
 function ImportProgressModal({ progress, pct }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -182,26 +145,20 @@ function ImportProgressModal({ progress, pct }) {
           </div>
           <span className="ml-auto text-2xl font-bold tabular-nums text-primary">{pct}%</span>
         </div>
-
         <div className="space-y-1.5">
           <div className="h-2.5 rounded-full bg-muted overflow-hidden">
             <div className="h-full rounded-full bg-primary transition-all duration-500 ease-out" style={{ width: `${pct}%` }} />
           </div>
           <div className="flex justify-between text-[11px] text-muted-foreground tabular-nums">
-            <span>{progress.sent.toLocaleString('fr-FR')} avis envoyés</span>
+            <span>{progress.sent.toLocaleString('fr-FR')} lignes envoyées</span>
             <span>{progress.rows.toLocaleString('fr-FR')} total</span>
           </div>
         </div>
-
-        {(progress.inserted > 0 || progress.updated > 0) && (
+        {(progress.inserted > 0) && (
           <div className="flex gap-3">
             <div className="flex-1 rounded-lg border border-border px-3 py-2 text-center">
               <p className="text-lg font-bold tabular-nums">{progress.inserted.toLocaleString('fr-FR')}</p>
-              <p className="text-[11px] text-muted-foreground">insérés</p>
-            </div>
-            <div className="flex-1 rounded-lg border border-border px-3 py-2 text-center">
-              <p className="text-lg font-bold tabular-nums text-muted-foreground">{progress.updated.toLocaleString('fr-FR')}</p>
-              <p className="text-[11px] text-muted-foreground">mis à jour</p>
+              <p className="text-[11px] text-muted-foreground">insérées</p>
             </div>
             {progress.errors?.length > 0 && (
               <div className="flex-1 rounded-lg border border-destructive/30 px-3 py-2 text-center">
@@ -211,16 +168,13 @@ function ImportProgressModal({ progress, pct }) {
             )}
           </div>
         )}
-
         <p className="text-[11px] text-muted-foreground text-center">Ne fermez pas cette fenêtre</p>
       </div>
     </div>
   )
 }
 
-// ── ImportSuccessModal ────────────────────────────────────────────────────────
 function ImportSuccessModal({ result, onClose }) {
-  const total = result.inserted + result.updated
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
@@ -236,32 +190,26 @@ function ImportSuccessModal({ result, onClose }) {
             </svg>
           </span>
         </div>
-
         <div className="space-y-1">
           <h3 className="text-base font-semibold">Import terminé !</h3>
           <p className="text-sm text-muted-foreground">
-            {total.toLocaleString('fr-FR')} avis traité{total > 1 ? 's' : ''}
+            {result.inserted.toLocaleString('fr-FR')} participation{result.inserted > 1 ? 's' : ''} importée{result.inserted > 1 ? 's' : ''}
+            {result.skipped > 0 && `, ${result.skipped.toLocaleString('fr-FR')} ignorée${result.skipped > 1 ? 's' : ''} (déjà présentes)`}
           </p>
         </div>
-
         <div className="flex gap-3">
           <div className="flex-1 rounded-lg border border-border px-3 py-2.5 text-center">
             <p className="text-xl font-bold tabular-nums">{result.inserted.toLocaleString('fr-FR')}</p>
-            <p className="text-[11px] text-muted-foreground">nouveaux</p>
-          </div>
-          <div className="flex-1 rounded-lg border border-border px-3 py-2.5 text-center">
-            <p className="text-xl font-bold tabular-nums text-muted-foreground">{result.updated.toLocaleString('fr-FR')}</p>
-            <p className="text-[11px] text-muted-foreground">mis à jour</p>
+            <p className="text-[11px] text-muted-foreground">nouvelles</p>
           </div>
           {result.skipped > 0 && (
             <div className="flex-1 rounded-lg border border-border px-3 py-2.5 text-center">
               <p className="text-xl font-bold tabular-nums text-muted-foreground">{result.skipped.toLocaleString('fr-FR')}</p>
-              <p className="text-[11px] text-muted-foreground">ignorés</p>
+              <p className="text-[11px] text-muted-foreground">ignorées</p>
             </div>
           )}
         </div>
-
-        {result.errors.length > 0 && (
+        {result.errors?.length > 0 && (
           <details className="text-left rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2">
             <summary className="text-xs text-destructive cursor-pointer font-medium">
               {result.errors.length} erreur{result.errors.length > 1 ? 's' : ''}
@@ -272,7 +220,6 @@ function ImportSuccessModal({ result, onClose }) {
             </ul>
           </details>
         )}
-
         <button type="button" onClick={onClose}
           className="w-full px-4 py-2 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
           Fermer
@@ -283,12 +230,13 @@ function ImportSuccessModal({ result, onClose }) {
 }
 
 // ── Composant principal ───────────────────────────────────────────────────────
-export default function ReviewsImporter({ onDone }) {
-  const [file, setFile]         = useState(null)
+
+export default function CsvImporterStats({ onDone }) {
+  const [file,      setFile]      = useState(null)
   const [importing, setImporting] = useState(false)
-  const [progress, setProgress] = useState(null)
-  const [error, setError]       = useState(null)
-  const [result, setResult]     = useState(null)
+  const [progress,  setProgress]  = useState(null)
+  const [error,     setError]     = useState(null)
+  const [result,    setResult]    = useState(null)
   const inputRef = useRef(null)
 
   const handleImport = useCallback(async () => {
@@ -301,34 +249,32 @@ export default function ReviewsImporter({ onDone }) {
 
     try {
       const text = await file.text()
-      const rows = parseReviewsCsv(text)
+      const rows = parseCsvText(text)
 
       if (rows.length === 0) {
-        setError('Aucun avis valide trouvé. Vérifiez que le CSV contient "N° de commande" en en-tête.')
+        setError('Aucune ligne valide trouvée. Vérifiez que le CSV contient "Nom du produit" en en-tête.')
         setImporting(false)
         return
       }
 
-      const totals = { inserted: 0, updated: 0, skipped: 0, errors: [] }
+      const totals = { inserted: 0, skipped: 0, errors: [] }
       const totalBatches = Math.ceil(rows.length / BATCH_SIZE)
 
       for (let i = 0; i < totalBatches; i++) {
         const batch = rows.slice(i * BATCH_SIZE, (i + 1) * BATCH_SIZE)
 
         setProgress({
-          current: i + 1,
-          total: totalBatches,
-          rows: rows.length,
-          sent: Math.min((i + 1) * BATCH_SIZE, rows.length),
+          current:  i + 1,
+          total:    totalBatches,
+          rows:     rows.length,
+          sent:     Math.min((i + 1) * BATCH_SIZE, rows.length),
           inserted: totals.inserted,
-          updated:  totals.updated,
           errors:   totals.errors,
         })
 
-        const res = await api.importAvisCsv(batch)
+        const res = await api.importParticipationsCsv(batch)
 
         totals.inserted += res.inserted ?? 0
-        totals.updated  += res.updated  ?? 0
         totals.skipped  += res.skipped  ?? 0
         if (res.errors?.length) totals.errors.push(...res.errors)
       }
@@ -339,7 +285,7 @@ export default function ReviewsImporter({ onDone }) {
       if (inputRef.current) inputRef.current.value = ''
       if (onDone) onDone()
     } catch (e) {
-      setError(e.message || "Erreur lors de l'import")
+      setError(e.message || 'Erreur lors de l\'import')
     } finally {
       setImporting(false)
     }
@@ -370,7 +316,9 @@ export default function ReviewsImporter({ onDone }) {
         </div>
 
         {file && !importing && (
-          <p className="text-xs text-muted-foreground">{file.name} · {(file.size / 1024).toFixed(0)} Ko</p>
+          <p className="text-xs text-muted-foreground">
+            {file.name} · {(file.size / 1024).toFixed(0)} Ko
+          </p>
         )}
 
         {error && (
@@ -380,8 +328,13 @@ export default function ReviewsImporter({ onDone }) {
         )}
       </div>
 
-      {importing && progress && <ImportProgressModal progress={progress} pct={pct} />}
-      {result && <ImportSuccessModal result={result} onClose={() => setResult(null)} />}
+      {importing && progress && (
+        <ImportProgressModal progress={progress} pct={pct} />
+      )}
+
+      {result && (
+        <ImportSuccessModal result={result} onClose={() => setResult(null)} />
+      )}
     </>
   )
 }

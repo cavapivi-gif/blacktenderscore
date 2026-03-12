@@ -1,20 +1,18 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 
 // ── Built-in Google Maps style presets ────────────────────────────────────────
-// Full JSON styles from Google Maps Platform / Snazzy Maps.
-// activeJson is the currently saved style; user can activate a preset or keep custom.
-
+// Colors arrays represent the dominant tones used in the gradient preview swatch.
 const BUILT_IN_PRESETS = [
   {
     name: 'Standard',
     description: 'Style Google par défaut',
+    colors: ['#e8eaed', '#f5f5f5', '#ffffff'],
     value: '[]',
-    preview: '#e8eaed',
   },
   {
     name: 'Silver',
-    description: 'Tons gris clair, épuré',
-    preview: '#c8c8c8',
+    description: 'Tons gris, épuré',
+    colors: ['#c8c8c8', '#f5f5f5', '#dadada'],
     value: JSON.stringify([
       { elementType: 'geometry', stylers: [{ color: '#f5f5f5' }] },
       { elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
@@ -30,7 +28,7 @@ const BUILT_IN_PRESETS = [
   {
     name: 'Retro',
     description: 'Tons sépia chauds',
-    preview: '#dfd2ae',
+    colors: ['#dfd2ae', '#ebe3cd', '#b9d3c2'],
     value: JSON.stringify([
       { elementType: 'geometry', stylers: [{ color: '#ebe3cd' }] },
       { elementType: 'labels.text.fill', stylers: [{ color: '#523735' }] },
@@ -45,7 +43,7 @@ const BUILT_IN_PRESETS = [
   {
     name: 'Dark',
     description: 'Fond sombre, labels clairs',
-    preview: '#212121',
+    colors: ['#212121', '#383838', '#000000'],
     value: JSON.stringify([
       { elementType: 'geometry', stylers: [{ color: '#212121' }] },
       { elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
@@ -60,7 +58,7 @@ const BUILT_IN_PRESETS = [
   {
     name: 'Night',
     description: 'Bleu nuit, style dashboard',
-    preview: '#0f172a',
+    colors: ['#1d2c4d', '#304a7d', '#0e1626'],
     value: JSON.stringify([
       { elementType: 'geometry', stylers: [{ color: '#1d2c4d' }] },
       { elementType: 'labels.text.fill', stylers: [{ color: '#8ec3b9' }] },
@@ -75,7 +73,7 @@ const BUILT_IN_PRESETS = [
   {
     name: 'Aubergine',
     description: 'Violet profond, labels dorés',
-    preview: '#1a0533',
+    colors: ['#1d0b40', '#3d1c5d', '#17263c'],
     value: JSON.stringify([
       { elementType: 'geometry', stylers: [{ color: '#1d0b40' }] },
       { elementType: 'labels.text.fill', stylers: [{ color: '#f8c967' }] },
@@ -88,20 +86,115 @@ const BUILT_IN_PRESETS = [
   },
 ]
 
+// ── MapPreview — live Google Maps preview ─────────────────────────────────────
+// Loads Maps JS API with the Elementor API key and shows a small interactive map.
+
+function parseStyle(json) {
+  if (!json || json === '[]') return []
+  try { return JSON.parse(json) } catch { return [] }
+}
+
+function MapPreview({ styleJson, apiKey }) {
+  const containerRef = useRef(null)
+  const mapRef       = useRef(null)
+  const loadedRef    = useRef(false)
+
+  const initMap = useCallback(() => {
+    if (!containerRef.current || mapRef.current) return
+    // Marseille — French coast, relevant for this sailing/activities app
+    mapRef.current = new window.google.maps.Map(containerRef.current, {
+      center: { lat: 43.2965, lng: 5.3698 },
+      zoom: 13,
+      disableDefaultUI: true,
+      gestureHandling: 'none',
+      styles: parseStyle(styleJson),
+    })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Load Maps JS API once
+  useEffect(() => {
+    if (!apiKey || loadedRef.current) return
+    loadedRef.current = true
+
+    if (window.google?.maps?.Map) {
+      initMap()
+      return
+    }
+
+    window.__btMapPreviewCb = initMap
+    const script = document.createElement('script')
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&callback=__btMapPreviewCb`
+    script.async = true
+    document.head.appendChild(script)
+
+    return () => {
+      delete window.__btMapPreviewCb
+    }
+  }, [apiKey, initMap])
+
+  // Apply style changes to existing map instance
+  useEffect(() => {
+    if (!mapRef.current) return
+    mapRef.current.setOptions({ styles: parseStyle(styleJson) })
+  }, [styleJson])
+
+  if (!apiKey) {
+    return (
+      <div className="rounded-lg border border-dashed border-border h-40 flex flex-col items-center justify-center gap-1.5 text-center px-4">
+        <svg className="text-muted-foreground/40" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Z"/>
+          <circle cx="12" cy="9" r="2.5"/>
+        </svg>
+        <p className="text-xs text-muted-foreground">
+          Aperçu indisponible — clé API Google Maps manquante.
+        </p>
+        <p className="text-[11px] text-muted-foreground/70">
+          Elementor → Réglages → Intégrations → Google Maps
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="rounded-lg overflow-hidden border border-border shadow-sm relative">
+      <div ref={containerRef} style={{ height: 200, width: '100%' }} />
+      {/* Location badge */}
+      <span className="absolute bottom-2 right-2 text-[10px] bg-black/50 text-white/80 rounded px-1.5 py-0.5 backdrop-blur-sm pointer-events-none">
+        Marseille · aperçu
+      </span>
+    </div>
+  )
+}
+
+// ── PresetSwatch — color gradient strip ───────────────────────────────────────
+function PresetSwatch({ colors }) {
+  const gradient = `linear-gradient(135deg, ${colors.join(', ')})`
+  return (
+    <span
+      className="w-full h-8 rounded-md border border-black/10 block shrink-0"
+      style={{ background: gradient }}
+    />
+  )
+}
+
+// ── MapPresets ─────────────────────────────────────────────────────────────────
 /**
- * MapPresets — preset picker + custom JSON editor for Google Maps styles.
+ * Preset picker + JSON editor + live preview for Google Maps styles.
  *
- * Props:
- *   presets         {array}    User-saved custom presets (name + value)
- *   activeJson      {string}   Currently active style JSON
- *   onPresetsChange {fn}       Called with updated presets array
- *   onActivate      {fn}       Called with the JSON string to activate
+ * @param {array}    presets          User-saved custom presets
+ * @param {string}   activeJson       Currently active style JSON
+ * @param {string}   apiKey           Google Maps JS API key (from Elementor settings)
+ * @param {function} onPresetsChange  Called with updated presets array
+ * @param {function} onActivate       Called with the JSON string to activate
  */
-export default function MapPresets({ presets = [], activeJson = '', onPresetsChange, onActivate }) {
-  const [customName, setCustomName]   = useState('')
-  const [jsonDraft,  setJsonDraft]    = useState(activeJson)
-  const [jsonError,  setJsonError]    = useState(null)
-  const [jsonOk,     setJsonOk]       = useState(false)
+export default function MapPresets({ presets = [], activeJson = '', apiKey = '', onPresetsChange, onActivate }) {
+  const [customName, setCustomName] = useState('')
+  const [jsonDraft,  setJsonDraft]  = useState(activeJson)
+  const [jsonError,  setJsonError]  = useState(null)
+  const [jsonOk,     setJsonOk]     = useState(false)
+
+  // The style shown in the preview: valid jsonDraft if editing, else active
+  const previewJson = jsonOk ? jsonDraft : activeJson
 
   function handleJsonChange(raw) {
     setJsonDraft(raw)
@@ -121,7 +214,10 @@ export default function MapPresets({ presets = [], activeJson = '', onPresetsCha
 
   function saveCustomPreset() {
     if (!customName.trim() || !jsonOk) return
-    const next = [...presets.filter(p => p.name !== customName.trim()), { name: customName.trim(), value: jsonDraft }]
+    const next = [
+      ...presets.filter(p => p.name !== customName.trim()),
+      { name: customName.trim(), value: jsonDraft },
+    ]
     onPresetsChange?.(next)
     setCustomName('')
   }
@@ -130,50 +226,63 @@ export default function MapPresets({ presets = [], activeJson = '', onPresetsCha
     onPresetsChange?.(presets.filter(p => p.name !== name))
   }
 
-  const isActive = (val) => activeJson === val
+  const isActive = val => activeJson === val
 
   return (
-    <div className="space-y-5">
-      {/* Built-in presets */}
-      <div>
-        <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Presets intégrés</p>
+    <div className="space-y-6">
+
+      {/* ── Live preview ── */}
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Aperçu en direct</p>
+        <MapPreview styleJson={previewJson} apiKey={apiKey} />
+      </div>
+
+      {/* ── Built-in presets ── */}
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Presets intégrés</p>
         <div className="grid grid-cols-3 gap-2">
           {BUILT_IN_PRESETS.map(p => (
             <button
               key={p.name}
               type="button"
               onClick={() => activatePreset(p.value)}
-              className={`flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-left transition-colors hover:bg-accent ${
-                isActive(p.value) ? 'border-primary ring-1 ring-primary bg-primary/5' : 'border-input bg-background'
-              }`}
+              className={[
+                'flex flex-col gap-2 rounded-lg border p-3 text-left transition-colors hover:bg-accent',
+                isActive(p.value)
+                  ? 'border-primary ring-1 ring-primary bg-primary/5'
+                  : 'border-input bg-background',
+              ].join(' ')}
             >
-              <span
-                className="w-5 h-5 rounded-full border border-black/10 shrink-0"
-                style={{ background: p.preview }}
-              />
-              <span className="min-w-0">
-                <span className="block text-xs font-medium leading-tight">{p.name}</span>
-                <span className="block text-[11px] text-muted-foreground leading-tight truncate">{p.description}</span>
+              <PresetSwatch colors={p.colors} />
+              <span className="flex items-center justify-between gap-1">
+                <span className="min-w-0">
+                  <span className="block text-xs font-medium leading-tight">{p.name}</span>
+                  <span className="block text-[11px] text-muted-foreground leading-tight truncate">{p.description}</span>
+                </span>
+                {isActive(p.value) && (
+                  <svg className="shrink-0 text-primary" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                    <path d="M20 6 9 17l-5-5"/>
+                  </svg>
+                )}
               </span>
-              {isActive(p.value) && (
-                <svg className="ml-auto shrink-0 text-primary" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                  <path d="M20 6 9 17l-5-5"/>
-                </svg>
-              )}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Custom presets */}
+      {/* ── Custom saved presets ── */}
       {presets.length > 0 && (
-        <div>
-          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Mes presets</p>
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Mes presets</p>
           <div className="flex flex-wrap gap-2">
             {presets.map(p => (
-              <div key={p.name} className={`flex items-center gap-1 rounded-md border pl-3 pr-1 py-1 text-xs transition-colors ${
-                isActive(p.value) ? 'border-primary bg-primary/5 text-primary' : 'border-input bg-background'
-              }`}>
+              <div
+                key={p.name}
+                className={[
+                  'flex items-center gap-1 rounded-md border pl-3 pr-1 py-1.5 text-xs transition-colors',
+                  isActive(p.value) ? 'border-primary bg-primary/5 text-primary' : 'border-input bg-background',
+                ].join(' ')}
+              >
                 <button type="button" onClick={() => activatePreset(p.value)} className="font-medium">
                   {p.name}
                 </button>
@@ -181,7 +290,7 @@ export default function MapPresets({ presets = [], activeJson = '', onPresetsCha
                   type="button"
                   onClick={() => deleteCustomPreset(p.name)}
                   className="ml-1 rounded p-0.5 text-muted-foreground hover:text-destructive transition-colors"
-                  title="Supprimer"
+                  title="Supprimer ce preset"
                 >
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <path d="M18 6 6 18M6 6l12 12"/>
@@ -193,19 +302,36 @@ export default function MapPresets({ presets = [], activeJson = '', onPresetsCha
         </div>
       )}
 
-      {/* JSON editor */}
-      <div className="space-y-2">
-        <p className="text-xs text-muted-foreground uppercase tracking-wider">Style personnalisé (JSON)</p>
-        <textarea
-          value={jsonDraft}
-          onChange={e => handleJsonChange(e.target.value)}
-          spellCheck={false}
-          rows={8}
-          placeholder={'[\n  {\n    "featureType": "water",\n    "elementType": "geometry",\n    "stylers": [{ "color": "#193341" }]\n  }\n]'}
-          className={`w-full rounded-md border px-3 py-2.5 font-mono text-xs leading-relaxed resize-y bg-transparent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
-            jsonError ? 'border-destructive' : jsonOk ? 'border-emerald-400' : 'border-input'
-          }`}
-        />
+      {/* ── Custom JSON editor ── */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Style personnalisé (JSON)</p>
+          <a
+            href="https://snazzymaps.com"
+            target="_blank"
+            rel="noreferrer"
+            className="text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+          >
+            Snazzy Maps →
+          </a>
+        </div>
+
+        <div className="relative">
+          <textarea
+            value={jsonDraft}
+            onChange={e => handleJsonChange(e.target.value)}
+            spellCheck={false}
+            rows={8}
+            placeholder={'[\n  {\n    "featureType": "water",\n    "elementType": "geometry",\n    "stylers": [{ "color": "#193341" }]\n  }\n]'}
+            className={[
+              'w-full rounded-md border px-3 py-2.5 font-mono text-xs leading-relaxed resize-y bg-transparent',
+              'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
+              jsonError ? 'border-destructive' : jsonOk ? 'border-emerald-400' : 'border-input',
+            ].join(' ')}
+          />
+        </div>
+
+        {/* Validation feedback */}
         {jsonError && (
           <span className="text-[11px] text-destructive flex items-center gap-1">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 9v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
@@ -215,10 +341,12 @@ export default function MapPresets({ presets = [], activeJson = '', onPresetsCha
         {jsonOk && !jsonError && (
           <span className="text-[11px] text-emerald-600 flex items-center gap-1">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 6 9 17l-5-5"/></svg>
-            JSON valide
+            JSON valide — aperçu mis à jour
           </span>
         )}
-        <div className="flex items-center gap-2 flex-wrap">
+
+        {/* Actions */}
+        <div className="flex items-center gap-2 flex-wrap pt-1">
           <button
             type="button"
             disabled={!jsonOk}
@@ -227,11 +355,12 @@ export default function MapPresets({ presets = [], activeJson = '', onPresetsCha
           >
             Appliquer ce style
           </button>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 ml-auto">
             <input
               type="text"
               value={customName}
               onChange={e => setCustomName(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && saveCustomPreset()}
               placeholder="Nom du preset…"
               className="h-7 rounded-md border border-input bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring w-36"
             />
@@ -244,12 +373,6 @@ export default function MapPresets({ presets = [], activeJson = '', onPresetsCha
               Sauvegarder
             </button>
           </div>
-          {!jsonDraft && (
-            <a href="https://snazzymaps.com" target="_blank" rel="noreferrer"
-              className="text-[11px] text-muted-foreground underline hover:text-foreground ml-1">
-              Snazzy Maps
-            </a>
-          )}
         </div>
       </div>
     </div>

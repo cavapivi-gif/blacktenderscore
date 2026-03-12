@@ -203,6 +203,98 @@ abstract class AbstractBtWidget extends \Elementor\Widget_Base {
         return (string) ob_get_clean();
     }
 
+    // ── Map Style — Advanced tab ─────────────────────────────────────────────
+
+    /**
+     * Résout le JSON de style Maps pour un preset key donné (built-in ou user).
+     * Méthode publique statique : utilisée par ElementorManager (injection globale)
+     * et par les widgets PHP (ex: itinéraire → static map URL).
+     *
+     * @param string $key  Valeur du control bt_map_style_preset
+     * @return string|null  JSON string, ou null si '' / key inconnue
+     */
+    public static function resolve_bt_map_style(string $key): ?string {
+        if ($key === '') return null;
+
+        $built = self::get_bt_built_in_map_styles();
+        if (isset($built[$key])) return $built[$key];
+
+        foreach ((array) get_option('bt_map_presets', []) as $p) {
+            if (!empty($p['name']) && 'custom_' . md5($p['name']) === $key) {
+                return $p['value'];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Retourne les options SELECT pour le contrôle preset (built-ins + user presets).
+     * Utilisé par ElementorManager pour l'injection dans tous les widgets.
+     *
+     * @return array<string, string>
+     */
+    public static function get_bt_map_style_options(): array {
+        $options = ['' => __('— Style global (Réglages → Map Style)', 'blacktenderscore')];
+        foreach (['standard' => 'Standard', 'silver' => 'Silver', 'retro' => 'Retro',
+                  'dark' => 'Dark', 'night' => 'Night', 'aubergine' => 'Aubergine'] as $k => $l) {
+            $options[$k] = $l;
+        }
+        foreach ((array) get_option('bt_map_presets', []) as $p) {
+            if (!empty($p['name']) && !empty($p['value'])) {
+                $options['custom_' . md5($p['name'])] = '★ ' . $p['name'];
+            }
+        }
+        return $options;
+    }
+
+    /**
+     * Convertit un JSON de style Maps JS API en paramètres URL pour Static Maps API.
+     *
+     * JS format   : [{"featureType":"water","elementType":"geometry","stylers":[{"color":"#193341"}]}]
+     * Static URL  : style=feature:water|element:geometry|color:0x193341
+     *
+     * @param string $json  JSON style Maps JS
+     * @return string  Paramètres URL concaténés (style=...&style=...) sans '?' initial
+     */
+    protected static function bt_map_json_to_static_params(string $json): string {
+        $rules = json_decode($json, true);
+        if (!is_array($rules) || empty($rules)) return '';
+
+        $params = [];
+        foreach ($rules as $rule) {
+            $parts = [];
+            if (!empty($rule['featureType'])) $parts[] = 'feature:' . $rule['featureType'];
+            if (!empty($rule['elementType'])) $parts[] = 'element:' . $rule['elementType'];
+            foreach ((array) ($rule['stylers'] ?? []) as $styler) {
+                foreach ($styler as $k => $v) {
+                    // Les couleurs hex '#rrggbb' → '0xrrggbb' (format Static Maps)
+                    if ($k === 'color') $v = '0x' . ltrim((string) $v, '#');
+                    $parts[] = $k . ':' . $v;
+                }
+            }
+            if (!empty($parts)) $params[] = 'style=' . rawurlencode(implode('|', $parts));
+        }
+
+        return implode('&', $params);
+    }
+
+    /**
+     * Presets built-in — doit rester synchronisé avec BUILT_IN_PRESETS dans MapPresets.jsx.
+     *
+     * @return array<string, string>  key => JSON string
+     */
+    private static function get_bt_built_in_map_styles(): array {
+        return [
+            'standard'  => '[]',
+            'silver'    => '[{"elementType":"geometry","stylers":[{"color":"#f5f5f5"}]},{"elementType":"labels.icon","stylers":[{"visibility":"off"}]},{"elementType":"labels.text.fill","stylers":[{"color":"#616161"}]},{"elementType":"labels.text.stroke","stylers":[{"color":"#f5f5f5"}]},{"featureType":"road","elementType":"geometry","stylers":[{"color":"#ffffff"}]},{"featureType":"road.arterial","elementType":"labels.text.fill","stylers":[{"color":"#757575"}]},{"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#dadada"}]},{"featureType":"water","elementType":"geometry","stylers":[{"color":"#c9c9c9"}]},{"featureType":"water","elementType":"labels.text.fill","stylers":[{"color":"#9e9e9e"}]}]',
+            'retro'     => '[{"elementType":"geometry","stylers":[{"color":"#ebe3cd"}]},{"elementType":"labels.text.fill","stylers":[{"color":"#523735"}]},{"elementType":"labels.text.stroke","stylers":[{"color":"#f5f1e6"}]},{"featureType":"road","elementType":"geometry","stylers":[{"color":"#f5f1e6"}]},{"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#f8c967"}]},{"featureType":"road.highway","elementType":"geometry.stroke","stylers":[{"color":"#e9bc62"}]},{"featureType":"water","elementType":"geometry.fill","stylers":[{"color":"#b9d3c2"}]},{"featureType":"poi.park","elementType":"geometry.fill","stylers":[{"color":"#a5b076"}]}]',
+            'dark'      => '[{"elementType":"geometry","stylers":[{"color":"#212121"}]},{"elementType":"labels.icon","stylers":[{"visibility":"off"}]},{"elementType":"labels.text.fill","stylers":[{"color":"#757575"}]},{"elementType":"labels.text.stroke","stylers":[{"color":"#212121"}]},{"featureType":"road","elementType":"geometry","stylers":[{"color":"#383838"}]},{"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#616161"}]},{"featureType":"water","elementType":"geometry","stylers":[{"color":"#000000"}]},{"featureType":"water","elementType":"labels.text.fill","stylers":[{"color":"#3d3d3d"}]}]',
+            'night'     => '[{"elementType":"geometry","stylers":[{"color":"#1d2c4d"}]},{"elementType":"labels.text.fill","stylers":[{"color":"#8ec3b9"}]},{"elementType":"labels.text.stroke","stylers":[{"color":"#1a3646"}]},{"featureType":"road","elementType":"geometry","stylers":[{"color":"#304a7d"}]},{"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#2c6675"}]},{"featureType":"water","elementType":"geometry","stylers":[{"color":"#0e1626"}]},{"featureType":"water","elementType":"labels.text.fill","stylers":[{"color":"#4e6d70"}]},{"featureType":"poi","elementType":"labels.icon","stylers":[{"visibility":"off"}]}]',
+            'aubergine' => '[{"elementType":"geometry","stylers":[{"color":"#1d0b40"}]},{"elementType":"labels.text.fill","stylers":[{"color":"#f8c967"}]},{"elementType":"labels.text.stroke","stylers":[{"color":"#100c23"}]},{"featureType":"road","elementType":"geometry","stylers":[{"color":"#3d1c5d"}]},{"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#6a2f8c"}]},{"featureType":"water","elementType":"geometry","stylers":[{"color":"#17263c"}]},{"featureType":"poi","elementType":"labels.icon","stylers":[{"visibility":"off"}]}]',
+        ];
+    }
+
     // ── ACF field discovery ───────────────────────────────────────────────────
 
     /**
