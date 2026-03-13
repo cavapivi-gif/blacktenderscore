@@ -342,11 +342,11 @@
 
 /* ── Panneaux — masqués via CSS ────────────────────────── */
 .bt-pricing__panel {
-  display: none;
+  display: none !important;
 }
 
 .bt-pricing__panel--active {
-  display: block;
+  display: block !important;
   padding-top: 20px;
 }
 
@@ -444,6 +444,116 @@
 .bt-pricing__booking-reveal--visible {
   max-height: 900px;
   opacity: 1;
+}
+
+/* ── Trigger button ────────────────────────────────────── */
+.bt-pricing-trigger-wrap {
+  display: block;
+}
+
+.bt-pricing__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 36px;
+  background: #09142a;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  font-size: 1em;
+  transition: background .2s, transform .15s;
+}
+
+.bt-pricing__trigger:hover {
+  background: #1a2e5c;
+  transform: translateY(-1px);
+}
+
+.bt-pricing__trigger[aria-expanded="true"] {
+  background: #1a2e5c;
+}
+
+/* ── Reveal content (grid animation) ──────────────────── */
+.bt-pricing__reveal-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  overflow: hidden;
+  transition: grid-template-rows .45s cubic-bezier(.4, 0, .2, 1);
+  margin-top: 0;
+}
+
+.bt-pricing__reveal-content > * {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.bt-pricing__reveal-content--open {
+  grid-template-rows: 1fr;
+  margin-top: 16px;
+}
+
+/* ── Modal (native <dialog>) ───────────────────────────── */
+.bt-pricing-modal {
+  border: none;
+  border-radius: 16px;
+  padding: 0;
+  max-width: min(640px, 96vw);
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .18), 0 4px 16px rgba(0, 0, 0, .12);
+}
+
+.bt-pricing-modal::backdrop {
+  background: rgba(0, 0, 0, .5);
+  backdrop-filter: blur(2px);
+}
+
+.bt-pricing-modal__inner {
+  position: relative;
+  padding: 36px 28px 28px;
+  overflow-y: auto;
+  max-height: 90vh;
+}
+
+.bt-pricing-modal__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, .07);
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s;
+  color: inherit;
+}
+
+.bt-pricing-modal__close:hover {
+  background: rgba(0, 0, 0, .14);
+}
+
+/* Mobile : bottom-sheet */
+@media (max-width: 600px) {
+  .bt-pricing-modal {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    max-height: 85vh;
+    margin: 0;
+  }
 }
 
 
@@ -841,13 +951,12 @@
 }
 
 /* ── Ligne verticale reliant uniquement les étapes ACF ────────
-   Exclut les items transport (départ, hors-bord, arrivée) :
-     - pas de connecteur SUR un item transport
-     - pas de connecteur VERS un item transport suivant
+   Tous les li sauf le dernier reçoivent un connecteur vertical —
+   transport inclus (departure, outboard, arrival font partie de la chaîne).
    left  = var(--bt-itin-dot-center) → centré sur le dot de l'étape
    bottom = calc(-gap) → comble le gap entre deux <li>            */
 .bt-itin:not(.bt-itin--no-connector)
-  .bt-itin__list > li:not(:last-child):not(.bt-itin__step--transport):not(:has(+ .bt-itin__step--transport))::before {
+  .bt-itin__list > li:not(:last-child)::before {
   content: '';
   position: absolute;
   left: var(--bt-itin-dot-center, 10px);
@@ -1059,10 +1168,15 @@
 }
 
 /* ── Connecteur étapes retour — couleur via CSS var ───────────
-   Surcharge uniquement les <li class="bt-itin__step--return">.
+   Deux cas (transport inclus maintenant que tous les li ont ::before) :
+   1. Un li--return : colorie le connecteur qu'il dessine vers le suivant.
+   2. Tout li dont le suivant EST un li--return
+      (ligne aller/transport → premier retour).
    Fallback : reprend --bt-itin-line-color si non défini.        */
 .bt-itin:not(.bt-itin--no-connector)
-  .bt-itin__list > li.bt-itin__step--return:not(:last-child):not(:has(+ .bt-itin__step--transport))::before {
+  .bt-itin__list > li.bt-itin__step--return:not(:last-child)::before,
+.bt-itin:not(.bt-itin--no-connector)
+  .bt-itin__list > li:not(:last-child):has(+ .bt-itin__step--return)::before {
   background-image: repeating-linear-gradient(
     to bottom,
     var(--bt-itin-return-line-color, var(--bt-itin-line-color, #d0d0d0)) 0,
@@ -2149,4 +2263,25 @@
   height: 18px;
   flex-shrink: 0;
   fill: currentColor;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   WIDGET: BT — Carte Google Maps (bt-google-map)
+───────────────────────────────────────────────────────────────────────────── */
+
+.bt-gmap {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.bt-gmap__canvas {
+  display: block;
+  width: 100%;
+  height: 420px; /* fallback — remplacé par le contrôle responsive Elementor */
+}
+
+/* Éditeur : l'iframe de preview prend la même classe que le canvas JS */
+.bt-gmap--editor .bt-gmap__canvas {
+  border: 0;
 }

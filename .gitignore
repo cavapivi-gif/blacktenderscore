@@ -2,4 +2,8 @@
 Thumbs.db
 *.log
 vendor/
-admin/backoffice/node_modules/
+node_modules/
+.claude/
+*.csv
+acf-export-*.json
+.env

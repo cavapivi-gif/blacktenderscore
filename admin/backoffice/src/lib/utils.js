@@ -37,6 +37,38 @@ export function prevPeriod(from, to) {
   return { cmpFrom: addDays(from, -days), cmpTo: addDays(from, -1) }
 }
 
+/**
+ * Retourne la plage et la comparaison pour une année calendrier.
+ * - Année passée  → from: YYYY-01-01, to: YYYY-12-31
+ * - Année courante → from: YYYY-01-01, to: aujourd'hui (en cours)
+ * - Comparaison   → toujours l'année civile précédente complète (N-1-01-01 → N-1-12-31)
+ *
+ * @param {number|string} year
+ * @returns {{ from, to, cmpFrom, cmpTo }}
+ */
+export function calendarYear(year) {
+  const y       = Number(year)
+  const curYear = new Date().getFullYear()
+  return {
+    from:    `${y}-01-01`,
+    to:      y < curYear ? `${y}-12-31` : today(),
+    cmpFrom: `${y - 1}-01-01`,
+    cmpTo:   `${y - 1}-12-31`,
+  }
+}
+
+/**
+ * Liste des années disponibles, de l'année courante jusqu'à firstYear (inclus).
+ * @param {number} [firstYear=2017]
+ * @returns {number[]}
+ */
+export function availableYears(firstYear = 2017) {
+  const cur = new Date().getFullYear()
+  const years = []
+  for (let y = cur; y >= firstYear; y--) years.push(y)
+  return years
+}
+
 export function fmtShort(dateStr) {
   if (!dateStr) return ''
   return new Date(dateStr + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })

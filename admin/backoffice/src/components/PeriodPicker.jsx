@@ -22,6 +22,7 @@ export const PERIOD_PRESETS_PLANNER = [
   { label: '30j',  from: () => daysAgo(29),   to: today },
   { label: '90j',  from: () => daysAgo(89),   to: today },
   { label: '1 an', from: () => monthsAgo(12), to: today },
+  { label: 'Tout', from: () => '2017-01-01',  to: () => '2030-12-31' },
 ]
 
 const pill = active =>
@@ -69,7 +70,7 @@ export function PeriodPicker({ from, to, onChange, presets = PERIOD_PRESETS_DEFA
       />
       <span className="text-[11px] text-muted-foreground">→</span>
       <input
-        type="date" value={localTo} min={localFrom} max={today()}
+        type="date" value={localTo} min={localFrom}
         onChange={e => { setLocalTo(e.target.value); setActive(null) }}
         onBlur={() => commitDates(localFrom, localTo)}
         className="text-xs border border-input rounded px-2 py-1 bg-transparent"

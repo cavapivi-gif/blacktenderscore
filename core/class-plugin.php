@@ -5,6 +5,7 @@ use BlackTenders\Admin\MetaBox\MetaBox;
 use BlackTenders\Admin\Backoffice\Backoffice;
 use BlackTenders\Admin\Backoffice\RestApi;
 use BlackTenders\Admin\Backoffice\Sync;
+use BlackTenders\Admin\Backoffice\Ai;
 use BlackTenders\Elementor\ElementorManager;
 
 defined('ABSPATH') || exit;
@@ -14,6 +15,8 @@ class Plugin {
     public function init(): void {
         // REST API disponible partout (front + admin)
         (new RestApi())->init();
+        // AJAX SSE pour le chat IA (doit s'enregistrer côté admin-ajax)
+        (new Ai())->init();
 
         if (is_admin()) {
             (new Backoffice())->init();

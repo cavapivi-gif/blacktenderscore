@@ -8,13 +8,27 @@ class Backoffice {
     public function init(): void {
         add_action('admin_menu',            [$this, 'add_page']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue']);
+
+        // Vite génère du code ESM qui utilise import.meta — nécessite type="module"
+        add_filter('script_loader_tag', [$this, 'add_module_type'], 10, 2);
+    }
+
+    /**
+     * Ajoute type="module" au script Vite pour que WordPress le charge en ESM.
+     * Sans ça, import.meta lance une SyntaxError dans le contexte non-module.
+     */
+    public function add_module_type(string $tag, string $handle): string {
+        if ($handle !== 'bt-backoffice') return $tag;
+        return str_replace(' src=', ' type="module" src=', $tag);
     }
 
     public function add_page(): void {
+        // 'read' = capability minimale (tous les users connectés).
+        // Le vrai contrôle d'accès est géré par bt_role_permissions dans le plugin.
         add_menu_page(
             'BlackTenders',
             'BlackTenders',
-            'manage_options',
+            'read',
             'blacktenderscore',
             [$this, 'render'],
             'dashicons-anchor',
@@ -23,7 +37,7 @@ class Backoffice {
     }
 
     public function render(): void {
-        if (!current_user_can('manage_options')) return;
+        if (!is_user_logged_in()) return;
         ?>
         <div id="bt-backoffice-root"></div>
         <?php
@@ -56,11 +70,21 @@ class Backoffice {
             true
         );
 
+        $cur = wp_get_current_user();
         wp_localize_script('bt-backoffice', 'btBackoffice', [
             'rest_url'        => rest_url('bt-regiondo/v1'),
             'nonce'           => wp_create_nonce('wp_rest'),
             'version'         => BT_VERSION,
             'onboarding_done' => (bool) get_option('bt_onboarding_done', false),
+            'ajax_url'        => admin_url('admin-ajax.php'),
+            'current_user'    => [
+                'id'     => $cur->ID,
+                'name'   => $cur->display_name,
+                'email'  => $cur->user_email,
+                'roles'  => $cur->roles,
+                'avatar' => get_avatar_url($cur->ID, ['size' => 32]),
+                'color'  => '#f0f0ee',
+            ],
         ]);
 
         // Page en plein écran, fond blanc uniforme

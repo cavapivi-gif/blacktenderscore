@@ -3,7 +3,7 @@ import {
   Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts'
 import { COLORS } from '../../lib/constants'
-import { fmtShort, fmtNum } from '../../lib/utils'
+import { fmtShort, fmtNum, fmtCurrency } from '../../lib/utils'
 import { ChartTooltip } from './ChartTooltip'
 
 export function BookingsChart({
@@ -28,8 +28,8 @@ export function BookingsChart({
               <stop offset="95%" stopColor={COLORS.current} stopOpacity={0} />
             </linearGradient>
             <linearGradient id="gradBookingsPrev" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={COLORS.compare} stopOpacity={0.08} />
-              <stop offset="95%" stopColor={COLORS.compare} stopOpacity={0} />
+              <stop offset="5%" stopColor={COLORS.compare} stopOpacity={0.18} />
+              <stop offset="95%" stopColor={COLORS.compare} stopOpacity={0.02} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke={COLORS.grid} vertical={false} />
@@ -42,8 +42,8 @@ export function BookingsChart({
           )}
           {hasCompare && (
             <Area type="monotone" dataKey="bookings_prev" name="Préc."
-              stroke={COLORS.compare} strokeWidth={1.5} strokeDasharray="5 3"
-              fill="url(#gradBookingsPrev)" dot={false} />
+              stroke={COLORS.compare} strokeWidth={2} strokeDasharray="6 3"
+              fill="url(#gradBookingsPrev)" dot={false} connectNulls />
           )}
           <Area type="monotone" dataKey="bookings" name="Actuel"
             stroke={COLORS.current} strokeWidth={2}
@@ -64,6 +64,21 @@ export function BookingsChart({
   )
 }
 
+/**
+ * AreaChart CA + panier moyen dans le temps.
+ * Enrichi avec header StatCard (CA total, delta %, panier moyen).
+ * Le panier moyen est sur un axe Y secondaire (droite) — échelle distincte du CA.
+ *
+ * @param {Array}   data            chartData (periods mergés courant + comparaison)
+ * @param {number}  [height]        Hauteur du chart en px
+ * @param {boolean} hasCompare      Mode comparatif actif
+ * @param {number}  [peakRevenue]   Valeur de pic pour ReferenceLine
+ * @param {Object}  filterParams    Paramètres de filtre (from, to, compareFrom, compareTo, granularity)
+ * @param {number}  [totalRevenue]  CA total période courante — active le header si fourni
+ * @param {number}  [cmpRevenue]    CA total période comparée
+ * @param {number}  [avgBasket]     Panier moyen période courante
+ * @param {number}  [avgBasketDelta] Delta % panier moyen vs période comparée
+ */
 export function RevenueChart({
   data,
   height = 220,
@@ -76,10 +91,60 @@ export function RevenueChart({
   avgBasketDelta,
   onChartClick,
 }) {
+  // Delta CA % — calculé ici pour le header StatCard
+  const revenueD = hasCompare && cmpRevenue > 0
+    ? Math.round(((totalRevenue - cmpRevenue) / cmpRevenue) * 100)
+    : null
+
   return (
     <>
+      {/* Header StatCard — CA total + delta + panier moyen */}
+      {totalRevenue != null && (
+        <div className="mb-4 pb-4 border-b">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Chiffre d'affaires</p>
+              <p className="text-[10px] text-muted-foreground/70 mt-0.5 mb-2">
+                CA confirmé · {fmtShort(filterParams.from)} – {fmtShort(filterParams.to)}
+              </p>
+              <div className="flex items-baseline gap-3">
+                <span className="text-2xl tabular-nums">{fmtCurrency(totalRevenue)}</span>
+                {revenueD !== null && (
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{
+                    backgroundColor: revenueD >= 0 ? COLORS.delta_pos_bg : COLORS.delta_neg_bg,
+                    color: revenueD >= 0 ? COLORS.delta_pos_text : COLORS.delta_neg_text,
+                  }}>{revenueD >= 0 ? '+' : ''}{revenueD}%</span>
+                )}
+              </div>
+              {hasCompare && cmpRevenue != null && (
+                <p className="text-[10px] text-muted-foreground/60 mt-1.5">
+                  vs {fmtCurrency(cmpRevenue)} · {fmtShort(filterParams.compareFrom)} – {fmtShort(filterParams.compareTo)}
+                </p>
+              )}
+            </div>
+            {/* Panier moyen — affiché en dehors de l'axe pour éviter la confusion avec CA */}
+            {avgBasket != null && (
+              <div className="text-right shrink-0">
+                <p className="text-[10px] text-muted-foreground/70 mb-0.5">Panier moyen</p>
+                <p className="text-lg tabular-nums font-medium" style={{ color: COLORS.basket }}>
+                  {fmtCurrency(avgBasket)}
+                </p>
+                {avgBasketDelta != null && (
+                  <p className="text-[9px] mt-0.5" style={{
+                    color: avgBasketDelta >= 0 ? COLORS.delta_pos_text : COLORS.delta_neg_text,
+                  }}>
+                    {avgBasketDelta >= 0 ? '+' : ''}{avgBasketDelta}% vs préc.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <ResponsiveContainer width="100%" height={height}>
-        <AreaChart data={data} margin={{ top: 8, right: 4, left: -20, bottom: 0 }}
+        {/* margin right=55 pour laisser de la place à l'axe Y panier (droite) */}
+        <AreaChart data={data} margin={{ top: 8, right: 55, left: -20, bottom: 0 }}
           onClick={onChartClick}
           className={filterParams.granularity === 'day' ? 'cursor-pointer' : ''}>
           <defs>
@@ -88,8 +153,8 @@ export function RevenueChart({
               <stop offset="95%" stopColor={COLORS.current} stopOpacity={0} />
             </linearGradient>
             <linearGradient id="gradRevenuePrev" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={COLORS.compare} stopOpacity={0.08} />
-              <stop offset="95%" stopColor={COLORS.compare} stopOpacity={0} />
+              <stop offset="5%" stopColor={COLORS.compare} stopOpacity={0.18} />
+              <stop offset="95%" stopColor={COLORS.compare} stopOpacity={0.02} />
             </linearGradient>
             <linearGradient id="gradBasket" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor={COLORS.basket} stopOpacity={0.10} />
@@ -98,23 +163,26 @@ export function RevenueChart({
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke={COLORS.grid} vertical={false} />
           <XAxis dataKey="label" tick={{ fontSize: 10, fill: COLORS.axis }} axisLine={false} tickLine={false} />
-          <YAxis tick={{ fontSize: 10, fill: COLORS.axis }} axisLine={false} tickLine={false} />
+          {/* Axe gauche : CA en euros */}
+          <YAxis yAxisId="revenue" tick={{ fontSize: 10, fill: COLORS.axis }} axisLine={false} tickLine={false} />
+          {/* Axe droit : panier moyen — échelle distincte pour ne pas écraser la courbe CA */}
+          <YAxis yAxisId="basket" orientation="right" tick={{ fontSize: 9, fill: COLORS.basket }} axisLine={false} tickLine={false} />
           <Tooltip content={p => <ChartTooltip {...p} suffix=" €" compareFrom={filterParams.compareFrom} compareTo={filterParams.compareTo} />} />
           {peakRevenue > 0 && (
-            <ReferenceLine y={peakRevenue} stroke={COLORS.peak} strokeDasharray="4 3" strokeWidth={1.5}
+            <ReferenceLine yAxisId="revenue" y={peakRevenue} stroke={COLORS.peak} strokeDasharray="4 3" strokeWidth={1.5}
               label={{ value: `Pic ${Number(peakRevenue).toLocaleString('fr-FR')} €`, fill: COLORS.peak, fontSize: 9, position: 'insideTopRight' }} />
           )}
           {hasCompare && (
-            <Area type="monotone" dataKey="revenue_prev" name="CA préc."
-              stroke={COLORS.compare} strokeWidth={1.5} strokeDasharray="5 3"
-              fill="url(#gradRevenuePrev)" dot={false} />
+            <Area yAxisId="revenue" type="monotone" dataKey="revenue_prev" name="CA préc."
+              stroke={COLORS.compare} strokeWidth={2} strokeDasharray="6 3"
+              fill="url(#gradRevenuePrev)" dot={false} connectNulls />
           )}
-          <Area type="monotone" dataKey="revenue" name="CA"
+          <Area yAxisId="revenue" type="monotone" dataKey="revenue" name="CA"
             stroke={COLORS.current} strokeWidth={2}
             fill="url(#gradRevenue)" dot={false} />
-          <Area type="monotone" dataKey="avg_basket" name="Panier moy."
+          <Area yAxisId="basket" type="monotone" dataKey="avg_basket" name="Panier moy."
             stroke={COLORS.basket} strokeWidth={1.5} strokeDasharray="3 2"
-            fill="url(#gradBasket)" dot={false} yAxisId={0} />
+            fill="url(#gradBasket)" dot={false} />
         </AreaChart>
       </ResponsiveContainer>
       <ChartLegend

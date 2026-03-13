@@ -1,4 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { Sparks } from 'iconoir-react'
+
+import EventsCorrelator from '../components/EventsCorrelator'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
@@ -6,11 +9,11 @@ import listPlugin from '@fullcalendar/list'
 import interactionPlugin from '@fullcalendar/interaction'
 import multiMonthPlugin from '@fullcalendar/multimonth'
 import frLocale from '@fullcalendar/core/locales/fr'
-import { LeadTimeChart, WeekdayChart, CancellationChart } from '../components/dashboard'
+import { LeadTimeChart, WeekdayChart, CancellationChart, TopDays } from '../components/dashboard'
 import { api } from '../lib/api'
 import { today, daysAgo, fmtNum } from '../lib/utils'
 import { COLORS } from '../lib/constants'
-import { PageHeader, Notice, Spinner } from '../components/ui'
+import { Btn, PageHeader, Notice, Spinner } from '../components/ui'
 import { PeriodPicker, PERIOD_PRESETS_PLANNER } from '../components/PeriodPicker'
 import DayDrawer from '../components/DayDrawer'
 import CustomerDrawer from '../components/CustomerDrawer'
@@ -39,6 +42,7 @@ function monthEnd(dateStr) {
 }
 
 const WDAY_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
+const CANCEL_SET = new Set(['canceled', 'cancelled', 'rejected', 'refunded'])
 
 // Initial period: 30 days
 const INIT_FROM = daysAgo(29)
@@ -55,6 +59,8 @@ export default function Planner() {
   const [error, setError]     = useState(null)
   const [dayDrawer, setDayDrawer]           = useState(null)
   const [customerDrawer, setCustomerDrawer] = useState(null)
+  const [eventsOpen, setEventsOpen]         = useState(false)
+  const [calEvents, setCalEvents]           = useState([])
 
   useEffect(() => {
     setLoading(true)
@@ -63,6 +69,13 @@ export default function Planner() {
       .then(setData)
       .catch(e => setError(e.message))
       .finally(() => setLoading(false))
+  }, [range])
+
+  /** Charge les événements IA depuis la DB à chaque changement de période. */
+  useEffect(() => {
+    api.aiEvents({ from: range.from, to: range.to })
+      .then(res => setCalEvents(res.events ?? []))
+      .catch(() => setCalEvents([]))
   }, [range])
 
   /**
@@ -95,7 +108,7 @@ export default function Planner() {
     Object.fromEntries((data?.calendar ?? []).map(d => [d.date, d.bookings]))
   , [data])
 
-  // Events FullCalendar
+  // Events FullCalendar — réservations
   const events = useMemo(() =>
     (data?.calendar ?? []).flatMap(day =>
       day.bookings.map(b => ({
@@ -111,6 +124,26 @@ export default function Planner() {
     )
   , [data])
 
+  /**
+   * Fusion des réservations et des événements IA pour FullCalendar.
+   * Les événements IA sont affichés en violet avec un emoji 🎉.
+   */
+  const allEvents = useMemo(() => [
+    ...events,
+    ...calEvents.map(e => ({
+      id: 'bt-event-' + e.id,
+      title: '🎉 ' + e.name,
+      start: e.date_start,
+      end: e.date_end ? e.date_end + 'T23:59:59' : undefined,
+      allDay: true,
+      backgroundColor: '#7c3aed22',
+      borderColor: '#7c3aed',
+      textColor: '#7c3aed',
+      classNames: ['bt-calendar-event'],
+      extendedProps: { type: 'bt_event', location: e.location },
+    })),
+  ], [events, calEvents])
+
   // Stats période
   const stats = useMemo(() => {
     let total = 0, confirmed = 0, cancelled = 0
@@ -124,6 +157,23 @@ export default function Planner() {
     }
     return { total, confirmed, cancelled }
   }, [byDate])
+
+  /**
+   * Données de réservations par jour au format attendu par EventsCorrelator.
+   * Calculé depuis data.calendar (même source que le calendrier FullCalendar).
+   */
+  const plannerBookingsData = useMemo(() =>
+    (data?.calendar ?? []).map(day => {
+      const cancelled = day.bookings.filter(b => CANCEL_SET.has(b.status?.toLowerCase() ?? '')).length
+      return {
+        key:       day.date,
+        bookings:  day.bookings.length,
+        confirmed: day.bookings.length - cancelled,
+        cancelled,
+        revenue:   day.bookings.reduce((s, b) => s + parseFloat(b.total_price ?? 0), 0),
+      }
+    })
+  , [data])
 
   // Top 7 jours par volume
   const topDays = useMemo(() =>
@@ -150,7 +200,6 @@ export default function Planner() {
    * Taux d'annulation groupé par jour (≤31j) ou par mois (>31j).
    * Calculé depuis data.calendar qui contient chaque réservation avec son statut.
    */
-  const CANCEL_SET = new Set(['canceled', 'cancelled', 'rejected', 'refunded'])
   const cancellationData = useMemo(() => {
     const days = data?.calendar ?? []
     if (!days.length) return []
@@ -203,8 +252,14 @@ export default function Planner() {
       />
 
       {/* ── Period picker ─────────────────────────────────────────────── */}
-      <div className="px-6 py-3 border-b bg-muted/30">
+      <div className="px-6 py-3 border-b bg-muted/30 flex items-center gap-3 flex-wrap">
         <PeriodPicker from={INIT_FROM} to={INIT_TO} onChange={handlePeriodChange} presets={PERIOD_PRESETS_PLANNER} />
+        <span className="bt-ai-wrap">
+          <Btn variant="ghost" size="sm" onClick={() => setEventsOpen(true)} className="gap-1.5 text-xs">
+            <Sparks width={13} height={13} />
+            Événements IA
+          </Btn>
+        </span>
       </div>
 
       {error && <div className="px-6 pt-5"><Notice type="error">{error}</Notice></div>}
@@ -252,34 +307,12 @@ export default function Planner() {
       {/* ── Top 7 jours ──────────────────────────────────────────────── */}
       {!loading && topDays.length > 0 && (
         <div className="border-b bg-card px-6 py-4">
-          <div className="flex items-baseline gap-3 mb-3">
-            <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium shrink-0">
-              Top 7 jours
-            </p>
-            <span className="text-[11px] text-muted-foreground">
-              {stats.total} réservation{stats.total > 1 ? 's' : ''} sur la période
-            </span>
-          </div>
-          <div className="space-y-1.5">
-            {topDays.map((day, rank) => {
-              const pct = topDays[0].count > 0 ? (day.count / topDays[0].count) * 100 : 0
-              return (
-                <div key={day.date} className="flex items-center gap-2 cursor-pointer group" onClick={() => openDay(day.date)}>
-                  <span className="text-[10px] text-muted-foreground w-4 tabular-nums text-right shrink-0">
-                    {rank + 1}
-                  </span>
-                  <span className="text-[11px] font-medium w-16 shrink-0">{fmtDayShort(day.date)}</span>
-                  <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-                    <div className="h-full rounded-full transition-all group-hover:opacity-80"
-                      style={{ width: `${pct}%`, background: COLORS.current }} />
-                  </div>
-                  <span className="text-[11px] font-semibold tabular-nums w-5 shrink-0 text-right">
-                    {day.count}
-                  </span>
-                </div>
-              )
-            })}
-          </div>
+          <TopDays
+            data={topDays}
+            total={stats.total}
+            onClickDay={openDay}
+            formatDate={fmtDayShort}
+          />
         </div>
       )}
 
@@ -314,7 +347,7 @@ export default function Planner() {
             buttonText={{ dayGridMonth: 'Mois', timeGridWeek: 'Semaine', listMonth: 'Liste' }}
             multiMonthMaxColumns={3}
             height="auto"
-            events={events}
+            events={allEvents}
             eventClick={({ event }) => openDay(event.extendedProps.dayDate)}
             dateClick={({ dateStr }) => openDay(dateStr)}
             moreLinkClick={({ date }) => openDay(toYMD(date))}
@@ -329,6 +362,14 @@ export default function Planner() {
       {customerDrawer && (
         <CustomerDrawer customer={customerDrawer} onClose={() => setCustomerDrawer(null)} elevated />
       )}
+
+      <EventsCorrelator
+        open={eventsOpen}
+        onClose={() => setEventsOpen(false)}
+        from={range.from}
+        to={range.to}
+        bookingsData={plannerBookingsData}
+      />
     </div>
   )
 }

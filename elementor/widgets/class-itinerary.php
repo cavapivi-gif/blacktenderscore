@@ -447,6 +447,16 @@ class Itinerary extends AbstractBtWidget {
             'selectors'  => ['{{WRAPPER}} .bt-itin__step' => 'gap: {{SIZE}}{{UNIT}}'],
         ]);
 
+        // Icône par défaut — fallback avant le numéro CSS counter
+        $this->add_control('step_dot_icon', [
+            'label'       => __('Icône par défaut des étapes', 'blacktenderscore'),
+            'description' => __('Appliquée aux étapes sans icône individuelle. Vide = numéro de l\'étape.', 'blacktenderscore'),
+            'type'        => \Elementor\Controls_Manager::ICONS,
+            'skin'        => 'inline',
+            'label_block' => false,
+            'separator'   => 'before',
+        ]);
+
         $this->add_control('return_dot_color', [
             'label'     => __('Couleur point — étape retour', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
@@ -819,7 +829,7 @@ class Itinerary extends AbstractBtWidget {
             $step_cls = 'bt-itin__step' . ($is_return ? ' bt-itin__step--return' : '');
             echo '<li class="' . esc_attr($step_cls) . '">';
 
-            // Dot : image ACF | classe FA | dot simple
+            // Dot : image ACF | classe FA | icône Elementor globale | counter numéroté
             if (is_array($icon_raw) && !empty($icon_raw['url']) && (isset($icon_raw['sizes']) || isset($icon_raw['filename']))) {
                 // Image ACF (discriminateur : présence de 'sizes' ou 'filename')
                 echo '<span class="bt-itin__dot bt-itin__dot--icon" aria-hidden="true">';
@@ -828,7 +838,13 @@ class Itinerary extends AbstractBtWidget {
             } elseif (is_string($icon_raw) && trim($icon_raw) !== '') {
                 // Classe FA (ex: "fas fa-anchor") entrée en texte libre dans ACF
                 echo '<span class="bt-itin__dot bt-itin__dot--icon" aria-hidden="true"><i class="' . esc_attr(trim($icon_raw)) . '"></i></span>';
+            } elseif (!empty($s['step_dot_icon']['value'])) {
+                // Icône Elementor globale (fallback avant le numéro)
+                echo '<span class="bt-itin__dot bt-itin__dot--icon" aria-hidden="true">';
+                \Elementor\Icons_Manager::render_icon($s['step_dot_icon'], ['aria-hidden' => 'true']);
+                echo '</span>';
             } else {
+                // Fallback final : counter CSS numéroté (via bt-itin__dot sans --icon)
                 echo '<span class="bt-itin__dot" aria-hidden="true"></span>';
             }
 

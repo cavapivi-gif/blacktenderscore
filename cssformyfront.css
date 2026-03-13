@@ -1,0 +1,382 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   Regiondo widget — custom skin
+   Palette : bg #fbfaf8 · text #1a1917 · border #e3e1db · muted #6b6860
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* ─── Base ──────────────────────────────────────────────────────────────────── */
+
+.regiondo-widget {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  font-size: 14px !important;
+  color: #1a1917 !important;
+  background: #fbfaf8 !important;
+  -webkit-font-smoothing: antialiased !important;
+  box-sizing: border-box !important;
+}
+.regiondo-widget *, .regiondo-widget *::before, .regiondo-widget *::after {
+  box-sizing: border-box !important;
+}
+
+/* MUI baseline reset */
+.MuiScopedCssBaseline-root { background: transparent !important; color: inherit !important; }
+
+/* Ripple = invisible */
+.MuiTouchRipple-root { display: none !important; }
+
+/* Texte capitalize override */
+.MuiButton-root { text-transform: none !important; letter-spacing: 0 !important; font-family: inherit !important; }
+
+/* ─── Scroll widget ──────────────────────────────────────────────────────────── */
+
+.regiondo-content {
+  background: #fbfaf8 !important;
+  overflow-y: auto !important;
+  max-height: calc(100dvh - 100px) !important;
+  overscroll-behavior: contain !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: #d4d2cc transparent !important;
+}
+.regiondo-content::-webkit-scrollbar { width: 4px !important; }
+.regiondo-content::-webkit-scrollbar-track { background: transparent !important; }
+.regiondo-content::-webkit-scrollbar-thumb { background: #d4d2cc !important; border-radius: 4px !important; }
+
+/* ─── Stepper ────────────────────────────────────────────────────────────────── */
+
+.regiondo-checkout-progress {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+  background: #ffffff !important;
+  border-bottom: 1px solid #e3e1db !important;
+  padding: 14px 16px !important;
+  margin: 0 !important;
+}
+
+/* Labels */
+.regiondo-progress-label {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  margin-top: 5px !important;
+  line-height: 1.3 !important;
+}
+.MuiStepLabel-label.Mui-active   .regiondo-progress-label { color: #1a1917 !important; font-weight: 700 !important; }
+.MuiStepLabel-label.Mui-completed .regiondo-progress-label { color: #6b6860 !important; }
+.MuiStepLabel-label.Mui-disabled  .regiondo-progress-label { color: #c0bdb6 !important; }
+
+/* Icônes */
+.regiondo-progress-icon--active    { color: #1a1917 !important; }
+.regiondo-progress-icon--completed { color: #1a1917 !important; }
+.regiondo-progress-icon--disabled  { color: #d4d2cc !important; }
+
+/* Ligne connector */
+.MuiStepConnector-line {
+  border-color: #e3e1db !important;
+  border-top-width: 1.5px !important;
+}
+.MuiStepConnector-root.Mui-active    .MuiStepConnector-line,
+.MuiStepConnector-root.Mui-completed .MuiStepConnector-line { border-color: #1a1917 !important; }
+
+/* ─── Checkout zones ─────────────────────────────────────────────────────────── */
+
+.regiondo-checkout { background: #fbfaf8 !important; }
+
+.regiondo-form,
+.regiondo-cart { padding: 20px 20px 4px !important; }
+
+/* Titre form */
+.regiondo-form-intro {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: #1a1917 !important;
+  margin: 0 0 18px !important;
+  padding: 0 !important;
+}
+
+/* ─── Champs ─────────────────────────────────────────────────────────────────── */
+
+.regiondo-field { margin-bottom: 12px !important; }
+
+.MuiFormLabel-root,
+.MuiInputLabel-root {
+  font-size: 12px !important;
+  font-family: inherit !important;
+  color: #6b6860 !important;
+}
+.MuiInputLabel-root.Mui-focused { color: #1a1917 !important; }
+.MuiFormLabel-asterisk { color: #b0aea8 !important; }
+
+.MuiInputBase-root {
+  font-family: inherit !important;
+  font-size: 13px !important;
+  background: #ffffff !important;
+  border-radius: 8px !important;
+}
+.regiondo-input {
+  font-size: 13px !important;
+  color: #1a1917 !important;
+  padding: 10px 12px !important;
+  font-family: inherit !important;
+}
+
+/* Bordure */
+.MuiOutlinedInput-notchedOutline {
+  border-color: #e3e1db !important;
+  border-radius: 8px !important;
+}
+.MuiOutlinedInput-root:hover     .MuiOutlinedInput-notchedOutline { border-color: #b0aea8 !important; }
+.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline { border-color: #1a1917 !important; border-width: 1.5px !important; }
+
+/* Hint */
+.regiondo-form-hint {
+  font-size: 11px !important;
+  color: #b0aea8 !important;
+  display: block !important;
+  margin: -6px 0 14px !important;
+}
+
+/* Checkbox */
+.MuiCheckbox-root               { color: #d4d2cc !important; padding: 6px !important; }
+.MuiCheckbox-root.Mui-checked   { color: #1a1917 !important; }
+.MuiFormControlLabel-label      { font-size: 12px !important; color: #1a1917 !important; line-height: 1.55 !important; }
+
+/* Select pays téléphone */
+.MuiSelect-icon        { color: #b0aea8 !important; }
+.MuiDivider-vertical   { border-color: #e3e1db !important; margin: 8px 0 !important; }
+
+/* Link CGV */
+.regiondo-link {
+  color: #1a1917 !important;
+  font-weight: 500 !important;
+  text-decoration: underline !important;
+  text-underline-offset: 2px !important;
+}
+
+/* ─── Panier : timer ──────────────────────────────────────────────────────────── */
+
+.regiondo-reservation {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 12px !important;
+  background: #fff8ee !important;
+  border: 1px solid #f0e4c8 !important;
+  border-radius: 10px !important;
+  padding: 12px 14px !important;
+  margin-bottom: 16px !important;
+}
+.regiondo-reservation__time {
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  color: #b97a20 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+.regiondo-reservation__message {
+  font-size: 12px !important;
+  color: #6b6860 !important;
+  line-height: 1.5 !important;
+  margin: 0 !important;
+}
+
+/* ─── Panier : tableau produits ───────────────────────────────────────────────── */
+
+.regiondo-table { margin-bottom: 16px !important; }
+
+.regiondo-table__row {
+  border: 1px solid #e3e1db !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  background: #ffffff !important;
+}
+
+.regiondo-table__header {
+  background: #f5f4f0 !important;
+  padding: 8px 12px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: #6b6860 !important;
+  text-transform: uppercase !important;
+  letter-spacing: .05em !important;
+  border-bottom: 1px solid #e3e1db !important;
+}
+
+.regiondo-table__cell { padding: 12px !important; }
+
+.regiondo-product-name {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #1a1917 !important;
+  margin: 0 0 4px !important;
+}
+.regiondo-product-option-name {
+  font-size: 11px !important;
+  color: #6b6860 !important;
+  line-height: 1.45 !important;
+  margin: 0 0 4px !important;
+}
+.regiondo-product-date,
+.regiondo-product-time {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  font-size: 11px !important;
+  color: #6b6860 !important;
+  margin: 2px 0 !important;
+}
+.regiondo-product-date svg,
+.regiondo-product-time svg { width: 12px !important; height: 12px !important; opacity: .55 !important; flex-shrink: 0 !important; }
+
+.regiondo-product-qty  { font-size: 13px !important; font-weight: 600 !important; color: #1a1917 !important; text-align: center !important; }
+.regiondo-product-price { font-size: 13px !important; font-weight: 600 !important; color: #1a1917 !important; }
+
+/* Bouton retirer */
+.re-ba-haatk2 {
+  font-size: 11px !important;
+  color: #b0aea8 !important;
+  padding: 4px 0 !important;
+  min-width: 0 !important;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+.re-ba-haatk2:hover { color: #dc2626 !important; background: none !important; }
+.regiondo-icon-remove { width: 14px !important; height: 14px !important; }
+
+/* ─── Coupon ──────────────────────────────────────────────────────────────────── */
+
+.regiondo-button-coupon {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: #1a1917 !important;
+  margin: 0 0 8px !important;
+}
+.regiondo-button-coupon-apply {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #1a1917 !important;
+  border-color: #e3e1db !important;
+  border-radius: 8px !important;
+  padding: 8px 14px !important;
+  background: transparent !important;
+  white-space: nowrap !important;
+  box-shadow: none !important;
+}
+.regiondo-button-coupon-apply:hover { border-color: #1a1917 !important; background: transparent !important; }
+
+.regiondo-note {
+  background: #f5f4f0 !important;
+  border-radius: 8px !important;
+  padding: 10px 12px !important;
+  margin-top: 8px !important;
+}
+.regiondo-note p {
+  font-size: 11px !important;
+  color: #6b6860 !important;
+  line-height: 1.5 !important;
+  margin: 0 !important;
+}
+
+/* ─── Paiement : accordéon méthode ──────────────────────────────────────────── */
+
+.MuiPaper-root, .MuiAccordion-root {
+  box-shadow: none !important;
+  background: transparent !important;
+}
+.MuiAccordion-root::before { display: none !important; }
+
+.regiondo-method {
+  border: 1px solid #e3e1db !important;
+  border-radius: 10px !important;
+  margin-bottom: 8px !important;
+  background: #ffffff !important;
+  overflow: hidden !important;
+}
+
+.MuiAccordionSummary-root { min-height: 0 !important; padding: 0 !important; }
+.MuiAccordionSummary-content { margin: 0 !important; }
+
+.regiondo-method__title {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 12px 14px !important;
+  gap: 10px !important;
+}
+.regiondo-method__title h3 {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: #1a1917 !important;
+  margin: 0 !important;
+}
+
+/* Radio */
+.MuiSvgIcon-root[data-testid="RadioButtonUncheckedIcon"] { color: #d4d2cc !important; width: 18px !important; height: 18px !important; }
+.MuiSvgIcon-root[data-testid="RadioButtonCheckedIcon"]   { color: #1a1917 !important; width: 18px !important; height: 18px !important; }
+
+/* ─── Totaux ──────────────────────────────────────────────────────────────────── */
+
+.regiondo-checkout-totals {
+  border: 1px solid #e3e1db !important;
+  border-radius: 10px !important;
+  background: #ffffff !important;
+  margin: 14px 0 !important;
+  overflow: hidden !important;
+}
+.regiondo-totals { padding: 0 !important; }
+
+.regiondo-totals--subtotal,
+.regiondo-totals--grand-total {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 10px 14px !important;
+}
+.regiondo-totals--subtotal { border-bottom: 1px solid #f0efe9 !important; }
+
+.regiondo-totals__title { font-size: 12px !important; font-weight: 400 !important; color: #6b6860 !important; margin: 0 !important; }
+.regiondo-totals__value { font-size: 12px !important; font-weight: 500 !important; color: #6b6860 !important; margin: 0 !important; }
+.regiondo-totals--grand-total .regiondo-totals__title { font-size: 15px !important; font-weight: 700 !important; color: #1a1917 !important; }
+.regiondo-totals--grand-total .regiondo-totals__value { font-size: 15px !important; font-weight: 700 !important; color: #1a1917 !important; }
+
+/* ─── Boutons d'action ────────────────────────────────────────────────────────── */
+
+.re-ba-1ghoshw {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  padding: 0 20px 20px !important;
+}
+
+.regiondo-button.regiondo-button-checkout {
+  background: #1a1917 !important;
+  color: #faf9f5 !important;
+  border: none !important;
+  border-radius: 10px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  padding: 13px 24px !important;
+  width: 100% !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+  transition: background .15s !important;
+}
+.regiondo-button.regiondo-button-checkout:hover { background: #2e2c2a !important; }
+
+.regiondo-button-back {
+  background: transparent !important;
+  color: #6b6860 !important;
+  border: 1px solid #e3e1db !important;
+  border-radius: 10px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  padding: 9px 20px !important;
+  width: 100% !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  transition: border-color .15s, color .15s !important;
+}
+.regiondo-button-back:hover { border-color: #b0aea8 !important; color: #1a1917 !important; background: #f5f4f0 !important; }
+.regiondo-button-back .MuiButton-startIcon { margin: 0 !important; }

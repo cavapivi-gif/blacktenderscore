@@ -19,6 +19,7 @@ use BlackTenders\Elementor\Widgets\Highlights;
 use BlackTenders\Elementor\Widgets\Captain;
 use BlackTenders\Elementor\Widgets\IncludedExcluded;
 use BlackTenders\Elementor\Widgets\Share;
+use BlackTenders\Elementor\Widgets\GoogleMap;
 
 defined('ABSPATH') || exit;
 
@@ -48,14 +49,18 @@ class ElementorManager {
         add_action('elementor/editor/after_enqueue_styles',    [$this, 'enqueue_editor_extras']);
 
         // ── Map Style : injecte la section "Style de carte" dans TOUS les widgets ──
-        // Utilise after_section_end avec static $injected pour n'ajouter la section qu'une fois par type.
+        // On s'accroche sur _section_responsive, toujours la DERNIÈRE section native
+        // du tab Advanced d'Elementor → notre section s'insère après, tout à la fin.
         add_action('elementor/element/after_section_end', static function(
-            \Elementor\Element_Base $element, string $section_id, array $args
+            $element, string $section_id, array $args
         ): void {
-            static $injected = [];
-            $name = $element->get_name();
-            if (isset($injected[$name])) return;
-            $injected[$name] = true;
+            // Le hook peut recevoir des Documents Elementor Pro (ex: Single_Page)
+            // qui n'héritent pas de Element_Base → on filtre proprement.
+            if (!($element instanceof \Elementor\Element_Base)) return;
+
+            // _section_responsive est la dernière section du tab Advanced dans tout widget Elementor.
+            // En s'y accrochant, on garantit que notre section arrive en toute fin du panneau Advanced.
+            if ($section_id !== '_section_responsive') return;
 
             $element->start_controls_section('section_bt_map_style', [
                 'label' => __('Style de carte (BT)', 'blacktenderscore'),
@@ -82,6 +87,63 @@ class ElementorManager {
 
             $element->end_controls_section();
         }, 99, 3);
+
+        // ── Google Maps iframe → JS API ────────────────────────────────────────────────────
+        // Remplace l'iframe Embed (cross-origin, non stylable) par un <div> initialisé via
+        // la Maps JS API, ce qui permet au monkey-patch de class-plugin.php d'appliquer le style.
+        add_filter('elementor/widget/render_content', static function(string $content, \Elementor\Widget_Base $widget): string {
+            if ($widget->get_name() !== 'google_maps') return $content;
+
+            // Extrait le src de l'iframe (les deux formats : embed/v1/place et maps?q=)
+            if (!preg_match('/src=["\']([^"\']*(?:maps\.google|google\.com\/maps)[^"\']*)["\']/', $content, $m)) {
+                return $content;
+            }
+
+            $src   = html_entity_decode($m[1]);
+            $query = wp_parse_url($src, PHP_URL_QUERY) ?? '';
+            wp_parse_str($query, $params);
+
+            $q    = rawurldecode($params['q'] ?? '');
+            $zoom = (int) ($params['zoom'] ?? $params['z'] ?? 10);
+
+            if ($q === '') return $content;  // impossible de centrer la carte sans adresse
+
+            // Charge la Maps JS API si elle n'est pas encore enqueued
+            // (l'iframe Embed ne la requiert pas, notre remplacement JS si)
+            if (!wp_script_is('google-maps-api', 'enqueued')) {
+                $api_key = get_option('elementor_google_maps_api_key', '');
+                $maps_url = $api_key
+                    ? 'https://maps.googleapis.com/maps/api/js?key=' . rawurlencode($api_key)
+                    : 'https://maps.googleapis.com/maps/api/js';
+                wp_enqueue_script('google-maps-api', $maps_url, [], null, true);
+            }
+
+            // Détermine si q est une paire lat,lng ou une adresse textuelle
+            $is_latlng = (bool) preg_match('/^-?\d+\.?\d*\s*,\s*-?\d+\.?\d*$/', $q);
+            $data_attr = $is_latlng
+                ? 'data-bt-latlng="' . esc_attr($q) . '"'
+                : 'data-bt-address="' . esc_attr($q) . '"';
+
+            // Récupère la hauteur définie dans les settings du widget
+            $settings    = $widget->get_settings_for_display();
+            $height_val  = $settings['height']['size'] ?? 300;
+            $height_unit = $settings['height']['unit'] ?? 'px';
+            $height_css  = esc_attr($height_val . $height_unit);
+
+            $replacement = '<div class="elementor-custom-embed">'
+                         . '<div class="bt-gmaps-js" ' . $data_attr
+                         .  ' data-zoom="' . $zoom . '"'
+                         .  ' style="width:100%;height:' . $height_css . '">'
+                         . '</div></div>';
+
+            // Remplace la première occurrence de l'embed (ungreedy, stop au 1er </div>)
+            return preg_replace(
+                '/<div class="elementor-custom-embed">[\s\S]*?<\/div>/U',
+                $replacement,
+                $content,
+                1
+            );
+        }, 10, 2);
 
         // ── Map Style : applique data-bt-map-style sur le wrapper du widget avant le rendu ──
         // Lit les settings BT map style et écrit l'attribut sur le wrapper.
@@ -164,6 +226,8 @@ class ElementorManager {
         $manager->register(new Captain());
         $manager->register(new IncludedExcluded());
         $manager->register(new Share());
+        // ── Utilitaires ───────────────────────────────────────────────────────
+        $manager->register(new GoogleMap());
     }
 
     public function enqueue_editor_extras(): void {
@@ -232,5 +296,8 @@ class ElementorManager {
         wp_register_style('bt-leaflet-css', BT_URL . 'elementor/assets/leaflet.min.css', [], '1.9.4');
         wp_register_script('bt-leaflet',     BT_URL . 'elementor/assets/leaflet.min.js',  [], '1.9.4', true);
         wp_register_script('bt-leaflet-init', BT_URL . 'elementor/assets/bt-leaflet-init.js', ['bt-leaflet'], BT_VERSION, true);
+
+        // Google Maps JS API init — remplace l'iframe Embed par un div stylable
+        wp_enqueue_script('bt-gmaps-init', BT_URL . 'elementor/assets/bt-gmaps-init.js', [], BT_VERSION, true);
     }
 }

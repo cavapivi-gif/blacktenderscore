@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { api } from '../lib/api'
-import { today, daysAgo, prevPeriod } from '../lib/utils'
+import { today, daysAgo, monthsAgo, prevPeriod } from '../lib/utils'
 
 function loadPrefs() {
   try {
@@ -58,7 +58,7 @@ export function useDashboard() {
       from: filterParams.from,
       to: filterParams.to,
       granularity: filterParams.granularity,
-      include: 'periods,kpis,by_product,by_channel,by_weekday,heatmap,payments,lead_time_buckets,lead_time,repeat_customers,product_mix,channel_status,yoy,cumulative',
+      include: 'periods,kpis,by_product,by_channel,by_weekday,heatmap,payments,lead_time_buckets,lead_time,repeat_customers,product_mix,channel_status,yoy,cumulative,top_dates',
     }
     if (filterParams.compareFrom) p.compare_from = filterParams.compareFrom
     if (filterParams.compareTo) p.compare_to = filterParams.compareTo

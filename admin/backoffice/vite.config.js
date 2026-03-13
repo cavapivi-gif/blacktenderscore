@@ -8,6 +8,7 @@ export default defineConfig({
     outDir: 'build',
     assetsDir: 'assets',
     rollupOptions: {
+      external: ['@lobehub/ui', 'antd', 'rc-util', 'rc-motion', '@ant-design/icons', 'react-layout-kit'],
       output: {
         entryFileNames: 'assets/index.js',
         chunkFileNames: 'assets/[name].js',

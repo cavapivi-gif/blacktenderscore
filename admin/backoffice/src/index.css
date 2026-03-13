@@ -2,31 +2,47 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Buenos Aires — police de marque ── */
+@font-face {
+  font-family: 'Buenos Aires';
+  src: url('https://dev.studiojae.fr/wp-content/uploads/2026/03/buenos-aires-light.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Buenos Aires';
+  src: url('https://dev.studiojae.fr/wp-content/uploads/2026/03/buenos-aires-bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ── Design Tokens (shadcn-like, scoped to our WP root) ── */
 #bt-backoffice-root {
-  --background: #ffffff;
-  --foreground: #0a0a0a;
+  --background: #fbfaf8;
+  --foreground: #1a1917;
   --card: #ffffff;
-  --card-foreground: #0a0a0a;
-  --primary: #0a0a0a;
-  --primary-foreground: #fafafa;
-  --secondary: #f5f5f5;
-  --secondary-foreground: #0a0a0a;
-  --muted: #f5f5f5;
-  --muted-foreground: #737373;
-  --accent: #f5f5f5;
-  --accent-foreground: #0a0a0a;
+  --card-foreground: #1a1917;
+  --primary: #1a1917;
+  --primary-foreground: #faf9f5;
+  --secondary: #f0efe9;
+  --secondary-foreground: #1a1917;
+  --muted: #f0efe9;
+  --muted-foreground: #6b6860;
+  --accent: #edecea;
+  --accent-foreground: #1a1917;
   --destructive: #dc2626;
   --destructive-foreground: #fafafa;
-  --border: #e5e5e5;
-  --input: #e5e5e5;
-  --ring: #a3a3a3;
+  --border: #e3e1db;
+  --input: #e3e1db;
+  --ring: #b0aea8;
   --radius: 0.5rem;
 }
 
 /* ── Root scope: prevent WP admin CSS bleed ── */
 #bt-backoffice-root {
-  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-family: 'Buenos Aires', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 14px;
   line-height: 1.5;
   color: var(--foreground);
@@ -140,3 +156,68 @@
 #bt-backoffice-root .fc .fc-multimonth-daygrid { font-size: 11px; }
 #bt-backoffice-root .fc .fc-multimonth .fc-daygrid-day-frame { min-height: 40px; }
 #bt-backoffice-root .fc .fc-multimonth .fc-daygrid-day-number { font-size: 11px; padding: 3px 5px; }
+
+/* ── AI animated gradient border button ─────────────────────────────────── */
+@keyframes bt-gradient-border {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.bt-ai-wrap {
+  --bw: 2px;
+  display: inline-flex;
+  border-radius: calc(6px + var(--bw));
+  background: linear-gradient(60deg, #f79533, #f37055, #ef4e7b, #a166ab, #5073b8, #1098ad, #07b39b, #6fba82);
+  background-size: 300% 300%;
+  animation: bt-gradient-border 3s ease alternate infinite;
+  padding: var(--bw);
+}
+
+.bt-ai-wrap > button {
+  border-radius: 6px;
+  background: var(--background);
+}
+
+/* État chargement : texte + icônes blancs sur fond dégradé */
+.bt-ai-wrap > button:disabled,
+.bt-ai-wrap > button[aria-disabled="true"] {
+  color: #fff !important;
+  opacity: 1 !important;
+  background: transparent !important;
+  font-weight: 600;
+}
+.bt-ai-wrap > button:disabled svg,
+.bt-ai-wrap > button[aria-disabled="true"] svg {
+  color: #fff !important;
+  stroke: #fff !important;
+}
+
+/* Variante fond plein — banner / bouton standalone */
+.bt-ai-btn-solid {
+  background: linear-gradient(60deg, #f79533, #f37055, #ef4e7b, #a166ab, #5073b8, #1098ad, #07b39b, #6fba82);
+  background-size: 300% 300%;
+  animation: bt-gradient-border 3s ease alternate infinite;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  transition: opacity 150ms;
+}
+
+.bt-ai-btn-solid:hover { opacity: 0.88; }
+
+/* Barre de chargement indéterminée — EventsCorrelator */
+@keyframes bt-loading-bar {
+  0%   { transform: translateX(-100%); }
+  50%  { transform: translateX(80%); }
+  100% { transform: translateX(200%); }
+}
+
+/* bt-ai-wrap autour d'un span non-button (badge IA header) */
+.bt-ai-wrap > span {
+  border-radius: 6px;
+  background: var(--background);
+}

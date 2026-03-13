@@ -70,11 +70,64 @@ export const api = {
   importAvisCsv:   (items)  => api.post('/avis/import/csv', { items }),
   resetAvis:       ()       => api.post('/avis/reset', {}),
 
+  // Snazzy Maps proxy
+  snazzymapsStyles: (params) => api.get('/snazzymaps-styles' + toQuery(params)),
+
+  // Google Analytics 4 + Search Console
+  ga4Stats:             (params) => api.get('/ga4/stats' + toQuery(params)),
+  searchConsoleStats:   (params) => api.get('/search-console/stats' + toQuery(params)),
+  googleTest:           ()       => api.get('/google/test'),
+  flushGa4Cache:        ()       => api.post('/ga4/cache/flush', {}),
+  flushGscCache:        ()       => api.post('/gsc/cache/flush', {}),
+
   // Onboarding wizard
   onboardingStatus:   ()     => api.get('/onboarding/status'),
   onboardingSetup:    (body) => api.post('/onboarding/setup', body),
   onboardingComplete: ()     => api.post('/onboarding/complete', {}),
   onboardingReset:    ()     => api.post('/onboarding/reset', {}),
+
+  // AI context + events
+  aiContext:       (params) => api.get('/ai/context' + toQuery(params)),
+  aiEvents:        (params) => api.get('/ai/events' + toQuery(params)),
+  generateEvents:  (body)   => api.post('/ai/events/generate', body),
+  importEvents:    (events) => api.post('/ai/events/import', { events }),
+  resetEvents:     ()       => api.post('/ai/events/reset', {}),
+
+  // AI status — providers actifs (sans exposer les clés)
+  aiStatus: () => api.get('/ai/status'),
+
+  // Traducteur + Correcteur IA
+  translate: (body) => api.post('/ai/translate', body),
+  correct:   (body) => api.post('/ai/correct', body),
+
+  // Partage de conversations (stocké en WP options, lien admin)
+  shareChat:       (conv)    => api.post('/chats/share', conv),
+  getSharedChat:   (token)   => api.get(`/chats/shared/${token}`),
+  deleteSharedChat:(token)   => apiFetch(`/chats/shared/${token}`, { method: 'DELETE' }),
+}
+
+/**
+ * Streaming SSE chat via wp-ajax.
+ * Returns a ReadableStreamDefaultReader for consuming SSE chunks.
+ * @param {Array}  messages  - [{role, content, images?: [{data, type}]}, ...]
+ * @param {string} from      - date ISO start
+ * @param {string} to        - date ISO end
+ * @param {Object} opts      - { provider?: 'anthropic'|'openai'|'gemini' }
+ */
+export async function streamChat(messages, from, to, opts = {}) {
+  const { ajax_url, nonce } = window.btBackoffice || {}
+  const body = { messages, from, to }
+  if (opts.provider) body.provider = opts.provider
+  const res = await fetch(ajax_url + '?action=bt_ai_chat', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-WP-Nonce': nonce,
+    },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) throw new Error(`Erreur ${res.status}`)
+  return res.body.getReader()
 }
 
 function toQuery(params) {

@@ -184,15 +184,122 @@
             p.classList.toggle('bt-pricing__panel--active', p.getAttribute('data-slot-panel') === idx);
           });
 
-          // Reveal booking widget
+          // Reveal booking widget + injection lazy si nécessaire
           if (reveal) {
             reveal.classList.add('bt-pricing__booking-reveal--visible');
+            injectBookingLazy(reveal);
             setTimeout(function () {
               reveal.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }, 80);
           }
         });
       });
+    });
+  }
+
+  /* ── Pricing Trigger — bouton reveal / modal ────────────────────────────── */
+
+  /**
+   * Injecte le booking-widget depuis le <template> lazy dans son conteneur.
+   * Ajoute le script Regiondo s'il n'est pas encore sur la page.
+   * Idempotent : marqueur data-bt-bk-loaded empêche la double injection.
+   */
+  function injectBookingLazy(root) {
+    root.querySelectorAll('.bt-pricing__booking-lazy:not([data-bt-bk-loaded])').forEach(function (placeholder) {
+      placeholder.setAttribute('data-bt-bk-loaded', '1');
+      var tpl = placeholder.querySelector('template.bt-booking-tpl');
+      if (!tpl) return;
+
+      // Cloner le contenu du template
+      var clone = document.importNode(tpl.content, true);
+      placeholder.appendChild(clone);
+
+      // Injecter le script Regiondo si absent (async — chargement en arrière-plan)
+      if (!document.querySelector('script[src*="regiondo.net"]')) {
+        var s = document.createElement('script');
+        s.src   = 'https://widgets.regiondo.net/booking/v1/booking-widget.min.js';
+        s.async = true;
+        document.head.appendChild(s);
+      }
+    });
+  }
+
+  /**
+   * Gère les wrappers [data-bt-trigger="reveal|modal"].
+   * - reveal : ouvre un panneau sous le bouton (grid animation)
+   * - modal  : ouvre un <dialog> natif
+   * - Support ancre #id pour scroll + ouverture automatique
+   */
+  function initPricingTrigger(el) {
+    el.querySelectorAll('[data-bt-trigger]:not([data-bt-tr-init])').forEach(function (wrap) {
+      wrap.setAttribute('data-bt-tr-init', '1');
+
+      var mode    = wrap.getAttribute('data-bt-trigger');
+      var btn     = wrap.querySelector('.bt-pricing__trigger');
+      if (!btn) return;
+
+      var wrapperId = wrap.id || '';
+
+      if (mode === 'reveal') {
+        var content = wrap.querySelector('.bt-pricing__reveal-content');
+        if (!content) return;
+
+        function openReveal() {
+          content.classList.add('bt-pricing__reveal-content--open');
+          btn.setAttribute('aria-expanded', 'true');
+          injectBookingLazy(content);
+        }
+
+        btn.addEventListener('click', function () {
+          var isOpen = content.classList.contains('bt-pricing__reveal-content--open');
+          if (isOpen) {
+            // Refermer si déjà ouvert (toggle)
+            content.classList.remove('bt-pricing__reveal-content--open');
+            btn.setAttribute('aria-expanded', 'false');
+          } else {
+            openReveal();
+            setTimeout(function () {
+              wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+          }
+        });
+
+        // Ouverture auto via ancre #id
+        if (wrapperId && window.location.hash === '#' + wrapperId) openReveal();
+        window.addEventListener('hashchange', function () {
+          if (wrapperId && window.location.hash === '#' + wrapperId) openReveal();
+        });
+
+      } else if (mode === 'modal') {
+        var dialog   = wrap.querySelector('.bt-pricing-modal');
+        var closeBtn = dialog && dialog.querySelector('.bt-pricing-modal__close');
+        if (!dialog) return;
+
+        function openModal() {
+          injectBookingLazy(dialog);
+          dialog.showModal();
+        }
+
+        btn.addEventListener('click', openModal);
+
+        if (closeBtn) {
+          closeBtn.addEventListener('click', function () { dialog.close(); });
+        }
+
+        // Clic sur le backdrop (en dehors du contenu) ferme la modal
+        dialog.addEventListener('click', function (e) {
+          var rect = dialog.getBoundingClientRect();
+          var outsideX = e.clientX < rect.left || e.clientX > rect.right;
+          var outsideY = e.clientY < rect.top  || e.clientY > rect.bottom;
+          if (outsideX || outsideY) dialog.close();
+        });
+
+        // Ouverture auto via ancre #id
+        if (wrapperId && window.location.hash === '#' + wrapperId) openModal();
+        window.addEventListener('hashchange', function () {
+          if (wrapperId && window.location.hash === '#' + wrapperId) openModal();
+        });
+      }
     });
   }
 
@@ -382,6 +489,7 @@
       initTabs(root);
     });
     initPricingButtons(el);
+    initPricingTrigger(el);
     initGallery(el);
     el.querySelectorAll('[data-bt-share]:not([data-bt-share-init])').forEach(function (btn) {
       btn.setAttribute('data-bt-share-init', '1');

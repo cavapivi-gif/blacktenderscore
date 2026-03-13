@@ -18,6 +18,7 @@ require_once __DIR__ . '/tags/class-tag-exp-booking-url.php';
 require_once __DIR__ . '/tags/class-tag-related-count.php';
 require_once __DIR__ . '/tags/class-tag-taxonomy.php';
 require_once __DIR__ . '/tags/class-tag-acf-range.php';
+require_once __DIR__ . '/tags/class-tag-acf-map.php';
 
 /**
  * Dynamic Tags Manager — BT Regiondo.
@@ -70,6 +71,9 @@ class Dynamic_Tags_Manager {
 
         // Plage de deux champs ACF (min - max, De X€ à Y€…)
         $manager->register(new Tag_Acf_Range());
+
+        // Champ ACF Google Map → retourne "lat,lng"
+        $manager->register(new Tag_Acf_Map());
 
         // URL
         $manager->register(new Tag_Exp_Booking_Url());

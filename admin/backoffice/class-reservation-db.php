@@ -665,6 +665,34 @@ class ReservationDb {
     }
 
     /**
+     * Heatmap des annulations — même format que query_heatmap mais filtre sur les statuts annulés.
+     * Permet d'identifier les mois × jours où les annulations se concentrent.
+     *
+     * @param string $from YYYY-MM-DD
+     * @param string $to   YYYY-MM-DD
+     * @return array [{month: 'YYYY-MM', dow: 1-7, total: N}]
+     */
+    public function query_heatmap_cancellations(string $from, string $to): array {
+        global $wpdb;
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT
+                    DATE_FORMAT(" . self::EDATE . ", '%%Y-%%m') AS month,
+                    DAYOFWEEK(" . self::EDATE . ") AS dow,
+                    COUNT(*) AS total
+                 FROM `{$this->table}`
+                 WHERE " . self::EDATE . " BETWEEN %s AND %s
+                   AND " . self::EDATE . " IS NOT NULL
+                   AND booking_status IN ('canceled','cancelled','rejected')
+                 GROUP BY month, dow
+                 ORDER BY month, dow",
+                $from, $to
+            ), ARRAY_A
+        );
+        return $rows ?: [];
+    }
+
+    /**
      * Répartition par méthode de paiement.
      */
     public function query_by_payment_method(string $from, string $to, int $limit = 10): array {
@@ -832,6 +860,71 @@ class ReservationDb {
     }
 
     /**
+     * Taux de repeat par période (mois).
+     * Pour chaque mois, retourne le nombre de clients uniques et ceux
+     * qui ont aussi réservé dans un autre mois de la même période (= clients fidèles).
+     *
+     * Approche PHP-side pour éviter les sous-requêtes corrélées coûteuses :
+     * 1. On récupère (period, email_hash) pour tous les clients actifs
+     * 2. On détermine en PHP lesquels apparaissent dans >1 période (repeat)
+     * 3. On calcule le taux par période
+     */
+    public function query_repeat_rate_by_period(string $from, string $to): array {
+        global $wpdb;
+
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT DATE_FORMAT(" . self::EDATE . ", '%%Y-%%m') AS period,
+                        buyer_email_hash
+                 FROM `{$this->table}`
+                 WHERE " . self::EDATE . " BETWEEN %s AND %s
+                   AND booking_status NOT IN ('canceled','cancelled','rejected')
+                   AND buyer_email_hash IS NOT NULL
+                   AND buyer_email_hash != ''
+                 GROUP BY period, buyer_email_hash
+                 ORDER BY period",
+                $from, $to
+            ), ARRAY_A
+        );
+
+        if ( ! $rows ) return [];
+
+        // Index : email_hash → liste des périodes où il apparaît
+        $customer_periods = [];
+        foreach ( $rows as $row ) {
+            $customer_periods[ $row['buyer_email_hash'] ][] = $row['period'];
+        }
+
+        // Clients qui apparaissent dans ≥2 périodes = repeat
+        $repeat_set = [];
+        foreach ( $customer_periods as $hash => $periods ) {
+            if ( count( array_unique( $periods ) ) >= 2 ) {
+                $repeat_set[ $hash ] = true;
+            }
+        }
+
+        // Agrégation par période
+        $by_period = [];
+        foreach ( $rows as $row ) {
+            $p = $row['period'];
+            if ( ! isset( $by_period[ $p ] ) ) {
+                $by_period[ $p ] = [ 'period' => $p, 'unique_customers' => 0, 'repeat_customers' => 0 ];
+            }
+            $by_period[ $p ]['unique_customers']++;
+            if ( isset( $repeat_set[ $row['buyer_email_hash'] ] ) ) {
+                $by_period[ $p ]['repeat_customers']++;
+            }
+        }
+
+        return array_map( function ( $p ) {
+            $p['repeat_rate'] = $p['unique_customers'] > 0
+                ? round( 100 * $p['repeat_customers'] / $p['unique_customers'], 1 )
+                : 0;
+            return $p;
+        }, array_values( $by_period ) );
+    }
+
+    /**
      * Product mix over time (top N products × period).
      */
     public function query_product_mix(string $from, string $to, string $granularity = 'month', int $top_n = 5): array {
@@ -977,6 +1070,34 @@ class ReservationDb {
                  FROM `{$this->table}`
                  WHERE " . self::EDATE . " BETWEEN %s AND %s
                    AND " . self::EDATE . " IS NOT NULL
+                 GROUP BY date
+                 ORDER BY count DESC
+                 LIMIT %d",
+                $from, $to, $limit
+            ), ARRAY_A
+        );
+        return $rows ?: [];
+    }
+
+    /**
+     * Top dates par volume d'annulations — même format que query_top_dates
+     * mais filtré sur booking_status IN ('canceled','cancelled','rejected').
+     *
+     * @param string $from  YYYY-MM-DD
+     * @param string $to    YYYY-MM-DD
+     * @param int    $limit Nombre de dates à retourner (défaut 30 pour les sélecteurs 7/20/30)
+     * @return array [{date: 'YYYY-MM-DD', count: N}] trié DESC
+     */
+    public function query_top_cancellation_dates(string $from, string $to, int $limit = 30): array {
+        global $wpdb;
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT " . self::EDATE . " AS date,
+                        COUNT(*) AS count
+                 FROM `{$this->table}`
+                 WHERE " . self::EDATE . " BETWEEN %s AND %s
+                   AND " . self::EDATE . " IS NOT NULL
+                   AND booking_status IN ('canceled','cancelled','rejected')
                  GROUP BY date
                  ORDER BY count DESC
                  LIMIT %d",

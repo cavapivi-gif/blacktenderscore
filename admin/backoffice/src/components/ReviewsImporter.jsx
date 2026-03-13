@@ -284,11 +284,12 @@ function ImportSuccessModal({ result, onClose }) {
 
 // ── Composant principal ───────────────────────────────────────────────────────
 export default function ReviewsImporter({ onDone }) {
-  const [file, setFile]         = useState(null)
-  const [importing, setImporting] = useState(false)
-  const [progress, setProgress] = useState(null)
-  const [error, setError]       = useState(null)
-  const [result, setResult]     = useState(null)
+  const [file, setFile]               = useState(null)
+  const [importing, setImporting]     = useState(false)
+  const [progress, setProgress]       = useState(null)
+  const [error, setError]             = useState(null)
+  const [result, setResult]           = useState(null)
+  const [resetFirst, setResetFirst]   = useState(false)
   const inputRef = useRef(null)
 
   const handleImport = useCallback(async () => {
@@ -300,6 +301,11 @@ export default function ReviewsImporter({ onDone }) {
     setProgress(null)
 
     try {
+      // Vider la table avant import si demandé (corrige les données corrompues)
+      if (resetFirst) {
+        await api.resetAvis()
+      }
+
       const text = await file.text()
       const rows = parseReviewsCsv(text)
 
@@ -368,6 +374,23 @@ export default function ReviewsImporter({ onDone }) {
             Importer
           </button>
         </div>
+
+        <label className="flex items-center gap-2 cursor-pointer select-none w-fit">
+          <input
+            type="checkbox"
+            checked={resetFirst}
+            onChange={e => setResetFirst(e.target.checked)}
+            disabled={importing}
+            className="rounded border-input"
+          />
+          <span className="text-xs text-muted-foreground">Vider la table avant d'importer</span>
+        </label>
+
+        {resetFirst && (
+          <div className="rounded-md border border-amber-300/50 bg-amber-50/50 dark:bg-amber-900/10 dark:border-amber-500/30 p-3 text-xs text-amber-700 dark:text-amber-400">
+            ⚠️ Toutes les données existantes seront supprimées avant l'import. Utile pour corriger des données corrompues.
+          </div>
+        )}
 
         {file && !importing && (
           <p className="text-xs text-muted-foreground">{file.name} · {(file.size / 1024).toFixed(0)} Ko</p>

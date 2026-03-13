@@ -239,15 +239,38 @@ export function Notice({ type = 'info', children }) {
   )
 }
 
-export function StatCard({ label, value, sub, accent = false }) {
+/**
+ * Carte de statistique générique.
+ * @param {string}  label          Titre court en majuscules
+ * @param {*}       value          Valeur principale affichée
+ * @param {string}  [sub]          Sous-texte optionnel sous la valeur
+ * @param {boolean} [accent]       Fond primary (couleur d'accentuation)
+ * @param {string}  [legend]       Texte explicatif sous le titre (ex: "Périodes de forte activité")
+ * @param {string}  [dateRange]    Plage de dates (ex: "1 avr. – 12 mars")
+ * @param {boolean} [compareMode]  Active l'affichage comparatif
+ * @param {string}  [comparePeriod] Libellé de la période de comparaison
+ */
+export function StatCard({ label, value, sub, accent = false, legend, dateRange, compareMode = false, comparePeriod }) {
+  const mutedCls = accent ? 'text-primary-foreground/60' : 'text-muted-foreground'
+  const subtleCls = accent ? 'text-primary-foreground/50' : 'text-muted-foreground/70'
   return (
     <div className={cn(
       'px-6 py-5',
       accent ? 'bg-primary text-primary-foreground' : 'bg-card'
     )}>
-      <div className={cn('text-[11px] uppercase tracking-wider mb-2', accent ? 'text-primary-foreground/60' : 'text-muted-foreground')}>{label}</div>
+      <div className={cn('text-[11px] uppercase tracking-wider', mutedCls, (legend || dateRange) ? 'mb-0.5' : 'mb-2')}>{label}</div>
+      {(legend || dateRange) && (
+        <div className={cn('text-[10px] mb-2 leading-snug', subtleCls)}>
+          {legend && <span>{legend}</span>}
+          {legend && dateRange && <span className="mx-1">·</span>}
+          {dateRange && <span>{dateRange}</span>}
+        </div>
+      )}
       <div className="text-2xl">{value ?? '—'}</div>
-      {sub && <div className={cn('text-xs mt-1.5', accent ? 'text-primary-foreground/60' : 'text-muted-foreground')}>{sub}</div>}
+      {sub && <div className={cn('text-xs mt-1.5', mutedCls)}>{sub}</div>}
+      {compareMode && comparePeriod && (
+        <div className={cn('text-[10px] mt-1', subtleCls)}>vs {comparePeriod}</div>
+      )}
     </div>
   )
 }

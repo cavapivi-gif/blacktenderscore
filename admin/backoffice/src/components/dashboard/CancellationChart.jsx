@@ -1,43 +1,64 @@
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ReferenceLine, ResponsiveContainer } from 'recharts'
-import { COLORS } from '../../lib/constants'
+import { COLORS, CHART_INFO } from '../../lib/constants'
 import { fmtNum } from '../../lib/utils'
+import { InfoTooltip } from './InfoTooltip'
 
 /**
  * Taux d'annulation sur une période — courbe + ligne de moyenne.
  *
- * Accepte des données pré-calculées : [{label, total, cancelled}]
- * Calcule le rate % (cancelled/total) pour chaque point.
+ * Quand dataCmp est fourni, superpose une deuxième courbe (période de comparaison)
+ * en gris pointillé. Les deux séries sont alignées par index (même nb de points).
  *
- * @param {Array}  data   [{label: string, total: number, cancelled: number}]
- * @param {number} height Hauteur du graphique (défaut 120)
+ * @param {Array}      data    [{label, total, cancelled}]
+ * @param {Array|null} dataCmp Données comparaison (même format, optionnel)
+ * @param {number}     height  Hauteur du graphique (défaut 120)
  */
-export function CancellationChart({ data = [], height = 120 }) {
+export function CancellationChart({ data = [], dataCmp = null, height = 120 }) {
   if (!data.length) return null
 
   const totalAll  = data.reduce((s, d) => s + (d.total    ?? 0), 0)
   const cancelAll = data.reduce((s, d) => s + (d.cancelled ?? 0), 0)
   if (!totalAll) return null
 
-  const avgRate = Math.round((cancelAll / totalAll) * 100)
+  const avgRate   = Math.round((cancelAll / totalAll) * 100)
+  const isCompare = dataCmp?.length > 0
 
-  const enriched = data.map(d => ({
+  const enriched = data.map((d, i) => ({
     ...d,
     rate: (d.total ?? 0) > 0 ? Math.round(((d.cancelled ?? 0) / d.total) * 100) : 0,
+    rate_cmp: (() => {
+      if (!isCompare) return null
+      const c = dataCmp[i]
+      return c && (c.total ?? 0) > 0
+        ? Math.round(((c.cancelled ?? 0) / c.total) * 100)
+        : null
+    })(),
   }))
 
-  // Show dots only for short series (readable at that density)
   const showDots = enriched.length <= 16
 
   return (
     <div className="rounded-lg border bg-card p-5">
       <div className="mb-4">
-        <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">
-          Taux d'annulation
+        <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium inline-flex items-center">
+          Taux d'annulation <InfoTooltip text={CHART_INFO.cancellation} />
         </p>
         <p className="text-[10px] text-muted-foreground mt-0.5">
           {fmtNum(cancelAll)} annulées / {fmtNum(totalAll)} rés.
           <span className="ml-1">· moy. <span className="font-semibold text-foreground">{avgRate}%</span></span>
         </p>
+        {isCompare && (
+          <div className="flex gap-3 mt-1">
+            <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+              <span className="w-4 border-b-2 shrink-0" style={{ borderColor: '#ef4444' }} />
+              Période
+            </span>
+            <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+              <span className="w-4 border-b-2 border-dashed shrink-0" style={{ borderColor: COLORS.compare }} />
+              Comparaison
+            </span>
+          </div>
+        )}
       </div>
 
       <ResponsiveContainer width="100%" height={height}>
@@ -55,7 +76,6 @@ export function CancellationChart({ data = [], height = 120 }) {
             domain={[0, d => Math.max(d, avgRate + 5)]}
             width={32}
           />
-          {/* Ligne de moyenne */}
           <ReferenceLine
             y={avgRate}
             stroke={COLORS.axis}
@@ -75,10 +95,28 @@ export function CancellationChart({ data = [], height = 120 }) {
                     <span className="text-muted-foreground ml-1">({d?.rate ?? 0}%)</span>
                   </p>
                   <p className="text-muted-foreground">{fmtNum(d?.total ?? 0)} rés. total</p>
+                  {d?.rate_cmp != null && (
+                    <p className="text-muted-foreground mt-0.5 pt-0.5 border-t">
+                      Comparaison : <span className="tabular-nums">{d.rate_cmp}%</span>
+                    </p>
+                  )}
                 </div>
               )
             }}
           />
+          {/* Courbe comparaison (dessous, pour ne pas masquer la principale) */}
+          {isCompare && (
+            <Area
+              dataKey="rate_cmp"
+              stroke={COLORS.compare}
+              strokeWidth={1.5}
+              strokeDasharray="4 2"
+              fill="rgba(129,140,248,0.06)"
+              dot={false}
+              activeDot={{ r: 3, fill: COLORS.compare, strokeWidth: 0 }}
+            />
+          )}
+          {/* Courbe principale */}
           <Area
             dataKey="rate"
             stroke="#ef4444"

@@ -1,6 +1,7 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, LabelList, ResponsiveContainer } from 'recharts'
-import { COLORS } from '../../lib/constants'
+import { COLORS, CHART_INFO } from '../../lib/constants'
 import { fmtNum } from '../../lib/utils'
+import { InfoTooltip } from './InfoTooltip'
 
 const BUCKET_ORDER = ['Jour J', '1-7j', '8-30j', '31-90j', '+90j']
 
@@ -42,8 +43,8 @@ export function LeadTimeChart({ data = [], dataCmp = null }) {
   return (
     <div className="rounded-lg border bg-card p-5">
       <div className="mb-4">
-        <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">
-          Avance de réservation
+        <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium inline-flex items-center">
+          Avance de réservation <InfoTooltip text={CHART_INFO.lead_time} />
         </p>
         <p className="text-[10px] text-muted-foreground mt-0.5">
           Délai entre commande et date d'activité · {fmtNum(totalCur)} rés.
@@ -107,7 +108,7 @@ export function LeadTimeChart({ data = [], dataCmp = null }) {
 
           {/* Barre comparaison */}
           {hasCompare && (
-            <Bar dataKey="bookings_cmp" fill={COLORS.grid} fillOpacity={1} radius={[0, 3, 3, 0]}
+            <Bar dataKey="bookings_cmp" fill={COLORS.compare} fillOpacity={0.75} radius={[0, 3, 3, 0]}
                  name="Comparaison">
               <LabelList
                 dataKey="pct_cmp"
@@ -128,7 +129,7 @@ export function LeadTimeChart({ data = [], dataCmp = null }) {
             Période
           </span>
           <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-            <span className="inline-block w-2.5 h-2.5 rounded-sm" style={{ background: COLORS.grid }} />
+            <span className="inline-block w-2.5 h-2.5 rounded-sm" style={{ background: COLORS.compare, opacity: 0.75 }} />
             Comparaison
           </span>
         </div>

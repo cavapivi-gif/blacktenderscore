@@ -15,6 +15,8 @@ export function KpiCard({
   sparkData,
   sparkColor,
   alert = false,
+  active = false,
+  onClick,
   className,
 }) {
   const isNeutral = d == null
@@ -22,11 +24,20 @@ export function KpiCard({
   const isPositive = visualDelta != null && visualDelta >= 0
 
   return (
-    <div className={cn(
-      'rounded-lg border bg-card p-4 space-y-1.5 transition-shadow hover:shadow-sm',
-      alert && 'ring-1 ring-red-200',
-      className,
-    )}>
+    <div
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onClick={onClick}
+      onKeyDown={onClick ? e => (e.key === 'Enter' || e.key === ' ') && onClick() : undefined}
+      style={active ? { borderColor: '#e3e1db' } : undefined}
+      className={cn(
+        'rounded-lg border bg-card p-4 space-y-1.5 transition-all',
+        onClick ? 'cursor-pointer hover:shadow-md select-none' : 'hover:shadow-sm',
+        active && 'shadow-sm',
+        alert && !active && 'ring-1 ring-red-200',
+        className,
+      )}
+    >
       <div className="flex items-center justify-between">
         <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">{label}</p>
         {sparkData && <Sparkline data={sparkData} color={sparkColor || COLORS.current} w={56} h={20} />}

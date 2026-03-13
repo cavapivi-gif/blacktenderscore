@@ -184,6 +184,41 @@ class PricingTabs extends AbstractBtWidget {
 
         $this->end_controls_section();
 
+        // ── Bouton déclencheur ────────────────────────────────────────────────
+        $this->start_controls_section('section_trigger', [
+            'label' => __('Bouton déclencheur', 'blacktenderscore'),
+            'tab'   => Controls_Manager::TAB_CONTENT,
+        ]);
+
+        $this->add_control('trigger_mode', [
+            'label'   => __('Mode d\'affichage', 'blacktenderscore'),
+            'type'    => Controls_Manager::SELECT,
+            'options' => [
+                'none'   => __('Désactivé (affichage direct)', 'blacktenderscore'),
+                'reveal' => __('Révéler sous le bouton', 'blacktenderscore'),
+                'modal'  => __('Ouvrir en modal / popup', 'blacktenderscore'),
+            ],
+            'default' => 'none',
+        ]);
+
+        $this->add_control('trigger_label', [
+            'label'     => __('Texte du bouton', 'blacktenderscore'),
+            'type'      => Controls_Manager::TEXT,
+            'default'   => __('Réserver', 'blacktenderscore'),
+            'dynamic'   => ['active' => true],
+            'condition' => ['trigger_mode!' => 'none'],
+        ]);
+
+        $this->add_control('trigger_id', [
+            'label'       => __('Ancre HTML (id)', 'blacktenderscore'),
+            'description' => __('Identifiant HTML du wrapper (ex: "booking"). Permet les liens #booking et l\'ouverture automatique.', 'blacktenderscore'),
+            'type'        => Controls_Manager::TEXT,
+            'default'     => 'booking',
+            'condition'   => ['trigger_mode!' => 'none'],
+        ]);
+
+        $this->end_controls_section();
+
         // ══ STYLE ══════════════════════════════════════════════════════════════
 
         $this->register_box_style('container', 'Style — Conteneur', '{{WRAPPER}} .bt-pricing');
@@ -240,6 +275,14 @@ class PricingTabs extends AbstractBtWidget {
             [],
             ['layout' => 'buttons']
         );
+
+        $this->register_button_style(
+            'trigger_btn',
+            'Style — Bouton déclencheur',
+            '{{WRAPPER}} .bt-pricing__trigger',
+            [],
+            ['trigger_mode!' => 'none']
+        );
     }
 
     // ── Render ───────────────────────────────────────────────────────────────
@@ -273,20 +316,55 @@ class PricingTabs extends AbstractBtWidget {
             }
         }
 
-        $active_uuid = $global_uuid ?: ($tab_uuids[0] ?? '');
-        $currency    = esc_html($s['currency'] ?: '€');
-        $uid         = 'bt-pricing-' . $this->get_id();
+        $active_uuid  = $global_uuid ?: ($tab_uuids[0] ?? '');
+        $currency     = esc_html($s['currency'] ?: '€');
+        $uid          = 'bt-pricing-' . $this->get_id();
+        $trigger_mode = $s['trigger_mode'] ?? 'none';
 
-        if ($layout === 'buttons') {
-            $this->render_buttons_layout($s, $rows, $uid, $currency, $tab_uuids, $active_uuid, $post_id);
+        if ($trigger_mode !== 'none') {
+            $trigger_label = esc_html($s['trigger_label'] ?: __('Réserver', 'blacktenderscore'));
+            $trigger_id    = esc_attr($s['trigger_id'] ?: 'booking');
+
+            echo "<div class=\"bt-pricing-trigger-wrap\" id=\"{$trigger_id}\" data-bt-trigger=\"{$trigger_mode}\">";
+            echo "<button type=\"button\" class=\"bt-pricing__trigger\" aria-expanded=\"false\">{$trigger_label}</button>";
+
+            if ($trigger_mode === 'reveal') {
+                echo '<div class="bt-pricing__reveal-content">';
+                echo '<div>'; // inner block for grid-template-rows animation
+                $this->render_inner_layout($s, $rows, $uid, $currency, $tab_uuids, $active_uuid, $post_id, $layout, true);
+                echo '</div></div>';
+            } elseif ($trigger_mode === 'modal') {
+                echo '<dialog class="bt-pricing-modal">';
+                echo '<div class="bt-pricing-modal__inner">';
+                echo '<button type="button" class="bt-pricing-modal__close" aria-label="' . esc_attr__('Fermer', 'blacktenderscore') . '">&times;</button>';
+                $this->render_inner_layout($s, $rows, $uid, $currency, $tab_uuids, $active_uuid, $post_id, $layout, true);
+                echo '</div></dialog>';
+            }
+
+            echo '</div>'; // .bt-pricing-trigger-wrap
         } else {
-            $this->render_tabs_layout($s, $rows, $uid, $currency, $tab_uuids, $active_uuid, $post_id);
+            $this->render_inner_layout($s, $rows, $uid, $currency, $tab_uuids, $active_uuid, $post_id, $layout, false);
+        }
+    }
+
+    /**
+     * Dispatche vers le bon layout (tabs ou buttons).
+     * @param bool $lazy Charge le booking-widget via <template> (chargement différé).
+     */
+    private function render_inner_layout(array $s, array $rows, string $uid, string $currency, array $tab_uuids, string $active_uuid, int $post_id, string $layout, bool $lazy): void {
+        if ($layout === 'buttons') {
+            $this->render_buttons_layout($s, $rows, $uid, $currency, $tab_uuids, $active_uuid, $post_id, $lazy);
+        } else {
+            $this->render_tabs_layout($s, $rows, $uid, $currency, $tab_uuids, $active_uuid, $post_id, $lazy);
         }
     }
 
     // ── Layout: Tabs ──────────────────────────────────────────────────────
 
-    private function render_tabs_layout(array $s, array $rows, string $uid, string $currency, array $tab_uuids, string $active_uuid, int $post_id): void {
+    /**
+     * @param bool $lazy Charge le booking via <template> (chargement différé).
+     */
+    private function render_tabs_layout(array $s, array $rows, string $uid, string $currency, array $tab_uuids, string $active_uuid, int $post_id, bool $lazy = false): void {
         $uuids_attr = '';
         if (!empty($tab_uuids)) {
             $uuids_attr = " data-tab-uuids='" . esc_attr(wp_json_encode($tab_uuids)) . "'";
@@ -323,14 +401,21 @@ class PricingTabs extends AbstractBtWidget {
         }
 
         // Booking — shared, outside panels
-        $this->render_booking_section($s, $active_uuid, $post_id);
+        if ($lazy) {
+            $this->render_booking_section_lazy($s, $active_uuid, $post_id);
+        } else {
+            $this->render_booking_section($s, $active_uuid, $post_id);
+        }
 
         echo '</div>'; // .bt-pricing
     }
 
     // ── Layout: Buttons (pills) ──────────────────────────────────────────
 
-    private function render_buttons_layout(array $s, array $rows, string $uid, string $currency, array $tab_uuids, string $active_uuid, int $post_id): void {
+    /**
+     * @param bool $lazy Charge le booking via <template> (chargement différé).
+     */
+    private function render_buttons_layout(array $s, array $rows, string $uid, string $currency, array $tab_uuids, string $active_uuid, int $post_id, bool $lazy = false): void {
         $uuids_json = !empty($tab_uuids) ? wp_json_encode($tab_uuids) : '';
 
         echo "<div class=\"bt-pricing bt-pricing--buttons\" id=\"{$uid}\" data-bt-pricing-buttons";
@@ -376,11 +461,15 @@ class PricingTabs extends AbstractBtWidget {
             echo '</div>';
         }
 
-        // Booking — shared, revealed on slot click
+        // Booking — shared, revealed on slot click (lazy si trigger actif)
         if ($s['show_booking'] === 'yes') {
             echo '<div class="bt-pricing__booking-reveal">';
             if ($active_uuid) {
-                echo $this->render_booking_widget($active_uuid, $post_id, 0);
+                if ($lazy) {
+                    $this->render_booking_section_lazy($s, $active_uuid, $post_id);
+                } else {
+                    echo $this->render_booking_widget($active_uuid, $post_id, 0);
+                }
             } elseif ($this->is_edit_mode()) {
                 echo '<div class="bt-widget-placeholder">Widget de réservation Regiondo (UUID requis)</div>';
             }
@@ -416,6 +505,48 @@ class PricingTabs extends AbstractBtWidget {
         }
     }
 
+    /**
+     * Rend le booking via <template> : le script Regiondo sera injecté par JS au clic.
+     * Utilisé uniquement quand trigger_mode est actif (lazy load).
+     */
+    private function render_booking_section_lazy(array $s, string $active_uuid, int $post_id): void {
+        if ($s['show_booking'] !== 'yes') return;
+
+        if ($active_uuid) {
+            echo '<div class="bt-pricing__booking-lazy">';
+            echo '<template class="bt-booking-tpl">';
+            echo $this->render_booking_widget_lazy($active_uuid, $post_id);
+            echo '</template>';
+            echo '</div>';
+        } elseif ($this->is_edit_mode()) {
+            echo '<div class="bt-widget-placeholder">Widget de réservation Regiondo (UUID requis)</div>';
+        }
+    }
+
+    /**
+     * Génère le HTML du booking-widget sans le <script> Regiondo (injecté par JS).
+     */
+    private function render_booking_widget_lazy(string $uuid, int $post_id): string {
+        $widget_id  = esc_attr($uuid);
+        $custom_css = get_option('bt_booking_custom_css', '');
+
+        ob_start(); ?>
+        <div class="bt-pricing__booking">
+            <booking-widget widget-id="<?= $widget_id ?>">
+                <style>
+                    .regiondo-booking-widget { max-width: 100% !important; }
+                    .regiondo-widget .regiondo-button-addtocart,
+                    .regiondo-widget .regiondo-button-checkout { border-radius: 40px; }
+                    <?php if ($custom_css): ?>
+                    <?= wp_strip_all_tags($custom_css) ?>
+                    <?php endif; ?>
+                </style>
+            </booking-widget>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+
     private function render_booking_section(array $s, string $active_uuid, int $post_id): void {
         if ($s['show_booking'] !== 'yes') return;
 
@@ -448,8 +579,7 @@ class PricingTabs extends AbstractBtWidget {
             if (is_string($term_val) && $term_val !== '') return $term_val;
         }
 
-        $price = $row['exp_price'] ?? '';
-        return $price ? "Forfait " . ($i + 1) . " — {$price} €" : "Forfait " . ($i + 1);
+        return "Forfait " . ($i + 1);
     }
 
     private function render_booking_widget(string $uuid, int $post_id, int $index): string {

@@ -6,13 +6,22 @@ import {
   Book,
   Group,
   Settings,
-  Compass,
   NavArrowDown,
   OpenNewWindow,
   Calendar,
-  Tools,
   Star,
+  StatsUpSquare,
+  Sparks,
+  Cpu,
 } from 'iconoir-react'
+import BtLogo from '../assets/BtLogo'
+
+// ── AI Tools sub-navigation ───────────────────────────────────────────────────
+const AI_TOOLS = [
+  { path: '/translator', label: 'Traducteur IA' },
+  { path: '/corrector',  label: 'Correcteur IA' },
+  { path: '/ai-chat',    label: 'Conseiller IA' },
+]
 
 // ── Settings sub-navigation ───────────────────────────────────────────────────
 // Deux groupes : réglages (sauvegardables) et outils (actions)
@@ -31,6 +40,7 @@ const SETTINGS_TOOLS = [
   { path: '/settings/stats-import',       label: 'Import Stats'       },
   { path: '/settings/diagnostic',         label: 'Diagnostic'         },
   { path: '/settings/installation',       label: 'Installation'       },
+  { path: '/settings/permissions',        label: 'Permissions'        },
 ]
 
 const nav = [
@@ -39,7 +49,15 @@ const nav = [
   { to: '/bookings',  label: 'Réservations',    icon: Book           },
   { to: '/planner',   label: 'Planificateur',   icon: Calendar       },
   { to: '/customers', label: 'Clients',         icon: Group          },
+  { to: '/analytics', label: 'Analytics',       icon: StatsUpSquare  },
   { to: '/reviews',   label: 'Avis',            icon: Star           },
+  {
+    to: '/ai-tools', label: 'Outils IA', icon: Sparks,
+    matchPaths: ['/translator', '/corrector', '/ai-chat'],
+    groups: [
+      { label: 'IA', items: AI_TOOLS },
+    ],
+  },
   {
     to: '/settings', label: 'Réglages', icon: Settings,
     groups: [
@@ -76,39 +94,48 @@ function SubItem({ path, label, isLast }) {
 
 export default function Sidebar() {
   const location = useLocation()
-  const isSettingsActive = location.pathname.startsWith('/settings')
-  const [openMenus, setOpenMenus] = useState({ '/settings': true })
+  const [openMenus, setOpenMenus] = useState({ '/settings': true, '/ai-tools': true })
 
   function toggleMenu(to) {
     setOpenMenus(prev => ({ ...prev, [to]: !prev[to] }))
   }
 
+  /** Indique si un item de nav avec sous-menu est actif (chemin courant ou matchPaths). */
+  function isGroupActive({ to, matchPaths }) {
+    if (location.pathname.startsWith(to)) return true
+    return matchPaths?.some(p => location.pathname.startsWith(p)) ?? false
+  }
+
   return (
     <aside
-      className="w-52 shrink-0 border-r flex flex-col bg-card sticky top-0 self-start min-h-full overflow-y-auto"
+      className="w-52 shrink-0 border-r flex flex-col bg-background sticky top-0 self-start min-h-full overflow-y-auto"
       style={{ minHeight: 'calc(100vh - 32px)' }}
     >
       {/* Logo */}
-      <div className="flex items-center gap-2.5 px-5 py-5 border-b">
-        <Compass width={18} height={18} strokeWidth={1.5} />
-        <span className="text-sm font-medium tracking-widest uppercase">BlackTenders</span>
+      <div className="flex items-center gap-2.5 px-4 py-4 border-b">
+        <BtLogo size={28} className="text-foreground shrink-0" />
+        <div className="min-w-0">
+          <span className="text-xs font-bold tracking-widest uppercase block leading-tight">BlackTenders</span>
+          <span className="text-[10px] text-muted-foreground tracking-wide">Backoffice</span>
+        </div>
       </div>
 
       {/* Nav */}
       <nav className="flex-1 py-3 space-y-0.5">
-        {nav.map(({ to, label, icon: Icon, groups }) => {
+        {nav.map(({ to, label, icon: Icon, groups, matchPaths }) => {
           const isExpanded = openMenus[to] ?? false
 
           if (groups) {
-            const isActive = location.pathname.startsWith(to)
+            const isActive = isGroupActive({ to, matchPaths })
             return (
               <div key={to}>
-                {/* Entrée parent cliquable */}
+                {/* Entrée parent — bouton simple (pas NavLink) pour les groupes virtuels */}
                 <div className="flex items-center mx-2">
-                  <NavLink
-                    to={to}
+                  <button
+                    type="button"
+                    onClick={() => toggleMenu(to)}
                     className={[
-                      'flex-1 flex items-center gap-3 px-3 py-2.5 text-sm transition-colors rounded-md',
+                      'flex-1 flex items-center gap-3 px-3 py-2.5 text-sm transition-colors rounded-md text-left',
                       isActive
                         ? 'bg-primary/10 text-primary font-medium'
                         : 'text-muted-foreground hover:text-foreground hover:bg-accent',
@@ -116,7 +143,7 @@ export default function Sidebar() {
                   >
                     <Icon width={15} height={15} strokeWidth={1.5} />
                     {label}
-                  </NavLink>
+                  </button>
                   <button
                     onClick={() => toggleMenu(to)}
                     className="px-2 py-2.5 text-muted-foreground hover:text-foreground transition-colors"
