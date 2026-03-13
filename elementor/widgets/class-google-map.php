@@ -297,7 +297,7 @@ class GoogleMap extends AbstractBtWidget {
         // ── Front-end ─────────────────────────────────────────────────────────
         $marker_attrs = '';
         if ($show_marker) {
-            $allowed = ['strong' => [], 'em' => [], 'br' => [], 'a' => ['href' => [], 'target' => []]];
+            $allowed = ['strong' => [], 'em' => [], 'br' => [], 'a' => ['href' => ['http', 'https', 'mailto'], 'target' => []]];
             $marker_attrs = ' data-marker="yes"'
                 . ' data-marker-title="'  . esc_attr($s['marker_title'] ?? '') . '"'
                 . ' data-marker-popup="'  . esc_attr(wp_kses($s['marker_popup'] ?? '', $allowed)) . '"'
@@ -308,9 +308,9 @@ class GoogleMap extends AbstractBtWidget {
         <div class="bt-gmap">
             <div class="bt-gmap__canvas bt-gmaps-js"
                 <?php echo $data_loc; ?>
-                data-zoom="<?php echo $zoom; ?>"
-                data-map-type="<?php echo $map_type; ?>"
-                data-scroll-zoom="<?php echo $scroll_zoom; ?>"
+                data-zoom="<?php echo (int) $zoom; ?>"
+                data-map-type="<?php echo esc_attr($map_type); ?>"
+                data-scroll-zoom="<?php echo esc_attr($scroll_zoom); ?>"
                 <?php echo $marker_attrs; ?>
             ></div>
         </div>

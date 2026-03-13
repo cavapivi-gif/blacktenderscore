@@ -1,6 +1,14 @@
 jQuery(function ($) {
+    if (typeof btRegionado === 'undefined') return;
     const { ajax_url, nonce, widgetMap, settingsUrl } = btRegionado;
     let ticketIndex = parseInt($('.bt-ticket-row').last().data('index') ?? -1) + 1;
+
+    /** Escape HTML to prevent XSS from API responses (audit §C08). */
+    function esc(str) {
+        var d = document.createElement('div');
+        d.textContent = str;
+        return d.innerHTML;
+    }
 
     // ── Charger les produits Regiondo ──────────────────────────────
     $('#bt-load-products').on('click', function () {
@@ -26,10 +34,10 @@ jQuery(function ($) {
                 $list.append(`
                     <label class="bt-product-row ${checked ? 'is-active' : ''}">
                         <input type="checkbox" class="bt-product-check"
-                               data-id="${p.product_id}" data-name="${p.name}"
+                               data-id="${esc(String(p.product_id))}" data-name="${esc(p.name)}"
                                ${checked}>
-                        <span class="bt-product-name">${p.name}</span>
-                        <span class="bt-product-price">${p.base_price} ${p.currency}</span>
+                        <span class="bt-product-name">${esc(p.name)}</span>
+                        <span class="bt-product-price">${esc(String(p.base_price))} ${esc(p.currency)}</span>
                     </label>
                 `);
             });
@@ -71,9 +79,9 @@ jQuery(function ($) {
     function addTicketRow(index, productId, label) {
         $('#bt-dynamic-tickets').append(`
             <div class="bt-ticket-row" data-index="${index}">
-                <input type="hidden" name="bt_regiondo_tickets[${index}][product_id]" value="${productId}">
-                <input type="hidden" name="bt_regiondo_tickets[${index}][label]" value="${label}">
-                <span class="bt-ticket-label">${label}</span>
+                <input type="hidden" name="bt_regiondo_tickets[${index}][product_id]" value="${esc(String(productId))}">
+                <input type="hidden" name="bt_regiondo_tickets[${index}][label]" value="${esc(label)}">
+                <span class="bt-ticket-label">${esc(label)}</span>
                 ${widgetStatus(productId)}
                 <button type="button" class="bt-remove-ticket button-link-delete">Retirer</button>
             </div>

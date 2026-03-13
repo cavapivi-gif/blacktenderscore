@@ -52,9 +52,12 @@
           iconAnchor: [14, 14],
           popupAnchor: [0, -16],
         });
+        // Use DOM nodes for popup to prevent XSS (audit §C08)
+        var popupEl = document.createElement('strong');
+        popupEl.textContent = p.title || ('Étape ' + num);
         L.marker([p.lat, p.lng], { icon: icon })
           .addTo(map)
-          .bindPopup('<strong>' + (p.title || ('Étape ' + num)) + '</strong>');
+          .bindPopup(popupEl);
       });
 
       // Ajuste le zoom pour afficher tous les points avec une marge

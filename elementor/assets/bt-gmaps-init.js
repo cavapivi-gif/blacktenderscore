@@ -105,11 +105,12 @@
     if (window.google && google.maps && google.maps.Map) {
       initBtGmaps();
     } else {
-      // Attend que l'API se charge (chargement asynchrone sans callback)
+      // Attend que l'API se charge (max 30s pour éviter un polling infini — audit §M11)
+      var attempts = 0;
       var t = setInterval(function () {
-        if (window.google && google.maps && google.maps.Map) {
+        if (++attempts > 300 || (window.google && google.maps && google.maps.Map)) {
           clearInterval(t);
-          initBtGmaps();
+          if (window.google && google.maps && google.maps.Map) initBtGmaps();
         }
       }, 100);
     }
