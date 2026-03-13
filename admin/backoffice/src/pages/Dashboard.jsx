@@ -5,11 +5,10 @@ import { Expand, Sparks } from 'iconoir-react'
 import EventsCorrelator from '../components/EventsCorrelator'
 
 import { cn, fmtCurrency, fmtNum, fmtPercent, fmtDecimal, fmtShort, delta } from '../lib/utils'
-import { COLORS, FEATURES, API_STATUS, PAYMENT_METHOD_LABELS } from '../lib/constants'
+import { COLORS, API_STATUS, PAYMENT_METHOD_LABELS } from '../lib/constants'
 import { STATUS_MAP } from '../lib/status'
 import { useDashboard } from '../hooks/useDashboard'
 
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/Tabs'
 import { TooltipProvider } from '../components/Tooltip'
 import { Btn, Table, Notice, Spinner, Badge } from '../components/ui'
 
@@ -71,7 +70,7 @@ export default function Dashboard() {
     data, stats, loading, statsLoading, error,
     filterParams, applyFilters, resetPeriod,
     chartData, hasCompare, kpis, kpisCmp,
-    sparkBookings, sparkRevenue, sparkAvgBasket,
+    sparkBookings,
     peaks,
   } = useDashboard()
 
@@ -89,7 +88,6 @@ export default function Dashboard() {
 
   // ── Deltas de comparaison ──────────────────────────────────────────────────
   const bookingsDelta   = delta(kpis.total_bookings,    kpisCmp?.total_bookings)
-  const revenueDelta    = delta(kpis.total_revenue,     kpisCmp?.total_revenue)
   const avgBasketDelta  = delta(kpis.avg_basket,        kpisCmp?.avg_basket)
   const cancelRateDelta = (() => {
     const d = delta(kpis.cancellation_rate, kpisCmp?.cancellation_rate)
@@ -275,28 +273,6 @@ export default function Dashboard() {
                 active={activeKpi === 'repeat'}
                 onClick={() => toggleKpi('repeat')}
               />
-              {FEATURES.revenue && (
-                <KpiCard
-                  label="CA total"
-                  value={fmtCurrency(kpis.total_revenue)}
-                  delta={revenueDelta}
-                  sparkData={sparkRevenue}
-                  sparkColor={COLORS.current}
-                  sub={hasCompare ? `vs ${fmtCurrency(kpisCmp?.total_revenue)} préc.` : 'CA confirmé'}
-                />
-              )}
-              {FEATURES.revenue && (
-                <KpiCard
-                  label="Panier moyen"
-                  value={fmtCurrency(kpis.avg_basket)}
-                  delta={avgBasketDelta}
-                  sparkData={sparkAvgBasket}
-                  sparkColor={COLORS.basket}
-                  sub={kpis.paid_bookings > 0
-                    ? `Sur ${fmtNum(kpis.paid_bookings)} rés. payantes`
-                    : 'Rés. avec prix renseigné'}
-                />
-              )}
             </div>
 
             {/* Strip cadence — métriques secondaires */}
@@ -307,8 +283,6 @@ export default function Dashboard() {
                 <KpiCompact label="Qté / rés."      value={fmtDecimal(kpis.avg_quantity)} />
                 <KpiCompact label="Produits actifs" value={fmtNum(kpis.unique_products)} />
                 <KpiCompact label="Jour de pic"     value={kpis.peak_weekday ?? '—'} />
-                {FEATURES.revenue && <KpiCompact label="CA / jour"   value={fmtCurrency(kpis.revenue_per_day)} />}
-                {FEATURES.revenue && <KpiCompact label="Taux impayés" value={fmtPercent(kpis.unpaid_rate)} invertDelta />}
               </div>
             </div>
           </div>
@@ -388,40 +362,6 @@ export default function Dashboard() {
                     Voir tout l'historique
                   </button>
                 </div>
-              ) : FEATURES.revenue ? (
-                <Tabs defaultValue="bookings">
-                  <div className="flex items-center justify-between mb-4">
-                    <TabsList>
-                      <TabsTrigger value="bookings">Réservations</TabsTrigger>
-                      <TabsTrigger value="revenue">CA + Panier moyen</TabsTrigger>
-                    </TabsList>
-                  </div>
-                  <TabsContent value="bookings">
-                    <div className="rounded-lg border bg-card p-5 relative">
-                      <button onClick={() => setFullscreen('bookings')}
-                        className="absolute top-3 right-3 h-7 w-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors" title="Plein écran">
-                        <Expand width={13} height={13} />
-                      </button>
-                      <BookingsChart data={chartData} height={220} hasCompare={hasCompare}
-                        peakBookings={peaks.bookings} filterParams={filterParams}
-                        totalBookings={kpis.total_bookings ?? 0} cmpBookings={kpisCmp?.total_bookings}
-                        onChartClick={handleChartClick} />
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="revenue">
-                    <div className="rounded-lg border bg-card p-5 relative">
-                      <button onClick={() => setFullscreen('revenue')}
-                        className="absolute top-3 right-3 h-7 w-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors" title="Plein écran">
-                        <Expand width={13} height={13} />
-                      </button>
-                      <RevenueChart data={chartData} height={220} hasCompare={hasCompare}
-                        peakRevenue={peaks.revenue} filterParams={filterParams}
-                        totalRevenue={kpis.total_revenue ?? 0} cmpRevenue={kpisCmp?.total_revenue}
-                        avgBasket={kpis.avg_basket} avgBasketDelta={avgBasketDelta}
-                        onChartClick={handleChartClick} />
-                    </div>
-                  </TabsContent>
-                </Tabs>
               ) : (
                 <div className="rounded-lg border bg-card p-5 relative">
                   <button onClick={() => setFullscreen('bookings')}

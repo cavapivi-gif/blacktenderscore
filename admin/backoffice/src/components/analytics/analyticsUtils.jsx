@@ -1,8 +1,12 @@
 /**
- * Analytics utilities — helpers, chart constants, and shared micro-components.
- * Centralises all formatting, delta calculation, and reusable UI primitives.
+ * Analytics utilities — chart constants and shared micro-components.
+ * Formatters are centralised in lib/utils.js and re-exported here for convenience.
  */
 import { NavLink } from 'react-router-dom'
+import { fmtNum, fmtDuration, fmtPct, fmtPctRaw, fmtDate, calcDelta } from '../../lib/utils'
+
+// Re-export formatters so existing consumer imports don't break
+export { fmtNum, fmtDuration, fmtPct, fmtPctRaw, fmtDate, calcDelta }
 
 // ── Chart colors (hardcodées — CSS vars ne marchent pas en SVG Recharts) ──────
 export const C_CURRENT   = '#10b981'  // emerald-500  — sessions / volume principal
@@ -16,48 +20,6 @@ export const C_PALETTE   = [
   '#8b5cf6','#06b6d4','#ec4899','#84cc16',
   '#f97316','#64748b',
 ]
-
-// ── Formatters ────────────────────────────────────────────────────────────────
-
-/** Formate un entier ou décimal en notation française. */
-export function fmtNum(n, decimals = 0) {
-  return Number(n ?? 0).toLocaleString('fr-FR', { maximumFractionDigits: decimals })
-}
-
-/** Formate une durée en secondes → "Xm Ys". */
-export function fmtDuration(s) {
-  const m   = Math.floor((s ?? 0) / 60)
-  const sec = Math.round((s ?? 0) % 60)
-  return m > 0 ? `${m}m ${sec}s` : `${sec}s`
-}
-
-/** Formate un ratio 0–1 en "X.X %" */
-export function fmtPct(v, decimals = 1) {
-  return `${Number((v ?? 0) * 100).toFixed(decimals)} %`
-}
-
-/** Formate un pourcentage déjà multiplié (0–100) en "X.X %" */
-export function fmtPctRaw(v, decimals = 1) {
-  return `${Number(v ?? 0).toFixed(decimals)} %`
-}
-
-const MONTH_SHORT = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc']
-
-/** Formate une date YYYY-MM-DD en "D MMM" court */
-export function fmtDate(d) {
-  if (!d) return ''
-  const [, mo, day] = d.split('-')
-  return `${+day} ${MONTH_SHORT[+mo - 1]}`
-}
-
-/**
- * Calcule le delta en % entre valeur actuelle et valeur de comparaison.
- * @returns {number|null}
- */
-export function calcDelta(current, compare) {
-  if (compare == null || compare === 0) return null
-  return Math.round(((current - compare) / compare) * 100)
-}
 
 // ── KpiCell — cellule Bloomberg-style pour le strip horizontal ────────────────
 

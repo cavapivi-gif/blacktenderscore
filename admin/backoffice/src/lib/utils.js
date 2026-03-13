@@ -81,6 +81,7 @@ export function fmtCurrency(v, decimals = 0) {
   return Number(v).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: decimals })
 }
 
+/** Formate un nombre en notation française. Retourne '—' pour null/undefined. */
 export function fmtNum(v) {
   if (v == null) return '—'
   return Number(v).toLocaleString('fr-FR')
@@ -96,11 +97,40 @@ export function fmtDecimal(v, decimals = 1) {
   return Number(v).toLocaleString('fr-FR', { maximumFractionDigits: decimals })
 }
 
+/** Formate une durée en secondes → "Xm Ys". */
+export function fmtDuration(s) {
+  const m   = Math.floor((s ?? 0) / 60)
+  const sec = Math.round((s ?? 0) % 60)
+  return m > 0 ? `${m}m ${sec}s` : `${sec}s`
+}
+
+/** Formate un ratio 0–1 en "X.X %" */
+export function fmtPct(v, decimals = 1) {
+  return `${Number((v ?? 0) * 100).toFixed(decimals)} %`
+}
+
+/** Formate un pourcentage déjà multiplié (0–100) en "X.X %" */
+export function fmtPctRaw(v, decimals = 1) {
+  return `${Number(v ?? 0).toFixed(decimals)} %`
+}
+
+const MONTH_SHORT = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc']
+
+/** Formate une date YYYY-MM-DD en "D MMM" court */
+export function fmtDate(d) {
+  if (!d) return ''
+  const [, mo, day] = d.split('-')
+  return `${+day} ${MONTH_SHORT[+mo - 1]}`
+}
+
 /**
- * Calculate delta percentage between current and previous values.
+ * Calcule le delta en % entre valeur actuelle et valeur de comparaison.
  * @returns {number|null}
  */
-export function delta(curr, prev) {
+export function calcDelta(curr, prev) {
   if (prev == null || prev === 0) return null
   return Math.round(((curr - prev) / Math.abs(prev)) * 100)
 }
+
+/** @deprecated Utiliser calcDelta() à la place. */
+export const delta = calcDelta

@@ -1251,24 +1251,27 @@ class ReservationDb {
 
         // Count unique customers by email hash
         $where = "buyer_email_hash IS NOT NULL AND buyer_email_hash != ''";
+        $params = [];
 
         if ($search) {
             $hash = $enc->blind_hash($search);
             $like = '%' . $wpdb->esc_like($search) . '%';
-            $where .= $wpdb->prepare(
-                ' AND (buyer_email_hash = %s OR buyer_name_hash = %s OR product_name LIKE %s)',
-                $hash, $hash, $like
-            );
+            $where .= ' AND (buyer_email_hash = %s OR buyer_name_hash = %s OR product_name LIKE %s)';
+            $params[] = $hash;
+            $params[] = $hash;
+            $params[] = $like;
         }
-
-        $total = (int) $wpdb->get_var(
-            "SELECT COUNT(DISTINCT buyer_email_hash) FROM `{$this->table}` WHERE {$where}"
-        );
 
         $offset = ($page - 1) * $per_page;
 
-        $rows = $wpdb->get_results(
-            "SELECT
+        // Build count query with prepare() wrapping the full SQL
+        $count_sql = "SELECT COUNT(DISTINCT buyer_email_hash) FROM `{$this->table}` WHERE {$where}";
+        $total = (int) $wpdb->get_var(
+            $params ? $wpdb->prepare($count_sql, $params) : $count_sql
+        );
+
+        // Build main query with prepare() wrapping the full SQL
+        $main_sql = "SELECT
                 buyer_email_hash,
                 buyer_name,
                 buyer_email,
@@ -1279,8 +1282,12 @@ class ReservationDb {
              FROM `{$this->table}`
              WHERE {$where}
              GROUP BY buyer_email_hash
-             ORDER BY {$order_col} {$order_dir}
-             LIMIT {$per_page} OFFSET {$offset}",
+             ORDER BY `{$order_col}` {$order_dir}
+             LIMIT %d OFFSET %d";
+        $main_params = array_merge($params, [$per_page, $offset]);
+
+        $rows = $wpdb->get_results(
+            $wpdb->prepare($main_sql, $main_params),
             ARRAY_A
         );
 

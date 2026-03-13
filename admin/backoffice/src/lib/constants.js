@@ -65,11 +65,6 @@ export const YOY_PALETTE = [
   '#f97316', // orange
 ]
 
-// ── Feature flags — met une option sur pause sans supprimer le code ──────────
-export const FEATURES = {
-  revenue: false, // CA mis en pause — données insuffisantes / non fiabilisées
-}
-
 // ── Chart colors — Bloomberg-grade palette ──────────────────────────────────
 // Monochrome base + accent only where it matters.
 
