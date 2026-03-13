@@ -12,14 +12,21 @@ defined('ABSPATH') || exit;
  */
 class Encryption {
 
-    private string $key;
+    private string $enc_key;
+    private string $hmac_key;
+    /** @var string Ancienne clé unifiée — rétrocompat déchiffrement uniquement. */
+    private string $legacy_key;
 
     public function __construct() {
         if (!defined('BT_ENCRYPTION_KEY') || strlen(BT_ENCRYPTION_KEY) < 32) {
             throw new \RuntimeException('BT_ENCRYPTION_KEY manquante ou trop courte (min 32 chars).');
         }
-        // Dériver une clé 32 octets depuis la constante
-        $this->key = substr(hash('sha256', BT_ENCRYPTION_KEY, true), 0, 32);
+        $master = BT_ENCRYPTION_KEY;
+        // Clés séparées pour chiffrement et HMAC (audit §C06)
+        $this->enc_key    = hash_hmac('sha256', 'bt_encrypt', $master, true);
+        $this->hmac_key   = hash_hmac('sha256', 'bt_hmac',    $master, true);
+        // Ancienne clé unique — utilisée uniquement pour déchiffrer les données existantes
+        $this->legacy_key = substr(hash('sha256', $master, true), 0, 32);
     }
 
     /**
@@ -33,7 +40,7 @@ class Encryption {
         if ($value === '') return '';
 
         $iv         = random_bytes(16);
-        $ciphertext = openssl_encrypt($value, 'AES-256-CBC', $this->key, OPENSSL_RAW_DATA, $iv);
+        $ciphertext = openssl_encrypt($value, 'AES-256-CBC', $this->enc_key, OPENSSL_RAW_DATA, $iv);
 
         if ($ciphertext === false) {
             throw new \RuntimeException('Échec du chiffrement AES-256-CBC.');
@@ -62,7 +69,11 @@ class Encryption {
             return ''; // Données corrompues
         }
 
-        $plain = openssl_decrypt($ciphertext, 'AES-256-CBC', $this->key, OPENSSL_RAW_DATA, $iv);
+        // Essayer d'abord avec la nouvelle clé, puis la clé legacy (rétrocompat)
+        $plain = openssl_decrypt($ciphertext, 'AES-256-CBC', $this->enc_key, OPENSSL_RAW_DATA, $iv);
+        if ($plain === false) {
+            $plain = openssl_decrypt($ciphertext, 'AES-256-CBC', $this->legacy_key, OPENSSL_RAW_DATA, $iv);
+        }
 
         return $plain !== false ? $plain : '';
     }
@@ -75,6 +86,6 @@ class Encryption {
      * @return string Hash hexadécimal de 64 chars.
      */
     public function blind_hash(string $value): string {
-        return hash_hmac('sha256', strtolower(trim($value)), $this->key);
+        return hash_hmac('sha256', strtolower(trim($value)), $this->hmac_key);
     }
 }

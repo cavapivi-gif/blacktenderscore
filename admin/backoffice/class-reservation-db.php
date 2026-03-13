@@ -98,18 +98,11 @@ class ReservationDb {
         $stats = ['inserted' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []];
         $now   = current_time('mysql', true);
         $enc   = new Encryption();
-        $conn  = $wpdb->dbh;
 
-        $q = function(?string $v) use ($conn): string {
-            if ($v === null || $v === '') return 'NULL';
-            $escaped = ($conn instanceof \mysqli)
-                ? mysqli_real_escape_string($conn, $v)
-                : addslashes($v);
-            return "'" . $escaped . "'";
-        };
+        // ── Crypto row-by-row, puis bulk INSERT via $wpdb->prepare() ─────────
+        $placeholders = [];
+        $flat_values  = [];
 
-        // ── Crypto row-by-row, puis bulk INSERT en une seule requête ─────────
-        $values = [];
         foreach ($items as $item) {
             $ref = trim($item['calendar_sold_id'] ?? '');
             if (empty($ref)) { $stats['skipped']++; continue; }
@@ -119,33 +112,51 @@ class ReservationDb {
             $booking_key = (string) ($item['booking_key'] ?? '');
 
             $price_total = $item['price_total'] ?? null;
-            $price_sql   = ($price_total !== null) ? number_format((float) $price_total, 2, '.', '') : 'NULL';
 
-            $values[] = sprintf(
-                "(%s,%s,%s,%s,%s,%d,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
-                $q($ref),
-                $q(trim($item['order_increment_id'] ?? '')),
-                $q(trim($item['created_at']         ?? '')),
-                $q((string) ($item['offer_raw']      ?? '')),
-                $q((string) ($item['product_name']   ?? '')),
+            // 19 colonnes → 19 placeholders par row
+            $row_ph = [];
+            $row_vals = [
+                $ref,
+                trim($item['order_increment_id'] ?? '') ?: null,
+                trim($item['created_at']         ?? '') ?: null,
+                (string) ($item['offer_raw']      ?? ''),
+                (string) ($item['product_name']   ?? ''),
                 (int) ($item['quantity'] ?? 1),
-                $price_sql,
-                $q($buyer_name  !== '' ? $enc->encrypt($buyer_name)  : ''),
-                $q($buyer_name  !== '' ? $enc->blind_hash($buyer_name)  : null),
-                $q($buyer_email !== '' ? $enc->encrypt($buyer_email) : ''),
-                $q($buyer_email !== '' ? $enc->blind_hash($buyer_email) : null),
-                $q(trim($item['appointment_date']   ?? '')),
-                $q((string) ($item['channel']        ?? '')),
-                $q((string) ($item['booking_status'] ?? '')),
-                $q((string) ($item['payment_method'] ?? '')),
-                $q((string) ($item['payment_status'] ?? '')),
-                $q($booking_key !== '' ? $enc->encrypt($booking_key) : ''),
-                $q((string) ($item['buyer_country']  ?? '')),
-                $q($now)
-            );
+                $price_total !== null ? (float) $price_total : null,
+                $buyer_name  !== '' ? $enc->encrypt($buyer_name)  : '',
+                $buyer_name  !== '' ? $enc->blind_hash($buyer_name)  : null,
+                $buyer_email !== '' ? $enc->encrypt($buyer_email) : '',
+                $buyer_email !== '' ? $enc->blind_hash($buyer_email) : null,
+                trim($item['appointment_date']   ?? '') ?: null,
+                (string) ($item['channel']        ?? ''),
+                (string) ($item['booking_status'] ?? ''),
+                (string) ($item['payment_method'] ?? ''),
+                (string) ($item['payment_status'] ?? ''),
+                $booking_key !== '' ? $enc->encrypt($booking_key) : '',
+                (string) ($item['buyer_country']  ?? ''),
+                $now,
+            ];
+
+            // Build placeholder string with proper types
+            $ph_parts = [];
+            foreach ($row_vals as $v) {
+                if ($v === null) {
+                    $ph_parts[] = 'NULL';
+                } elseif (is_int($v)) {
+                    $ph_parts[] = '%d';
+                    $flat_values[] = $v;
+                } elseif (is_float($v)) {
+                    $ph_parts[] = '%f';
+                    $flat_values[] = $v;
+                } else {
+                    $ph_parts[] = '%s';
+                    $flat_values[] = (string) $v;
+                }
+            }
+            $placeholders[] = '(' . implode(',', $ph_parts) . ')';
         }
 
-        if (empty($values)) return $stats;
+        if (empty($placeholders)) return $stats;
 
         $cols = "(calendar_sold_id, order_increment_id, created_at, offer_raw,
                   product_name, quantity, price_total,
@@ -154,7 +165,7 @@ class ReservationDb {
                   payment_status, booking_key, buyer_country, imported_at)";
 
         $sql = "INSERT INTO `{$this->table}` {$cols} VALUES "
-             . implode(',', $values)
+             . implode(',', $placeholders)
              . " ON DUPLICATE KEY UPDATE
                   order_increment_id = VALUES(order_increment_id),
                   created_at         = VALUES(created_at),
@@ -175,18 +186,15 @@ class ReservationDb {
                   booking_key        = VALUES(booking_key),
                   imported_at        = VALUES(imported_at)";
 
-        if ($conn instanceof \mysqli) {
-            $conn->query($sql);
-            $affected = $conn->errno ? false : (int) $conn->affected_rows;
-            if ($affected === false) $stats['errors'][] = $conn->error;
-        } else {
-            $affected = $wpdb->query($sql);
-            if ($affected === false) $stats['errors'][] = $wpdb->last_error;
-        }
+        // Use $wpdb->prepare() for all user-provided values (audit §C04)
+        $prepared = empty($flat_values) ? $sql : $wpdb->prepare($sql, $flat_values);
+        $affected = $wpdb->query($prepared);
 
-        if ($affected !== false) {
+        if ($affected === false) {
+            $stats['errors'][] = $wpdb->last_error;
+        } else {
             // MySQL: affected_rows = inserts*1 + updates*2 → inserts = 2n - affected
-            $n = count($values);
+            $n = count($placeholders);
             $stats['updated']  = max(0, (int) $affected - $n);
             $stats['inserted'] = max(0, $n - $stats['updated']);
         }
@@ -1245,7 +1253,8 @@ class ReservationDb {
         $enc = new Encryption();
 
         // Whitelist sort columns to prevent SQL injection
-        $allowed_sort = ['last_booking' => 'last_booking', 'bookings_count' => 'bookings_count', 'total_spent' => 'total_spent', 'name' => 'buyer_name'];
+        // Note: buyer_name is encrypted, sorting by it is meaningless — excluded (audit §C04)
+        $allowed_sort = ['last_booking' => 'last_booking', 'bookings_count' => 'bookings_count', 'total_spent' => 'total_spent'];
         $order_col = $allowed_sort[$sort_key] ?? 'last_booking';
         $order_dir = strtoupper($sort_dir) === 'ASC' ? 'ASC' : 'DESC';
 

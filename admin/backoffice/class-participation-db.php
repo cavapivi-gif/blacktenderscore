@@ -76,17 +76,6 @@ class ParticipationDb {
         $now   = current_time('mysql', true);
         $enc   = new Encryption();
 
-        // Même approche que ReservationDb : éviter $wpdb->prepare() sur des
-        // valeurs produit/chiffré qui contiennent des % (false positives vsprintf).
-        $conn = $wpdb->dbh;
-        $q    = function (?string $v) use ($conn): string {
-            if ($v === null || $v === '') return 'NULL';
-            $escaped = ($conn instanceof \mysqli)
-                ? mysqli_real_escape_string($conn, $v)
-                : addslashes($v);
-            return "'" . $escaped . "'";
-        };
-
         foreach ($items as $item) {
             $product = trim((string) ($item['product_name'] ?? ''));
             if ($product === '') {
@@ -110,39 +99,43 @@ class ParticipationDb {
             // Blind index email pour la recherche exacte future
             $email_hash = $email_raw !== '' ? $enc->blind_hash($email_raw) : null;
 
-            // Prix → NULL si absent ou invalide
-            $price_net_sql   = ($item['price_net']   !== null) ? number_format((float) $item['price_net'],   2, '.', '') : 'NULL';
-            $price_gross_sql = ($item['price_gross']  !== null) ? number_format((float) $item['price_gross'], 2, '.', '') : 'NULL';
+            // Use $wpdb->insert() for safe parameterized queries (audit §C04)
+            $data = [
+                'dedup_hash'         => $dedup_hash,
+                'participation_date' => $date_raw ?: null,
+                'product_name'       => $product,
+                'buyer_firstname'    => $firstname_enc,
+                'buyer_lastname'     => $lastname_enc,
+                'buyer_email'        => $email_enc,
+                'buyer_email_hash'   => $email_hash,
+                'price_net'          => $item['price_net']  !== null ? (float) $item['price_net']  : null,
+                'price_gross'        => $item['price_gross'] !== null ? (float) $item['price_gross'] : null,
+                'phone'              => $phone_enc,
+                'imported_at'        => $now,
+            ];
 
-            $sql = "INSERT IGNORE INTO `{$this->table}`
-                        (dedup_hash, participation_date, product_name,
-                         buyer_firstname, buyer_lastname, buyer_email, buyer_email_hash,
-                         price_net, price_gross, phone, imported_at)
-                     VALUES (
-                        {$q($dedup_hash)},
-                        {$q($date_raw ?: null)},
-                        {$q($product)},
-                        {$q($firstname_enc)},
-                        {$q($lastname_enc)},
-                        {$q($email_enc)},
-                        {$q($email_hash)},
-                        {$price_net_sql},
-                        {$price_gross_sql},
-                        {$q($phone_enc)},
-                        {$q($now)}
-                     )";
-
-            if ($conn instanceof \mysqli) {
-                $conn->query($sql);
-                $affected = $conn->errno ? false : $conn->affected_rows;
-                $db_error = $conn->error;
-            } else {
-                $affected = $wpdb->query($sql);
-                $db_error = $wpdb->last_error;
-            }
+            // INSERT IGNORE via raw SQL with $wpdb->prepare() — $wpdb->insert() doesn't support IGNORE
+            $affected = $wpdb->query($wpdb->prepare(
+                "INSERT IGNORE INTO `{$this->table}`
+                    (dedup_hash, participation_date, product_name,
+                     buyer_firstname, buyer_lastname, buyer_email, buyer_email_hash,
+                     price_net, price_gross, phone, imported_at)
+                 VALUES (%s, %s, %s, %s, %s, %s, %s, %f, %f, %s, %s)",
+                $data['dedup_hash'],
+                $data['participation_date'] ?? '',
+                $data['product_name'],
+                $data['buyer_firstname'],
+                $data['buyer_lastname'],
+                $data['buyer_email'],
+                $data['buyer_email_hash'] ?? '',
+                $data['price_net'] ?? 0,
+                $data['price_gross'] ?? 0,
+                $data['phone'],
+                $data['imported_at']
+            ));
 
             if ($affected === false) {
-                $stats['errors'][] = "Erreur DB : {$product} / {$email_raw} — " . ($db_error ?: 'query failed');
+                $stats['errors'][] = "Erreur DB : {$product} — " . ($wpdb->last_error ?: 'query failed');
             } elseif ($affected === 0) {
                 $stats['skipped']++; // dédup : ligne déjà présente
             } else {
