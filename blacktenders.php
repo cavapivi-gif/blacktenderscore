@@ -6,6 +6,8 @@
  * Version:     1.0.1
  * Author:      StudioJae
  * Text Domain: blacktenderscore
+ *
+ * to be waited
  */
 
 defined('ABSPATH') || exit;
