@@ -376,33 +376,31 @@ class RestApi {
         ]);
 
         // ── Conversations IA partagées (nouveau système granulaire) ──────────
-        $auth_logged = fn() => is_user_logged_in();
-
         register_rest_route(self::NS, '/chats', [
-            ['methods' => 'GET',  'callback' => [$this, 'list_chats'],   'permission_callback' => $auth_logged],
-            ['methods' => 'POST', 'callback' => [$this, 'create_chat'],  'permission_callback' => $auth_logged],
+            ['methods' => 'GET',  'callback' => [$this, 'list_chats'],   'permission_callback' => $perm('chat_access')],
+            ['methods' => 'POST', 'callback' => [$this, 'create_chat'],  'permission_callback' => $perm('chat_access')],
         ]);
 
         register_rest_route(self::NS, '/chats/(?P<uuid>[a-z0-9_\-]+)', [
-            ['methods' => 'GET',    'callback' => [$this, 'get_chat'],    'permission_callback' => $auth_logged],
-            ['methods' => 'PATCH',  'callback' => [$this, 'update_chat'], 'permission_callback' => $auth_logged],
-            ['methods' => 'DELETE', 'callback' => [$this, 'delete_chat'], 'permission_callback' => $auth_logged],
+            ['methods' => 'GET',    'callback' => [$this, 'get_chat'],    'permission_callback' => $perm('chat_access')],
+            ['methods' => 'PATCH',  'callback' => [$this, 'update_chat'], 'permission_callback' => $perm('chat_access')],
+            ['methods' => 'DELETE', 'callback' => [$this, 'delete_chat'], 'permission_callback' => $perm('chat_access')],
         ]);
 
         register_rest_route(self::NS, '/chats/(?P<uuid>[a-z0-9_\-]+)/shares', [
-            ['methods' => 'GET',  'callback' => [$this, 'list_shares'], 'permission_callback' => $auth_logged],
-            ['methods' => 'POST', 'callback' => [$this, 'add_share'],   'permission_callback' => $auth_logged],
+            ['methods' => 'GET',  'callback' => [$this, 'list_shares'], 'permission_callback' => $perm('chat_share')],
+            ['methods' => 'POST', 'callback' => [$this, 'add_share'],   'permission_callback' => $perm('chat_share')],
         ]);
 
         register_rest_route(self::NS, '/chats/(?P<uuid>[a-z0-9_\-]+)/shares/(?P<uid>\d+)', [
-            ['methods' => 'PATCH',  'callback' => [$this, 'update_share'], 'permission_callback' => $auth_logged],
-            ['methods' => 'DELETE', 'callback' => [$this, 'remove_share'], 'permission_callback' => $auth_logged],
+            ['methods' => 'PATCH',  'callback' => [$this, 'update_share'], 'permission_callback' => $perm('chat_share')],
+            ['methods' => 'DELETE', 'callback' => [$this, 'remove_share'], 'permission_callback' => $perm('chat_share')],
         ]);
 
         register_rest_route(self::NS, '/users/search', [
             'methods'             => 'GET',
             'callback'            => [$this, 'search_users'],
-            'permission_callback' => $auth_logged,
+            'permission_callback' => $perm('chat_share'),
         ]);
 
         register_rest_route(self::NS, '/settings/role-permissions', [
@@ -456,7 +454,7 @@ class RestApi {
      * Paramètres : page, per_page, from, to, status, product_id, search (ou order_number legacy).
      */
     public function get_bookings(\WP_REST_Request $req): \WP_REST_Response {
-        $db     = new Db();
+        $db     = new ReservationDb();
         $result = $db->query_bookings([
             'page'       => (int)    ($req->get_param('page')     ?: 1),
             'per_page'   => (int)    ($req->get_param('per_page') ?: 50),
@@ -488,26 +486,27 @@ class RestApi {
         $db     = new ReservationDb();
         $result = $db->query_customers($page, $per_page, $search, $sort_key, $sort_dir);
 
-        // Enrich with avis count from sj_avis CPT if available
+        // Enrich with avis count from sj_avis CPT if available (single aggregated query)
         if (!empty($result['data']) && post_type_exists('sj_avis')) {
-            foreach ($result['data'] as &$customer) {
-                $email = $customer['email'] ?? '';
-                if ($email) {
-                    $count = (new \WP_Query([
-                        'post_type'      => 'sj_avis',
-                        'posts_per_page' => -1,
-                        'fields'         => 'ids',
-                        'meta_query'     => [
-                            [
-                                'key'   => 'avis_customer_email',
-                                'value' => $email,
-                            ],
-                        ],
-                    ]))->found_posts;
-                    $customer['avis_count'] = $count;
-                } else {
-                    $customer['avis_count'] = 0;
+            global $wpdb;
+            $emails = array_filter(array_column($result['data'], 'email'));
+            $avis_counts = [];
+            if (!empty($emails)) {
+                $placeholders = implode(',', array_fill(0, count($emails), '%s'));
+                $rows = $wpdb->get_results($wpdb->prepare(
+                    "SELECT pm.meta_value AS email, COUNT(*) AS cnt
+                     FROM {$wpdb->postmeta} pm
+                     INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id AND p.post_type = 'sj_avis'
+                     WHERE pm.meta_key = 'avis_customer_email' AND pm.meta_value IN ({$placeholders})
+                     GROUP BY pm.meta_value",
+                    ...$emails
+                ), ARRAY_A);
+                foreach ($rows as $row) {
+                    $avis_counts[$row['email']] = (int) $row['cnt'];
                 }
+            }
+            foreach ($result['data'] as &$customer) {
+                $customer['avis_count'] = $avis_counts[$customer['email'] ?? ''] ?? 0;
             }
         }
 
@@ -685,7 +684,7 @@ class RestApi {
             ],
             'openssl'        => ['ok' => function_exists('openssl_encrypt')],
             'db_table'       => [
-                'ok' => $wpdb->get_var("SHOW TABLES LIKE '{$table}'") === $table,
+                'ok' => $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table)) === $table,
             ],
             'encryption_key' => [
                 'ok' => defined('BT_ENCRYPTION_KEY') && strlen(BT_ENCRYPTION_KEY) >= 32,
@@ -863,68 +862,5 @@ class RestApi {
             $req->get_param('product_id') ? [(int) $req->get_param('product_id')] : null
         );
         return rest_ensure_response($result);
-    }
-    // ── Partage de conversations IA ───────────────────────────────────────────
-
-    /**
-     * Stocke une conversation IA dans wp_options et retourne un token + lien admin.
-     * POST /chats/share — body: { title, messages[], provider }
-     */
-    public function share_chat(\WP_REST_Request $req): \WP_REST_Response|\WP_Error {
-        $body = $req->get_json_params();
-        if (empty($body['messages'])) {
-            return new \WP_Error('invalid', 'Aucun message à partager.', ['status' => 400]);
-        }
-
-        $token  = 'bt_' . substr(md5(uniqid('', true)), 0, 12);
-        $shared = get_option('bt_shared_chats', []);
-
-        // Purge les partages de plus de 30 jours pour ne pas bloater les options
-        $cutoff = strtotime('-30 days');
-        foreach ($shared as $k => $v) {
-            if (!empty($v['sharedAt']) && strtotime($v['sharedAt']) < $cutoff) {
-                unset($shared[$k]);
-            }
-        }
-
-        $shared[$token] = [
-            'title'     => sanitize_text_field($body['title'] ?? 'Conversation partagée'),
-            'provider'  => sanitize_text_field($body['provider'] ?? 'anthropic'),
-            'messages'  => array_map(fn($m) => [
-                'role'     => $m['role']     ?? 'user',
-                'content'  => $m['content']  ?? '',
-                'provider' => $m['provider'] ?? null,
-            ], array_slice($body['messages'], 0, 100)),
-            'sharedAt'  => current_time('c'),
-            'sharedBy'  => get_current_user_id(),
-        ];
-
-        update_option('bt_shared_chats', $shared, false);
-
-        return rest_ensure_response([
-            'token' => $token,
-            'url'   => admin_url('admin.php?page=blacktenderscore&bt_chat=' . $token),
-        ]);
-    }
-
-    /**
-     * GET  /chats/shared/{token} — retourne la conversation stockée.
-     * DELETE /chats/shared/{token} — supprime le partage.
-     */
-    public function handle_shared_chat(\WP_REST_Request $req): \WP_REST_Response|\WP_Error {
-        $token  = sanitize_key($req->get_param('token'));
-        $shared = get_option('bt_shared_chats', []);
-
-        if (!isset($shared[$token])) {
-            return new \WP_Error('not_found', 'Conversation introuvable.', ['status' => 404]);
-        }
-
-        if ($req->get_method() === 'DELETE') {
-            unset($shared[$token]);
-            update_option('bt_shared_chats', $shared, false);
-            return rest_ensure_response(['deleted' => true]);
-        }
-
-        return rest_ensure_response($shared[$token]);
     }
 }
