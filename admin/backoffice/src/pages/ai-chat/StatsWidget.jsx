@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { motion } from 'motion/react'
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
@@ -14,7 +15,7 @@ import {
 // Stats widget — affiché automatiquement quand l'intent est détecté
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function StatsWidget({ data, intents, range }) {
+export const StatsWidget = memo(function StatsWidget({ data, intents, range }) {
   const chart    = data.chart    ?? data.monthly   ?? []
   const kpis     = data.kpis     ?? {}
   const products = data.by_product ?? []
@@ -178,4 +179,4 @@ export function StatsWidget({ data, intents, range }) {
       </div>
     </motion.div>
   )
-}
+})

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import { motion } from 'motion/react'
 import Lottie from 'lottie-react'
 import { Copy, Check, ShareAndroid } from 'iconoir-react'
@@ -77,7 +77,7 @@ export function UserMsg({ msg, participants, currentUserId }) {
   )
 }
 
-export function AssistantMsg({ msg, streaming = false, onCopy, onShare, isLast = false, onSend }) {
+export const AssistantMsg = memo(function AssistantMsg({ msg, streaming = false, onCopy, onShare, isLast = false, onSend }) {
   const cfg         = getProvider(msg.provider || 'anthropic')
   const displayText = useTypewriter(msg.content, streaming)
   return (
@@ -146,7 +146,7 @@ export function AssistantMsg({ msg, streaming = false, onCopy, onShare, isLast =
       </div>
     </motion.div>
   )
-}
+})
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Thinking indicator

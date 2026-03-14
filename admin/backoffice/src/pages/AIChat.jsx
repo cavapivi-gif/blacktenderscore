@@ -85,6 +85,7 @@ export default function AIChat() {
   const inputRef    = useRef(null)
   const fileRef     = useRef(null)
   const sendingRef  = useRef(false)
+  const abortRef    = useRef(null)
 
   const messages = activeConv?.messages ?? []
 
@@ -104,12 +105,13 @@ export default function AIChat() {
   // Charge les messages + participants à la sélection :
   // - conversation remote (partagée, non locale)
   // - conversation owner synced en DB mais participants pas encore chargés
+  // Attend la fin du chargement initial DB pour éviter un double fetch.
   useEffect(() => {
-    if (!activeConv) return
+    if (!activeConv || dbLoading) return
     if (activeConv.remote || (activeConv.db_id && !activeConv.participants?.length)) {
       loadRemoteMessages(activeConv.id)
     }
-  }, [activeId])
+  }, [activeId, dbLoading])
 
   // Polling temps réel — démarre dès qu'une conversation DB est active.
   // Condition : partagée (non-owner) OU collaborateurs connus OU participants pas encore chargés.
@@ -157,6 +159,9 @@ export default function AIChat() {
     }
   }, []) // run once on mount
 
+  // Cleanup : annule le stream en cours si le composant est démonté
+  useEffect(() => () => abortRef.current?.abort(), [])
+
   // Auto-scroll — messages nouveaux + changement de conversation
   useEffect(() => {
     const el = scrollRef.current
@@ -167,6 +172,10 @@ export default function AIChat() {
   const send = useCallback(async (content, attachedImages = []) => {
     if (!content.trim() || streaming || sendingRef.current) return
     sendingRef.current = true
+    // Annule un éventuel stream précédent encore en cours
+    abortRef.current?.abort()
+    const ac = new AbortController()
+    abortRef.current = ac
 
     let convId = activeId
     if (!convId) convId = create(activeProvider, filterParams)
@@ -208,7 +217,7 @@ export default function AIChat() {
 
     let full = ''
     try {
-      const reader  = await streamChat(history, statsRange.from, statsRange.to, { provider: activeProvider })
+      const reader  = await streamChat(history, statsRange.from, statsRange.to, { provider: activeProvider, signal: ac.signal })
       const decoder = new TextDecoder()
       let buf = ''
 
@@ -263,6 +272,7 @@ export default function AIChat() {
     } finally {
       setStreaming(false); setShowThinking(false); setStreamText('')
       sendingRef.current = false
+      abortRef.current = null
     }
   }, [messages, streaming, filterParams, activeProvider, activeId, create, updateMessages, conversations])
 
