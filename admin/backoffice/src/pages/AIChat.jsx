@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import {
-  SendDiagonal, MediaImage, Xmark, ShareAndroid,
+  SendDiagonal, MediaImage, Xmark, ShareAndroid, Refresh,
 } from 'iconoir-react'
 
 import { streamChat, api } from '../lib/api'
 import { today, daysAgo } from '../lib/utils'
 import { ChatSharePanel } from '../components/chat/ChatSharePanel'
-import { syncChat } from '../lib/chatApi'
+import { syncChat, deleteChat } from '../lib/chatApi'
 import { useSearchParams } from 'react-router-dom'
 import { useConversations } from '../hooks/useConversations'
 
@@ -68,6 +68,7 @@ export default function AIChat() {
   const [streaming,     setStreaming]     = useState(false)
   const [streamText,    setStreamText]    = useState('')
   const [error,         setError]         = useState(null)
+  const lastFailedRef = useRef(null) // { content, images } for retry
   const [filterParams,  setFilterParams]  = useState({ from: daysAgo(365), to: today() })
   const [activeProvider,setActiveProvider]= useState('anthropic')
   const [availProviders,setAvailProviders]= useState({ anthropic: false, openai: false, gemini: false })
@@ -256,6 +257,7 @@ export default function AIChat() {
         const conv = conversations.find(c => c.id === convId)
         if (conv?.db_id) syncChat({ ...conv, messages: finalMsgs }).catch(() => {})
       }
+      lastFailedRef.current = null
     } catch (e) {
       if (full) {
         const finalMsgs = [...updatedMsgs, {
@@ -267,7 +269,8 @@ export default function AIChat() {
         const conv = conversations.find(c => c.id === convId)
         if (conv?.db_id) syncChat({ ...conv, messages: finalMsgs }).catch(() => {})
       }
-      setError(e.message || "Erreur de connexion à l'IA.")
+      setError(e.name === 'AbortError' ? null : (e.message || "Erreur de connexion à l'IA."))
+      if (e.name !== 'AbortError') lastFailedRef.current = { content, images: attachedImages }
       setShowThinking(false)
     } finally {
       setStreaming(false); setShowThinking(false); setStreamText('')
@@ -308,7 +311,12 @@ export default function AIChat() {
           activeId={activeId}
           onSelect={id => { setActiveId(id); setError(null) }}
           onNew={handleNewConv}
-          onDelete={id => { remove(id); toast('Conversation supprimée') }}
+          onDelete={id => {
+            const conv = conversations.find(c => c.id === id)
+            if (conv?.db_id) deleteChat(conv.db_id).catch(() => {})
+            remove(id)
+            toast('Conversation supprimée')
+          }}
           onRename={rename}
           onClear={() => { clearAll(); toast('Historique effacé') }}
         />
@@ -441,7 +449,15 @@ export default function AIChat() {
             >
               <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
                 <span className="flex-1">{error}</span>
-                <button onClick={() => setError(null)}><Xmark width={13} height={13} strokeWidth={2} /></button>
+                {lastFailedRef.current && (
+                  <button
+                    onClick={() => { const f = lastFailedRef.current; lastFailedRef.current = null; setError(null); send(f.content, f.images) }}
+                    className="shrink-0 flex items-center gap-1 px-2 py-1 rounded-md bg-red-100 hover:bg-red-200 transition-colors font-medium"
+                  >
+                    <Refresh width={11} height={11} strokeWidth={2} /> Réessayer
+                  </button>
+                )}
+                <button onClick={() => { setError(null); lastFailedRef.current = null }}><Xmark width={13} height={13} strokeWidth={2} /></button>
               </div>
             </motion.div>
           )}

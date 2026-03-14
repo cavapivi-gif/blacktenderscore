@@ -9,9 +9,11 @@ import {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function ConvItem({ conv, isActive, onSelect, onDelete, onRename }) {
-  const [editing, setEditing] = useState(false)
-  const [draft,   setDraft]   = useState('')
-  const inputRef = useRef(null)
+  const [editing, setEditing]     = useState(false)
+  const [draft,   setDraft]       = useState('')
+  const [confirm, setConfirm]     = useState(false)
+  const inputRef  = useRef(null)
+  const timerRef  = useRef(null)
 
   function startEdit(e) {
     e.stopPropagation()
@@ -82,13 +84,28 @@ function ConvItem({ conv, isActive, onSelect, onDelete, onRename }) {
           >
             <EditPencil width={10} height={10} strokeWidth={1.5} />
           </button>
-          <button
-            onClick={e => { e.stopPropagation(); onDelete(conv.id) }}
-            title="Supprimer"
-            className="p-0.5 rounded hover:text-destructive transition-colors"
-          >
-            <Trash width={11} height={11} strokeWidth={1.5} />
-          </button>
+          {confirm ? (
+            <button
+              onClick={e => { e.stopPropagation(); clearTimeout(timerRef.current); setConfirm(false); onDelete(conv.id) }}
+              onBlur={() => { clearTimeout(timerRef.current); setConfirm(false) }}
+              title="Confirmer la suppression"
+              className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-destructive text-white hover:bg-destructive/90 transition-colors leading-none"
+            >
+              Supprimer ?
+            </button>
+          ) : (
+            <button
+              onClick={e => {
+                e.stopPropagation()
+                setConfirm(true)
+                timerRef.current = setTimeout(() => setConfirm(false), 3000)
+              }}
+              title="Supprimer"
+              className="p-0.5 rounded hover:text-destructive transition-colors"
+            >
+              <Trash width={11} height={11} strokeWidth={1.5} />
+            </button>
+          )}
         </div>
       )}
     </motion.div>
