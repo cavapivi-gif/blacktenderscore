@@ -125,6 +125,7 @@ export async function streamChat(messages, from, to, opts = {}) {
       'X-WP-Nonce': nonce,
     },
     body: JSON.stringify(body),
+    signal: opts.signal,
   })
   if (!res.ok) throw new Error(`Erreur ${res.status}`)
   return res.body.getReader()

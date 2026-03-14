@@ -47,15 +47,15 @@ class Settings {
     }
 
     public function enqueue(string $hook): void {
-        if ($hook !== 'settings_page_bt-regiondo-settings') return;
-        wp_enqueue_style('bt-settings', BT_URL . 'admin/settings/settings.css', [], BT_VERSION);
+        if ($hook !== 'settings_page_bt-settings') return;
     }
 
     public function render(): void {
         if (!current_user_can('manage_options')) return;
 
-        // Flush cache si demandé
+        // Flush cache si demandé (avec vérification nonce CSRF)
         if (isset($_POST['bt_flush_cache'])) {
+            check_admin_referer('bt_flush_cache_action', 'bt_flush_cache_nonce');
             (new \BlackTenders\Api\Regiondo\Cache())->flush();
             echo '<div class="notice notice-success"><p>Cache Regiondo vidé.</p></div>';
         }
@@ -127,9 +127,9 @@ class Settings {
                     ?>
                     <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px; padding:8px; background:#f9f9f9; border-radius:4px">
                         <span style="flex:1; font-weight:500"><?= esc_html($p['name']) ?></span>
-                        <code style="color:#999">#<?= $p['product_id'] ?></code>
+                        <code style="color:#999">#<?= esc_html($p['product_id']) ?></code>
                         <input type="text"
-                               name="bt_widget_map[<?= $p['product_id'] ?>]"
+                               name="bt_widget_map[<?= esc_attr($p['product_id']) ?>]"
                                value="<?= esc_attr($wid) ?>"
                                placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
                                style="font-family:monospace; font-size:11px; width:320px"
@@ -143,6 +143,7 @@ class Settings {
             </form>
 
             <form method="post">
+                <?php wp_nonce_field('bt_flush_cache_action', 'bt_flush_cache_nonce'); ?>
                 <hr>
                 <h2>Maintenance</h2>
                 <p>

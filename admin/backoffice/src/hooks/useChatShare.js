@@ -56,7 +56,7 @@ export function useChatShare(conv) {
   /** Révoque l'accès d'un invité. */
   const revoke = useCallback(async (userId) => {
     await removeShare(conv.id, userId)
-    setShares(prev => prev.filter(s => s.user_id != userId))
+    setShares(prev => prev.filter(s => String(s.user_id) !== String(userId)))
   }, [conv?.id])
 
   return {

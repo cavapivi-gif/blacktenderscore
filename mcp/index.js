@@ -60,6 +60,16 @@ function fmt(date) {
   return date.toISOString().slice(0, 10)
 }
 
+/** Validate a date string is YYYY-MM-DD format */
+function isValidDate(str) {
+  return typeof str === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(str)
+}
+
+/** Clamp a numeric value to a range */
+function clamp(val, min, max) {
+  return Math.max(min, Math.min(max, Number(val) || min))
+}
+
 /** Retourne {from, to} pour les N derniers jours */
 function lastDays(n) {
   const to   = new Date()
@@ -189,6 +199,9 @@ async function handleTool(name, args) {
   switch (name) {
     case 'bt_kpis': {
       const { from = d30.from, to = d30.to, compare_from, compare_to, granularity = 'month' } = args
+      if (!isValidDate(from) || !isValidDate(to)) throw new Error('Format de date invalide (YYYY-MM-DD requis)')
+      if (compare_from && !isValidDate(compare_from)) throw new Error('compare_from: format invalide')
+      if (compare_to && !isValidDate(compare_to)) throw new Error('compare_to: format invalide')
       const params = { from, to, granularity }
       if (compare_from) params.compare_from = compare_from
       if (compare_to)   params.compare_to   = compare_to
@@ -198,6 +211,7 @@ async function handleTool(name, args) {
 
     case 'bt_timeline': {
       const { from = d30.from, to = d30.to, granularity = 'month', compare = false } = args
+      if (!isValidDate(from) || !isValidDate(to)) throw new Error('Format de date invalide (YYYY-MM-DD requis)')
       const params = { from, to, granularity }
       if (compare) {
         // Calcule automatiquement la période précédente de même longueur
@@ -213,25 +227,34 @@ async function handleTool(name, args) {
     }
 
     case 'bt_top_products': {
-      const { from = d30.from, to = d30.to, limit = 10 } = args
+      const { from = d30.from, to = d30.to, limit: rawLimit = 10 } = args
+      if (!isValidDate(from) || !isValidDate(to)) throw new Error('Format de date invalide (YYYY-MM-DD requis)')
+      const limit = clamp(rawLimit, 1, 50)
       const data = await wpFetch('/bookings/stats', { from, to, granularity: 'month' })
       return formatTopProducts(data, limit)
     }
 
     case 'bt_top_dates': {
-      const { from = d30.from, to = d30.to, limit = 10 } = args
+      const { from = d30.from, to = d30.to, limit: rawLimit = 10 } = args
+      if (!isValidDate(from) || !isValidDate(to)) throw new Error('Format de date invalide (YYYY-MM-DD requis)')
+      const limit = clamp(rawLimit, 1, 50)
       const data = await wpFetch('/bookings/stats', { from, to, granularity: 'day' })
       return formatTopDates(data, limit)
     }
 
     case 'bt_bookings_list': {
-      const { from = d30.from, to = d30.to, status, search, page = 1, per_page = 20 } = args
-      const data = await wpFetch('/bookings', { from, to, status, search, page, per_page })
+      const { from = d30.from, to = d30.to, status, search, page: rawPage = 1, per_page: rawPerPage = 20 } = args
+      if (!isValidDate(from) || !isValidDate(to)) throw new Error('Format de date invalide (YYYY-MM-DD requis)')
+      const page = clamp(rawPage, 1, 9999)
+      const per_page = clamp(rawPerPage, 1, 100)
+      const safeSearch = typeof search === 'string' ? search.slice(0, 255) : undefined
+      const data = await wpFetch('/bookings', { from, to, status, search: safeSearch, page, per_page })
       return formatBookingsList(data)
     }
 
     case 'bt_ga4': {
       const { from = d30.from, to = d30.to, compare = false } = args
+      if (!isValidDate(from) || !isValidDate(to)) throw new Error('Format de date invalide (YYYY-MM-DD requis)')
       const data = await wpFetch('/ga4/stats', { from, to, compare: compare ? 1 : 0 })
       return formatGa4(data)
     }
@@ -241,6 +264,7 @@ async function handleTool(name, args) {
       const gscTo = new Date(); gscTo.setDate(gscTo.getDate() - 2)
       const gscFrom = new Date(gscTo); gscFrom.setDate(gscFrom.getDate() - 27)
       const { from = fmt(gscFrom), to = fmt(gscTo), compare = false } = args
+      if (!isValidDate(from) || !isValidDate(to)) throw new Error('Format de date invalide (YYYY-MM-DD requis)')
       const data = await wpFetch('/search-console/stats', { from, to, compare: compare ? 1 : 0 })
       return formatGsc(data)
     }

@@ -26,12 +26,12 @@ trait RestApiSync {
 
     /** Retourne les stats de la DB locale et le statut de la dernière sync. */
     public function get_sync_status(): \WP_REST_Response {
-        return rest_ensure_response((new Db())->get_sync_status());
+        return rest_ensure_response((new ReservationDb())->get_sync_status());
     }
 
-    /** Vide complètement la table bt_bookings et remet le statut à zéro. */
+    /** Vide complètement la table bt_reservations et remet le statut à zéro. */
     public function reset_bookings_db(): \WP_REST_Response {
-        (new Db())->truncate();
+        (new ReservationDb())->truncate();
         return rest_ensure_response(['success' => true]);
     }
 
@@ -59,6 +59,12 @@ trait RestApiSync {
      * Body JSON : { "year": 2023 } ou { "from": "YYYY-MM-DD", "to": "YYYY-MM-DD" }.
      */
     public function import_reservations(\WP_REST_Request $req): \WP_REST_Response {
+        // Prevent concurrent imports
+        if (get_transient('bt_import_lock')) {
+            return new \WP_REST_Response(['error' => 'Import déjà en cours. Réessayez dans quelques minutes.'], 409);
+        }
+        set_transient('bt_import_lock', 1, 300);
+
         $body = $req->get_json_params();
         $db   = new ReservationDb();
 
@@ -91,6 +97,7 @@ trait RestApiSync {
             $db->update_sync_status(['years_synced' => $years]);
         }
         $db->update_sync_status(['last_import' => current_time('mysql', true)]);
+        delete_transient('bt_import_lock');
 
         return rest_ensure_response(array_merge($result, ['db' => $db->get_sync_status()]));
     }

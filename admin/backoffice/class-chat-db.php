@@ -55,7 +55,8 @@ class ChatDb {
             provider   varchar(50) DEFAULT NULL,
             created_at datetime    NOT NULL,
             PRIMARY KEY (id),
-            KEY chat_id (chat_id)
+            KEY chat_id (chat_id),
+            KEY chat_created (chat_id, created_at)
         ) ENGINE=InnoDB {$charset};");
 
         dbDelta("CREATE TABLE {$this->shares} (
@@ -199,15 +200,22 @@ class ChatDb {
     // ── Messages ──────────────────────────────────────────────────────────────
 
     /**
-     * Remplace tous les messages d'un chat (sync depuis localStorage).
-     * Les messages user reçoivent owner_id si user_id est absent.
+     * Synchronise les messages d'un chat depuis localStorage.
+     * Append-only : ne supprime plus tous les messages existants.
+     * Compare le nombre de messages en DB et n'insère que les nouveaux.
      */
     public function save_messages(int $chat_id, array $messages, int $owner_id): void {
         global $wpdb;
-        $wpdb->delete($this->messages, ['chat_id' => $chat_id]);
         $now = current_time('mysql', true);
 
-        foreach ($messages as $msg) {
+        $existing_count = (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$this->messages} WHERE chat_id=%d", $chat_id
+        ));
+
+        // Seuls les messages au-delà de ceux déjà en DB sont insérés
+        $new_messages = array_slice($messages, $existing_count);
+
+        foreach ($new_messages as $msg) {
             $role = in_array($msg['role'] ?? 'user', ['user','assistant'], true) ? $msg['role'] : 'user';
             $wpdb->insert($this->messages, [
                 'chat_id'    => $chat_id,

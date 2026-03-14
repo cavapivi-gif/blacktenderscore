@@ -16,7 +16,7 @@ trait RestApiAi {
     public function get_ai_context(\WP_REST_Request $req): \WP_REST_Response {
         $from = $req->get_param('from') ?: date('Y-m-d', strtotime('-12 months'));
         $to   = $req->get_param('to')   ?: date('Y-m-d');
-        $db   = new ReservationDb();
+        $db   = new ReservationStats();
         return rest_ensure_response([
             'kpis'     => $db->query_enhanced_kpis($from, $to),
             'products' => $db->query_top_products($from, $to, 10),
@@ -162,7 +162,7 @@ trait RestApiAi {
      * @param string $to   Date de fin (Y-m-d)
      */
     public function build_system_prompt(string $from, string $to): string {
-        $db = new ReservationDb();
+        $db = new ReservationStats();
 
         // ── Données commerciales ──────────────────────────────────────────────
         try {

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback } from 'react'
 import { api } from '../lib/api'
 
 const MAX_CHARS = 2000
@@ -27,7 +27,6 @@ export function useTranslator() {
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState(null)
   const [history, setHistory]   = useState([]) // max 10 entrées session
-  const abortRef                = useRef(null)
 
   const tokenEstimate = estimateTokens(input)
 

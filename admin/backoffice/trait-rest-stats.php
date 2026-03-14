@@ -21,7 +21,7 @@ trait RestApiStats {
      *   compare_to   YYYY-MM-DD — fin de la période de comparaison (optionnel)
      */
     public function get_bookings_stats(\WP_REST_Request $req): \WP_REST_Response {
-        $db = new ReservationDb(); // lit bt_reservations (solditems importés)
+        $db = new ReservationStats(); // lit bt_reservations (solditems importés)
 
         // ── Validation des paramètres ──────────────────────────────────────
         $granularity = in_array($req->get_param('granularity'), ['day', 'week', 'month'], true)

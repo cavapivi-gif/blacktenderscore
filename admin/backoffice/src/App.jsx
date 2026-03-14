@@ -1,4 +1,4 @@
-import { Component } from 'react'
+import { Component, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
 
@@ -20,18 +20,20 @@ class ErrorBoundary extends Component {
     return this.props.children
   }
 }
-import Dashboard from './pages/Dashboard'
-import Products from './pages/Products'
-import Bookings from './pages/Bookings'
-import Customers from './pages/Customers'
-import Reviews from './pages/Reviews'
-import Planner from './pages/Planner'
-import Settings from './pages/Settings'
-import Analytics from './pages/Analytics'
-import Onboarding from './pages/Onboarding'
-import AIChat from './pages/AIChat'
-import Translator from './pages/Translator'
-import Corrector  from './pages/Corrector'
+
+// Route-level code splitting — each page is lazy-loaded
+const Dashboard  = lazy(() => import('./pages/Dashboard'))
+const Products   = lazy(() => import('./pages/Products'))
+const Bookings   = lazy(() => import('./pages/Bookings'))
+const Customers  = lazy(() => import('./pages/Customers'))
+const Reviews    = lazy(() => import('./pages/Reviews'))
+const Planner    = lazy(() => import('./pages/Planner'))
+const Settings   = lazy(() => import('./pages/Settings'))
+const Analytics  = lazy(() => import('./pages/Analytics'))
+const Onboarding = lazy(() => import('./pages/Onboarding'))
+const AIChat     = lazy(() => import('./pages/AIChat'))
+const Translator = lazy(() => import('./pages/Translator'))
+const Corrector  = lazy(() => import('./pages/Corrector'))
 
 // Valeur injectée par PHP via wp_localize_script — statique au chargement de la page.
 // Après onboardingComplete(), window.location.reload() recharge la page avec onboarding_done = true.
@@ -41,14 +43,27 @@ const onboardingDone = !!window.btBackoffice?.onboarding_done
 const sharedChatToken = new URLSearchParams(window.location.search).get('bt_chat')
 const DEFAULT_ROUTE = sharedChatToken ? '/ai-chat' : '/dashboard'
 
+function PageFallback() {
+  return (
+    <div className="flex items-center justify-center h-64">
+      <div className="w-5 h-5 border-2 border-muted-foreground/30 border-t-foreground rounded-full animate-spin" />
+    </div>
+  )
+}
+
 export default function App() {
   if (!onboardingDone) {
-    return <Onboarding />
+    return (
+      <Suspense fallback={<PageFallback />}>
+        <Onboarding />
+      </Suspense>
+    )
   }
 
   return (
     <ErrorBoundary>
     <Layout>
+      <Suspense fallback={<PageFallback />}>
       <Routes>
         <Route path="/"                  element={<Navigate to={DEFAULT_ROUTE} replace />} />
         <Route path="/dashboard"         element={<Dashboard />} />
@@ -65,6 +80,7 @@ export default function App() {
         <Route path="/settings"          element={<Navigate to="/settings/api" replace />} />
         <Route path="/settings/:section" element={<Settings />} />
       </Routes>
+      </Suspense>
     </Layout>
     </ErrorBoundary>
   )

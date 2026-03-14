@@ -10,6 +10,19 @@ defined('ABSPATH') || exit;
 trait AiJson {
 
     /**
+     * Base cURL options for synchronous JSON calls.
+     */
+    private function base_json_curl_opts(): array {
+        return [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 60,
+            CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
+        ];
+    }
+
+    /**
      * Appel synchrone à Anthropic — retourne tableau PHP ou null.
      *
      * @param string $key        Clé API Anthropic
@@ -19,7 +32,7 @@ trait AiJson {
     public function call_anthropic_json(string $key, string $prompt, int $max_tokens = 1024): ?array {
         $ch = curl_init('https://api.anthropic.com/v1/messages');
 
-        curl_setopt_array($ch, [
+        curl_setopt_array($ch, $this->base_json_curl_opts() + [
             CURLOPT_POST           => true,
             CURLOPT_POSTFIELDS     => json_encode([
                 'model'      => 'claude-sonnet-4-6',
@@ -31,11 +44,10 @@ trait AiJson {
                 'anthropic-version: 2023-06-01',
                 'Content-Type: application/json',
             ],
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT        => 60,
         ]);
 
         $raw = curl_exec($ch);
+        curl_close($ch);
         if (!$raw) return null;
 
         $response = json_decode($raw, true);
@@ -52,7 +64,7 @@ trait AiJson {
     public function call_openai_json(string $key, string $prompt, int $max_tokens = 1024): ?array {
         $ch = curl_init('https://api.openai.com/v1/chat/completions');
 
-        curl_setopt_array($ch, [
+        curl_setopt_array($ch, $this->base_json_curl_opts() + [
             CURLOPT_POST           => true,
             CURLOPT_POSTFIELDS     => json_encode([
                 'model'      => 'gpt-4o',
@@ -63,11 +75,10 @@ trait AiJson {
                 'Authorization: Bearer ' . $key,
                 'Content-Type: application/json',
             ],
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT        => 60,
         ]);
 
         $raw = curl_exec($ch);
+        curl_close($ch);
         if (!$raw) return null;
 
         $response = json_decode($raw, true);
@@ -82,21 +93,20 @@ trait AiJson {
      * @param int    $max_tokens Limite de tokens
      */
     public function call_gemini_json(string $key, string $prompt, int $max_tokens = 1024): ?array {
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key={$key}";
+        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent';
         $ch  = curl_init($url);
 
-        curl_setopt_array($ch, [
+        curl_setopt_array($ch, $this->base_json_curl_opts() + [
             CURLOPT_POST           => true,
             CURLOPT_POSTFIELDS     => json_encode([
                 'contents'         => [['role' => 'user', 'parts' => [['text' => $prompt]]]],
                 'generationConfig' => ['maxOutputTokens' => $max_tokens],
             ]),
-            CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT        => 60,
+            CURLOPT_HTTPHEADER     => ['Content-Type: application/json', 'x-goog-api-key: ' . $key],
         ]);
 
         $raw = curl_exec($ch);
+        curl_close($ch);
         if (!$raw) return null;
 
         $response = json_decode($raw, true);

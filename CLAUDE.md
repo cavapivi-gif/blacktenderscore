@@ -1,7 +1,7 @@
-# SJ Reviews — Architecture Guide for AI Agents
+# BlackTenders Core — Architecture Guide for AI Agents
 
 > This file guides any AI (Claude, GPT, Copilot...) to build, maintain, and extend
-> Elementor widgets for this plugin — and any plugin following the same pattern.
+> this WordPress plugin — Elementor widgets, Regiondo API integration, React backoffice.
 
 ---
 
@@ -12,13 +12,13 @@
 | 1 | [Git Workflow](#git-workflow) | Before any `git` operation |
 | 2 | [Project Overview](#project-overview) | First time reading the project |
 | 3 | [Directory Structure](#directory-structure) | Finding where a file lives |
-| 4 | [How to Create a New Elementor Widget](#how-to-create-a-new-elementor-widget) | Adding a new widget (4 steps) |
-| 5 | [SharedControls Trait — Available Methods](#sharedcontrols-trait--available-methods) | Adding style controls to a widget |
-| 6 | [SjWidgetBase — What It Provides](#sjwidgetbase--what-it-provides) | Understanding base class features |
-| 7 | [Key Conventions](#key-conventions) | Naming, selectors, data flow, helpers |
-| 8 | [Adding SharedControls to Legacy Widgets](#adding-sharedcontrols-to-legacy-widgets) | Migrating an old widget |
-| 9 | [Elementor Control Types — Pitfalls & Patterns](#elementor-control-types--pitfalls--patterns) | ICONS bug, mode selector, CSS grid |
-| 10 | [For Other Plugins](#for-other-plugins) | Porting this architecture elsewhere |
+| 4 | [How to Create a New Elementor Widget](#how-to-create-a-new-elementor-widget) | Adding a new widget |
+| 5 | [SharedControls Trait](#sharedcontrols-trait--available-methods) | Adding style controls to a widget |
+| 6 | [AbstractBtWidget — What It Provides](#abstractbtwidget--what-it-provides) | Understanding base class features |
+| 7 | [Key Conventions](#key-conventions) | Naming, selectors, data flow |
+| 8 | [Backoffice Architecture](#backoffice-architecture) | REST API, DB classes, React app |
+| 9 | [Security Patterns](#security-patterns) | Encryption, SQL, XSS, CSRF |
+| 10 | [Elementor Control Types — Pitfalls](#elementor-control-types--pitfalls--patterns) | ICONS bug, mode selector, CSS grid |
 
 ---
 
@@ -27,232 +27,202 @@
 - ALWAYS commit directly to `main` (or the current active branch)
 - NEVER create new branches under any circumstance
 - NEVER use `git checkout -b`, `git switch -c`, or any branch creation command
-- NEVER create branches named `claude/*`, `fix/*`, `feature/*` or similar
 - Commit directly: `git add` → `git commit` → done
-- If asked to "fix", "refactor", or "implement" anything: commit to current branch, no new branch
 - Do NOT open pull requests — push directly
 
 ---
 
 ## Project Overview
 
-**Type:** WordPress plugin (Elementor + ACF integration)
-**Namespace:** `SJ_Reviews`
-**CPT:** `sj_avis` (reviews linked to posts via `avis_linked_post`)
-**Entry point:** `studiojae-reviews.php` → `core/class-plugin.php`
+**Type:** WordPress plugin (Elementor + ACF + Regiondo API integration)
+**Namespace:** `BlackTenders`
+**Entry point:** `blacktenders.php` → `core/class-plugin.php`
+**Text domain:** `blacktenderscore`
+**Constants:** `BT_VERSION`, `BT_DIR`, `BT_URL`
+
+**Key features:**
+- 17 custom Elementor widgets (excursions, boats, galleries, maps, reviews)
+- Regiondo booking API integration (sync, stats, planner)
+- React admin dashboard (backoffice) with AI chat, analytics, customer CRM
+- GDPR-compliant encrypted storage (AES-256-CBC with HMAC blind indexes)
+- MCP server for AI tool integration
 
 ---
 
 ## Directory Structure
 
 ```
-studiojae-reviews/
+blacktenderscore/
+├── blacktenders.php                   # Plugin bootstrap, defines BT_DIR/BT_URL
+├── uninstall.php                      # Cleanup on plugin deletion
 ├── core/
-│   └── class-plugin.php              # Bootstraps everything
+│   ├── class-loader.php               # PSR-4 autoloader (CamelCase → kebab-case)
+│   └── class-plugin.php               # Bootstraps REST API, Backoffice, Elementor, MetaBox
+├── admin/
+│   ├── backoffice/
+│   │   ├── class-backoffice.php       # Admin menu registration + Vite asset enqueue
+│   │   ├── class-rest-api.php         # Central REST controller (uses 7 traits below)
+│   │   ├── trait-rest-stats.php       # Stats/charts endpoints
+│   │   ├── trait-rest-sync.php        # Regiondo sync endpoints
+│   │   ├── trait-rest-ai.php          # AI context/chat endpoints
+│   │   ├── trait-rest-chat.php        # Chat CRUD endpoints
+│   │   ├── trait-rest-settings.php    # Settings CRUD endpoints
+│   │   ├── trait-rest-google.php      # Google Reviews endpoints
+│   │   ├── trait-rest-translator.php  # Translation endpoints
+│   │   ├── class-reservation-db.php   # DB CRUD for bt_reservations (schema, upsert, query)
+│   │   ├── class-reservation-stats.php # Analytics queries (extends ReservationDb)
+│   │   ├── class-reservation-sync.php # Maps Regiondo API → ReservationDb
+│   │   ├── class-participation-db.php # DB for CSV-imported participations
+│   │   ├── class-chat-db.php          # Chat/conversation storage
+│   │   ├── class-events-db.php        # AI-generated events storage
+│   │   ├── class-reviews-db.php       # Google reviews storage
+│   │   ├── class-encryption.php       # AES-256-CBC + HMAC blind indexes
+│   │   ├── class-ai.php              # SSE streaming for AI chat
+│   │   ├── class-sync.php            # Regiondo product sync
+│   │   ├── trait-ai-prompt.php       # System prompt builder
+│   │   ├── trait-ai-streams.php      # SSE stream handling
+│   │   ├── trait-ai-json.php         # JSON extraction from AI responses
+│   │   ├── trait-ai-formatters.php   # Response formatting
+│   │   └── src/                       # React app (Vite + Tailwind)
+│   │       ├── main.jsx              # App entry point
+│   │       ├── index.css             # Tailwind + custom styles
+│   │       ├── pages/                # Route pages
+│   │       │   ├── Settings.jsx      # Settings page (uses settings/ subdir)
+│   │       │   ├── AIChat.jsx        # AI chat page (uses ai-chat/ subdir)
+│   │       │   ├── Reviews.jsx       # Reviews page (uses reviews/ subdir)
+│   │       │   ├── Dashboard.jsx     # Dashboard
+│   │       │   ├── Planner.jsx       # Calendar planner (FullCalendar)
+│   │       │   ├── Customers.jsx     # Customer CRM
+│   │       │   └── ... (Bookings, Analytics, etc.)
+│   │       └── components/           # Shared React components
+│   ├── meta-box/
+│   │   ├── class-meta-box.php        # Regiondo ticket meta box
+│   │   ├── template.php              # Meta box HTML template
+│   │   └── meta-box.js               # Meta box JS (product selection)
+│   └── settings/
+│       └── class-settings.php         # WP Settings API page
+├── api/
+│   └── regiondo/
+│       ├── class-client.php           # HTTP client for Regiondo API
+│       ├── class-auth.php             # API authentication
+│       ├── class-cache.php            # Transient-based caching
+│       └── api-map.php               # Endpoint mapping
 ├── elementor/
-│   ├── class-widget-base.php         # SjWidgetBase — abstract base for ALL widgets
-│   ├── class-elementor-manager.php   # Registers widget category
+│   ├── class-abstract-bt-widget.php   # AbstractBtWidget — base for all widgets
+│   ├── class-elementor-manager.php    # Widget/tag registration
 │   ├── traits/
-│   │   └── trait-shared-controls.php # SharedControls — reusable control sections
-│   └── widgets/
-│       ├── class-coup-de-coeur-widget.php  # EXAMPLE: uses SjWidgetBase + SharedControls
-│       ├── class-reviews-widget.php        # Legacy (extends Widget_Base directly)
-│       ├── class-rating-badge-widget.php   # Legacy
-│       ├── class-summary-widget.php        # Legacy
-│       └── class-inline-rating-widget.php  # Legacy
-├── front/
-│   ├── class-*-shortcode.php         # Shortcode classes (render logic)
+│   │   ├── class-bt-shared-controls.php  # Main SharedControls dispatcher
+│   │   ├── trait-bt-typography-controls.php
+│   │   ├── trait-bt-layout-controls.php
+│   │   ├── trait-bt-heading-controls.php
+│   │   ├── trait-bt-content-controls.php
+│   │   └── trait-bt-nav-controls.php
+│   ├── widgets/                       # 17 Elementor widgets
+│   │   ├── class-google-map.php       # Google Maps (JS API + ACF integration)
+│   │   ├── class-gallery.php          # Photo gallery
+│   │   ├── class-itinerary.php        # Itinerary with Leaflet maps
+│   │   ├── class-reviews.php          # Reviews display
+│   │   ├── class-boat-pricing.php     # Pricing tables
+│   │   └── ... (13 more widgets)
+│   ├── dynamic-tags/                  # Elementor dynamic tags
+│   ├── loop-queries/                  # Custom loop queries
 │   └── assets/
-│       ├── sj-*.css                  # Per-feature CSS (layout defaults only)
-│       └── sj-*.js                   # Front-end JS
-├── post-types/
-│   ├── class-avis-cpt.php           # CPT + ACF field registration
-│   └── class-lieu-metabox.php       # Location meta box
-├── includes/
-│   ├── helpers.php                   # sj_get_reviews(), sj_aggregate(), sj_stars_html()
-│   ├── class-widget.php             # Classic WP_Widget
-│   └── class-cron.php               # Auto-sync scheduling
-└── admin/
-    └── backoffice/                   # React admin dashboard + REST API
+│       ├── bt-gmaps-init.js           # Google Maps JS init
+│       └── bt-leaflet-init.js         # Leaflet maps init
+└── mcp/
+    ├── index.js                       # MCP server for AI tools
+    └── package.json
 ```
+
+---
+
+## Autoloader
+
+`core/class-loader.php` implements PSR-4 autoloading:
+- `BlackTenders\Admin\Backoffice\ReservationDb` → `admin/backoffice/class-reservation-db.php`
+- CamelCase class names are converted to kebab-case file names
+- All files must be prefixed with `class-` (or `trait-` for traits — loaded manually)
 
 ---
 
 ## How to Create a New Elementor Widget
 
-### Step 1: Create the shortcode (rendering logic)
+### Step 1: Create the widget class
 
-File: `front/class-{feature}-shortcode.php`
-
-```php
-<?php
-namespace SJ_Reviews\Front;
-
-defined('ABSPATH') || exit;
-
-class FeatureShortcode {
-    public function init(): void {
-        add_shortcode('sj_feature', [$this, 'render']);
-    }
-
-    public function render(array $atts = []): string {
-        $a = shortcode_atts([
-            'post_id' => 0,
-            // ... attributes matching Elementor widget controls
-        ], $atts, 'sj_feature');
-
-        ob_start();
-        // HTML output using BEM classes: .sj-feature, .sj-feature__title, etc.
-        return ob_get_clean();
-    }
-}
-```
-
-### Step 2: Create the Elementor widget
-
-File: `elementor/widgets/class-{feature}-widget.php`
+File: `elementor/widgets/class-{feature}.php`
 
 ```php
 <?php
-namespace SJ_Reviews\Elementor\Widgets;
+namespace BlackTenders\Elementor\Widgets;
 
-use Elementor\Controls_Manager;
-use SJ_Reviews\Elementor\SjWidgetBase;
-use SJ_Reviews\Elementor\Traits\SharedControls;
+use BlackTenders\Elementor\AbstractBtWidget;
+use BlackTenders\Elementor\Traits\BtSharedControls;
 
 defined('ABSPATH') || exit;
 
-class FeatureWidget extends SjWidgetBase {
+class Feature extends AbstractBtWidget {
+    use BtSharedControls;
 
-    use SharedControls;
-
-    protected static function get_sj_config(): array {
+    protected static function get_bt_config(): array {
         return [
-            'id'       => 'sj_feature',
-            'title'    => 'SJ — Feature Name',
+            'id'       => 'bt-feature',
+            'title'    => 'BT — Feature Name',
             'icon'     => 'eicon-star',
-            'keywords' => ['feature', 'avis', 'sj'],
-            'css'      => ['sj-feature'],        // style handle from wp_enqueue
-            'categories' => ['sj-reviews'],
+            'keywords' => ['feature', 'bt'],
+            'css'      => ['bt-feature'],   // optional style handle
+            'js'       => ['bt-feature'],   // optional script handle
         ];
     }
 
-    public function __construct($data = [], $args = null) {
-        parent::__construct($data, $args);
-
-        // Define selector dictionary for this widget
-        $this->selectors = array_merge($this->selectors, [
-            'container' => '{{WRAPPER}} .sj-feature',
-            'title'     => '{{WRAPPER}} .sj-feature__title',
-            'subtitle'  => '{{WRAPPER}} .sj-feature__subtitle',
-            'stars'     => '{{WRAPPER}} .sj-feature__stars',
-        ]);
-    }
-
     protected function register_controls(): void {
-        // ── CONTENT TAB (custom per widget) ────────────────
+        // Content tab
         $this->start_controls_section('section_content', [
-            'label' => 'Contenu',
-            'tab'   => Controls_Manager::TAB_CONTENT,
+            'label' => __('Contenu', 'blacktenderscore'),
+            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
         ]);
-        // ... widget-specific content controls
+        // ... controls
         $this->end_controls_section();
-
-        // ── STYLE TAB (shared controls from trait) ─────────
-        $this->register_box_controls('container', 'Conteneur', $this->sel('container'));
-        $this->register_typography_controls('title', 'Titre', $this->sel('title'));
-        $this->register_typography_controls('subtitle', 'Sous-titre', $this->sel('subtitle'));
-        $this->register_stars_controls('stars', 'Étoiles', $this->sel('stars'));
     }
 
     protected function render(): void {
         $s = $this->get_settings_for_display();
-        require_once SJ_REVIEWS_DIR . 'front/class-feature-shortcode.php';
-        $sc = new \SJ_Reviews\Front\FeatureShortcode();
-        echo $sc->render([/* map settings to shortcode atts */]);
+        // HTML output
     }
 }
 ```
 
-### Step 3: Create the CSS (layout defaults only)
+### Step 2: Register in ElementorManager
 
-File: `front/assets/sj-{feature}.css`
-
-**Rules:**
-- CSS provides LAYOUT (display, flex, grid) + FALLBACK styles for shortcode-only use
-- Elementor controls override colors, fonts, spacing, borders, shadows via `{{WRAPPER}}`
-- Use BEM naming: `.sj-feature`, `.sj-feature__title`, `.sj-feature__title--highlight`
-- No `!important` — Elementor selectors have higher specificity via `{{WRAPPER}}`
-
-### Step 4: Register in class-plugin.php
-
-```php
-// In shortcodes section:
-require_once SJ_REVIEWS_DIR . 'front/class-feature-shortcode.php';
-(new \SJ_Reviews\Front\FeatureShortcode())->init();
-
-// In Elementor section (inside the closure):
-require_once SJ_REVIEWS_DIR . 'elementor/widgets/class-feature-widget.php';
-$manager->register(new \SJ_Reviews\Elementor\Widgets\FeatureWidget());
-
-// In enqueue_front_assets():
-wp_enqueue_style('sj-feature', SJ_REVIEWS_URL . 'front/assets/sj-feature.css', [], SJ_REVIEWS_VERSION);
-```
+Widgets are auto-registered by `class-elementor-manager.php` which scans the `widgets/` directory.
 
 ---
 
 ## SharedControls Trait — Available Methods
 
-Each method registers a complete Elementor SECTION (label + controls + selectors).
-Call them in `register_controls()` with one line each.
+Each method registers a complete Elementor SECTION with all related controls.
 
-| Method | What it adds | Controls included |
-|--------|-------------|-------------------|
-| `register_typography_controls($prefix, $label, $selector)` | Typography section | Font family, size, weight, transform, line-height, letter-spacing, color, hover color (opt), alignment (opt), bottom spacing |
-| `register_box_controls($prefix, $label, $selector)` | Box/container section | Background (classic/gradient), border, border-radius, padding, margin, box-shadow |
-| `register_box_hover_controls($prefix, $label, $selector)` | Box with **Normal/Hover tabs** | Border-radius, padding, transition timing, then tabs: background, border, shadow per state + hover transform effect |
-| `register_button_controls($prefix, $label, $selector)` | Button with **Normal/Hover tabs** | Typography, padding, border-radius, transition, then tabs: text color, background, border per state |
-| `register_avatar_controls($prefix, $label, $selector)` | Image/avatar section | Size, border-radius, object-fit, border, box-shadow, spacing |
-| `register_stars_controls($prefix, $label, $selector)` | Star rating section | Star color, empty color, size, gap |
-| `register_separator_controls($prefix, $label, $selector)` | Divider/separator section | Color, width (thickness), height |
-| `register_layout_controls($prefix, $label, $selector)` | Flex layout section | Gap, justify-content, align-items |
-| `register_bar_controls($prefix, $label, $fill_sel, $track_sel)` | Progress bar section | Fill color, track color, height, border-radius |
-| `register_pill_controls($prefix, $label, $selector, $active_sel)` | Pill/tag with **3-state tabs** | Typography, padding, radius, then Normal/Hover/Active tabs: color, bg, border |
+| Method | What it adds |
+|--------|-------------|
+| `register_typography_controls($prefix, $label, $selector)` | Font, size, weight, color, alignment, spacing |
+| `register_box_controls($prefix, $label, $selector)` | Background, border, radius, padding, margin, shadow |
+| `register_box_hover_controls($prefix, $label, $selector)` | Box with Normal/Hover tabs + transform |
+| `register_button_controls($prefix, $label, $selector)` | Button with Normal/Hover tabs |
+| `register_avatar_controls($prefix, $label, $selector)` | Image size, radius, object-fit, border |
+| `register_stars_controls($prefix, $label, $selector)` | Star color, empty color, size, gap |
+| `register_separator_controls($prefix, $label, $selector)` | Divider color, width, height |
+| `register_layout_controls($prefix, $label, $selector)` | Flex gap, justify, align |
+| `register_bar_controls($prefix, $label, $fill, $track)` | Progress bar fill/track |
+| `register_pill_controls($prefix, $label, $sel, $active)` | Pill with Normal/Hover/Active tabs |
 
-**All methods accept an optional `$defaults` array for initial values.**
-
-### Defaults examples:
-```php
-// Typography with hover + alignment
-$this->register_typography_controls('link', 'Lien', $sel, [
-    'color' => '#222', 'hover_color' => '#0066cc', 'align' => 'center'
-]);
-
-// Box with hover effect
-$this->register_box_hover_controls('card', 'Carte', $sel, [
-    'radius' => 12, 'transition' => 300, 'hover_transform' => 'translateY(-2px)'
-]);
-
-// Button
-$this->register_button_controls('load', 'Charger plus', $sel, [
-    'color' => '#fff', 'bg' => '#222', 'transition' => 200
-]);
-
-// Avatar (circular by default)
-$this->register_avatar_controls('author', 'Photo auteur', $sel, [
-    'size' => 40, 'radius' => 50, 'fit' => 'cover'
-]);
-```
+All methods accept an optional `$defaults` array.
 
 ---
 
-## SjWidgetBase — What It Provides
+## AbstractBtWidget — What It Provides
 
 | Feature | How |
 |---------|-----|
-| `get_name()`, `get_title()`, `get_icon()`, etc. | Auto-derived from `get_sj_config()` |
-| `$selectors` dictionary | Map logical names → CSS selectors with `{{WRAPPER}}` |
-| `$this->sel('key')` | Shorthand to resolve a selector from the dictionary |
+| `get_name()`, `get_title()`, `get_icon()` | Auto-derived from `get_bt_config()` |
 | `get_style_depends()` / `get_script_depends()` | From config `css` / `js` arrays |
 
 ---
@@ -260,111 +230,95 @@ $this->register_avatar_controls('author', 'Photo auteur', $sel, [
 ## Key Conventions
 
 ### Naming
-- **Widget IDs:** `sj_{feature}` (e.g. `sj_coup_de_coeur`, `sj_inline_rating`)
-- **CSS classes:** `.sj-{feature}` with BEM: `__element`, `--modifier`
+- **Widget IDs:** `bt-{feature}` (e.g. `bt-google-map`, `bt-gallery`)
+- **CSS classes:** `.bt-{feature}` with BEM: `__element`, `--modifier`
 - **Control IDs:** `{prefix}_{property}` (e.g. `title_color`, `container_padding`)
-- **Section IDs:** `section_{prefix}_style` or `section_{prefix}_box`
-- **PHP classes:** PascalCase `FeatureWidget`, `FeatureShortcode`
-- **Files:** `class-{feature}-widget.php`, `class-{feature}-shortcode.php`, `sj-{feature}.css`
+- **PHP classes:** PascalCase (e.g. `GoogleMap`, `BoatPricing`)
+- **Files:** `class-{feature}.php`, `bt-{feature}.css`
 
-### Selectors Strategy
-- **Always use `{{WRAPPER}}`** — Elementor replaces it with the unique widget wrapper selector
-- **Define once in `$selectors`**, reference everywhere via `$this->sel('key')`
-- **CSS file = layout defaults**, Elementor controls = dynamic overrides
-- When Elementor controls set a value, it generates inline CSS with `{{WRAPPER}}` specificity — automatically wins over the CSS file defaults
-
-### Data Flow
-```
-ACF field (best_seller) → Shortcode checks field → Queries sj_avis CPT
-    → sj_get_reviews() → sj_aggregate() → render HTML
-```
-
-Reviews are linked to posts via `avis_linked_post` meta key on `sj_avis` posts.
-
-### Helper Functions (includes/helpers.php)
-- `sj_get_reviews(array $args)` — WP_Query wrapper for sj_avis
-- `sj_normalize_review(WP_Post)` — Normalize to array (ACF or post_meta)
-- `sj_aggregate(array $reviews)` — Returns `['avg' => float, 'count' => int]`
-- `sj_stars_html(int $rating, int $max, string $color)` — SVG stars
-- `sj_relative_date(string|int)` — French relative date
-- `sj_source_icon(string)` — Source SVG icon
+### CSS
+- CSS provides LAYOUT defaults
+- Elementor controls override via `{{WRAPPER}}` specificity
+- No `!important`
 
 ---
 
-## Adding SharedControls to Legacy Widgets
+## Backoffice Architecture
 
-To migrate an existing widget to use the shared system:
+### REST API
+Central controller: `class-rest-api.php` — uses 7 traits for different endpoint groups.
+Namespace: `bt/v1`
 
-1. Change `extends \Elementor\Widget_Base` to `extends SjWidgetBase`
-2. Add `use SharedControls;`
-3. Add `get_sj_config()` static method
-4. Define `$selectors` in constructor
-5. Replace manual control sections with trait method calls
-6. Remove hardcoded color/font values from CSS → let Elementor handle them
+Permission system: `bt_role_permissions` option + `ChatDb::role_has_permission()`.
+Routes use `$perm('permission_key')` closures for role-based access.
+
+### Database Classes
+| Class | Table | Purpose |
+|-------|-------|---------|
+| `ReservationDb` | `bt_reservations` | Regiondo solditems CRUD |
+| `ReservationStats` | (same table) | Analytics queries (extends ReservationDb) |
+| `ParticipationDb` | `bt_participations` | CSV-imported participations |
+| `ChatDb` | `bt_chats` | AI chat conversations |
+| `EventsDb` | `bt_events` | AI-generated calendar events |
+| `ReviewsDb` | `bt_reviews` | Google reviews |
+
+### React App
+Built with Vite + React + Tailwind CSS.
+Source: `admin/backoffice/src/`
+Build: `admin/backoffice/build/` (committed, required for plugin to work)
+
+---
+
+## Security Patterns
+
+### SQL Injection Prevention
+Always use `$wpdb->prepare()` with `%s`, `%d`, `%f` placeholders. Never interpolate user input.
+
+### Encryption (GDPR)
+`class-encryption.php` — AES-256-CBC with separate derived keys:
+- `enc_key` = HMAC-SHA256("bt_encrypt", master_key) — for data encryption
+- `hmac_key` = HMAC-SHA256("bt_hmac", master_key) — for blind index hashing
+- Backward-compatible decryption with legacy single-key scheme
+
+### XSS Prevention
+- PHP: `esc_attr()`, `esc_html()`, `wp_kses()` on all output
+- JS: DOM node creation (`textContent`) instead of `innerHTML` for user data
+- `wp_kses` href protocols restricted to `['http', 'https', 'mailto']`
+
+### CSRF
+All admin forms use `wp_nonce_field()` + `check_admin_referer()`.
 
 ---
 
 ## Elementor Control Types — Pitfalls & Patterns
 
 ### ICONS control returns an array, not a string!
-`Controls_Manager::ICONS` stores `['value' => 'fas fa-check', 'library' => 'fa-solid']`.
-`Controls_Manager::TEXT` stores a plain string.
-
-**Never mix them.** If you change a control from TEXT to ICONS (or vice versa), previously saved data in the DB will still be the old type. Always normalize in the render/resolve logic:
-
 ```php
 $icon = $settings['my_icon'] ?? [];
 if (is_array($icon) && !empty($icon['value'])) {
     Icons_Manager::render_icon($icon, ['aria-hidden' => 'true']);
 } elseif (is_string($icon) && $icon !== '') {
-    echo esc_html($icon);  // legacy TEXT value or emoji
+    echo esc_html($icon);  // legacy TEXT value
 }
 ```
 
 ### "Can't unselect" — Mode selector pattern
-Elementor's ICONS picker has no "none" option — once an icon is selected, you can't clear it. When the user needs an explicit "show nothing" choice, **add a SELECT control as a mode gate**:
-
+Add a SELECT gate control before an ICONS control:
 ```php
-$this->add_control('icon_fallback_mode', [
+$this->add_control('icon_mode', [
     'type'    => Controls_Manager::SELECT,
-    'options' => [
-        'icon' => __('Show a default icon'),
-        'none' => __('Show nothing'),
-    ],
+    'options' => ['icon' => 'Show icon', 'none' => 'Show nothing'],
     'default' => 'icon',
 ]);
-
-$this->add_control('default_icon', [
+$this->add_control('the_icon', [
     'type'      => Controls_Manager::ICONS,
-    'condition' => ['icon_fallback_mode' => 'icon'],  // hidden when mode = 'none'
+    'condition' => ['icon_mode' => 'icon'],
 ]);
 ```
 
-Then in resolve/render, check the mode before falling back:
-```php
-$fallback = ($s['icon_fallback_mode'] ?? 'icon') === 'none' ? null : $s['default_icon'];
-```
-
-### CSS Grid: height vs aspect-ratio conflict
-When using CSS Grid with `aspect-ratio` on items, **never set `height: 100%` on the same element** — it overrides the aspect-ratio. Use `height: 100%` only when the grid has a fixed height (e.g. airbnb layout). For ratio-driven grids, use absolute positioning inside the item:
-
+### CSS Grid: height vs aspect-ratio
+Never set `height: 100%` on an element with `aspect-ratio`. Use absolute positioning:
 ```css
 .grid-item { aspect-ratio: 4/3; position: relative; }
-.grid-item__link { position: absolute; inset: 0; }
-.grid-item__img  { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.grid-item__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 ```
-
----
-
-## For Other Plugins
-
-This architecture is portable. To use it in another plugin:
-
-1. Copy `elementor/class-widget-base.php` → adjust namespace
-2. Copy `elementor/traits/trait-shared-controls.php` → adjust namespace
-3. Each widget extends your WidgetBase + `use SharedControls`
-4. Define `get_sj_config()` (rename to `get_config()` if you want)
-5. CSS = layout only, Elementor = dynamic styles
-
-The pattern works for any Elementor plugin: review widgets, booking widgets,
-pricing tables, testimonials, etc.

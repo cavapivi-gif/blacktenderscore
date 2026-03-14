@@ -96,8 +96,6 @@ export function useDashboard() {
 
   // Sparklines (7j)
   const sparkBookings = useMemo(() => sparkData?.periods?.map(p => p.bookings ?? 0) ?? [], [sparkData])
-  const sparkRevenue = useMemo(() => sparkData?.periods?.map(p => p.revenue ?? 0) ?? [], [sparkData])
-  const sparkAvgBasket = useMemo(() => sparkData?.periods?.map(p => p.avg_basket ?? 0) ?? [], [sparkData])
 
   // Peaks
   const peaks = {
@@ -127,7 +125,7 @@ export function useDashboard() {
     filterParams, applyFilters, resetPeriod,
     // Derived
     chartData, hasCompare, kpis, kpisCmp,
-    sparkBookings, sparkRevenue, sparkAvgBasket,
+    sparkBookings,
     peaks,
   }
 }

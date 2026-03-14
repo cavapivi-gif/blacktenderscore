@@ -3,7 +3,7 @@
  * Sources : localStorage (conversations locales de l'owner) + API DB (partagées + owned synced).
  * Les conversations partagées (non-owner) n'ont pas de messages locaux : ils sont chargés à la demande.
  */
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import { listChats, getChat } from '../lib/chatApi'
 
 const STORAGE_KEY = 'bt_ai_conversations'
@@ -153,25 +153,30 @@ export function useConversations() {
     } catch {}
   }, [mutate])
 
-  /** Rafraîchit les messages d'une conversation depuis l'API (polling). */
+  /** Rafraîchit les messages d'une conversation depuis l'API (polling).
+   *  Compare updated_at pour détecter tout changement (ajout, suppression, édition). */
   const refreshMessages = useCallback(async (id) => {
     try {
       const data = await getChat(id)
       mutate(prev => prev.map(c => {
         if (c.id !== id) return c
-        // Ajoute uniquement les nouveaux messages (par position)
-        const existing = c.messages ?? []
-        const fresh    = data.messages ?? []
-        if (fresh.length <= existing.length) return c
-        return { ...c, messages: fresh, participants: data.participants ?? c.participants ?? [] }
+        const remoteUpdated = data.updated_at ?? data.updatedAt
+        // Rien de nouveau si même timestamp
+        if (remoteUpdated && c.updatedAt === toIso(remoteUpdated)) return c
+        return {
+          ...c,
+          messages: data.messages ?? c.messages,
+          participants: data.participants ?? c.participants ?? [],
+          updatedAt: remoteUpdated ? toIso(remoteUpdated) : c.updatedAt,
+        }
       }))
     } catch {}
   }, [mutate])
 
   const activeConv = conversations.find(c => c.id === activeId) ?? null
 
-  // Group conversations by date for sidebar display
-  const grouped = (() => {
+  // Group conversations by date for sidebar display (memoized)
+  const grouped = useMemo(() => {
     const now = new Date()
     const todayStr  = now.toDateString()
     const yest      = new Date(now - 86400000).toDateString()
@@ -186,7 +191,7 @@ export function useConversations() {
       else                   g.older.push(c)
     }
     return g
-  })()
+  }, [conversations])
 
   return {
     conversations, activeId, activeConv, grouped, dbLoading,
