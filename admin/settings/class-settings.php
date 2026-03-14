@@ -48,7 +48,6 @@ class Settings {
 
     public function enqueue(string $hook): void {
         if ($hook !== 'settings_page_bt-settings') return;
-        wp_enqueue_style('bt-settings', BT_URL . 'admin/settings/settings.css', [], BT_VERSION);
     }
 
     public function render(): void {
