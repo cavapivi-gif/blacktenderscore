@@ -55,7 +55,8 @@ class ChatDb {
             provider   varchar(50) DEFAULT NULL,
             created_at datetime    NOT NULL,
             PRIMARY KEY (id),
-            KEY chat_id (chat_id)
+            KEY chat_id (chat_id),
+            KEY chat_created (chat_id, created_at)
         ) ENGINE=InnoDB {$charset};");
 
         dbDelta("CREATE TABLE {$this->shares} (

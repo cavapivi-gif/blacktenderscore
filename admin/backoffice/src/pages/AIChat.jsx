@@ -123,9 +123,10 @@ export default function AIChat() {
     const hasCollabs    = (activeConv.participants?.length ?? 0) > 1
     const notYetLoaded  = !activeConv.participants?.length   // participants pas encore récupérés
     if (!isShared && !hasCollabs && !notYetLoaded) return
-    const interval = setInterval(() => refreshMessages(activeConv.id), 3000)
+    const id = activeConv.id
+    const interval = setInterval(() => refreshMessages(id), 3000)
     return () => clearInterval(interval)
-  }, [activeId, activeConv?.db_id, activeConv?.participants?.length])
+  }, [activeId, activeConv?.db_id, activeConv?.participants?.length, refreshMessages])
 
   // Load shared conversation from URL param (?share=uuid or legacy ?bt_chat=token)
   useEffect(() => {
@@ -143,7 +144,7 @@ export default function AIChat() {
           })
           .catch(() => toast('Lien de partage introuvable ou accès refusé', 'error'))
           .finally(() => setSharedLoading(false))
-      })
+      }).catch(() => toast('Erreur de chargement', 'error'))
       return
     }
 
