@@ -54,6 +54,10 @@ export default function Settings() {
   const [pImportStatus,    setPImportStatus]    = useState(null)
   const [pResetLoading,    setPResetLoading]    = useState(false)
   const [showPResetModal,  setShowPResetModal]  = useState(false)
+  const savedTimerRef = useRef(null)
+
+  // Cleanup saved timer on unmount
+  useEffect(() => () => clearTimeout(savedTimerRef.current), [])
 
   useEffect(() => {
     api.settings()
@@ -110,7 +114,8 @@ export default function Settings() {
       const fresh = await api.settings()
       setSettings(fresh)
       setSaved(true)
-      setTimeout(() => setSaved(false), 3000)
+      clearTimeout(savedTimerRef.current)
+      savedTimerRef.current = setTimeout(() => setSaved(false), 3000)
     } catch (e) { setError(e.message) }
     finally { setSaving(false) }
   }
@@ -287,8 +292,8 @@ export default function Settings() {
       await api.resetParticipationsDb()
       const status = await api.participationsImportStatus().catch(() => null)
       if (status) setPImportStatus(status)
-    } catch (e) {
-      console.error('Reset participations error:', e.message)
+    } catch {
+      // Silently handled — user sees loading state reset
     } finally {
       setPResetLoading(false)
     }

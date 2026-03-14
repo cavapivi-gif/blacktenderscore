@@ -97,6 +97,7 @@ function ConvItem({ conv, isActive, onSelect, onDelete, onRename }) {
             <button
               onClick={e => {
                 e.stopPropagation()
+                clearTimeout(timerRef.current)
                 setConfirm(true)
                 timerRef.current = setTimeout(() => setConfirm(false), 3000)
               }}
