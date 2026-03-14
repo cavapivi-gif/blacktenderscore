@@ -19,6 +19,13 @@ define('BT_URL',      plugin_dir_url(__FILE__));
 require_once BT_DIR . 'core/class-loader.php';
 require_once BT_DIR . 'core/class-plugin.php';
 
+// Clean up cron jobs on plugin deactivation
+register_deactivation_hook(__FILE__, function(): void {
+    wp_clear_scheduled_hook('bt_auto_sync');
+    delete_transient('bt_sync_lock');
+    delete_transient('bt_import_lock');
+});
+
 function bt_run(): void {
     $plugin = new BlackTenders\Core\Plugin();
     $plugin->init();

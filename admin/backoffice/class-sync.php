@@ -26,12 +26,20 @@ class Sync {
 
     /**
      * Lance la synchronisation.
+     * Uses a transient lock to prevent concurrent sync runs.
      *
      * @param int[]|null $product_ids null = tous les produits
      * @return array { created, updated, errors, log[] }
      */
     public function run(?array $product_ids = null): array {
         $result = ['created' => 0, 'updated' => 0, 'errors' => 0, 'log' => []];
+
+        // Prevent concurrent sync runs (lock for 5 minutes max)
+        if (get_transient('bt_sync_lock')) {
+            $result['log'][] = 'Sync déjà en cours, abandon.';
+            return $result;
+        }
+        set_transient('bt_sync_lock', 1, 300);
 
         $products = $this->client->get_products('fr-FR');
         if (empty($products)) {
@@ -80,6 +88,7 @@ class Sync {
         }
 
         update_option('bt_synced_products', $existing, false);
+        delete_transient('bt_sync_lock');
 
         return $result;
     }

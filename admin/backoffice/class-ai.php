@@ -37,8 +37,26 @@ class Ai {
         $db = new ChatDb();
         if (!$db->role_has_chat_access(get_current_user_id())) { status_header(403); exit; }
 
-        $data     = json_decode(file_get_contents('php://input'), true) ?? [];
+        // Limit request body size (512 KB max)
+        $raw_input = file_get_contents('php://input');
+        if (strlen($raw_input) > 524288) {
+            wp_send_json_error(['message' => 'Requête trop volumineuse.'], 413);
+            exit;
+        }
+
+        $data     = json_decode($raw_input, true) ?? [];
         $messages = $data['messages'] ?? [];
+
+        // Limit message count and individual message length
+        if (count($messages) > 100) {
+            $messages = array_slice($messages, -100);
+        }
+        foreach ($messages as &$msg) {
+            if (is_array($msg) && isset($msg['content']) && is_string($msg['content']) && strlen($msg['content']) > 32000) {
+                $msg['content'] = mb_substr($msg['content'], 0, 32000);
+            }
+        }
+        unset($msg);
         $from     = sanitize_text_field($data['from'] ?? date('Y-m-d', strtotime('-12 months')));
         $to       = sanitize_text_field($data['to']   ?? date('Y-m-d'));
 
@@ -60,6 +78,8 @@ class Ai {
         header('Cache-Control: no-cache, no-store');
         header('X-Accel-Buffering: no');
         header('Connection: keep-alive');
+        header('X-Content-Type-Options: nosniff');
+        header('X-Frame-Options: DENY');
 
         $system  = $this->build_system_prompt($from, $to);
         $msgs_oa = $this->format_messages_openai($messages);
