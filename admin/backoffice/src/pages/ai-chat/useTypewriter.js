@@ -9,8 +9,29 @@ export function useTypewriter(target, active) {
   const rafRef    = useRef(null)
   const targetRef = useRef(target)
 
-  // Garde la cible à jour sans re-déclencher la boucle
-  useEffect(() => { targetRef.current = target }, [target])
+  // Garde la cible à jour et relance la boucle si elle s'était arrêtée
+  useEffect(() => {
+    targetRef.current = target
+    if (active && !rafRef.current) {
+      rafRef.current = requestAnimationFrame(tick)
+    }
+  }, [target])
+
+  function tick() {
+    let caughtUp = false
+    setText(prev => {
+      const t = targetRef.current
+      if (prev.length >= t.length) { caughtUp = true; return prev }
+      const lag  = t.length - prev.length
+      const step = lag > 300 ? 12 : lag > 80 ? 5 : 2
+      return t.slice(0, prev.length + step)
+    })
+    if (caughtUp) {
+      rafRef.current = null
+    } else {
+      rafRef.current = requestAnimationFrame(tick)
+    }
+  }
 
   useEffect(() => {
     if (!active) {
@@ -18,17 +39,6 @@ export function useTypewriter(target, active) {
       if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null }
       setText(target)
       return
-    }
-    function tick() {
-      setText(prev => {
-        const t   = targetRef.current
-        if (prev.length >= t.length) return prev
-        // Accélère si on a du retard pour ne jamais être trop en arrière
-        const lag  = t.length - prev.length
-        const step = lag > 300 ? 12 : lag > 80 ? 5 : 2
-        return t.slice(0, prev.length + step)
-      })
-      rafRef.current = requestAnimationFrame(tick)
     }
     rafRef.current = requestAnimationFrame(tick)
     return () => { if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null } }

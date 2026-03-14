@@ -81,9 +81,10 @@ export default function AIChat() {
   const [sharedLoading, setSharedLoading] = useState(false)
 
   const { toasts, push: toast } = useToast()
-  const scrollRef = useRef(null)
-  const inputRef  = useRef(null)
-  const fileRef   = useRef(null)
+  const scrollRef   = useRef(null)
+  const inputRef    = useRef(null)
+  const fileRef     = useRef(null)
+  const sendingRef  = useRef(false)
 
   const messages = activeConv?.messages ?? []
 
@@ -164,7 +165,8 @@ export default function AIChat() {
 
   // ── Send message ────────────────────────────────────────────────────────────
   const send = useCallback(async (content, attachedImages = []) => {
-    if (!content.trim() || streaming) return
+    if (!content.trim() || streaming || sendingRef.current) return
+    sendingRef.current = true
 
     let convId = activeId
     if (!convId) convId = create(activeProvider, filterParams)
@@ -260,6 +262,7 @@ export default function AIChat() {
       setShowThinking(false)
     } finally {
       setStreaming(false); setShowThinking(false); setStreamText('')
+      sendingRef.current = false
     }
   }, [messages, streaming, filterParams, activeProvider, activeId, create, updateMessages, conversations])
 
