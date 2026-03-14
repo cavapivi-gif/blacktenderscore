@@ -483,7 +483,7 @@ class RestApi {
         $sort_dir = $req->get_param('sort_dir') ?: 'desc';
 
         // Use local DB (bt_reservations) — Regiondo CRM API returns 404 for supplier accounts
-        $db     = new ReservationDb();
+        $db     = new ReservationStats();
         $result = $db->query_customers($page, $per_page, $search, $sort_key, $sort_dir);
 
         // Enrich with avis count from sj_avis CPT if available (single aggregated query)
@@ -552,7 +552,7 @@ class RestApi {
 
         // Stats depuis la DB locale (bt_reservations — solditems importés)
         // Plus fiable et instantané que l'API Regiondo.
-        $local_db = new ReservationDb();
+        $local_db = new ReservationStats();
         $summary  = $local_db->get_summary();
 
         // Customer count from local DB (Regiondo CRM API returns 404 for supplier accounts)

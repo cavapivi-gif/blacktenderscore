@@ -57,7 +57,7 @@ trait AiPrompt {
 
         // ── Données commerciales ──────────────────────────────────────────────
         try {
-            $db       = new ReservationDb();
+            $db       = new ReservationStats();
             $kpis     = $db->query_enhanced_kpis($from, $to);
             $products = $db->query_top_products($from, $to, 10);
             $channels = $db->query_by_channel($from, $to, 10);
