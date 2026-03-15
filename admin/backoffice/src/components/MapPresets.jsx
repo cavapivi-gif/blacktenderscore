@@ -12,13 +12,18 @@ function parseStyle(json) {
 // Remonte à Marseille par défaut — pertinent pour une app activités nautiques.
 
 function MapPreview({ styleJson, apiKey, height = 320 }) {
-  const containerRef = useRef(null)
-  const mapRef       = useRef(null)
-  const loadedRef    = useRef(false)
+  // wrapperRef: React-managed div (no React children inside)
+  // mapNodeRef: manually created div given to Google Maps — avoids removeChild conflict
+  // Google Maps reparents its container div, which breaks React's removeChild assumptions.
+  // By giving Google Maps a non-React node we manage ourselves, React never tries to remove it.
+  const wrapperRef = useRef(null)
+  const mapNodeRef = useRef(null)
+  const mapRef     = useRef(null)
+  const loadedRef  = useRef(false)
 
   const initMap = useCallback(() => {
-    if (!containerRef.current || mapRef.current) return
-    mapRef.current = new window.google.maps.Map(containerRef.current, {
+    if (!mapNodeRef.current || mapRef.current) return
+    mapRef.current = new window.google.maps.Map(mapNodeRef.current, {
       center: { lat: 43.2965, lng: 5.3698 },
       zoom: 13,
       disableDefaultUI: true,
@@ -26,6 +31,21 @@ function MapPreview({ styleJson, apiKey, height = 320 }) {
       styles: parseStyle(styleJson),
     })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Create the Google Maps host node outside React's tree; clean it up on unmount.
+  useEffect(() => {
+    const node = document.createElement('div')
+    node.style.width  = '100%'
+    node.style.height = '100%'
+    mapNodeRef.current = node
+    wrapperRef.current?.appendChild(node)
+    return () => {
+      if (node.parentNode) node.parentNode.removeChild(node)
+      mapNodeRef.current = null
+      mapRef.current     = null
+      loadedRef.current  = false
+    }
+  }, [])
 
   useEffect(() => {
     if (!apiKey || loadedRef.current) return
@@ -62,7 +82,7 @@ function MapPreview({ styleJson, apiKey, height = 320 }) {
 
   return (
     <div className="rounded-xl overflow-hidden border border-border shadow-sm relative">
-      <div ref={containerRef} style={{ height, width: '100%' }} />
+      <div ref={wrapperRef} style={{ height, width: '100%' }} />
       <span className="absolute bottom-2 right-2 text-[10px] bg-black/50 text-white/80 rounded px-1.5 py-0.5 backdrop-blur-sm pointer-events-none select-none">
         Marseille · aperçu
       </span>

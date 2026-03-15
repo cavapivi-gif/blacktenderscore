@@ -288,7 +288,7 @@ trait RestApiStats {
      * soit ?days=N (horizon glissant, 7-90, défaut 30).
      */
     public function get_planner(\WP_REST_Request $req): \WP_REST_Response {
-        $db   = new ReservationDb(); // lit bt_reservations (solditems importés)
+        $db   = new ReservationStats(); // query_calendar() et query_lead_time_buckets() sont dans ReservationStats
         $from = $req->get_param('from');
         $to   = $req->get_param('to');
 
