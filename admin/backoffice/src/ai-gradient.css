@@ -1,0 +1,44 @@
+/* ── AI animated gradient border — utilisé par EventsCorrelator, Planner, Dashboard ── */
+@keyframes bt-gradient-border {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.bt-ai-wrap {
+  --bw: 2px;
+  display: inline-flex;
+  border-radius: calc(6px + var(--bw));
+  background: linear-gradient(60deg, #f79533, #f37055, #ef4e7b, #a166ab, #5073b8, #1098ad, #07b39b, #6fba82);
+  background-size: 300% 300%;
+  animation: bt-gradient-border 3s ease alternate infinite;
+  padding: var(--bw);
+}
+.bt-ai-wrap > button, .bt-ai-wrap > span {
+  border-radius: 6px;
+  background: var(--background);
+}
+.bt-ai-wrap > button:disabled,
+.bt-ai-wrap > button[aria-disabled="true"] {
+  color: #fff !important;
+  opacity: 1 !important;
+  background: transparent !important;
+  font-weight: 600;
+}
+.bt-ai-wrap > button:disabled svg,
+.bt-ai-wrap > button[aria-disabled="true"] svg { color: #fff !important; stroke: #fff !important; }
+
+.bt-ai-btn-solid {
+  background: linear-gradient(60deg, #f79533, #f37055, #ef4e7b, #a166ab, #5073b8, #1098ad, #07b39b, #6fba82);
+  background-size: 300% 300%;
+  animation: bt-gradient-border 3s ease alternate infinite;
+  color: #fff; border: none; cursor: pointer;
+  font-family: inherit; font-weight: 500; letter-spacing: 0.01em; transition: opacity 150ms;
+}
+.bt-ai-btn-solid:hover { opacity: 0.88; }
+
+@keyframes bt-loading-bar {
+  0%   { transform: translateX(-100%); }
+  50%  { transform: translateX(80%); }
+  100% { transform: translateX(200%); }
+}

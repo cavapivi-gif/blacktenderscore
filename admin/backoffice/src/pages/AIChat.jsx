@@ -9,7 +9,7 @@ import { syncChat, deleteChat } from '../lib/chatApi'
 import { useSearchParams } from 'react-router-dom'
 import { useConversations } from '../hooks/useConversations'
 import { RainbowButton } from '../components/ui/rainbow-button'
-import { ChatInputArea } from './ai-chat/ChatInputArea'
+import { ChatInputArea } from '../components/chat/ChatInputArea'
 
 import {
   useToast,

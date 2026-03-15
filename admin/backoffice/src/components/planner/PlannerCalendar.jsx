@@ -3,6 +3,7 @@
  * Affiche les réservations (dots colorés) + événements IA (violet 🎉).
  */
 import { useMemo, forwardRef } from 'react'
+import '../../planner.css'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
