@@ -224,10 +224,11 @@ class ReservationStats extends ReservationDb {
     public function query_calendar(string $from, string $to): array {
         global $wpdb;
 
+        // Planner: on filtre par appointment_date (date de l'activité), pas created_at (date de commande)
         $rows = $wpdb->get_results(
             $wpdb->prepare(
                 "SELECT
-                    DATE_FORMAT(" . self::EDATE . ", '%%Y-%%m-%%d') AS booking_date,
+                    DATE_FORMAT(appointment_date, '%%Y-%%m-%%d') AS booking_date,
                     order_increment_id AS booking_ref,
                     product_name,
                     buyer_name,
@@ -235,8 +236,8 @@ class ReservationStats extends ReservationDb {
                     price_total        AS total_price,
                     booking_status     AS status
                  FROM `{$this->table}`
-                 WHERE " . self::EDATE . " BETWEEN %s AND %s
-                   AND " . self::EDATE . " IS NOT NULL
+                 WHERE appointment_date BETWEEN %s AND %s
+                   AND appointment_date IS NOT NULL
                  ORDER BY appointment_date ASC, id ASC",
                 $from,
                 $to,
