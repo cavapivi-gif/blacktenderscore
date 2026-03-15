@@ -1,5 +1,7 @@
 export { useToast } from './useToast'
-export { useTypewriter } from './useTypewriter'
+export { ChatInputArea } from './ChatInputArea'
+export { FilePreviewCard, PastedContentCard, DragOverlay } from './FilePreviewCards'
+export { useChatFiles } from './useChatFiles'
 export { Markdown } from './Markdown'
 export { StatsWidget } from './StatsWidget'
 export { SuggestedReplies } from './SuggestedReplies'

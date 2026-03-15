@@ -7,7 +7,7 @@ import AiProviderIcon from '../../components/AiProviderIcon'
 import { Markdown } from './Markdown'
 import { StatsWidget } from './StatsWidget'
 import { SuggestedReplies } from './SuggestedReplies'
-import { useTypewriter } from './useTypewriter'
+import { ResponseStream } from '../../components/ui/response-stream'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Message components
@@ -78,8 +78,7 @@ export function UserMsg({ msg, participants, currentUserId }) {
 }
 
 export const AssistantMsg = memo(function AssistantMsg({ msg, streaming = false, onCopy, onShare, isLast = false, onSend }) {
-  const cfg         = getProvider(msg.provider || 'anthropic')
-  const displayText = useTypewriter(msg.content, streaming)
+  const cfg = getProvider(msg.provider || 'anthropic')
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -100,8 +99,14 @@ export const AssistantMsg = memo(function AssistantMsg({ msg, streaming = false,
         <div className="bg-card border border-border/70 rounded-2xl rounded-tl-sm px-4 py-3.5 shadow-sm">
           {streaming
             ? (
-              <div className="text-base leading-relaxed whitespace-pre-wrap">
-                {displayText}
+              <div className="text-sm leading-relaxed">
+                <ResponseStream
+                  textStream={msg.content}
+                  mode="typewriter"
+                  speed={55}
+                  as="span"
+                  className="whitespace-pre-wrap"
+                />
                 <motion.span
                   animate={{ opacity: [1, 0, 1] }}
                   transition={{ duration: 0.6, repeat: Infinity }}
