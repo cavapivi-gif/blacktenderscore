@@ -1,8 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import {
-  SendDiagonal, MediaImage, Xmark, ShareAndroid, Refresh,
-} from 'iconoir-react'
+import { ShareAndroid } from 'iconoir-react'
 
 import { streamChat, api } from '../lib/api'
 import { today, daysAgo } from '../lib/utils'
@@ -10,6 +8,8 @@ import { ChatSharePanel } from '../components/chat/ChatSharePanel'
 import { syncChat, deleteChat } from '../lib/chatApi'
 import { useSearchParams } from 'react-router-dom'
 import { useConversations } from '../hooks/useConversations'
+import { RainbowButton } from '../components/ui/rainbow-button'
+import { ChatInputArea } from './ai-chat/ChatInputArea'
 
 import {
   useToast,
@@ -19,8 +19,6 @@ import {
   UserMsg,
   AssistantMsg,
   ThinkingIndicator,
-  ModelPicker,
-  ImagePreviews,
   ShareModal,
   parseMessageDate,
   detectDataIntent,
@@ -83,8 +81,6 @@ export default function AIChat() {
 
   const { toasts, push: toast } = useToast()
   const scrollRef   = useRef(null)
-  const inputRef    = useRef(null)
-  const fileRef     = useRef(null)
   const sendingRef  = useRef(false)
   const abortRef    = useRef(null)
 
@@ -280,18 +276,8 @@ export default function AIChat() {
     }
   }, [messages, streaming, filterParams, activeProvider, activeId, create, updateMessages, conversations])
 
-  function handleSubmit(e)   { e.preventDefault(); send(input, images) }
-  function handleKeyDown(e)  { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input, images) } }
-
-  function handleFileChange(e) {
-    Array.from(e.target.files ?? []).forEach(file => {
-      if (!file.type.startsWith('image/')) return
-      const reader = new FileReader()
-      reader.onload = ev => setImages(prev => [...prev, { data: ev.target.result.split(',')[1], type: file.type }])
-      reader.readAsDataURL(file)
-    })
-    e.target.value = ''
-  }
+  // ChatInputArea calls onSubmit(e, files, pastedContent) — files/pastedContent ignorés pour l'instant (images base64 gérées en interne)
+  function handleSubmit(e)  { e?.preventDefault(); send(input, images) }
 
   function handleProviderChange(key) {
     setActiveProvider(key)
@@ -373,16 +359,27 @@ export default function AIChat() {
               </div>
             )}
 
+            {/* Nouveau chat */}
+            <RainbowButton
+              onClick={handleNewConv}
+              title="Nouvelle conversation"
+              className="text-xs"
+              style={{ height: '30px' }}
+            >
+              + Nouveau
+            </RainbowButton>
+
             {/* Share button */}
             {activeConv && messages.length > 0 && (
-              <button
+              <RainbowButton
                 onClick={() => setSharePanelOpen(true)}
                 title="Partager cette conversation"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-foreground text-background hover:bg-foreground/85 transition-colors shrink-0"
+                className="text-xs"
+                style={{ height: '30px' }}
               >
                 <ShareAndroid width={12} height={12} strokeWidth={2} />
                 <span className="hidden sm:inline">Partager</span>
-              </button>
+              </RainbowButton>
             )}
           </div>
         </div>
@@ -439,71 +436,22 @@ export default function AIChat() {
           )}
         </div>
 
-        {/* Error */}
-        <AnimatePresence>
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{    opacity: 0, height: 0     }}
-              className="px-6 pb-1"
-            >
-              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
-                <span className="flex-1">{error}</span>
-                {lastFailedRef.current && (
-                  <button
-                    onClick={() => { const f = lastFailedRef.current; lastFailedRef.current = null; setError(null); send(f.content, f.images) }}
-                    className="shrink-0 flex items-center gap-1 px-2 py-1 rounded-md bg-red-100 hover:bg-red-200 transition-colors font-medium"
-                  >
-                    <Refresh width={11} height={11} strokeWidth={2} /> Réessayer
-                  </button>
-                )}
-                <button onClick={() => { setError(null); lastFailedRef.current = null }}><Xmark width={13} height={13} strokeWidth={2} /></button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Input */}
-        <div className="px-4 py-3 shrink-0 border-t bg-background">
-          <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
-            <div className="rounded-2xl bg-card shadow-sm focus-within:shadow-[0_0_0_3px_rgba(26,25,23,0.06)] transition-all">
-              <ImagePreviews images={images} onRemove={i => setImages(p => p.filter((_, idx) => idx !== i))} />
-              <textarea
-                ref={inputRef} rows={1} value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Posez votre question… (Entrée pour envoyer)"
-                disabled={streaming}
-                className="w-full resize-none bg-transparent px-4 py-3 text-sm focus-visible:outline-none placeholder:text-muted-foreground disabled:opacity-50 leading-relaxed"
-                style={{ fieldSizing: 'content', minHeight: '44px', maxHeight: '180px' }}
-              />
-              <div className="flex items-center justify-between px-3 pb-3 gap-2">
-                <div className="flex items-center gap-2">
-                  <button type="button" onClick={() => fileRef.current?.click()}
-                    title="Joindre une image"
-                    className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors shrink-0">
-                    <MediaImage width={15} height={15} strokeWidth={1.5} />
-                  </button>
-                  <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
-                  <ModelPicker active={activeProvider} available={availProviders} onChange={handleProviderChange} />
-                </div>
-                <button type="submit"
-                  disabled={(!input.trim() && !images.length) || streaming}
-                  className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 disabled:opacity-30 disabled:pointer-events-none transition-all shadow-sm shrink-0"
-                >
-                  {streaming
-                    ? <span className="w-3 h-3 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                    : <SendDiagonal width={13} height={13} strokeWidth={2.5} />}
-                </button>
-              </div>
-            </div>
-            <p className="text-[10px] text-muted-foreground mt-1.5 px-1">
-              Shift+Entrée pour un saut de ligne
-              {images.length > 0 && <span className="ml-2 font-medium">{images.length} image{images.length > 1 ? 's' : ''} jointe{images.length > 1 ? 's' : ''}</span>}
-            </p>
-          </form>
-        </div>
+        {/* Input + error bar (délégués à ChatInputArea) */}
+        <ChatInputArea
+          input={input}
+          onInputChange={e => setInput(e.target.value)}
+          onSubmit={handleSubmit}
+          streaming={streaming}
+          images={images}
+          onImagesChange={setImages}
+          activeProvider={activeProvider}
+          availProviders={availProviders}
+          onProviderChange={handleProviderChange}
+          error={error}
+          lastFailed={lastFailedRef.current}
+          onRetry={() => { const f = lastFailedRef.current; lastFailedRef.current = null; setError(null); send(f.content, f.images) }}
+          onErrorDismiss={() => { setError(null); lastFailedRef.current = null }}
+        />
       </div>
 
       {/* Share panel (conversation) */}
