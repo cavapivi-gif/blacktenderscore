@@ -1,0 +1,60 @@
+/* ── FullCalendar — thème design system ─────────────────────────────────── */
+#bt-backoffice-root .fc {
+  --fc-border-color:              var(--border);
+  --fc-button-bg-color:           var(--primary);
+  --fc-button-border-color:       var(--primary);
+  --fc-button-hover-bg-color:     #262626;
+  --fc-button-hover-border-color: #262626;
+  --fc-button-active-bg-color:    #1a1a1a;
+  --fc-today-bg-color:            rgba(10, 10, 10, 0.04);
+  --fc-highlight-color:           rgba(10, 10, 10, 0.06);
+  --fc-page-bg-color:             var(--card);
+  --fc-neutral-bg-color:          var(--muted);
+  --fc-list-event-hover-bg-color: var(--accent);
+}
+#bt-backoffice-root .fc .fc-button {
+  font-family: inherit; font-size: 12px; font-weight: 500;
+  padding: 5px 12px; letter-spacing: 0; text-transform: none;
+  border-radius: var(--radius); transition: opacity 150ms;
+  box-shadow: none !important;
+}
+#bt-backoffice-root .fc .fc-button:focus,
+#bt-backoffice-root .fc .fc-button:focus-visible { box-shadow: none !important; outline: none; }
+#bt-backoffice-root .fc .fc-button-group .fc-button { border-radius: 0; }
+#bt-backoffice-root .fc .fc-button-group .fc-button:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+#bt-backoffice-root .fc .fc-button-group .fc-button:last-child  { border-radius: 0 var(--radius) var(--radius) 0; }
+#bt-backoffice-root .fc .fc-toolbar-title {
+  font-size: 15px; font-weight: 600;
+  color: var(--foreground); letter-spacing: -0.01em;
+}
+#bt-backoffice-root .fc .fc-col-header-cell-cushion {
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--muted-foreground);
+  padding: 8px 4px; text-decoration: none;
+}
+#bt-backoffice-root .fc .fc-daygrid-day-number {
+  font-size: 12px; color: var(--muted-foreground); padding: 6px 8px; text-decoration: none;
+}
+#bt-backoffice-root .fc .fc-day-today .fc-daygrid-day-number { font-weight: 700; color: var(--primary); }
+#bt-backoffice-root .fc .fc-daygrid-day-frame { min-height: 80px; }
+#bt-backoffice-root .fc .fc-event {
+  border-radius: 4px; font-size: 11px; font-family: inherit;
+  cursor: pointer; border: none; padding: 1px 5px; transition: opacity 150ms;
+}
+#bt-backoffice-root .fc .fc-event:hover { opacity: 0.80; }
+#bt-backoffice-root .fc .fc-more-link { color: var(--primary); font-size: 11px; font-weight: 600; text-decoration: none; }
+#bt-backoffice-root .fc .fc-list-day-cushion { background: var(--muted) !important; font-size: 12px; font-weight: 600; }
+#bt-backoffice-root .fc .fc-list-event-title a { text-decoration: none; color: var(--foreground); }
+#bt-backoffice-root .fc .fc-list-event-time { color: var(--muted-foreground); font-size: 11px; }
+#bt-backoffice-root .fc .fc-timegrid-slot-label-cushion { font-size: 11px; color: var(--muted-foreground); }
+#bt-backoffice-root .fc .fc-scrollgrid { border-color: var(--border); }
+#bt-backoffice-root .fc td, #bt-backoffice-root .fc th { border-color: var(--border); }
+#bt-backoffice-root .fc .fc-multimonth { border-color: var(--border); }
+#bt-backoffice-root .fc .fc-multimonth-month { border-color: var(--border); }
+#bt-backoffice-root .fc .fc-multimonth-title {
+  font-size: 13px; font-weight: 600; color: var(--foreground);
+  padding: 8px 12px; background: var(--muted) !important;
+}
+#bt-backoffice-root .fc .fc-multimonth-daygrid { font-size: 11px; }
+#bt-backoffice-root .fc .fc-multimonth .fc-daygrid-day-frame { min-height: 40px; }
+#bt-backoffice-root .fc .fc-multimonth .fc-daygrid-day-number { font-size: 11px; padding: 3px 5px; }

@@ -9,7 +9,7 @@ import { syncChat, deleteChat } from '../lib/chatApi'
 import { useSearchParams } from 'react-router-dom'
 import { useConversations } from '../hooks/useConversations'
 import { RainbowButton } from '../components/ui/rainbow-button'
-import { ChatInputArea } from './ai-chat/ChatInputArea'
+import { ChatInputArea } from '../components/chat/ChatInputArea'
 
 import {
   useToast,
@@ -34,7 +34,7 @@ export default function AIChat() {
     conversations, grouped, activeId, activeConv, dbLoading,
     setActiveId, create, updateMessages, updateProvider, remove, rename, clearAll, loadRemoteMessages, refreshMessages,
   } = useConversations()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const [sidebarWidth,  setSidebarWidth]  = useState(280)
   const isResizing = useRef(false)
@@ -99,6 +99,18 @@ export default function AIChat() {
     if (activeConv?.provider) setActiveProvider(activeConv.provider)
   }, [activeId])
 
+  // Sync URL ↔ activeId : ?chat=<id> quand une conv est ouverte, propre sinon
+  useEffect(() => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev)
+      if (activeId) next.set('chat', activeId)
+      else next.delete('chat')
+      // Conserver éventuels autres params (share, etc.) sauf s'ils entrent en conflit
+      next.delete('share')
+      return next
+    }, { replace: true })
+  }, [activeId])
+
   // Charge les messages + participants à la sélection :
   // - conversation remote (partagée, non locale)
   // - conversation owner synced en DB mais participants pas encore chargés
@@ -124,23 +136,26 @@ export default function AIChat() {
     return () => clearInterval(interval)
   }, [activeId, activeConv?.db_id, activeConv?.participants?.length, refreshMessages])
 
-  // Load shared conversation from URL param (?share=uuid or legacy ?bt_chat=token)
+  // Restauration depuis URL au montage : ?share=<uuid>, ?chat=<id>, ou legacy ?bt_chat=<token>
   useEffect(() => {
-    const shareUuid = searchParams.get('share')
+    const shareUuid  = searchParams.get('share')
+    const chatId     = searchParams.get('chat')
     const legacyToken = searchParams.get('bt_chat')
 
     if (shareUuid) {
-      // New system: load by UUID from DB
       import('../lib/chatApi').then(({ getChat }) => {
         setSharedLoading(true)
         getChat(shareUuid)
-          .then(data => {
-            setActiveId(shareUuid)
-            toast('Conversation partagée chargée')
-          })
+          .then(() => { setActiveId(shareUuid); toast('Conversation partagée chargée') })
           .catch(() => toast('Lien de partage introuvable ou accès refusé', 'error'))
           .finally(() => setSharedLoading(false))
       }).catch(() => toast('Erreur de chargement', 'error'))
+      return
+    }
+
+    // Restauration conversation directe via ?chat=<id>
+    if (chatId) {
+      setActiveId(chatId)
       return
     }
 
@@ -160,10 +175,11 @@ export default function AIChat() {
   // Cleanup : annule le stream en cours si le composant est démonté
   useEffect(() => () => abortRef.current?.abort(), [])
 
-  // Auto-scroll — messages nouveaux + changement de conversation
+  // Auto-scroll — après paint DOM (rAF évite le flash en haut lors du changement de conv)
   useEffect(() => {
     const el = scrollRef.current
-    if (el) el.scrollTop = el.scrollHeight
+    if (!el) return
+    requestAnimationFrame(() => { el.scrollTop = el.scrollHeight })
   }, [messages, streamText, showThinking, activeId])
 
   // ── Send message ────────────────────────────────────────────────────────────

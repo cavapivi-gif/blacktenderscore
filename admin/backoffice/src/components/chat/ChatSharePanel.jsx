@@ -48,7 +48,10 @@ export function ChatSharePanel({ open, onClose, conv }) {
   }
 
   function copyLink() {
-    const url = `${window.location.origin}${window.location.pathname}#/ai-chat?share=${conv?.id}`
+    // share= doit être dans la query string AVANT le hash pour être lisible par le router
+    const base = window.btBackoffice?.admin_url ?? `${window.location.origin}${window.location.pathname}`
+    const page = new URLSearchParams(window.location.search).get('page') ?? 'blacktenderscore'
+    const url  = `${base}?page=${page}&share=${conv?.id}#/ai-chat`
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
