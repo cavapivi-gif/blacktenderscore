@@ -335,7 +335,7 @@ export default function EventsCorrelator({ open, onClose, from, to, bookingsData
       <div className="flex items-start justify-between gap-3 px-6 pt-5 pb-4 border-b">
         <div className="flex flex-col gap-1.5 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <AnimatePresence mode="wait">
+            <AnimatePresence>
               <motion.h2
                 key={step}
                 {...FADE_UP}
@@ -365,7 +365,7 @@ export default function EventsCorrelator({ open, onClose, from, to, bookingsData
 
       {/* ── Corps ──────────────────────────────────────────────────────────── */}
       <div className="px-6 py-5 max-h-[60vh] overflow-y-auto">
-        <AnimatePresence mode="wait">
+        <AnimatePresence>
 
           {/* ── Step 1 : Generate ────────────────────────────────────────── */}
           {step === 'generate' && (
@@ -537,7 +537,7 @@ export default function EventsCorrelator({ open, onClose, from, to, bookingsData
 
       {/* ── Footer ─────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-3 px-6 py-4 border-t bg-muted/20 rounded-b-xl">
-        <AnimatePresence mode="wait">
+        <AnimatePresence>
 
           {step === 'generate' && (
             <motion.div key="footer-generate" {...FADE_IN} className="flex items-center justify-between w-full gap-3">
