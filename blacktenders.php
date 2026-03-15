@@ -16,6 +16,11 @@ define('BT_VERSION',  '1.0.1');
 define('BT_DIR',      plugin_dir_path(__FILE__));
 define('BT_URL',      plugin_dir_url(__FILE__));
 
+// Composer autoload (defuse/php-encryption, pusher/pusher-php-server)
+if (file_exists(BT_DIR . 'vendor/autoload.php')) {
+    require_once BT_DIR . 'vendor/autoload.php';
+}
+
 require_once BT_DIR . 'core/class-loader.php';
 require_once BT_DIR . 'core/class-plugin.php';
 
