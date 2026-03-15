@@ -162,6 +162,7 @@ class Highlights extends AbstractBtWidget {
         ]);
 
         $this->register_section_title_controls(['title' => __('Points forts', 'blacktenderscore')]);
+        $this->register_collapsible_section_control();
 
         $this->add_control('show_icon', [
             'label'        => __('Afficher l\'icône', 'blacktenderscore'),
@@ -354,11 +355,16 @@ class Highlights extends AbstractBtWidget {
 
         if (!$rows) return;
 
-        $layout   = $s['layout'] ?: 'grid';
-        $wrap_cls = $layout === 'list' ? 'bt-highlights__list' : 'bt-highlights__grid';
+        $layout      = $s['layout'] ?: 'grid';
+        $wrap_cls    = $layout === 'list' ? 'bt-highlights__list' : 'bt-highlights__grid';
+        $collapsible = isset($s['collapsible_mode']) && $s['collapsible_mode'] !== '';
 
         echo '<div class="bt-highlights">';
-        $this->render_section_title($s, 'bt-highlights__section-title');
+        if ($collapsible) {
+            $this->render_collapsible_section_open($s, 'bt-highlights__section-title');
+        } else {
+            $this->render_section_title($s, 'bt-highlights__section-title');
+        }
         echo "<div class=\"{$wrap_cls}\">";
 
         foreach ($rows as $row) {
@@ -398,6 +404,9 @@ class Highlights extends AbstractBtWidget {
         }
 
         echo '</div>'; // grid / list
+        if ($collapsible) {
+            $this->render_collapsible_section_close();
+        }
         echo '</div>'; // .bt-highlights
     }
 

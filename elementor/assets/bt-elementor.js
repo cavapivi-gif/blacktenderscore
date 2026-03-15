@@ -244,30 +244,44 @@
         var content = wrap.querySelector('.bt-pricing__reveal-content');
         if (!content) return;
 
-        function openReveal() {
+        // Optionnel : déplacer le contenu (forfaits + résa) dans un conteneur cible (ex. #booking)
+        var targetId = wrap.getAttribute('data-bt-reveal-target');
+        if (targetId) {
+          var target = document.getElementById(targetId);
+          if (target && target !== wrap && !wrap.contains(target)) {
+            target.appendChild(content);
+          }
+        }
+
+        function openReveal(andScroll) {
           content.classList.add('bt-pricing__reveal-content--open');
           btn.setAttribute('aria-expanded', 'true');
           injectBookingLazy(content);
+          if (andScroll) {
+            setTimeout(function () {
+              var scrollEl = content.parentNode;
+              if (scrollEl && scrollEl.nodeType === 1) scrollEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 150);
+          }
         }
 
         btn.addEventListener('click', function () {
           var isOpen = content.classList.contains('bt-pricing__reveal-content--open');
           if (isOpen) {
-            // Refermer si déjà ouvert (toggle)
             content.classList.remove('bt-pricing__reveal-content--open');
             btn.setAttribute('aria-expanded', 'false');
           } else {
-            openReveal();
-            setTimeout(function () {
-              wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }, 100);
+            openReveal(true);
           }
         });
 
-        // Ouverture auto via ancre #id
-        if (wrapperId && window.location.hash === '#' + wrapperId) openReveal();
+        function hashMatches() {
+          var hash = window.location.hash.slice(1);
+          return (wrapperId && hash === wrapperId) || (targetId && hash === targetId);
+        }
+        if (hashMatches()) openReveal(true);
         window.addEventListener('hashchange', function () {
-          if (wrapperId && window.location.hash === '#' + wrapperId) openReveal();
+          if (hashMatches()) openReveal(true);
         });
 
       } else if (mode === 'modal') {
@@ -476,8 +490,64 @@
 
   /* ── Bootstrap ───────────────────────────────────────────────────────────── */
 
+  function initCollapsibleBlock(block) {
+    if (block.getAttribute('data-bt-collapse-init')) return;
+    block.setAttribute('data-bt-collapse-init', '1');
+
+    var mode = block.getAttribute('data-bt-collapsible') || '';
+    var trigger = block.querySelector('.bt-collapsible-block__trigger');
+    var panel = block.querySelector('.bt-collapsible-block__panel');
+    if (!trigger || !panel) return;
+
+    function isActive() {
+      var w = window.innerWidth || document.documentElement.clientWidth;
+      if (mode === 'mobile') return w < 768;
+      if (mode === 'pc') return w >= 768;
+      if (mode === 'mobile_and_pc') return true;
+      return false;
+    }
+
+    function setPanelHeight(open) {
+      if (open) {
+        panel.style.maxHeight = panel.scrollHeight + 'px';
+        block.classList.add('bt-collapsible-block--open');
+        trigger.setAttribute('aria-expanded', 'true');
+      } else {
+        panel.style.maxHeight = '0px';
+        block.classList.remove('bt-collapsible-block--open');
+        trigger.setAttribute('aria-expanded', 'false');
+      }
+    }
+
+    if (!isActive()) {
+      panel.style.maxHeight = 'none';
+      return;
+    }
+    setPanelHeight(false);
+
+    trigger.addEventListener('click', function () {
+      if (!isActive()) return;
+      var open = block.classList.contains('bt-collapsible-block--open');
+      setPanelHeight(!open);
+    });
+
+    window.addEventListener('resize', function () {
+      if (!isActive()) {
+        panel.style.maxHeight = 'none';
+        block.classList.add('bt-collapsible-block--open');
+        trigger.setAttribute('aria-expanded', 'true');
+      } else {
+        if (!block.classList.contains('bt-collapsible-block--open')) {
+          panel.style.maxHeight = '0px';
+        }
+      }
+    });
+  }
+
   function boot(scope) {
     var el = (scope && scope !== document) ? scope : document;
+
+    el.querySelectorAll('.bt-collapsible-block[data-bt-collapsible]').forEach(initCollapsibleBlock);
 
     // data-bt-init évite la double initialisation (DOMContentLoaded + handler)
     el.querySelectorAll('[data-bt-accordion]:not([data-bt-init])').forEach(function (root) {
@@ -564,6 +634,10 @@
     elementorFrontend.elementsHandler.attachHandler('bt-itinerary',     BtWidgetHandler);
     elementorFrontend.elementsHandler.attachHandler('bt-share',         BtWidgetHandler);
     elementorFrontend.elementsHandler.attachHandler('bt-gallery',       BtWidgetHandler);
+    elementorFrontend.elementsHandler.attachHandler('bt-highlights',    BtWidgetHandler);
+    elementorFrontend.elementsHandler.attachHandler('bt-included-excluded', BtWidgetHandler);
+    elementorFrontend.elementsHandler.attachHandler('bt-title-icon-desc',   BtWidgetHandler);
+    elementorFrontend.elementsHandler.attachHandler('bt-taxonomy-display', BtWidgetHandler);
   });
 
   // Fallback : pages sans Elementor JS (ex. thème sans Elementor)

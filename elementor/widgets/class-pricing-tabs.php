@@ -39,13 +39,29 @@ class PricingTabs extends AbstractBtWidget {
 
     protected function register_controls(): void {
 
-        // ── Contenu général ───────────────────────────────────────────────
-        $this->start_controls_section('section_content', [
-            'label' => __('Contenu', 'blacktenderscore'),
+        // ── Titre & description ───────────────────────────────────────────
+        $this->start_controls_section('section_heading', [
+            'label' => __('Titre & description', 'blacktenderscore'),
             'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->register_section_title_controls();
+
+        $this->add_control('section_description', [
+            'label'   => __('Description', 'blacktenderscore'),
+            'type'    => Controls_Manager::TEXTAREA,
+            'default' => '',
+            'rows'    => 3,
+            'dynamic' => ['active' => true],
+        ]);
+
+        $this->end_controls_section();
+
+        // ── Affichage ─────────────────────────────────────────────────────
+        $this->start_controls_section('section_display', [
+            'label' => __('Affichage', 'blacktenderscore'),
+            'tab'   => Controls_Manager::TAB_CONTENT,
+        ]);
 
         $this->add_control('layout', [
             'label'   => __('Format d\'affichage', 'blacktenderscore'),
@@ -66,10 +82,25 @@ class PricingTabs extends AbstractBtWidget {
             'default' => 'tarification_par_forfait',
         ]);
 
+        $this->end_controls_section();
+
+        // ── Prix ─────────────────────────────────────────────────────────
+        $this->start_controls_section('section_price', [
+            'label' => __('Prix', 'blacktenderscore'),
+            'tab'   => Controls_Manager::TAB_CONTENT,
+        ]);
+
         $this->add_control('currency', [
             'label'   => __('Symbole devise', 'blacktenderscore'),
             'type'    => Controls_Manager::TEXT,
             'default' => '€',
+        ]);
+
+        $this->add_control('show_price', [
+            'label'        => __('Afficher le prix', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => 'yes',
         ]);
 
         $this->add_control('show_per_label', [
@@ -105,6 +136,32 @@ class PricingTabs extends AbstractBtWidget {
             'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
+        ]);
+
+        $this->end_controls_section();
+
+        // ── Onglets ──────────────────────────────────────────────────────
+        $this->start_controls_section('section_tabs', [
+            'label' => __('Onglets', 'blacktenderscore'),
+            'tab'   => Controls_Manager::TAB_CONTENT,
+        ]);
+
+        $this->add_control('tab_title_mode', [
+            'label'   => __('Titre des onglets', 'blacktenderscore'),
+            'type'    => Controls_Manager::SELECT,
+            'options' => [
+                'forfait_et_prix' => __('Forfait + prix', 'blacktenderscore'),
+                'prix_seul'       => __('Prix seul', 'blacktenderscore'),
+            ],
+            'default'     => 'forfait_et_prix',
+            'description' => __('Contenu affiché dans chaque onglet (et dans chaque bouton pill en layout boutons).', 'blacktenderscore'),
+        ]);
+
+        $this->add_control('discount_subfield', [
+            'label'       => __('Champ ACF remise (repeater)', 'blacktenderscore'),
+            'type'        => Controls_Manager::TEXT,
+            'default'     => 'is_a_discount',
+            'description' => __('Nom du sous-champ nombre (%). Si > 0, affiche "-X%" à côté du prix (onglet + corps).', 'blacktenderscore'),
         ]);
 
         $this->end_controls_section();
@@ -184,21 +241,22 @@ class PricingTabs extends AbstractBtWidget {
 
         $this->end_controls_section();
 
-        // ── Bouton déclencheur ────────────────────────────────────────────────
+        // ── Bouton « Réserver » et emplacement du contenu ──────────────────────
         $this->start_controls_section('section_trigger', [
-            'label' => __('Bouton déclencheur', 'blacktenderscore'),
+            'label' => __('Bouton « Réserver » et emplacement', 'blacktenderscore'),
             'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('trigger_mode', [
-            'label'   => __('Mode d\'affichage', 'blacktenderscore'),
-            'type'    => Controls_Manager::SELECT,
-            'options' => [
-                'none'   => __('Désactivé (affichage direct)', 'blacktenderscore'),
-                'reveal' => __('Révéler sous le bouton', 'blacktenderscore'),
-                'modal'  => __('Ouvrir en modal / popup', 'blacktenderscore'),
+            'label'       => __('Mode d\'affichage', 'blacktenderscore'),
+            'type'        => Controls_Manager::SELECT,
+            'options'     => [
+                'none'   => __('Désactivé — forfaits + résa visibles directement', 'blacktenderscore'),
+                'reveal' => __('Bouton « Réserver » — clic révèle forfaits + résa (sous le bouton ou dans un conteneur)', 'blacktenderscore'),
+                'modal'  => __('Bouton « Réserver » — ouvre en modal / popup', 'blacktenderscore'),
             ],
-            'default' => 'none',
+            'default'     => 'none',
+            'description' => __('Choisir comment afficher les forfaits et le widget de réservation.', 'blacktenderscore'),
         ]);
 
         $this->add_control('trigger_label', [
@@ -209,12 +267,13 @@ class PricingTabs extends AbstractBtWidget {
             'condition' => ['trigger_mode!' => 'none'],
         ]);
 
-        $this->add_control('trigger_id', [
-            'label'       => __('Ancre HTML (id)', 'blacktenderscore'),
-            'description' => __('Identifiant HTML du wrapper (ex: "booking"). Permet les liens #booking et l\'ouverture automatique.', 'blacktenderscore'),
+        $this->add_control('reveal_target_id', [
+            'label'       => __('ID du conteneur cible', 'blacktenderscore'),
+            'description' => __('Renseigner l\'ID du conteneur Elementor où afficher forfaits + réservation (ex: booking-exc). Donnez le même ID à votre colonne/conteneur dans les paramètres Avancé. Vide = le contenu s\'ouvre sous le bouton.', 'blacktenderscore'),
             'type'        => Controls_Manager::TEXT,
-            'default'     => 'booking',
-            'condition'   => ['trigger_mode!' => 'none'],
+            'default'     => '',
+            'placeholder' => 'booking-exc',
+            'condition'   => ['trigger_mode' => 'reveal'],
         ]);
 
         $this->end_controls_section();
@@ -257,7 +316,24 @@ class PricingTabs extends AbstractBtWidget {
             '{{WRAPPER}} .bt-pricing__note, {{WRAPPER}} .bt-pricing__deposit'
         );
 
+        $this->register_button_style(
+            'discount',
+            'Style — Remise (-X%)',
+            '{{WRAPPER}} .bt-pricing__discount',
+            [],
+            []
+        );
+
         $this->register_section_title_style('{{WRAPPER}} .bt-pricing__section-title');
+
+        $this->register_typography_section(
+            'section_desc',
+            'Style — Description',
+            '{{WRAPPER}} .bt-pricing__section-desc',
+            [],
+            [],
+            ['section_description!' => '']
+        );
 
         $this->register_typography_section(
             'btn_title',
@@ -322,10 +398,12 @@ class PricingTabs extends AbstractBtWidget {
         $trigger_mode = $s['trigger_mode'] ?? 'none';
 
         if ($trigger_mode !== 'none') {
-            $trigger_label = esc_html($s['trigger_label'] ?: __('Réserver', 'blacktenderscore'));
-            $trigger_id    = esc_attr($s['trigger_id'] ?: 'booking');
+            $trigger_label   = esc_html($s['trigger_label'] ?: __('Réserver', 'blacktenderscore'));
+            $reveal_target   = $trigger_mode === 'reveal' ? trim((string) ($s['reveal_target_id'] ?? '')) : '';
+            $wrap_id         = 'bt-pricing-trigger-' . $this->get_id();
+            $data_reveal_tgt = $reveal_target !== '' ? ' data-bt-reveal-target="' . esc_attr($reveal_target) . '"' : '';
 
-            echo "<div class=\"bt-pricing-trigger-wrap\" id=\"{$trigger_id}\" data-bt-trigger=\"{$trigger_mode}\">";
+            echo '<div class="bt-pricing-trigger-wrap" id="' . esc_attr($wrap_id) . '" data-bt-trigger="' . esc_attr($trigger_mode) . '"' . $data_reveal_tgt . '>';
             echo "<button type=\"button\" class=\"bt-pricing__trigger\" aria-expanded=\"false\">{$trigger_label}</button>";
 
             if ($trigger_mode === 'reveal') {
@@ -372,19 +450,24 @@ class PricingTabs extends AbstractBtWidget {
 
         echo "<div class=\"bt-pricing bt-pricing--tabs\" id=\"{$uid}\" data-bt-tabs data-bt-panel-class=\"bt-pricing__panel\"{$uuids_attr}>";
 
-        $this->render_section_title($s, 'bt-pricing__section-title');
+        $this->render_heading_block($s);
 
         // Tab bar
+        $discount_key = isset($s['discount_subfield']) && $s['discount_subfield'] !== '' ? $s['discount_subfield'] : 'is_a_discount';
         echo '<div class="bt-pricing__tablist" role="tablist">';
         foreach ($rows as $i => $row) {
-            $label  = $this->get_tab_label($row, $i);
-            $tab_id = "{$uid}-tab-{$i}";
-            $pan_id = "{$uid}-panel-{$i}";
-            $active = $i === 0 ? ' bt-pricing__tab--active' : '';
-            $sel    = $i === 0 ? 'true' : 'false';
-            $tabi   = $i === 0 ? '0' : '-1';
+            $label   = $this->get_tab_label($row, $i, $s, $currency);
+            $discount = $this->get_discount_value($row, $discount_key);
+            $tab_id  = "{$uid}-tab-{$i}";
+            $pan_id  = "{$uid}-panel-{$i}";
+            $active  = $i === 0 ? ' bt-pricing__tab--active' : '';
+            $sel     = $i === 0 ? 'true' : 'false';
+            $tabi    = $i === 0 ? '0' : '-1';
             echo "<button class=\"bt-pricing__tab{$active}\" id=\"{$tab_id}\" role=\"tab\" aria-selected=\"{$sel}\" aria-controls=\"{$pan_id}\" tabindex=\"{$tabi}\">";
             echo esc_html($label);
+            if ($discount > 0) {
+                echo ' <span class="bt-pricing__discount">-' . (int) $discount . '%</span>';
+            }
             echo '</button>';
         }
         echo '</div>';
@@ -424,7 +507,7 @@ class PricingTabs extends AbstractBtWidget {
         }
         echo '>';
 
-        $this->render_section_title($s, 'bt-pricing__section-title');
+        $this->render_heading_block($s);
 
         // Title
         $title = $s['buttons_title'] ?? '';
@@ -433,22 +516,19 @@ class PricingTabs extends AbstractBtWidget {
             echo "<{$tag} class=\"bt-pricing__btn-title\">" . esc_html($title) . "</{$tag}>";
         }
 
+        $discount_key = isset($s['discount_subfield']) && $s['discount_subfield'] !== '' ? $s['discount_subfield'] : 'is_a_discount';
         // Pill buttons — one per repeater row (same data as tabs)
         echo '<div class="bt-pricing__slots">';
         foreach ($rows as $i => $row) {
-            $label = $this->get_tab_label($row, $i);
-            $uuid  = $tab_uuids[$i] ?? $active_uuid;
-
-            // Optionally append price to button label
-            if (($s['buttons_show_price'] ?? '') === 'yes') {
-                $price = $row['exp_price'] ?? '';
-                if ($price !== '') {
-                    $label .= ' — ' . number_format((float) $price, 0, ',', ' ') . ' ' . ($s['currency'] ?? '€');
-                }
-            }
+            $label    = $this->get_tab_label($row, $i, $s, $currency);
+            $discount = $this->get_discount_value($row, $discount_key);
+            $uuid     = $tab_uuids[$i] ?? $active_uuid;
 
             echo '<button type="button" class="bt-pricing__slot" data-slot-index="' . $i . '" data-uuid="' . esc_attr($uuid) . '">';
             echo esc_html($label);
+            if ($discount > 0) {
+                echo ' <span class="bt-pricing__discount">-' . (int) $discount . '%</span>';
+            }
             echo '</button>';
         }
         echo '</div>'; // .bt-pricing__slots
@@ -481,17 +561,31 @@ class PricingTabs extends AbstractBtWidget {
 
     // ── Shared render helpers ─────────────────────────────────────────────
 
-    private function render_price_block(array $s, array $row, string $currency): void {
-        $price   = $row['exp_price']        ?? '';
-        $note    = $row['exp_pricing_note'] ?? '';
-        $deposit = $row['exp_deposit']      ?? '';
+    /** Affiche le titre de section + description optionnelle. */
+    private function render_heading_block(array $s): void {
+        $this->render_section_title($s, 'bt-pricing__section-title');
+        $desc = trim((string) ($s['section_description'] ?? ''));
+        if ($desc !== '') {
+            echo '<div class="bt-pricing__section-desc">' . wp_kses_post($desc) . '</div>';
+        }
+    }
 
-        if ($price !== '') {
+    private function render_price_block(array $s, array $row, string $currency): void {
+        $price    = $row['exp_price']        ?? '';
+        $note     = $row['exp_pricing_note'] ?? '';
+        $deposit  = $row['exp_deposit']      ?? '';
+        $discount_key = isset($s['discount_subfield']) && $s['discount_subfield'] !== '' ? $s['discount_subfield'] : 'is_a_discount';
+        $discount = $this->get_discount_value($row, $discount_key);
+
+        if ($price !== '' && ($s['show_price'] ?? 'yes') === 'yes') {
             echo '<div class="bt-pricing__price-block">';
             if ($note && $s['show_note'] === 'yes') {
                 echo '<span class="bt-pricing__note">' . esc_html($note) . ' </span>';
             }
             echo '<span class="bt-pricing__price">' . esc_html(number_format((float) $price, 0, ',', ' ')) . ' ' . $currency . '</span>';
+            if ($discount > 0) {
+                echo ' <span class="bt-pricing__discount">-' . (int) $discount . '%</span>';
+            }
             if ($s['show_per_label'] === 'yes') {
                 $per_lbl = esc_html($s['per_label'] ?: __('/ pers.', 'blacktenderscore'));
                 echo '<span class="bt-pricing__per"> ' . $per_lbl . '</span>';
@@ -559,27 +653,51 @@ class PricingTabs extends AbstractBtWidget {
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private function get_tab_label(array $row, int $i): string {
+    /**
+     * Libellé d’onglet / bouton : forfait (durée) et/ou prix selon tab_title_mode.
+     */
+    private function get_tab_label(array $row, int $i, array $s, string $currency): string {
         $term_val = $row['exp_time'] ?? null;
+        $base     = '';
 
         if ($term_val) {
-            if ($term_val instanceof \WP_Term) return $term_val->name;
-            if (is_numeric($term_val)) {
+            if ($term_val instanceof \WP_Term) {
+                $base = $term_val->name;
+            } elseif (is_numeric($term_val)) {
                 $t = get_term((int) $term_val);
-                if ($t && !is_wp_error($t)) return $t->name;
-            }
-            if (is_array($term_val)) {
+                if ($t && !is_wp_error($t)) $base = $t->name;
+            } elseif (is_array($term_val)) {
                 $first = reset($term_val);
-                if ($first instanceof \WP_Term) return $first->name;
-                if (is_numeric($first)) {
+                if ($first instanceof \WP_Term) {
+                    $base = $first->name;
+                } elseif (is_numeric($first)) {
                     $t = get_term((int) $first);
-                    if ($t && !is_wp_error($t)) return $t->name;
+                    if ($t && !is_wp_error($t)) $base = $t->name;
                 }
+            } elseif (is_string($term_val) && $term_val !== '') {
+                $base = $term_val;
             }
-            if (is_string($term_val) && $term_val !== '') return $term_val;
+        }
+        if ($base === '') {
+            $base = sprintf(__('Forfait %d', 'blacktenderscore'), $i + 1);
         }
 
-        return "Forfait " . ($i + 1);
+        $price_raw = $row['exp_price'] ?? '';
+        $price_str = $price_raw !== '' ? number_format((float) $price_raw, 0, ',', ' ') . ' ' . $currency : '';
+
+        $mode = $s['tab_title_mode'] ?? 'forfait_et_prix';
+        if ($mode === 'prix_seul') {
+            return $price_str !== '' ? $price_str : $base;
+        }
+        return $price_str !== '' ? $base . ' — ' . $price_str : $base;
+    }
+
+    /** Valeur du champ remise (%). 0 si absent ou ≤ 0. */
+    private function get_discount_value(array $row, string $subfield): int {
+        $v = $row[$subfield] ?? null;
+        if ($v === null || $v === '') return 0;
+        $n = (int) $v;
+        return $n > 0 ? $n : 0;
     }
 
     private function render_booking_widget(string $uuid, int $post_id, int $index): string {

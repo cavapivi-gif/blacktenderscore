@@ -27,6 +27,7 @@ require_once __DIR__ . '/trait-bt-content-controls.php';
  *   register_grid_layout_controls($sel, $defaults, $label)              — section complète
  *   register_box_style($prefix, $label, $sel, $defaults, $condition)
  *   register_separator_controls($prefix, $label, $sel, $defaults, $condition)
+ *     → inclut l’option « Saut de ligne » ; si activée, le widget doit ajouter .bt-sep--line-break sur l’élément
  *   register_stars_style($prefix, $label, $sel, $defaults, $condition)
  *   register_icon_style_section($prefix, $label, $sel, $defaults, $condition) — section complète icône
  *   register_gap_control($control_id, $label, $selectors[], $default)   — inline (section ouverte)
@@ -44,6 +45,7 @@ require_once __DIR__ . '/trait-bt-content-controls.php';
  *
  * BtContentControls (trait-bt-content-controls.php)
  *   register_cta_button_controls($prefix, $label, $defaults) — inline
+ *   register_collapsible_section_control() — Rendre repliable (mobile / PC / les deux)
  *
  * ─── Exemples d'appel depuis register_controls() ──────────────────────────
  *

@@ -179,6 +179,44 @@ abstract class AbstractBtWidget extends \Elementor\Widget_Base {
     }
 
     /**
+     * Ouvre le bloc repliable (titre cliquable + panneau). À appeler quand collapsible_mode est actif.
+     * Fermer avec render_collapsible_section_close().
+     *
+     * @param array  $s        get_settings_for_display()
+     * @param string $title_class Classe CSS du titre (ex: bt-highlights__section-title)
+     * @param string $key      Clé du setting titre (défaut: section_title)
+     */
+    protected function render_collapsible_section_open(
+        array  $s,
+        string $title_class,
+        string $key = 'section_title'
+    ): void {
+        $mode = $s['collapsible_mode'] ?? '';
+        if ($mode === '') return;
+
+        $uid   = 'bt-collapse-' . $this->get_id();
+        $title = isset($s[$key]) ? (string) $s[$key] : '';
+
+        echo '<div class="bt-collapsible-block" data-bt-collapsible="' . esc_attr($mode) . '" id="' . esc_attr($uid) . '">';
+        echo '<button type="button" class="bt-collapsible-block__trigger" aria-expanded="false" aria-controls="' . esc_attr($uid . '-panel') . '" id="' . esc_attr($uid . '-trigger') . '">';
+        echo '<span class="' . esc_attr($title_class) . '">' . esc_html($title) . '</span>';
+        echo '<span class="bt-collapsible-block__icon" aria-hidden="true">';
+        echo '<span class="bt-collapsible-block__icon--closed"></span>';
+        echo '<span class="bt-collapsible-block__icon--open"></span>';
+        echo '</span>';
+        echo '</button>';
+        echo '<div class="bt-collapsible-block__panel" id="' . esc_attr($uid . '-panel') . '" role="region" aria-labelledby="' . esc_attr($uid . '-trigger') . '">';
+    }
+
+    /**
+     * Ferme le panneau et le wrapper du bloc repliable.
+     */
+    protected function render_collapsible_section_close(): void {
+        echo '</div>'; // .bt-collapsible-block__panel
+        echo '</div>'; // .bt-collapsible-block
+    }
+
+    /**
      * Retourne true si le contexte est l'éditeur Elementor.
      */
     protected function is_edit_mode(): bool {

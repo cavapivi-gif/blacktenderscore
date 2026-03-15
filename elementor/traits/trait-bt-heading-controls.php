@@ -54,9 +54,12 @@ trait BtHeadingControls {
      * Controls générés (prefixés "heading_") :
      *   heading_typography, heading_color, heading_align, heading_spacing
      *
-     * @param string $selector Sélecteur CSS — ex: '{{WRAPPER}} .bt-faq__section-title'
+     * @param string       $selector         Sélecteur CSS — ex: '{{WRAPPER}} .bt-faq__section-title'
+     * @param array|string $spacing_selector Optionnel. Si fourni, l'espacement bas est appliqué à ce(s) sélecteur(s)
+     *                                       au lieu du titre (ex: trigger repliable pour garder l'icône en haut).
+     *                                       Array de [ selector => 'margin-bottom: {{SIZE}}{{UNIT}}' ] ou string.
      */
-    protected function register_section_title_style(string $selector): void {
+    protected function register_section_title_style(string $selector, $spacing_selector = null): void {
         $this->start_controls_section('style_heading', [
             'label'     => __('Style — Titre section', 'blacktenderscore'),
             'tab'       => Controls_Manager::TAB_STYLE,
@@ -85,11 +88,14 @@ trait BtHeadingControls {
             'selectors' => [$selector => 'text-align: {{VALUE}}'],
         ]);
 
+        $spacing_selectors = $spacing_selector !== null
+            ? (is_array($spacing_selector) ? $spacing_selector : [$spacing_selector => 'margin-bottom: {{SIZE}}{{UNIT}}'])
+            : [$selector => 'margin-bottom: {{SIZE}}{{UNIT}}'];
         $this->add_responsive_control('heading_spacing', [
             'label'      => __('Espacement bas', 'blacktenderscore'),
             'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px', 'em'],
-            'selectors'  => [$selector => 'margin-bottom: {{SIZE}}{{UNIT}}'],
+            'selectors'  => $spacing_selectors,
         ]);
 
         $this->end_controls_section();

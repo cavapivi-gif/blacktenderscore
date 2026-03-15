@@ -36,6 +36,7 @@ class IncludedExcluded extends AbstractBtWidget {
         ]);
 
         $this->register_section_title_controls();
+        $this->register_collapsible_section_control();
 
         $this->add_control('show_included', [
             'label'        => __('Afficher colonne Inclus', 'blacktenderscore'),
@@ -229,9 +230,15 @@ class IncludedExcluded extends AbstractBtWidget {
 
         if (!$this->acf_required()) return;
 
+        $collapsible = isset($s['collapsible_mode']) && $s['collapsible_mode'] !== '';
+
         echo '<div class="bt-inclexcl">';
 
-        $this->render_section_title($s, 'bt-inclexcl__section-title');
+        if ($collapsible) {
+            $this->render_collapsible_section_open($s, 'bt-inclexcl__section-title');
+        } else {
+            $this->render_section_title($s, 'bt-inclexcl__section-title');
+        }
 
         echo '<div class="bt-inclexcl__grid">';
 
@@ -310,6 +317,11 @@ class IncludedExcluded extends AbstractBtWidget {
         }
 
         echo '</div>'; // .bt-inclexcl__grid
+
+        if ($collapsible) {
+            $this->render_collapsible_section_close();
+        }
+
         echo '</div>'; // .bt-inclexcl
     }
 

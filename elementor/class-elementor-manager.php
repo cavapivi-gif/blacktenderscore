@@ -20,6 +20,8 @@ use BlackTenders\Elementor\Widgets\Captain;
 use BlackTenders\Elementor\Widgets\IncludedExcluded;
 use BlackTenders\Elementor\Widgets\Share;
 use BlackTenders\Elementor\Widgets\GoogleMap;
+use BlackTenders\Elementor\Widgets\TitleIconDesc;
+use BlackTenders\Elementor\Widgets\TaxonomyDisplay;
 
 defined('ABSPATH') || exit;
 
@@ -226,6 +228,8 @@ class ElementorManager {
         $manager->register(new Captain());
         $manager->register(new IncludedExcluded());
         $manager->register(new Share());
+        $manager->register(new TitleIconDesc());
+        $manager->register(new TaxonomyDisplay());
         // ── Utilitaires ───────────────────────────────────────────────────────
         $manager->register(new GoogleMap());
     }

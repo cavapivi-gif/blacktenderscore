@@ -52,6 +52,38 @@ class FaqAccordion extends AbstractBtWidget {
             'default' => 'exp_faq',
         ]);
 
+        $this->add_control('prioritize_page_questions', [
+            'label'        => __('Mettre en avant les questions de la page', 'blacktenderscore'),
+            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'label_on'     => __('Oui', 'blacktenderscore'),
+            'label_off'    => __('Non', 'blacktenderscore'),
+            'return_value' => 'yes',
+            'default'      => 'yes',
+            'description'  => __('Place les questions de la page courante en premier quand on combine FAQ locale et page liée.', 'blacktenderscore'),
+            'condition'    => ['acf_field' => '__combined_exp_faq'],
+        ]);
+
+        $this->add_control('combined_local_fields', [
+            'label'       => __('Champs ACF locaux (FAQ)', 'blacktenderscore'),
+            'type'        => \Elementor\Controls_Manager::SELECT2,
+            'multiple'    => true,
+            'options'     => self::get_faq_repeater_options(),
+            'default'     => ['exp_faq_current', 'city_faq'],
+            'label_block' => true,
+            'description' => __('Repeaters ACF utilisés pour les FAQ sur cette page (ex: exp_faq_current, city_faq).', 'blacktenderscore'),
+            'condition'   => ['acf_field' => '__combined_exp_faq'],
+        ]);
+
+        $this->add_control('combined_relationship_field', [
+            'label'       => __('Champ relation vers pages FAQ', 'blacktenderscore'),
+            'type'        => \Elementor\Controls_Manager::SELECT,
+            'options'     => self::get_faq_relationship_options(),
+            'default'     => 'exp_faq',
+            'label_block' => true,
+            'description' => __('Champ ACF de type Relationship qui pointe vers les pages FAQ (ex: exp_faq).', 'blacktenderscore'),
+            'condition'   => ['acf_field' => '__combined_exp_faq'],
+        ]);
+
         $this->add_control('layout', [
             'label'   => __('Disposition', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
@@ -388,10 +420,17 @@ class FaqAccordion extends AbstractBtWidget {
 
         if (!$this->acf_required()) return;
 
-        $rows = $this->get_acf_rows(
-            $s['acf_field'],
-            sprintf(__('Aucune FAQ trouvée pour le champ « %s ».', 'blacktenderscore'), $s['acf_field'])
-        );
+        $field = $s['acf_field'] ?? '';
+
+        if ($field === '__combined_exp_faq') {
+            $rows = $this->get_combined_faq_rows($s);
+        } else {
+            $rows = $this->get_acf_rows(
+                $field,
+                sprintf(__('Aucune FAQ trouvée pour le champ « %s ».', 'blacktenderscore'), $field)
+            );
+        }
+
         if (!$rows) return;
 
         $layout = $s['layout'] ?: 'accordion';
@@ -428,6 +467,9 @@ class FaqAccordion extends AbstractBtWidget {
 
         foreach ($rows as $i => $row) {
             [$q, $a]   = $this->resolve_qa($row);
+            if ($q === '' && $a === '') {
+                continue;
+            }
             $item_id   = "{$uid}-item-{$i}";
             $panel_id  = "{$uid}-panel-{$i}";
             $is_active = ($open_first && $i === 0);
@@ -436,14 +478,17 @@ class FaqAccordion extends AbstractBtWidget {
             echo "<li class=\"bt-faq__item{$cls}\">";
             echo "<button class=\"bt-faq__header\" id=\"{$item_id}\" aria-expanded=\"" . ($is_active ? 'true' : 'false') . "\" aria-controls=\"{$panel_id}\">";
 
+        // Wrapper .bt-faq__icon toujours présent :
+        // - pseudo-éléments ::before/::after dessinent un +/− CSS (fallback robuste)
+        // - si des icônes Elementor sont définies, on les injecte à l’intérieur
+        //   et on désactive le +/− CSS via la classe --has-fa (voir CSS).
+        $icon_cls  = $has_fa_icons ? 'bt-faq__icon bt-faq__icon--has-fa' : 'bt-faq__icon';
+        $icon_html = '<span class="' . esc_attr($icon_cls) . '" aria-hidden="true">';
             if ($has_fa_icons) {
-                $icon_html = '<span class="bt-faq__icon-wrap" aria-hidden="true">'
-                           . '<span class="bt-faq__icon--closed">' . $icon_closed_html . '</span>'
-                           . '<span class="bt-faq__icon--open">'   . $icon_open_html   . '</span>'
-                           . '</span>';
-            } else {
-                $icon_html = '<span class="bt-faq__icon" aria-hidden="true"></span>';
+                $icon_html .= '<span class="bt-faq__icon--closed">' . $icon_closed_html . '</span>';
+                $icon_html .= '<span class="bt-faq__icon--open">'   . $icon_open_html   . '</span>';
             }
+            $icon_html .= '</span>';
 
             if ($icon_align === 'left') {
                 echo $icon_html;
@@ -471,6 +516,9 @@ class FaqAccordion extends AbstractBtWidget {
         echo '<div class="bt-faq__tablist" role="tablist">';
         foreach ($rows as $i => $row) {
             [$q]    = $this->resolve_qa($row);
+            if ($q === '') {
+                continue;
+            }
             $q      = $q ?: 'Question ' . ($i + 1);
             $tab_id = "{$uid}-tab-{$i}";
             $pan_id = "{$uid}-tabpanel-{$i}";
@@ -485,6 +533,9 @@ class FaqAccordion extends AbstractBtWidget {
 
         foreach ($rows as $i => $row) {
             [, $a]      = $this->resolve_qa($row);
+            if ($a === '') {
+                continue;
+            }
             $tab_id     = "{$uid}-tab-{$i}";
             $pan_id     = "{$uid}-tabpanel-{$i}";
             $active_cls = $i === 0 ? ' bt-faq__tabpanel--active' : '';
@@ -503,7 +554,184 @@ class FaqAccordion extends AbstractBtWidget {
      * Inclut repeaters et relationships — resolve_qa() gère les deux types.
      */
     private static function get_faq_field_options(): array {
-        return static::acf_field_options('faq', ['exp_faq' => 'FAQ (exp_faq)']);
+        $options = static::acf_field_options('faq', ['exp_faq' => 'FAQ (exp_faq)']);
+
+        // Option virtuelle : combine FAQ de la page courante (repeater) + FAQ d'une page liée (relationship).
+        // La clé commence par "__" pour éviter toute collision avec un vrai nom de champ ACF.
+        $virtual_key   = '__combined_exp_faq';
+        $virtual_label = __('FAQ locale + page liée (combiné)', 'blacktenderscore');
+
+        // On place l’option combinée en tête pour qu’elle soit facile à trouver.
+        return [$virtual_key => $virtual_label] + $options;
+    }
+
+    /**
+     * Champs ACF de type repeater contenant "faq" dans leur nom.
+     *
+     * @return array<string, string>
+     */
+    private static function get_faq_repeater_options(): array {
+        if (!function_exists('acf_get_field_groups')) {
+            return ['exp_faq_current' => 'FAQ pour cette sortie (exp_faq_current) [repeater]'];
+        }
+
+        $options = [];
+        foreach (acf_get_field_groups() as $group) {
+            foreach (acf_get_fields($group['key']) ?: [] as $field) {
+                if (($field['type'] ?? '') !== 'repeater') {
+                    continue;
+                }
+                if (stripos($field['name'] ?? '', 'faq') === false) {
+                    continue;
+                }
+                $name             = $field['name'];
+                $options[$name] = sprintf(
+                    '%s (%s) [repeater]',
+                    $field['label'] ?? $name,
+                    $name
+                );
+            }
+        }
+
+        if (empty($options)) {
+            $options['exp_faq_current'] = 'FAQ pour cette sortie (exp_faq_current) [repeater]';
+            $options['city_faq']        = 'FAQ locale (city_faq) [repeater]';
+        }
+
+        return $options;
+    }
+
+    /**
+     * Champs ACF de type relationship contenant "faq" dans leur nom.
+     *
+     * @return array<string, string>
+     */
+    private static function get_faq_relationship_options(): array {
+        if (!function_exists('acf_get_field_groups')) {
+            return ['exp_faq' => 'FAQ (Schema FAQPage) (exp_faq) [relationship]'];
+        }
+
+        $options = [];
+        foreach (acf_get_field_groups() as $group) {
+            foreach (acf_get_fields($group['key']) ?: [] as $field) {
+                if (($field['type'] ?? '') !== 'relationship') {
+                    continue;
+                }
+                if (stripos($field['name'] ?? '', 'faq') === false) {
+                    continue;
+                }
+                $name             = $field['name'];
+                $options[$name] = sprintf(
+                    '%s (%s) [relationship]',
+                    $field['label'] ?? $name,
+                    $name
+                );
+            }
+        }
+
+        if (empty($options)) {
+            $options['exp_faq'] = 'FAQ (Schema FAQPage) (exp_faq) [relationship]';
+        }
+
+        return $options;
+    }
+
+    /**
+     * Combine les FAQ locales (page courante) et celles d’une page liée via un champ relationship.
+     *
+     * - Repeater locaux   : contrôlés par combined_local_fields (par défaut exp_faq_current, city_faq)
+     * - Relationship FAQ  : contrôlé par combined_relationship_field (par défaut exp_faq)
+     *
+     * @param array $s  Settings complets du widget.
+     * @return array|null
+     */
+    private function get_combined_faq_rows(array $s): ?array {
+        $local_rows = [];
+
+        // Champs repeaters locaux choisis dans le panel (fallback sur nos valeurs historiques).
+        $local_fields = (array) ($s['combined_local_fields'] ?? ['exp_faq_current', 'city_faq']);
+
+        foreach ($local_fields as $field_name) {
+            if (!is_string($field_name) || $field_name === '') {
+                continue;
+            }
+            $rows = $this->get_acf_rows($field_name) ?? [];
+            foreach ((array) $rows as $row) {
+                if (is_array($row)) {
+                    $local_rows[] = $row;
+                }
+            }
+        }
+
+        // Pages FAQ liées via relationship, chacune pouvant contenir un ou plusieurs repeaters de FAQ.
+        $related_rows = [];
+        if (function_exists('get_field')) {
+            $relationship_field = is_string($s['combined_relationship_field'] ?? '')
+                ? $s['combined_relationship_field']
+                : 'exp_faq';
+
+            $related = get_field($relationship_field, get_the_ID());
+            if ($related instanceof \WP_Post) {
+                $related = [$related];
+            }
+            foreach ((array) $related as $rel) {
+                // Relationship peut renvoyer : WP_Post, ID, ou tableau avec clé ID.
+                if ($rel instanceof \WP_Post) {
+                    $post_id = $rel->ID;
+                } elseif (is_numeric($rel)) {
+                    $post_id = (int) $rel;
+                } elseif (is_array($rel) && isset($rel['ID'])) {
+                    $post_id = (int) $rel['ID'];
+                } else {
+                    continue;
+                }
+
+                if ($post_id <= 0) {
+                    continue;
+                }
+
+                $found_rows = false;
+
+                // Réutilise la même liste de repeaters que pour la page courante,
+                // mais appliquée à la page FAQ liée.
+                foreach ($local_fields as $field_name) {
+                    if (!is_string($field_name) || $field_name === '') {
+                        continue;
+                    }
+                    $repeater = get_field($field_name, $post_id);
+                    foreach ((array) $repeater as $row) {
+                        if (is_array($row)) {
+                            $related_rows[] = $row;
+                            $found_rows      = true;
+                        }
+                    }
+                }
+
+                // Si aucun repeater n'a retourné de lignes, ajoute au moins la page FAQ elle-même
+                // (resolve_qa() utilisera faq_description ou le contenu du post).
+                if (!$found_rows) {
+                    $post = get_post($post_id);
+                    if ($post instanceof \WP_Post) {
+                        $related_rows[] = $post;
+                    }
+                }
+            }
+        }
+
+        $prioritize_page = ($s['prioritize_page_questions'] ?? '') === 'yes';
+
+        $rows = $prioritize_page
+            ? array_merge($local_rows, $related_rows)
+            : array_merge($related_rows, $local_rows);
+
+        if (empty($rows)) {
+            if ($this->is_edit_mode()) {
+                $this->render_placeholder(__('Aucune FAQ trouvée pour les champs combinés.', 'blacktenderscore'));
+            }
+            return null;
+        }
+
+        return $rows;
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

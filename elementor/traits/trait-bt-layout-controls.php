@@ -364,6 +364,14 @@ trait BtLayoutControls {
         $this->end_controls_section();
     }
 
+    /**
+     * Section Style pour un séparateur / diviseur visuel.
+     *
+     * Contrôles : {prefix}_as_break (Saut de ligne), {prefix}_color, {prefix}_width,
+     * {prefix}_length, {prefix}_spacing.
+     * Si "Saut de ligne" est activé, le widget doit ajouter la classe .bt-sep--line-break
+     * sur l’élément séparateur pour masquer la ligne (seul l’espacement reste).
+     */
     protected function register_separator_controls(
         string $prefix,
         string $label,
@@ -376,6 +384,16 @@ trait BtLayoutControls {
             $section_args['condition'] = $condition;
         }
         $this->start_controls_section("style_{$prefix}", $section_args);
+
+        $this->add_control("{$prefix}_as_break", [
+            'label'        => __('Saut de ligne', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'label_on'     => __('Oui', 'blacktenderscore'),
+            'label_off'    => __('Non', 'blacktenderscore'),
+            'return_value' => 'yes',
+            'default'      => '',
+            'description'  => __('Masque la ligne et ne garde que l’espace. Pensez à ajouter la classe .bt-sep--line-break sur l’élément séparateur quand activé.', 'blacktenderscore'),
+        ]);
 
         $this->add_control("{$prefix}_color", [
             'label'     => __('Couleur', 'blacktenderscore'),
@@ -410,6 +428,17 @@ trait BtLayoutControls {
             'size_units' => ['px', 'em'],
             'default'    => ['size' => 16, 'unit' => 'px'],
             'selectors'  => [$selector => 'margin-block: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        // Quand "Saut de ligne" est activé, le widget doit ajouter la classe .bt-sep--line-break
+        // sur l’élément séparateur → la ligne est masquée, l’espacement (margin) reste.
+        $break_selector = $selector . '.bt-sep--line-break';
+        $this->add_control("{$prefix}_line_break_style", [
+            'type'      => Controls_Manager::HIDDEN,
+            'default'   => '',
+            'selectors' => [
+                $break_selector => 'height: 0 !important; min-height: 0 !important; background: transparent !important; border: none !important;',
+            ],
         ]);
 
         $this->end_controls_section();

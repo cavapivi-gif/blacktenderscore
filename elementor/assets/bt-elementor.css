@@ -22,6 +22,117 @@
   border-radius: 4px;
 }
 
+/* ── Séparateur : option « Saut de ligne » (trait register_separator_controls) ───
+   Quand le widget ajoute .bt-sep--line-break sur l’élément, la ligne est masquée,
+   seul l’espacement (margin) reste. */
+.bt-sep--line-break {
+  height: 0 !important;
+  min-height: 0 !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+/* ── Bloc repliable (contôle global collapsible_mode) ────────────────────────
+   À partir du titre de section : clic pour ouvrir/fermer, réduit le scroll sur mobile. */
+.bt-collapsible-block__trigger {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--bt-border-light);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+.bt-collapsible-block__trigger:hover {
+  opacity: 0.9;
+}
+.bt-collapsible-block--icon-left .bt-collapsible-block__trigger {
+  flex-direction: row-reverse;
+}
+.bt-collapsible-block--icon-right .bt-collapsible-block__trigger {
+  flex-direction: row;
+}
+.bt-collapsible-block__trigger > span:first-child {
+  flex: 1 1 auto;
+}
+/* Icône repliable : en haut du titre, pas en absolute (fermé = trait, ouvert = chevron) */
+.bt-collapsible-block__icon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.bt-collapsible-block__icon--closed,
+.bt-collapsible-block__icon--open {
+  width: 24px;
+  height: 24px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+/* Fermé : chevron vers le bas (cliquer pour ouvrir) */
+.bt-collapsible-block__icon--closed {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M16.59%208.59003L12%2013.17L7.41%208.59003L6%2010L12%2016L18%2010L16.59%208.59003Z' fill='currentColor'/%3E%3C/svg%3E");
+  display: block;
+}
+.bt-collapsible-block__icon--open {
+  display: none;
+}
+/* Ouvert : trait horizontal (moins, cliquer pour fermer) */
+.bt-collapsible-block__icon--open {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24'%3E%3Cpath d='M19 11H5V13H19V11Z' fill='currentColor'/%3E%3C/svg%3E");
+}
+.bt-collapsible-block--open .bt-collapsible-block__icon--closed {
+  display: none;
+}
+.bt-collapsible-block--open .bt-collapsible-block__icon--open {
+  display: block;
+}
+.bt-collapsible-block__panel {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+.bt-collapsible-block--open .bt-collapsible-block__panel {
+  max-height: 2000px; /* fallback si JS n’a pas encore mis scrollHeight */
+}
+
+/* mobile only : repliable uniquement sur mobile */
+@media (min-width: 768px) {
+  .bt-collapsible-block[data-bt-collapsible="mobile"] .bt-collapsible-block__panel {
+    max-height: none;
+    overflow: visible;
+  }
+  .bt-collapsible-block[data-bt-collapsible="mobile"] .bt-collapsible-block__trigger {
+    cursor: default;
+    pointer-events: none;
+  }
+  .bt-collapsible-block[data-bt-collapsible="mobile"] .bt-collapsible-block__icon {
+    display: none;
+  }
+}
+/* pc only : repliable uniquement sur PC */
+@media (max-width: 767px) {
+  .bt-collapsible-block[data-bt-collapsible="pc"] .bt-collapsible-block__panel {
+    max-height: none;
+    overflow: visible;
+  }
+  .bt-collapsible-block[data-bt-collapsible="pc"] .bt-collapsible-block__trigger {
+    cursor: default;
+    pointer-events: none;
+  }
+  .bt-collapsible-block[data-bt-collapsible="pc"] .bt-collapsible-block__icon {
+    display: none;
+  }
+}
+
 /* ══════════════════════════════════════════════════════════
    WIDGET : Taxonomy List
    ══════════════════════════════════════════════════════════ */
@@ -205,6 +316,13 @@
   opacity: 0;
 }
 
+/* Si le widget utilise des icônes Elementor (Font Awesome, SVG, etc.),
+   on désactive le +/− CSS pour éviter le spam visuel. */
+.bt-faq__icon--has-fa::before,
+.bt-faq__icon--has-fa::after {
+  content: none;
+}
+
 /* ── Icônes FA (selected_icon / selected_active_icon) ─────── */
 .bt-faq__icon--open   { display: none; }
 
@@ -340,6 +458,12 @@
   border-bottom-color: #09142a;
 }
 
+.bt-pricing__section-desc {
+  margin-top: 0.5em;
+  margin-bottom: 1em;
+  opacity: 0.9;
+}
+
 /* ── Panneaux — masqués via CSS ────────────────────────── */
 .bt-pricing__panel {
   display: none !important;
@@ -373,6 +497,13 @@
 .bt-pricing__note {
   font-size: .85em;
   opacity: .7;
+}
+
+.bt-pricing__discount {
+  display: inline-block;
+  font-size: .85em;
+  font-weight: 600;
+  opacity: .9;
 }
 
 .bt-pricing__deposit {
@@ -2285,3 +2416,18 @@
 .bt-gmap--editor .bt-gmap__canvas {
   border: 0;
 }
+
+/* ── BT — Titre + Icône + Descriptif ─────────────────────────────────────── */
+.bt-tid { display: block; }
+.bt-tid__inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.bt-tid__icon { flex-shrink: 0; }
+.bt-tid__desc { flex: 1; margin: 0; }
+
+/* ── BT — Affichage Taxonomie ────────────────────────────────────────────── */
+.bt-taxdisp { display: block; }
+.bt-taxdisp__section-title { margin: 0 0 8px; }
+.bt-taxdisp__text { margin: 0; }

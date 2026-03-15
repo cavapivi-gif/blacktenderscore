@@ -58,6 +58,88 @@ abstract class Abstract_BT_Tag extends \Elementor\Core\DynamicTags\Tag {
     }
 
     /**
+     * Retourne les champs ACF de type repeater pour un SELECT.
+     *
+     * @return array<string, string>  name => label
+     */
+    protected function acf_repeater_field_options(): array {
+
+        if (!function_exists('acf_get_field_groups')) return [];
+
+        $opts = [];
+        foreach (acf_get_field_groups() as $group) {
+            $fields = acf_get_fields($group['key'] ?? '');
+            if (!is_array($fields)) continue;
+            foreach ($fields as $field) {
+                if (($field['type'] ?? '') !== 'repeater') continue;
+                $opts[$field['name']] = $group['title'] . '  →  ' . $field['label'] . '  (' . $field['name'] . ')';
+            }
+        }
+
+        asort($opts);
+        return $opts ?: ['' => __('Aucun repeater ACF trouvé', 'blacktenderscore')];
+    }
+
+    /**
+     * Détecte la structure "horaires" d'un repeater ACF : 1 sous-repeater (N départs) + 1 champ prix.
+     *
+     * Parcourt les sub_fields du repeater, trouve le 1er sous-champ de type repeater (liste d'horaires),
+     * puis le 1er sous-champ texte/number dedans (valeur horaire). Et le 1er number dans le repeater principal (prix).
+     *
+     * @param string $repeater_name Nom du champ repeater (ex. tarification_par_forfait)
+     * @return array{times_subfield: string, time_value_subfield: string, price_subfield: string}|null
+     */
+    protected function acf_detect_repeater_departure_structure(string $repeater_name): ?array {
+
+        if (!function_exists('acf_get_field') || $repeater_name === '') return null;
+
+        $main = acf_get_field($repeater_name);
+        if (!is_array($main) || empty($main['sub_fields'])) return null;
+
+        $times_subfield     = '';
+        $time_value_subfield = '';
+        $price_subfield     = '';
+
+        foreach ($main['sub_fields'] as $sub) {
+            $type = $sub['type'] ?? '';
+            $name = $sub['name'] ?? '';
+            if ($type === 'repeater' && $times_subfield === '') {
+                $times_subfield = $name;
+                $inner = acf_get_field($sub['key'] ?? $name);
+                if (is_array($inner) && !empty($inner['sub_fields'])) {
+                    foreach ($inner['sub_fields'] as $inner_sub) {
+                        $inner_type = $inner_sub['type'] ?? '';
+                        if (in_array($inner_type, ['text', 'number', 'url'], true)) {
+                            $time_value_subfield = $inner_sub['name'] ?? '';
+                            break;
+                        }
+                    }
+                }
+            }
+            if ($type === 'number' && strpos($name, 'price') !== false) {
+                $price_subfield = $name;
+                break;
+            }
+        }
+        if ($price_subfield === '') {
+            foreach ($main['sub_fields'] as $sub) {
+                if (($sub['type'] ?? '') === 'number') {
+                    $price_subfield = $sub['name'] ?? '';
+                    break;
+                }
+            }
+        }
+
+        if ($times_subfield === '' || $time_value_subfield === '') return null;
+
+        return [
+            'times_subfield'      => $times_subfield,
+            'time_value_subfield' => $time_value_subfield,
+            'price_subfield'      => $price_subfield,
+        ];
+    }
+
+    /**
      * Convertit n'importe quelle valeur ACF en chaîne affichable.
      *
      *  - WP_Term ou tableau de WP_Term → nom(s) du/des terme(s)
