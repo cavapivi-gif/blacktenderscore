@@ -94,7 +94,7 @@ function SubItem({ path, label, isLast }) {
 
 export default function Sidebar() {
   const location = useLocation()
-  const [openMenus, setOpenMenus] = useState({ '/settings': true, '/ai-tools': true })
+  const [openMenus, setOpenMenus] = useState({ '/settings': false, '/ai-tools': true })
 
   function toggleMenu(to) {
     setOpenMenus(prev => ({ ...prev, [to]: !prev[to] }))

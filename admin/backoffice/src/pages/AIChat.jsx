@@ -395,7 +395,7 @@ export default function AIChat() {
               Chargement de la conversation…
             </div>
           ) : (
-            <AnimatePresence mode="wait">
+            <AnimatePresence>
               {!hasMessages ? (
                 <WelcomeScreen
                   key="welcome"
