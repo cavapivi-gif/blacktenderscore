@@ -81,7 +81,9 @@ export default function AIChat() {
 
   // ── Vercel AI SDK stream (remplace le reader loop SSE manuel) ────────────────
   const { stream, stop, isLoading, streamText, showThinking } = useAiChat({
-    onFinish: useCallback((content, provider) => {
+    // Pas de useCallback nécessaire : useAiChat stocke ces callbacks en refs,
+    // ce qui garantit que la version fraîche (avec conversations à jour) est toujours appelée.
+    onFinish: (content, provider) => {
       sendingRef.current = false
       const convId = convIdRef.current
       if (!convId || !content) return
@@ -97,17 +99,14 @@ export default function AIChat() {
       if (conv?.db_id) syncChat({ ...conv, messages: finalMsgs }).catch(() => {})
       lastFailedRef.current = null
       statsDataRef.current  = null
-    }, [conversations, updateMessages]),
+    },
 
-    onError: useCallback((err) => {
+    onError: (err) => {
       sendingRef.current = false
       if (err.name !== 'AbortError') {
         setError(err.message || "Erreur de connexion à l'IA.")
-        if (lastFailedRef.current == null) {
-          // Preserve retry context only if user hasn't already retried
-        }
       }
-    }, []),
+    },
   })
 
   // ── Load AI provider status ──────────────────────────────────────────────────
@@ -317,9 +316,11 @@ export default function AIChat() {
               </div>
             )}
 
-            <RainbowButton onClick={handleNewConv} title="Nouvelle conversation" className="text-xs" style={{ height: '30px' }}>
-              + Nouveau
-            </RainbowButton>
+            {activeConv && (
+              <RainbowButton onClick={handleNewConv} title="Nouvelle conversation" className="text-xs" style={{ height: '30px' }}>
+                + Nouveau
+              </RainbowButton>
+            )}
 
             {activeConv && messages.length > 0 && (
               <RainbowButton onClick={() => setSharePanelOpen(true)} title="Partager" className="text-xs" style={{ height: '30px' }}>
