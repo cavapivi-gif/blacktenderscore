@@ -18,6 +18,54 @@ defined('ABSPATH') || exit;
 
 trait BtPricingShared {
 
+    // ── Layout orchestrator ─────────────────────────────────────────────────
+
+    /**
+     * Pattern commun : trigger(optionnel) → wrapper(optionnel) → contenu → quote(optionnel).
+     *
+     * Factorise render_boat_mode() et render_excursion_mode() qui étaient quasi-identiques.
+     *
+     * @param array    $s        Widget settings.
+     * @param int      $post_id  Post ID courant.
+     * @param array    $keys     Mapping des clés settings du trigger :
+     *                             mode, label, label_default, target, target_id,
+     *                             hide_sel, fullwidth, wrap_prefix
+     * @param callable $content  fn(array $s, int $post_id): void — rendu du contenu tarifs.
+     */
+    protected function render_pricing_layout(array $s, int $post_id, array $keys, callable $content): void {
+        $mode = $s[$keys['mode']] ?? 'none';
+
+        if ($mode !== 'none') {
+            $this->render_trigger_open(
+                $s,
+                $mode,
+                $keys['label']         ?? 'trigger_label',
+                $keys['label_default'] ?? 'Voir les tarifs',
+                $keys['target']        ?? 'reveal_target',
+                $keys['target_id']     ?? 'reveal_target_id',
+                $keys['hide_sel']      ?? 'reveal_hide_selector',
+                $keys['fullwidth']     ?? 'trigger_fullwidth',
+                $keys['wrap_prefix']   ?? 'bt-bprice-trigger'
+            );
+        }
+
+        if (($s['show_quote_form'] ?? '') === 'yes') {
+            $this->render_wrapper_open($s);
+        }
+
+        $content($s, $post_id);
+
+        if (($s['show_quote_form'] ?? '') === 'yes') {
+            $this->render_wrapper_between($s);
+            $this->render_embedded_quote_form($s, $post_id);
+            $this->render_wrapper_close();
+        }
+
+        if ($mode !== 'none') {
+            $this->render_trigger_close($mode);
+        }
+    }
+
     // ── Trigger (bouton reveal) ─────────────────────────────────────────────
 
     /**

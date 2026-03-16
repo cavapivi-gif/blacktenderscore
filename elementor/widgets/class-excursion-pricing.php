@@ -409,43 +409,15 @@ class ExcursionPricing extends AbstractBtWidget {
 
         if (!$this->acf_required()) return;
 
-        $this->render_excursion_mode($s, $post_id);
-    }
-
-    /**
-     * Mode excursion : trigger optionnel + forfaits + booking (+ wrapper devis si activé).
-     */
-    private function render_excursion_mode(array $s, int $post_id): void {
-        $trigger_mode = $s['exc_trigger_mode'] ?? 'none';
-
-        if ($trigger_mode !== 'none') {
-            $this->render_trigger_open(
-                $s,
-                $trigger_mode,
-                'exc_trigger_label',
-                'Réserver',
-                'exc_reveal_target',
-                'exc_reveal_target_id',
-                'exc_reveal_hide_selector',
-                'exc_trigger_fullwidth',
-                'bt-pricing-trigger'
-            );
-        }
-
-        if (($s['show_quote_form'] ?? '') === 'yes') {
-            $this->render_wrapper_open($s);
-        }
-
-        $this->render_excursion_pricing($s, $post_id);
-
-        if (($s['show_quote_form'] ?? '') === 'yes') {
-            $this->render_wrapper_between($s);
-            $this->render_embedded_quote_form($s, $post_id);
-            $this->render_wrapper_close();
-        }
-
-        if ($trigger_mode !== 'none') {
-            $this->render_trigger_close($trigger_mode);
-        }
+        $this->render_pricing_layout($s, $post_id, [
+            'mode'          => 'exc_trigger_mode',
+            'label'         => 'exc_trigger_label',
+            'label_default' => 'Réserver',
+            'target'        => 'exc_reveal_target',
+            'target_id'     => 'exc_reveal_target_id',
+            'hide_sel'      => 'exc_reveal_hide_selector',
+            'fullwidth'     => 'exc_trigger_fullwidth',
+            'wrap_prefix'   => 'bt-pricing-trigger',
+        ], fn($s, $pid) => $this->render_excursion_pricing($s, $pid));
     }
 }

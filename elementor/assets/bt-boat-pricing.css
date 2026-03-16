@@ -1,912 +1,234 @@
 /* ══════════════════════════════════════════════════════════
-   QUOTE FORM — Design tokens
+   BT — Tarifs Bateau
+   LAYOUT ONLY — visuel piloté par Elementor controls
+   Couleurs / tailles via CSS custom properties (overridables)
    ══════════════════════════════════════════════════════════ */
 
-   .bt-quote {
-    --_accent: var(--bt-quote-accent, #eff6ff);
-    --_accent-light: var(--bt-quote-accent-light, #dbeafe);
-    --_accent-text: var(--bt-quote-accent-text, #1e3a5f);
-    --_accent-10: color-mix(in srgb, var(--_accent) 10%, transparent);
-    --_accent-20: color-mix(in srgb, var(--_accent) 20%, transparent);
-    --_border: var(--bt-border-light, rgba(0,0,0,.1));
-  }
-  
-  /* ══════════════════════════════════════════════════════════
-     QUOTE FORM — Steps
-     ══════════════════════════════════════════════════════════ */
-  
-  .bt-quote {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  
-  .bt-quote-step {
-    border: 1px solid var(--bt-border-light, rgba(0,0,0,.1));
-    border-radius: 8px;
-    overflow: hidden;
-    transition: opacity .3s ease;
-  }
-  
-  .bt-quote-step:not(.bt-quote-step--active) {
-    opacity: .75;
-  }
-  
-  .bt-quote-step__header {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    gap: 8px 12px;
-    padding: 16px 20px;
-    cursor: pointer;
-    user-select: none;
-  }
-  
-  /* background/color piloté par Elementor controls (qt_step_number_bg, qt_step_number_color) */
-  .bt-quote-step__number {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    font-size: .8em;
-    font-weight: 700;
-    grid-row: 1;
-  }
-  
-  /* font piloté par Elementor typography control */
-  .bt-quote-step__title {
-    grid-row: 1;
-  }
-  
-  .bt-quote-step__summary {
-    grid-column: 2 / -1;
-    grid-row: 2;
-    font-size: .8em;
-    opacity: .55;
-    line-height: 1.3;
-  }
-  
-  /* Hide summary when step is open (content already visible) */
-  .bt-quote-step--active .bt-quote-step__summary {
-    display: none;
-  }
-  
-  /* Hide summary when empty */
-  .bt-quote-step__summary:empty {
-    display: none;
-  }
-  
-  .bt-quote-step__content {
-    display: none;
-    padding: 0 20px 16px;
-  }
-  
-  .bt-quote-step--active .bt-quote-step__content {
-    display: block;
-  }
-  
-  .bt-quote-step__actions {
-    display: none;
-    padding: 0 20px 16px;
-  }
-  
-  .bt-quote-step--active .bt-quote-step__actions {
-    display: flex;
-    justify-content: flex-end;
-  }
-  
-  /* background/color piloté par Elementor controls (qt_btn_next_bg, qt_btn_next_color) */
-  .bt-quote-step__next {
-    padding: 8px 24px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color .2s, transform .1s;
-  }
-  
-  .bt-quote-step__next:hover {
-    filter: brightness(1.1);
-  }
-  
-  .bt-quote-step__next:active {
-    transform: scale(.97);
-  }
-  
-  /* Shake feedback */
-  .bt-quote-step--shake {
-    animation: btQuoteShake .4s ease;
-  }
-  
-  @keyframes btQuoteShake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-6px); }
-    75% { transform: translateX(6px); }
-  }
-  
-  /* ══════════════════════════════════════════════════════════
-     EXCURSION CARDS (Step 1)
-     ══════════════════════════════════════════════════════════ */
-  
-  .bt-quote-exc-cards {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  
-  .bt-quote-exc-card {
-    display: flex;
-    gap: 0;
-    border: 2px solid var(--bt-border-light, rgba(0,0,0,.1));
-    border-radius: 8px;
-    overflow: hidden;
-    cursor: pointer;
-    transition: border-color .2s, box-shadow .2s;
-  }
-  
-  .bt-quote-exc-card:hover {
-    border-color: var(--_accent);
-  }
-  
-  .bt-quote-exc-card[aria-selected="true"] {
-    border-color: var(--_accent);
-    box-shadow: 0 0 0 1px var(--_accent);
-  }
-  
-  .bt-quote-exc-card__img {
-    flex: 0 0 30%;
-    max-width: 30%;
-    position: relative;
-  }
-  
-  .bt-quote-exc-card__img img {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  
-  .bt-quote-exc-card__body {
-    flex: 1;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  
-  .bt-quote-exc-card__title {
-    font-size: 1em;
-    font-weight: 600;
-    margin: 0;
-  }
-  
-  .bt-quote-exc-card__pax {
-    font-size: .85em;
-    opacity: .65;
-    margin: 0;
-  }
-  
-  .bt-quote-exc-card__tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 4px;
-  }
-  
-  .bt-quote-exc-card__tag {
-    display: inline-block;
-    padding: 2px 8px;
-    font-size: .75em;
-    font-weight: 600;
-    border-radius: 12px;
-    background: var(--bt-bg-subtle, rgba(0,0,0,.06));
-  }
-  
-  /* Auto-selected excursion */
-  .bt-quote-exc-auto {
-    padding: 12px 16px;
-    background: var(--bt-bg-subtle, rgba(0,0,0,.03));
-    border-radius: 6px;
-    margin-bottom: 12px;
-  }
-  
-  .bt-quote-exc-auto__name {
-    font-weight: 400;
-    margin: 0;
-  }
-  
-  /* Excursion choice: "Cette excursion" / "Expérience sur mesure" */
-  .bt-quote-exc-choice {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-  
-  /* color/border/background piloté par Elementor controls (qt_exc_choice_*) */
-  .bt-quote-exc-choice__btn {
-    padding: 14px 12px;
-    border: 1.5px solid transparent;
-    border-radius: 10px;
-    background: transparent;
-    cursor: pointer;
-    font: inherit;
-    text-align: center;
-    transition: border-color .2s, box-shadow .2s, background-color .2s, color .2s;
-  }
-  
-  .bt-quote-exc-choice__btn:hover {
-  }
-  
-  .bt-quote-exc-choice__btn--selected,
-  .bt-quote-exc-choice__btn[aria-selected="true"] {border: 1px solid var(--blue-50);border-radius: 0.5rem;}
-  
-  button.bt-quote-exc-choice__btn[aria-selected="false"] {
-      opacity: 0.30;
-  }
-  
-  .bt-quote-exc-custom {
-    margin-top: 12px;
-  }
-  
-  /* Auto-selected boat */
-  .bt-quote-boat-auto {
-    padding: 12px 16px;
-    background: var(--bt-bg-subtle, rgba(0,0,0,.03));
-    border-radius: 6px;
-  }
-  
-  .bt-quote-boat-auto__name {
-    font-weight: 600;
-    margin: 0;
-  }
-  
-  /* ══════════════════════════════════════════════════════════
-     BOAT CARDS — Airbnb-like (Step 2 — loaded via AJAX)
-     ══════════════════════════════════════════════════════════ */
-  
-  .bt-quote-boat-cards {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    min-height: 60px;
-  }
-  
-  /* background piloté par Elementor control (qt_boat_card_bg) */
-  .bt-quote-boat-card {
-    display: flex;
-    gap: 0;
-    border-radius: 10px;
-    overflow: hidden;
-    background-color: white;
-    cursor: pointer;
-    transition: border-color .2s, box-shadow .2s;
-  }
-  
-  .bt-quote-boat-card:hover {
-    border-color: var(--_accent);
-  }
-  
-  /* border-color piloté par Elementor control (qt_boat_card_selected) */
-  .bt-quote-boat-card--selected {
-  }
-  
-  .bt-quote-boat-card__img {
-    flex: 0 0 30%;
-    max-width: 30%;
-    position: relative;
-  }
-  
-  .bt-quote-boat-card__img img {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  
-  .bt-quote-boat-card__body {
-    flex: 1;
-    padding: 14px 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  
-  .bt-quote-boat-card__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-  }
-  
-  /* font piloté par Elementor typography control (qt_boat_title_typo) */
-  .bt-quote-boat-card__title {
-    margin: 0;
-    line-height: 1.3;
-    font-size: 18px;
-  }
-  
-  .bt-quote-boat-card__type {
-    font-size: .7em;
-    font-weight: 500;
-    padding: 2px 6px;
-    border-radius: 4px;
-    background: var(--bt-bg-subtle, rgba(0,0,0,.05));
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  
-  /* color piloté par Elementor control (qt_boat_meta_color) */
-  .bt-quote-boat-card__pax {
-    font-size: .8em;
-    margin: 0;
-  }
-  
-  .bt-quote-boat-card__price {
-    margin: 4px 0 0;
-    display: flex;
-    align-items: flex-start;
-    gap: 0;
+/* ── Design tokens ──────────────────────────────────────── */
+.bt-bprice {
+  --_card-radius:    var(--bt-bprice-card-radius, 12px);
+  --_card-padding:   var(--bt-bprice-card-padding, 24px);
+  --_cards-gap:      var(--bt-bprice-cards-gap, 16px);
+  --_fuel-yes-bg:    var(--bt-bprice-fuel-yes-bg,    #e6f4ea);
+  --_fuel-yes-color: var(--bt-bprice-fuel-yes-color, #2d7a3a);
+  --_fuel-no-bg:     var(--bt-bprice-fuel-no-bg,     #fef3c7);
+  --_fuel-no-color:  var(--bt-bprice-fuel-no-color,  #92400e);
+  --_border:         var(--bt-border-light, rgba(0,0,0,.1));
+}
+
+/* ── Conteneur principal ────────────────────────────────── */
+.bt-bprice {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Layout Cartes côte à côte ──────────────────────────── */
+.bt-bprice__cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--_cards-gap);
+}
+
+.bt-bprice__cards .bt-bprice__card {
+  flex: 1 1 200px;
+}
+
+/* ── Carte individuelle ─────────────────────────────────── */
+.bt-bprice__card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-radius: var(--_card-radius);
+  padding: var(--_card-padding);
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--_border);
+}
+
+.bt-bprice__card-label {
+  font-weight: 600;
+}
+
+/* ── Bloc montant + durée ───────────────────────────────── */
+.bt-bprice__amount-block {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+  line-height: 1;
+}
+
+.bt-bprice__amount {
+  font-size: 1.5em;
+  font-weight: 700;
+}
+
+.bt-bprice__duration {
+  font-size: .875em;
+}
+
+.bt-bprice__per-person {
+  font-size: .8em;
+}
+
+.bt-bprice__note {
+  font-size: .85em;
+  display: block;
+}
+
+.bt-bprice__deposit {
+  font-size: .875em;
+  margin: 0;
+}
+
+/* ── Badges carburant ───────────────────────────────────── */
+.bt-bprice__fuel {
+  display: inline-block;
+  padding: 3px 10px;
+  font-size: .8em;
+  font-weight: 600;
+  border-radius: 999px;
+  margin-top: 4px;
+}
+
+.bt-bprice__fuel--yes {
+  background-color: var(--_fuel-yes-bg);
+  color:            var(--_fuel-yes-color);
+}
+
+.bt-bprice__fuel--no {
+  background-color: var(--_fuel-no-bg);
+  color:            var(--_fuel-no-color);
+}
+
+/* ── Layout Tableau ─────────────────────────────────────── */
+.bt-bprice__table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.bt-bprice__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .95em;
+}
+
+.bt-bprice__table th,
+.bt-bprice__table td {
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--_border);
+}
+
+.bt-bprice__table thead th {
+  font-weight: 600;
+  font-size: .8em;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+/* ── Layout Onglets internes (demi-journée / journée) ────── */
+/* .bt-bprice__tablist et .bt-bprice__tab sont dans bt-elementor.css */
+
+.bt-bprice__tabs {
+  display: flex;
+  flex-direction: column;
+}
+
+.bt-bprice__tablist-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.bt-bprice__panel {
+  display: none;
+}
+
+.bt-bprice__panel--active {
+  display: block;
+  padding-top: 16px;
+}
+
+/* ── Section zones de navigation ───────────────────────── */
+.bt-bprice__zones {
+  margin-top: 8px;
+}
+
+.bt-bprice__zones-title {
+  font-size: .95em;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+
+/* ══════════════════════════════════════════════════════════
+   OUTER WRAPPER TABS — Forfaits | Demande de devis
+   Généré par BtPricingShared::render_wrapper_open()
+   ══════════════════════════════════════════════════════════ */
+
+.bt-bprice-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.bt-bprice-wrapper__tablist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  border-bottom: 2px solid var(--bt-border-light, #e0e0e0);
+  margin-bottom: 0;
+}
+
+/* Styles de base partagés avec .bt-bprice__tab via bt-elementor.css */
+.bt-bprice-wrapper__tab {
+  padding: 10px 20px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  color: var(--bt-tab-inactive-color, #666);
+  white-space: nowrap;
+  transition: color .15s, border-color .15s;
+}
+
+.bt-bprice-wrapper__tab:hover {
+  color: var(--bt-tab-hover-color, #333);
+}
+
+.bt-bprice-wrapper__tab--active {
+  color: var(--bt-tab-active-color, #000);
+  border-bottom-color: var(--bt-tab-active-color, #000);
+}
+
+.bt-bprice-wrapper__panel {
+  display: none;
+}
+
+.bt-bprice-wrapper__panel--active {
+  display: block;
+  padding-top: 20px;
+}
+
+/* ══════════════════════════════════════════════════════════
+   TRIGGER WRAPPER (mode reveal — bouton bateau)
+   ══════════════════════════════════════════════════════════ */
+
+.bt-bprice-trigger-wrap {
+  display: block;
+}
+
+/* ══════════════════════════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════════════════════════ */
+
+@media (max-width: 600px) {
+  .bt-bprice__cards {
     flex-direction: column;
   }
-  
-  .bt-quote-boat-card__price-amount {
-    font-weight: 500;
-    font-size: 14px;
+  .bt-bprice__cards .bt-bprice__card {
+    flex: none;
   }
-  
-  .bt-quote-boat-card__price-suffix {
-    font-size: .8em;
-    opacity: .55;
-  }
-  
-  .bt-quote-boat-card__meta {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 2px;
-  }
-  
-  .bt-quote-boat-card__durations {
-    font-size: .75em;
-    opacity: .5;
-  }
-  
-  .bt-quote-boat-card__fuels {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-  }
-  
-  .bt-quote-boat-card__fuel-badge {
-    display: inline-block;
-    padding: 1px 6px;
-    font-size: .7em;
-    font-weight: 500;
-    border-radius: 4px;
-    background: #e6f4ea;
-    color: #2d7a3a;
-  }
-  
-  .bt-quote-boat-card__more {
-    align-self: stretch;
-    padding: 6px 12px;
-    font-size: .8em;
-    font-weight: 600;
-    border: none;
-    border-top: 1px solid var(--bt-border-light, rgba(0,0,0,.06));
-    border-radius: 0;
-    background: transparent;
-    cursor: pointer;
-    transition: background-color .15s;
-    margin: 4px -12px -12px;
-    padding: 8px 12px;
-    text-align: center;
-    color: var(--bt-primary, #0073aa);
-  }
-  
-  .bt-quote-boat-card__more:hover {
-    background: var(--bt-bg-subtle, rgba(0,0,0,.03));
-  }
-  
-  /* ══════════════════════════════════════════════════════════
-     DURATION CARDS (Step 3 funnel)
-     ══════════════════════════════════════════════════════════ */
-  
-  .bt-quote-duration-cards {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-  
-  .bt-quote-duration-card {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 14px 12px;
-    border: 1.5px solid var(--_accent);
-    border-radius: 10px;
-    background: transparent;
-    color: var(--_accent);
-    cursor: pointer;
-    text-align: center;
-    transition: border-color .2s, box-shadow .2s, background-color .2s, color .2s;
-    user-select: none;
-  }
-  
-  .bt-quote-duration-card:hover {
-    background: var(--_accent-10);
-  }
-  
-  .bt-quote-duration-card[aria-selected="true"] {
-    background: var(--_accent);
-    border-color: var(--_accent);
-    color: var(--_accent-text);
-  }
-  
-  .bt-quote-duration-card__label {
-    font-size: .9em;
-    font-weight: 600;
-  }
-  
-  /* Custom textarea */
-  .bt-quote-fields__textarea {
-    resize: vertical;
-    min-height: 60px;
-  }
-  
-  /* ══════════════════════════════════════════════════════════
-     TIMESLOT — Matin / Après-midi (demi-journée)
-     ══════════════════════════════════════════════════════════ */
-  
-  .bt-quote-timeslot {
-    margin-top: 12px;
-  }
-  
-  .bt-quote-timeslot__options {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-  
-  .bt-quote-timeslot__btn {
-    padding: 10px 12px;
-    border: 1.5px solid var(--_accent);
-    border-radius: 8px;
-    background: transparent;
-    color: var(--_accent);
-    cursor: pointer;
-    font: inherit;
-    font-size: .9em;
-    font-weight: 600;
-    text-align: center;
-    transition: border-color .2s, background-color .2s, color .2s;
-  }
-  
-  .bt-quote-timeslot__btn:hover {
-    background: var(--_accent-10);
-  }
-  
-  .bt-quote-timeslot__btn[aria-selected="true"] {
-    background: var(--_accent);
-    border-color: var(--_accent);
-    color: var(--_accent-text);
-  }
-  
-  /* ══════════════════════════════════════════════════════════
-     DATE PICKER (Step 3)
-     ══════════════════════════════════════════════════════════ */
-  
-  .bt-quote-datepicker__labels {
-    display: flex;
-    gap: 16px;
-    margin-bottom: 16px;
-  }
-  
-  .bt-quote-datepicker__field {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  
-  .bt-quote-datepicker__label {
-    font-size: .8em;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-    opacity: .65;
-  }
-  
-  .bt-quote-datepicker__input {
-    padding: 8px 12px;
-    border: 1.5px solid var(--_border);
-    border-radius: 8px;
-    font-size: .9em;
-    background: transparent;
-    transition: border-color .2s;
-  }
-  
-  .bt-quote-datepicker__input:focus {
-    outline: none;
-    border-color: var(--_accent);
-  }
-  
-  /* Calendar */
-  .bt-dp {
-    user-select: none;
-  }
-  
-  .bt-dp__nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
-  }
-  
-  .bt-dp__month-label {
-    font-weight: 600;
-    font-size: .95em;
-  }
-  
-  .bt-dp__prev,
-  .bt-dp__next {
-    width: 32px;
-    height: 32px;
-    border: 1px solid var(--bt-border-light, rgba(0,0,0,.1));
-    border-radius: 6px;
-    background: transparent;
-    font-size: 1.2em;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color .15s;
-  }
-  
-  .bt-dp__prev:hover,
-  .bt-dp__next:hover {
-    background: var(--bt-bg-subtle, rgba(0,0,0,.04));
-  }
-  
-  .bt-dp__grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 2px;
-  }
-  
-  .bt-dp__day-header {
-    text-align: center;
-    font-size: .75em;
-    font-weight: 600;
-    text-transform: uppercase;
-    opacity: .5;
-    padding: 4px 0;
-  }
-  
-  .bt-dp__cell {
-    text-align: center;
-    padding: 8px 4px;
-    border-radius: 6px;
-    font-size: .85em;
-    cursor: pointer;
-    transition: background-color .15s, color .15s;
-  }
-  
-  .bt-dp__cell:hover:not(.bt-dp__cell--disabled):not(.bt-dp__cell--empty) {
-    background: var(--bt-bg-subtle, rgba(0,0,0,.06));
-  }
-  
-  .bt-dp__cell--empty {
-    cursor: default;
-  }
-  
-  .bt-dp__cell--disabled {
-    opacity: .3;
-    cursor: not-allowed;
-  }
-  
-  .bt-dp__cell--today {
-    font-weight: 700;
-  }
-  
-  .bt-dp__cell--start,
-  .bt-dp__cell--end {
-    background: var(--_accent);
-    color: var(--_accent-text);
-    font-weight: 700;
-  }
-  
-  .bt-dp__cell--range {
-    background: var(--_accent-10);
-    border-radius: 0;
-  }
-  
-  .bt-dp__cell--start {
-    border-radius: 6px 0 0 6px;
-  }
-  
-  .bt-dp__cell--end {
-    border-radius: 0 6px 6px 0;
-  }
-  
-  /* ══════════════════════════════════════════════════════════
-     CONTACT FIELDS (Step 4)
-     ══════════════════════════════════════════════════════════ */
-  
-  .bt-quote-fields {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  
-  .bt-quote-fields__row {
-    display: flex;
-    gap: 16px;
-  }
-  
-  .bt-quote-fields__row > .bt-quote-fields__group {
-    flex: 1;
-  }
-  
-  .bt-quote-fields__group {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  
-  .bt-quote-fields__label {
-    font-size: .8em;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-    opacity: .65;
-  }
-  
-  .bt-quote-fields__input {
-    padding: 10px 14px;
-    border: 1.5px solid var(--_border);
-    border-radius: 8px;
-    font-size: .9em;
-    background: transparent;
-    transition: border-color .2s, box-shadow .2s;
-  }
-  
-  .bt-quote-fields__input:focus {
-    outline: none;
-    border-color: var(--_accent);
-    box-shadow: 0 0 0 2px var(--_accent-20);
-  }
-  
-  .bt-quote-fields__input--error {
-    border-color: #d32f2f;
-    box-shadow: 0 0 0 2px rgba(211, 47, 47, .15);
-  }
-  
-  /* ══════════════════════════════════════════════════════════
-     SUBMIT & MESSAGES (Step 5)
-     ══════════════════════════════════════════════════════════ */
-  
-  .bt-quote-recap {
-    margin-bottom: 16px;
-  }
-  
-  .bt-quote-recap__line {
-    font-size: .9em;
-    margin: 0 0 4px;
-    padding: 6px 0;
-    border-bottom: 1px solid var(--bt-border-light, rgba(0,0,0,.06));
-  }
-  
-  /* background/color piloté par Elementor controls (qt_btn_submit_bg, qt_btn_submit_color) */
-  .bt-quote-submit {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 14px 32px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color .2s, transform .1s;
-    width: 100%;
-  }
-  
-  .bt-quote-submit:hover {
-    filter: brightness(1.1);
-  }
-  
-  .bt-quote-submit:active {
-    transform: scale(.98);
-  }
-  
-  .bt-quote-submit:disabled {
-    opacity: .6;
-    cursor: wait;
-  }
-  
-  .bt-quote-submit--loading::after {
-    content: '';
-    width: 16px;
-    height: 16px;
-    border: 2px solid color-mix(in srgb, var(--_accent-text) 30%, transparent);
-    border-top-color: var(--_accent-text);
-    border-radius: 50%;
-    animation: btQuoteSpin .6s linear infinite;
-  }
-  
-  @keyframes btQuoteSpin {
-    to { transform: rotate(360deg); }
-  }
-  
-  .bt-quote-message {
-    margin-top: 12px;
-    padding: 12px 16px;
-    border-radius: 6px;
-    font-size: .9em;
-    font-weight: 500;
-  }
-  
-  .bt-quote-message:empty {
-    display: none;
-  }
-  
-  /* background/color piloté par Elementor controls (qt_msg_success_*, qt_msg_error_*) */
-  .bt-quote-message--success {
-  }
-  
-  .bt-quote-message--error {
-  }
-  
-  /* ══════════════════════════════════════════════════════════
-     POPUP (Dialog)
-     ══════════════════════════════════════════════════════════ */
-  
-  .bt-quote-popup {
-    border: none;
-    border-radius: 12px;
-    padding: 32px;
-    max-width: 800px;
-    width: 90vw;
-    max-height: 85vh;
-    overflow-y: auto;
-    box-shadow: 0 20px 60px rgba(0,0,0,.25);
-  }
-  
-  .bt-quote-popup::backdrop {
-    background: rgba(0,0,0,.5);
-  }
-  
-  .bt-quote-popup__close {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    width: 32px;
-    height: 32px;
-    border: none;
-    background: var(--bt-bg-subtle, rgba(0,0,0,.06));
-    border-radius: 50%;
-    font-size: 1.2em;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color .15s;
-  }
-  
-  .bt-quote-popup__close:hover {
-    background: rgba(0,0,0,.12);
-  }
-  
-  .bt-quote-popup__title {
-    font-size: 1.2em;
-    font-weight: 700;
-    margin: 0 0 16px;
-  }
-  
-  .bt-quote-popup__table-wrap {
-    overflow-x: auto;
-  }
-  
-  .bt-quote-popup__table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: .9em;
-  }
-  
-  .bt-quote-popup__table th,
-  .bt-quote-popup__table td {
-    padding: 10px 14px;
-    text-align: left;
-    border-bottom: 1px solid rgba(0,0,0,.08);
-  }
-  
-  .bt-quote-popup__table thead th {
-    font-weight: 600;
-    font-size: .8em;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-    opacity: .65;
-  }
-  
-  .bt-quote-popup__tag {
-    display: inline-block;
-    padding: 2px 8px;
-    font-size: .8em;
-    font-weight: 600;
-    border-radius: 12px;
-    background: var(--bt-bg-subtle, rgba(0,0,0,.06));
-  }
-  
-  /* ══════════════════════════════════════════════════════════
-     LOADING SPINNER
-     ══════════════════════════════════════════════════════════ */
-  
-  .bt-quote__loading {
-    display: flex;
-    justify-content: center;
-    padding: 32px 0;
-  }
-  
-  .bt-quote__loading::after {
-    content: '';
-    width: 24px;
-    height: 24px;
-    border: 3px solid var(--bt-border-light, rgba(0,0,0,.12));
-    border-top-color: var(--bt-primary, #0073aa);
-    border-radius: 50%;
-    animation: btQuoteSpin .7s linear infinite;
-  }
-  
-  .bt-quote__empty,
-  .bt-quote__error {
-    text-align: center;
-    padding: 16px;
-    font-size: .9em;
-    opacity: .65;
-  }
-  
-  .bt-quote__error {
-    color: #c62828;
-    opacity: 1;
-  }
-  
-  /* Loop fallback (when no posts found) */
-  .bt-quote-loop-fallback {
-    text-align: center;
-    padding: 24px 16px;
-    font-size: .9em;
-    opacity: .6;
-  }
-  
-  /* ══════════════════════════════════════════════════════════
-     RESPONSIVE
-     ══════════════════════════════════════════════════════════ */
-  
-  @media (max-width: 600px) {
-    .bt-quote-exc-card,
-    .bt-quote-boat-card {
-      flex-direction: column;
-    }
-    .bt-quote-exc-card__img,
-    .bt-quote-boat-card__img {
-      flex: none;
-      max-width: 100%;
-      aspect-ratio: 16/9;
-    }
-    .bt-quote-datepicker__labels {
-      flex-direction: column;
-    }
-    .bt-quote-fields__row {
-      flex-direction: column;
-    }
-    .bt-quote-popup {
-      width: 95vw;
-      padding: 20px;
-    }
-  }
-  
+}
