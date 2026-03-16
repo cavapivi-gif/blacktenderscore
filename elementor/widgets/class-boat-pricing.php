@@ -26,7 +26,7 @@ class BoatPricing extends AbstractBtWidget {
             'title'    => 'BT — Tarifs',
             'icon'     => 'eicon-price-list',
             'keywords' => ['tarif', 'prix', 'bateau', 'excursion', 'forfait', 'demi-journée', 'journée', 'devis', 'bt'],
-            'css'      => ['bt-boat-pricing', 'bt-pricing-tabs'],
+            'css'      => ['bt-boat-pricing', 'bt-quote-form', 'bt-pricing-tabs'],
             'js'       => ['bt-elementor', 'bt-boat-pricing-quote'],
         ];
     }
@@ -878,10 +878,7 @@ class BoatPricing extends AbstractBtWidget {
         // ── 🚤 BATEAU — Titre ──────────────────────────────────────────────
         $this->register_section_title_style('{{WRAPPER}} .bt-bprice__title', null, ['pricing_mode' => 'boat']);
 
-        // ── 🚤 BATEAU — Conteneur prix ──────────────────────────────────
-        $this->register_box_style('container', '🚤 Bateau — Conteneur prix', '{{WRAPPER}} .bt-bprice', [], ['pricing_mode' => 'boat']);
-
-        // ── 🚤 BATEAU — Onglets ½j / Journée ───────────────────────────
+        // ── 🚤 BATEAU — Onglets ½j / Journée (tabs — non fusionné) ────
         $this->register_tabs_nav_style(
             'tab',
             '🚤 Bateau — Onglets ½j / Journée',
@@ -902,51 +899,84 @@ class BoatPricing extends AbstractBtWidget {
             ]
         );
 
-        // ── 🚤 BATEAU — Cartes / Tableau ────────────────────────────────
-        $this->register_box_style('card', '🚤 Bateau — Cartes prix', '{{WRAPPER}} .bt-bprice__card', ['padding' => 24], ['pricing_mode' => 'boat']);
-
-        $this->start_controls_section('style_cards_gap', [
-            'label'     => __('🚤 Bateau — Espacement cartes', 'blacktenderscore'),
-            'tab'       => Controls_Manager::TAB_STYLE,
-            'condition' => ['pricing_mode' => 'boat', 'layout' => 'cards'],
-        ]);
-        $this->add_responsive_control('cards_gap_extra', [
-            'label'      => __('Espacement entre cartes', 'blacktenderscore'),
-            'type'       => Controls_Manager::SLIDER,
-            'size_units' => ['px'],
-            'default'    => ['size' => 16, 'unit' => 'px'],
-            'selectors'  => ['{{WRAPPER}} .bt-bprice__cards' => 'gap: {{SIZE}}{{UNIT}}'],
-        ]);
-        $this->end_controls_section();
-
-        $this->register_typography_section('card_label', '🚤 Bateau — Label forfait', '{{WRAPPER}} .bt-bprice__card-label', [], [], ['pricing_mode' => 'boat']);
-        $this->register_typography_section('price', '🚤 Bateau — Prix', '{{WRAPPER}} .bt-bprice__amount', [], [], ['pricing_mode' => 'boat']);
-        $this->register_typography_section('duration', '🚤 Bateau — Durée', '{{WRAPPER}} .bt-bprice__duration', [], [], ['pricing_mode' => 'boat']);
-
-        // ── 🚤 BATEAU — Badges / Caution ────────────────────────────────
-        $this->start_controls_section('style_badges', [
-            'label'     => __('🚤 Bateau — Badges & caution', 'blacktenderscore'),
+        // ── 🚤 Bateau — Conteneur ─────────────────────────────────────
+        $this->start_controls_section('style_boat_container', [
+            'label'     => __('🚤 Bateau — Conteneur', 'blacktenderscore'),
             'tab'       => Controls_Manager::TAB_STYLE,
             'condition' => ['pricing_mode' => 'boat'],
         ]);
+
+        $this->add_control('container_heading_outer', ['label' => __('Conteneur prix', 'blacktenderscore'), 'type' => Controls_Manager::HEADING]);
+        $this->add_control('container_bg', ['label' => __('Fond', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-bprice' => 'background-color: {{VALUE}}']]);
+        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), ['name' => 'container_border', 'selector' => '{{WRAPPER}} .bt-bprice']);
+        $this->add_responsive_control('container_radius', ['label' => __('Border radius', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px', '%', 'em'], 'selectors' => ['{{WRAPPER}} .bt-bprice' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}']]);
+        $this->add_responsive_control('container_padding', ['label' => __('Padding', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px', 'em'], 'selectors' => ['{{WRAPPER}} .bt-bprice' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}']]);
+        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), ['name' => 'container_shadow', 'selector' => '{{WRAPPER}} .bt-bprice']);
+
+        $this->add_responsive_control('cards_gap_extra', ['label' => __('Espacement entre cartes', 'blacktenderscore'), 'type' => Controls_Manager::SLIDER, 'separator' => 'before', 'size_units' => ['px'], 'default' => ['size' => 16, 'unit' => 'px'], 'selectors' => ['{{WRAPPER}} .bt-bprice__cards' => 'gap: {{SIZE}}{{UNIT}}'], 'condition' => ['layout' => 'cards']]);
+
+        $this->add_control('card_heading', ['label' => __('Cartes', 'blacktenderscore'), 'type' => Controls_Manager::HEADING, 'separator' => 'before']);
+        $this->add_control('card_bg', ['label' => __('Fond carte', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-bprice__card' => 'background-color: {{VALUE}}']]);
+        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), ['name' => 'card_border', 'selector' => '{{WRAPPER}} .bt-bprice__card']);
+        $this->add_responsive_control('card_radius', ['label' => __('Border radius', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px', '%', 'em'], 'selectors' => ['{{WRAPPER}} .bt-bprice__card' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}']]);
+        $this->add_responsive_control('card_padding', ['label' => __('Padding', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px', 'em'], 'default' => ['top' => 24, 'right' => 24, 'bottom' => 24, 'left' => 24, 'unit' => 'px', 'isLinked' => true], 'selectors' => ['{{WRAPPER}} .bt-bprice__card' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}']]);
+        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), ['name' => 'card_shadow', 'selector' => '{{WRAPPER}} .bt-bprice__card']);
+
+        $this->end_controls_section();
+
+        // ── 🚤 Bateau — Typographie ───────────────────────────────────
+        $this->start_controls_section('style_boat_typography', [
+            'label'     => __('🚤 Bateau — Typographie', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_STYLE,
+            'condition' => ['pricing_mode' => 'boat'],
+        ]);
+
+        $this->add_control('typo_heading_label', ['label' => __('Label forfait', 'blacktenderscore'), 'type' => Controls_Manager::HEADING]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), ['name' => 'card_label_typography', 'selector' => '{{WRAPPER}} .bt-bprice__card-label']);
+        $this->add_control('card_label_color', ['label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-bprice__card-label' => 'color: {{VALUE}}']]);
+
+        $this->add_control('typo_heading_price', ['label' => __('Prix', 'blacktenderscore'), 'type' => Controls_Manager::HEADING, 'separator' => 'before']);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), ['name' => 'price_typography', 'selector' => '{{WRAPPER}} .bt-bprice__amount']);
+        $this->add_control('price_color', ['label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-bprice__amount' => 'color: {{VALUE}}']]);
+
+        $this->add_control('typo_heading_duration', ['label' => __('Durée', 'blacktenderscore'), 'type' => Controls_Manager::HEADING, 'separator' => 'before']);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), ['name' => 'duration_typography', 'selector' => '{{WRAPPER}} .bt-bprice__duration']);
+        $this->add_control('duration_color', ['label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-bprice__duration' => 'color: {{VALUE}}']]);
+
+        $this->end_controls_section();
+
+        // ── 🚤 Bateau — Badges & boutons ──────────────────────────────
+        $this->start_controls_section('style_boat_badges_btns', [
+            'label'     => __('🚤 Bateau — Badges & boutons', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_STYLE,
+            'condition' => ['pricing_mode' => 'boat'],
+        ]);
+
+        $this->add_control('badges_heading', ['label' => __('Badges carburant', 'blacktenderscore'), 'type' => Controls_Manager::HEADING]);
         $this->add_control('deposit_color', ['label' => __('Couleur caution', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-bprice__deposit' => 'color: {{VALUE}}'], 'condition' => ['show_deposit' => 'yes']]);
         $this->add_control('fuel_yes_bg',   ['label' => __('Fond badge inclus', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-bprice__fuel--yes' => 'background-color: {{VALUE}}'], 'condition' => ['show_fuel_badge' => 'yes']]);
         $this->add_control('fuel_yes_color', ['label' => __('Texte badge inclus', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-bprice__fuel--yes' => 'color: {{VALUE}}'], 'condition' => ['show_fuel_badge' => 'yes']]);
         $this->add_control('fuel_no_bg',    ['label' => __('Fond badge en sus', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-bprice__fuel--no' => 'background-color: {{VALUE}}'], 'condition' => ['show_fuel_badge' => 'yes']]);
         $this->add_control('fuel_no_color', ['label' => __('Texte badge en sus', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-bprice__fuel--no' => 'color: {{VALUE}}'], 'condition' => ['show_fuel_badge' => 'yes']]);
+
+        $this->add_control('trigger_heading', ['label' => __('Bouton déclencheur', 'blacktenderscore'), 'type' => Controls_Manager::HEADING, 'separator' => 'before', 'condition' => ['trigger_mode!' => 'none']]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), ['name' => 'trigger_btn_typography', 'selector' => '{{WRAPPER}} .bt-pricing__trigger', 'condition' => ['trigger_mode!' => 'none']]);
+        $this->start_controls_tabs('trigger_btn_state_tabs', ['condition' => ['trigger_mode!' => 'none']]);
+        $this->start_controls_tab('trigger_btn_tab_normal', ['label' => __('Normal', 'blacktenderscore')]);
+        $this->add_control('trigger_btn_color', ['label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__trigger' => 'color: {{VALUE}}']]);
+        $this->add_control('trigger_btn_bg', ['label' => __('Fond', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__trigger' => 'background-color: {{VALUE}}']]);
+        $this->end_controls_tab();
+        $this->start_controls_tab('trigger_btn_tab_hover', ['label' => __('Survol', 'blacktenderscore')]);
+        $this->add_control('trigger_btn_color_hover', ['label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__trigger:hover' => 'color: {{VALUE}}']]);
+        $this->add_control('trigger_btn_bg_hover', ['label' => __('Fond', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__trigger:hover' => 'background-color: {{VALUE}}']]);
+        $this->end_controls_tab();
+        $this->end_controls_tabs();
+        $this->add_responsive_control('trigger_btn_padding', ['label' => __('Padding', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px', 'em'], 'selectors' => ['{{WRAPPER}} .bt-pricing__trigger' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'], 'condition' => ['trigger_mode!' => 'none']]);
+        $this->add_responsive_control('trigger_btn_radius', ['label' => __('Border radius', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px', '%', 'em'], 'selectors' => ['{{WRAPPER}} .bt-pricing__trigger' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'], 'condition' => ['trigger_mode!' => 'none']]);
+
         $this->end_controls_section();
 
-        // ── 🚤 BATEAU — Bouton « Voir les tarifs » ──────────────────────
-        $this->register_button_style('trigger_btn', '🚤 Bateau — Bouton déclencheur', '{{WRAPPER}} .bt-pricing__trigger', [], ['pricing_mode' => 'boat', 'trigger_mode!' => 'none']);
-
-        // ══════════════════════════════════════════════════════════════════
-        //  ⛵ EXCURSION
-        // ══════════════════════════════════════════════════════════════════
-
-        // ── ⛵ EXCURSION — Conteneur forfaits ────────────────────────────
-        $this->register_box_style('exc_container', '⛵ Excursion — Conteneur forfaits', '{{WRAPPER}} .bt-pricing', [], ['pricing_mode' => 'excursion']);
-
-        // ── ⛵ EXCURSION — Onglets forfaits (55€ / 75€) ─────────────────
+        // ── ⛵ Excursion — Onglets forfaits (tabs — non fusionné) ──────
         $this->register_tabs_nav_style(
             'exc_tab',
             '⛵ Excursion — Onglets forfaits',
@@ -967,53 +997,71 @@ class BoatPricing extends AbstractBtWidget {
             ]
         );
 
-        $this->register_typography_section('exc_price', '⛵ Excursion — Prix', '{{WRAPPER}} .bt-pricing__price', [], [], ['pricing_mode' => 'excursion']);
-        $this->register_button_style('exc_discount', '⛵ Excursion — Badge remise (-X%)', '{{WRAPPER}} .bt-pricing__discount', [], ['pricing_mode' => 'excursion']);
-        $this->register_button_style('exc_slot', '⛵ Excursion — Boutons pill', '{{WRAPPER}} .bt-pricing__slot', [], ['pricing_mode' => 'excursion', 'exc_layout' => 'buttons']);
-
-        // ── ⛵ EXCURSION — Bouton « Réserver » ──────────────────────────
-        $this->register_button_style('exc_trigger_btn', '⛵ Excursion — Bouton Réserver', '{{WRAPPER}} .bt-pricing__trigger', [], ['pricing_mode' => 'excursion', 'exc_trigger_mode!' => 'none']);
-
-        $this->start_controls_section('style_exc_trigger_layout', [
-            'label'     => __('⛵ Excursion — Layout bouton Réserver', 'blacktenderscore'),
+        // ── ⛵ Excursion — Onglets & boutons ──────────────────────────
+        $this->start_controls_section('style_exc_btns', [
+            'label'     => __('⛵ Excursion — Onglets & boutons', 'blacktenderscore'),
             'tab'       => Controls_Manager::TAB_STYLE,
-            'condition' => ['pricing_mode' => 'excursion', 'exc_trigger_mode!' => 'none'],
+            'condition' => ['pricing_mode' => 'excursion'],
         ]);
-        $this->add_responsive_control('exc_trigger_align', [
-            'label'   => __('Alignement', 'blacktenderscore'),
-            'type'    => Controls_Manager::CHOOSE,
-            'options' => [
-                'flex-start' => ['title' => __('Gauche', 'blacktenderscore'), 'icon' => 'eicon-h-align-left'],
-                'center'     => ['title' => __('Centre', 'blacktenderscore'), 'icon' => 'eicon-h-align-center'],
-                'flex-end'   => ['title' => __('Droite', 'blacktenderscore'), 'icon' => 'eicon-h-align-right'],
-                'stretch'    => ['title' => __('Pleine largeur', 'blacktenderscore'), 'icon' => 'eicon-h-align-stretch'],
-            ],
-            'default'   => 'flex-start',
-            'selectors' => [
-                '{{WRAPPER}} .bt-pricing-trigger-wrap' => 'display: flex; justify-content: {{VALUE}}',
-                '{{WRAPPER}} .bt-pricing-trigger-wrap .bt-pricing__trigger' => 'align-self: {{VALUE}}',
-            ],
-        ]);
-        $this->add_responsive_control('exc_trigger_width', [
-            'label'      => __('Largeur bouton', 'blacktenderscore'),
-            'type'       => Controls_Manager::SLIDER,
-            'size_units' => ['px', '%'],
-            'range'      => ['px' => ['min' => 100, 'max' => 800], '%' => ['min' => 10, 'max' => 100]],
-            'selectors'  => ['{{WRAPPER}} .bt-pricing-trigger-wrap .bt-pricing__trigger' => 'width: {{SIZE}}{{UNIT}}'],
-            'condition'  => ['exc_trigger_align!' => 'stretch'],
-        ]);
+
+        $this->add_control('exc_container_heading', ['label' => __('Conteneur forfaits', 'blacktenderscore'), 'type' => Controls_Manager::HEADING]);
+        $this->add_control('exc_container_bg', ['label' => __('Fond', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing' => 'background-color: {{VALUE}}']]);
+        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), ['name' => 'exc_container_border', 'selector' => '{{WRAPPER}} .bt-pricing']);
+        $this->add_responsive_control('exc_container_radius', ['label' => __('Border radius', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px', '%', 'em'], 'selectors' => ['{{WRAPPER}} .bt-pricing' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}']]);
+        $this->add_responsive_control('exc_container_padding', ['label' => __('Padding', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px', 'em'], 'selectors' => ['{{WRAPPER}} .bt-pricing' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}']]);
+        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), ['name' => 'exc_container_shadow', 'selector' => '{{WRAPPER}} .bt-pricing']);
+
+        $this->add_control('exc_price_heading', ['label' => __('Prix', 'blacktenderscore'), 'type' => Controls_Manager::HEADING, 'separator' => 'before']);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), ['name' => 'exc_price_typography', 'selector' => '{{WRAPPER}} .bt-pricing__price']);
+        $this->add_control('exc_price_color', ['label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__price' => 'color: {{VALUE}}']]);
+
+        $this->add_control('exc_discount_heading', ['label' => __('Badge remise', 'blacktenderscore'), 'type' => Controls_Manager::HEADING, 'separator' => 'before']);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), ['name' => 'exc_discount_typography', 'selector' => '{{WRAPPER}} .bt-pricing__discount']);
+        $this->add_control('exc_discount_color', ['label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__discount' => 'color: {{VALUE}}']]);
+        $this->add_control('exc_discount_bg', ['label' => __('Fond', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__discount' => 'background-color: {{VALUE}}']]);
+
+        $this->add_control('exc_slot_heading', ['label' => __('Boutons pill', 'blacktenderscore'), 'type' => Controls_Manager::HEADING, 'separator' => 'before', 'condition' => ['exc_layout' => 'buttons']]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), ['name' => 'exc_slot_typography', 'selector' => '{{WRAPPER}} .bt-pricing__slot', 'condition' => ['exc_layout' => 'buttons']]);
+        $this->start_controls_tabs('exc_slot_state_tabs', ['condition' => ['exc_layout' => 'buttons']]);
+        $this->start_controls_tab('exc_slot_tab_normal', ['label' => __('Normal', 'blacktenderscore')]);
+        $this->add_control('exc_slot_color', ['label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__slot' => 'color: {{VALUE}}']]);
+        $this->add_control('exc_slot_bg', ['label' => __('Fond', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__slot' => 'background-color: {{VALUE}}']]);
+        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), ['name' => 'exc_slot_border', 'selector' => '{{WRAPPER}} .bt-pricing__slot']);
+        $this->end_controls_tab();
+        $this->start_controls_tab('exc_slot_tab_hover', ['label' => __('Survol', 'blacktenderscore')]);
+        $this->add_control('exc_slot_color_hover', ['label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__slot:hover' => 'color: {{VALUE}}']]);
+        $this->add_control('exc_slot_bg_hover', ['label' => __('Fond', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__slot:hover' => 'background-color: {{VALUE}}']]);
+        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), ['name' => 'exc_slot_border_hover', 'selector' => '{{WRAPPER}} .bt-pricing__slot:hover']);
+        $this->end_controls_tab();
+        $this->end_controls_tabs();
+        $this->add_responsive_control('exc_slot_padding', ['label' => __('Padding', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px', 'em'], 'selectors' => ['{{WRAPPER}} .bt-pricing__slot' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'], 'condition' => ['exc_layout' => 'buttons']]);
+        $this->add_responsive_control('exc_slot_radius', ['label' => __('Border radius', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px', '%', 'em'], 'selectors' => ['{{WRAPPER}} .bt-pricing__slot' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'], 'condition' => ['exc_layout' => 'buttons']]);
+
+        $this->add_control('exc_trigger_heading', ['label' => __('Bouton Réserver', 'blacktenderscore'), 'type' => Controls_Manager::HEADING, 'separator' => 'before', 'condition' => ['exc_trigger_mode!' => 'none']]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), ['name' => 'exc_trigger_btn_typography', 'selector' => '{{WRAPPER}} .bt-pricing__trigger', 'condition' => ['exc_trigger_mode!' => 'none']]);
+        $this->start_controls_tabs('exc_trigger_btn_state_tabs', ['condition' => ['exc_trigger_mode!' => 'none']]);
+        $this->start_controls_tab('exc_trigger_btn_tab_normal', ['label' => __('Normal', 'blacktenderscore')]);
+        $this->add_control('exc_trigger_btn_color', ['label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__trigger' => 'color: {{VALUE}}']]);
+        $this->add_control('exc_trigger_btn_bg', ['label' => __('Fond', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__trigger' => 'background-color: {{VALUE}}']]);
+        $this->end_controls_tab();
+        $this->start_controls_tab('exc_trigger_btn_tab_hover', ['label' => __('Survol', 'blacktenderscore')]);
+        $this->add_control('exc_trigger_btn_color_hover', ['label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__trigger:hover' => 'color: {{VALUE}}']]);
+        $this->add_control('exc_trigger_btn_bg_hover', ['label' => __('Fond', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__trigger:hover' => 'background-color: {{VALUE}}']]);
+        $this->end_controls_tab();
+        $this->end_controls_tabs();
+        $this->add_responsive_control('exc_trigger_btn_padding', ['label' => __('Padding', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px', 'em'], 'selectors' => ['{{WRAPPER}} .bt-pricing__trigger' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'], 'condition' => ['exc_trigger_mode!' => 'none']]);
+        $this->add_responsive_control('exc_trigger_btn_radius', ['label' => __('Border radius', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px', '%', 'em'], 'selectors' => ['{{WRAPPER}} .bt-pricing__trigger' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'], 'condition' => ['exc_trigger_mode!' => 'none']]);
+        $this->add_responsive_control('exc_trigger_align', ['label' => __('Alignement', 'blacktenderscore'), 'type' => Controls_Manager::CHOOSE, 'options' => ['flex-start' => ['title' => __('Gauche', 'blacktenderscore'), 'icon' => 'eicon-h-align-left'], 'center' => ['title' => __('Centre', 'blacktenderscore'), 'icon' => 'eicon-h-align-center'], 'flex-end' => ['title' => __('Droite', 'blacktenderscore'), 'icon' => 'eicon-h-align-right'], 'stretch' => ['title' => __('Pleine largeur', 'blacktenderscore'), 'icon' => 'eicon-h-align-stretch']], 'default' => 'flex-start', 'selectors' => ['{{WRAPPER}} .bt-pricing-trigger-wrap' => 'display: flex; justify-content: {{VALUE}}', '{{WRAPPER}} .bt-pricing-trigger-wrap .bt-pricing__trigger' => 'align-self: {{VALUE}}'], 'condition' => ['exc_trigger_mode!' => 'none']]);
+        $this->add_responsive_control('exc_trigger_width', ['label' => __('Largeur bouton', 'blacktenderscore'), 'type' => Controls_Manager::SLIDER, 'size_units' => ['px', '%'], 'range' => ['px' => ['min' => 100, 'max' => 800], '%' => ['min' => 10, 'max' => 100]], 'selectors' => ['{{WRAPPER}} .bt-pricing-trigger-wrap .bt-pricing__trigger' => 'width: {{SIZE}}{{UNIT}}'], 'condition' => ['exc_trigger_align!' => 'stretch', 'exc_trigger_mode!' => 'none']]);
+
         $this->end_controls_section();
 
-        // ══════════════════════════════════════════════════════════════════
-        //  📋 WRAPPER & DEVIS (les deux modes)
-        // ══════════════════════════════════════════════════════════════════
-
-        // ── 📋 Onglets Forfaits / Devis (tabs mère) ─────────────────────
+        // ── 📋 Onglets Forfaits / Devis (tabs — non fusionné) ─────────
         $this->register_tabs_nav_style(
             'wrapper_tab',
             '📋 Onglets Forfaits / Devis',
             '{{WRAPPER}} .bt-bprice-wrapper__tab',
-            '{{WRAPPER}} .bt-bprice-wrapper__tab[aria-selected="true"]',
+            '{{WRAPPER}} .bt-bprice-wrapper__tab--active',
             '{{WRAPPER}} .bt-bprice-wrapper__tablist',
             ['wrapper_enable' => 'yes'],
             [
@@ -1029,78 +1077,94 @@ class BoatPricing extends AbstractBtWidget {
             ]
         );
 
-        // ── 📋 Devis — Étapes ───────────────────────────────────────────
-        $this->start_controls_section('style_quote_steps', [
-            'label'     => __('📋 Devis — Étapes', 'blacktenderscore'),
+        // ── 📋 Devis — Étapes & formulaire ────────────────────────────
+        $this->start_controls_section('style_quote_form', [
+            'label'     => __('📋 Devis — Étapes & formulaire', 'blacktenderscore'),
             'tab'       => Controls_Manager::TAB_STYLE,
             'condition' => ['wrapper_enable' => 'yes'],
         ]);
+
+        $this->add_control('step_heading_steps', ['label' => __('Étapes', 'blacktenderscore'), 'type' => Controls_Manager::HEADING]);
         $this->add_control('step_closed_opacity', ['label' => __('Opacité étape fermée', 'blacktenderscore'), 'type' => Controls_Manager::SLIDER, 'size_units' => [''], 'range' => ['' => ['min' => 0.1, 'max' => 1, 'step' => 0.05]], 'default' => ['size' => 0.75], 'selectors' => ['{{WRAPPER}} .bt-quote-step:not(.bt-quote-step--active)' => 'opacity: {{SIZE}}']]);
         $this->add_control('step_transition', ['label' => __('Durée transition (ms)', 'blacktenderscore'), 'type' => Controls_Manager::SLIDER, 'size_units' => [''], 'range' => ['' => ['min' => 100, 'max' => 800, 'step' => 50]], 'default' => ['size' => 300], 'selectors' => ['{{WRAPPER}} .bt-quote-step' => 'transition: opacity {{SIZE}}ms ease, max-height {{SIZE}}ms ease']]);
         $this->add_responsive_control('step_gap', ['label' => __('Espacement étapes', 'blacktenderscore'), 'type' => Controls_Manager::SLIDER, 'size_units' => ['px'], 'range' => ['px' => ['min' => 0, 'max' => 40]], 'default' => ['size' => 16, 'unit' => 'px'], 'selectors' => ['{{WRAPPER}} .bt-quote' => 'gap: {{SIZE}}{{UNIT}}']]);
         $this->add_control('step_number_bg', ['label' => __('Fond numéro étape', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-quote-step__number' => 'background-color: {{VALUE}}']]);
         $this->add_control('step_number_color', ['label' => __('Couleur numéro étape', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-quote-step__number' => 'color: {{VALUE}}']]);
-        $this->end_controls_section();
 
-        // ── 📋 Devis — Conteneur formulaire ─────────────────────────────
-        $this->register_box_style('quote_container', '📋 Devis — Conteneur', '{{WRAPPER}} .bt-quote', [], ['wrapper_enable' => 'yes']);
+        $this->add_control('quote_container_heading', ['label' => __('Conteneur', 'blacktenderscore'), 'type' => Controls_Manager::HEADING, 'separator' => 'before']);
+        $this->add_control('quote_container_bg', ['label' => __('Fond', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-quote' => 'background-color: {{VALUE}}']]);
+        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), ['name' => 'quote_container_border', 'selector' => '{{WRAPPER}} .bt-quote']);
+        $this->add_responsive_control('quote_container_radius', ['label' => __('Border radius', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px', '%', 'em'], 'selectors' => ['{{WRAPPER}} .bt-quote' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}']]);
+        $this->add_responsive_control('quote_container_padding', ['label' => __('Padding', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px', 'em'], 'selectors' => ['{{WRAPPER}} .bt-quote' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}']]);
+        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), ['name' => 'quote_container_shadow', 'selector' => '{{WRAPPER}} .bt-quote']);
 
-        // ── 📋 Devis — Bouton Suivant ───────────────────────────────────
-        $this->register_button_style('quote_next', '📋 Devis — Bouton Suivant', '{{WRAPPER}} .bt-quote-step__next', [], ['wrapper_enable' => 'yes']);
+        $this->add_control('quote_next_heading', ['label' => __('Bouton Suivant', 'blacktenderscore'), 'type' => Controls_Manager::HEADING, 'separator' => 'before']);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), ['name' => 'quote_next_typography', 'selector' => '{{WRAPPER}} .bt-quote-step__next']);
+        $this->start_controls_tabs('quote_next_state_tabs');
+        $this->start_controls_tab('quote_next_tab_normal', ['label' => __('Normal', 'blacktenderscore')]);
+        $this->add_control('quote_next_color', ['label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-quote-step__next' => 'color: {{VALUE}}']]);
+        $this->add_control('quote_next_bg', ['label' => __('Fond', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-quote-step__next' => 'background-color: {{VALUE}}']]);
+        $this->end_controls_tab();
+        $this->start_controls_tab('quote_next_tab_hover', ['label' => __('Survol', 'blacktenderscore')]);
+        $this->add_control('quote_next_color_hover', ['label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-quote-step__next:hover' => 'color: {{VALUE}}']]);
+        $this->add_control('quote_next_bg_hover', ['label' => __('Fond', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-quote-step__next:hover' => 'background-color: {{VALUE}}']]);
+        $this->end_controls_tab();
+        $this->end_controls_tabs();
+        $this->add_responsive_control('quote_next_padding', ['label' => __('Padding', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px', 'em'], 'selectors' => ['{{WRAPPER}} .bt-quote-step__next' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}']]);
+        $this->add_responsive_control('quote_next_radius', ['label' => __('Border radius', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px', '%', 'em'], 'selectors' => ['{{WRAPPER}} .bt-quote-step__next' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}']]);
 
-        // ── 📋 Devis — Champs formulaire ────────────────────────────────
-        $this->start_controls_section('style_quote_fields', [
-            'label'     => __('📋 Devis — Champs', 'blacktenderscore'),
-            'tab'       => Controls_Manager::TAB_STYLE,
-            'condition' => ['wrapper_enable' => 'yes'],
-        ]);
+        $this->add_control('fields_heading', ['label' => __('Champs formulaire', 'blacktenderscore'), 'type' => Controls_Manager::HEADING, 'separator' => 'before']);
         $this->add_control('field_label_color',  ['label' => __('Couleur labels', 'blacktenderscore'),  'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-quote-fields__label, {{WRAPPER}} .bt-quote-datepicker__label' => 'color: {{VALUE}}']]);
         $this->add_control('field_bg',           ['label' => __('Fond champs', 'blacktenderscore'),     'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-quote-fields__input, {{WRAPPER}} .bt-quote-datepicker__input' => 'background-color: {{VALUE}}']]);
         $this->add_control('field_border_color', ['label' => __('Bordure champs', 'blacktenderscore'),  'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-quote-fields__input, {{WRAPPER}} .bt-quote-datepicker__input' => 'border-color: {{VALUE}}']]);
         $this->add_control('field_focus_color',  ['label' => __('Bordure focus', 'blacktenderscore'),   'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-quote-fields__input:focus, {{WRAPPER}} .bt-quote-datepicker__input:focus' => 'border-color: {{VALUE}}; box-shadow: 0 0 0 2px color-mix(in srgb, {{VALUE}} 20%, transparent)']]);
         $this->add_responsive_control('field_radius',  ['label' => __('Border radius', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px'], 'selectors' => ['{{WRAPPER}} .bt-quote-fields__input, {{WRAPPER}} .bt-quote-datepicker__input' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}']]);
         $this->add_responsive_control('field_padding', ['label' => __('Padding', 'blacktenderscore'),       'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px', 'em'], 'selectors' => ['{{WRAPPER}} .bt-quote-fields__input, {{WRAPPER}} .bt-quote-datepicker__input' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}']]);
-        $this->end_controls_section();
 
-        // ── 📋 Devis — Cards durée ──────────────────────────────────────
-        $this->start_controls_section('style_quote_duration', [
-            'label'     => __('📋 Devis — Cards durée', 'blacktenderscore'),
-            'tab'       => Controls_Manager::TAB_STYLE,
-            'condition' => ['wrapper_enable' => 'yes'],
-        ]);
+        $this->add_control('duration_cards_heading', ['label' => __('Cards durée', 'blacktenderscore'), 'type' => Controls_Manager::HEADING, 'separator' => 'before']);
         $this->add_control('duration_card_border',        ['label' => __('Bordure', 'blacktenderscore'),            'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-quote-duration-card' => 'border-color: {{VALUE}}']]);
         $this->add_control('duration_card_bg',            ['label' => __('Fond', 'blacktenderscore'),               'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-quote-duration-card' => 'background-color: {{VALUE}}']]);
         $this->add_control('duration_card_active_border', ['label' => __('Bordure sélectionné', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-quote-duration-card[aria-selected="true"]' => 'border-color: {{VALUE}}; box-shadow: 0 0 0 1px {{VALUE}}']]);
         $this->add_control('duration_card_active_bg',     ['label' => __('Fond sélectionné', 'blacktenderscore'),    'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-quote-duration-card[aria-selected="true"]' => 'background-color: {{VALUE}}']]);
         $this->add_responsive_control('duration_card_radius', ['label' => __('Border radius', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px'], 'selectors' => ['{{WRAPPER}} .bt-quote-duration-card' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}']]);
+
         $this->end_controls_section();
 
-        // ── 📋 Devis — Messages résultat ────────────────────────────────
-        $this->start_controls_section('style_quote_messages', [
-            'label'     => __('📋 Devis — Messages résultat', 'blacktenderscore'),
+        // ── 📋 Devis — Récap & popup ──────────────────────────────────
+        $this->start_controls_section('style_quote_recap', [
+            'label'     => __('📋 Devis — Récap & popup', 'blacktenderscore'),
             'tab'       => Controls_Manager::TAB_STYLE,
             'condition' => ['wrapper_enable' => 'yes'],
         ]);
+
+        $this->add_control('msg_heading', ['label' => __('Messages résultat', 'blacktenderscore'), 'type' => Controls_Manager::HEADING]);
         $this->add_control('msg_success_bg',    ['label' => __('Fond succès', 'blacktenderscore'),  'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-quote-message--success' => 'background-color: {{VALUE}}']]);
         $this->add_control('msg_success_color', ['label' => __('Texte succès', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-quote-message--success' => 'color: {{VALUE}}']]);
         $this->add_control('msg_error_bg',      ['label' => __('Fond erreur', 'blacktenderscore'),  'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-quote-message--error' => 'background-color: {{VALUE}}']]);
         $this->add_control('msg_error_color',   ['label' => __('Texte erreur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-quote-message--error' => 'color: {{VALUE}}']]);
-        $this->end_controls_section();
 
-        // ── 📋 Devis — Popup bateau ─────────────────────────────────────
-        $this->start_controls_section('style_popup', [
-            'label'     => __('📋 Devis — Popup bateau', 'blacktenderscore'),
-            'tab'       => Controls_Manager::TAB_STYLE,
-            'condition' => ['wrapper_enable' => 'yes', 'step_boat_enable' => 'yes'],
-        ]);
-        $this->add_responsive_control('popup_max_width', ['label' => __('Largeur max', 'blacktenderscore'), 'type' => Controls_Manager::SLIDER, 'size_units' => ['px', '%', 'vw'], 'range' => ['px' => ['min' => 300, 'max' => 1200]], 'default' => ['size' => 800, 'unit' => 'px'], 'selectors' => ['{{WRAPPER}} .bt-quote-popup' => 'max-width: {{SIZE}}{{UNIT}}']]);
-        $this->add_responsive_control('popup_padding',   ['label' => __('Padding', 'blacktenderscore'),     'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px', 'em'], 'selectors' => ['{{WRAPPER}} .bt-quote-popup' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}']]);
-        $this->add_responsive_control('popup_radius',    ['label' => __('Border radius', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px', '%'], 'selectors' => ['{{WRAPPER}} .bt-quote-popup' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}']]);
-        $this->add_control('popup_overlay_color', ['label' => __('Couleur overlay', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-quote-popup::backdrop' => 'background-color: {{VALUE}}']]);
-        $this->end_controls_section();
+        $this->add_control('popup_heading', ['label' => __('Popup bateau', 'blacktenderscore'), 'type' => Controls_Manager::HEADING, 'separator' => 'before', 'condition' => ['step_boat_enable' => 'yes']]);
+        $this->add_responsive_control('popup_max_width', ['label' => __('Largeur max', 'blacktenderscore'), 'type' => Controls_Manager::SLIDER, 'size_units' => ['px', '%', 'vw'], 'range' => ['px' => ['min' => 300, 'max' => 1200]], 'default' => ['size' => 800, 'unit' => 'px'], 'selectors' => ['{{WRAPPER}} .bt-quote-popup' => 'max-width: {{SIZE}}{{UNIT}}'], 'condition' => ['step_boat_enable' => 'yes']]);
+        $this->add_responsive_control('popup_padding',   ['label' => __('Padding', 'blacktenderscore'),     'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px', 'em'], 'selectors' => ['{{WRAPPER}} .bt-quote-popup' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'], 'condition' => ['step_boat_enable' => 'yes']]);
+        $this->add_responsive_control('popup_radius',    ['label' => __('Border radius', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px', '%'], 'selectors' => ['{{WRAPPER}} .bt-quote-popup' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'], 'condition' => ['step_boat_enable' => 'yes']]);
+        $this->add_control('popup_overlay_color', ['label' => __('Couleur overlay', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-quote-popup::backdrop' => 'background-color: {{VALUE}}'], 'condition' => ['step_boat_enable' => 'yes']]);
 
-        // ── 📋 Devis — Bouton envoi ─────────────────────────────────────
-        $this->register_button_style('quote_submit', '📋 Devis — Bouton envoi', '{{WRAPPER}} .bt-quote-submit', [], ['wrapper_enable' => 'yes']);
+        $this->add_control('submit_heading', ['label' => __('Bouton envoi', 'blacktenderscore'), 'type' => Controls_Manager::HEADING, 'separator' => 'before']);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), ['name' => 'quote_submit_typography', 'selector' => '{{WRAPPER}} .bt-quote-submit']);
+        $this->start_controls_tabs('quote_submit_state_tabs');
+        $this->start_controls_tab('quote_submit_tab_normal', ['label' => __('Normal', 'blacktenderscore')]);
+        $this->add_control('quote_submit_color', ['label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-quote-submit' => 'color: {{VALUE}}']]);
+        $this->add_control('quote_submit_bg', ['label' => __('Fond', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-quote-submit' => 'background-color: {{VALUE}}']]);
+        $this->end_controls_tab();
+        $this->start_controls_tab('quote_submit_tab_hover', ['label' => __('Survol', 'blacktenderscore')]);
+        $this->add_control('quote_submit_color_hover', ['label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-quote-submit:hover' => 'color: {{VALUE}}']]);
+        $this->add_control('quote_submit_bg_hover', ['label' => __('Fond', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-quote-submit:hover' => 'background-color: {{VALUE}}']]);
+        $this->end_controls_tab();
+        $this->end_controls_tabs();
+        $this->add_responsive_control('quote_submit_padding', ['label' => __('Padding', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px', 'em'], 'selectors' => ['{{WRAPPER}} .bt-quote-submit' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}']]);
+        $this->add_responsive_control('quote_submit_radius', ['label' => __('Border radius', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px', '%', 'em'], 'selectors' => ['{{WRAPPER}} .bt-quote-submit' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}']]);
+
+        $this->end_controls_section();
     }
 
     // ══ Render ════════════════════════════════════════════════════════════════
@@ -1277,7 +1341,7 @@ class BoatPricing extends AbstractBtWidget {
         $tab1_label = esc_html($s['wrapper_tab1_label'] ?: __('Forfaits', 'blacktenderscore'));
         $tab2_label = esc_html($s['wrapper_tab2_label'] ?: __('Demande de devis', 'blacktenderscore'));
 
-        echo '<button class="bt-bprice-wrapper__tab" id="' . esc_attr($uid) . '-tab-0" role="tab"'
+        echo '<button class="bt-bprice-wrapper__tab bt-bprice-wrapper__tab--active" id="' . esc_attr($uid) . '-tab-0" role="tab"'
            . ' aria-selected="true" aria-controls="' . esc_attr($uid) . '-panel-0" tabindex="0">'
            . $tab1_label . '</button>';
 
@@ -1322,12 +1386,12 @@ class BoatPricing extends AbstractBtWidget {
     private function render_pricing_content(array $s, int $post_id): void {
         $currency   = esc_html($s['currency'] ?: '€');
         $price_note = (string) get_field('boat_price_note', $post_id);
-        $price_half = get_field('boat_price_half', $post_id);
+        $fuel_incl  = (bool)  get_field('boat_fuel_included', $post_id);
+        $deposit    = (float)(get_field('boat_deposit',        $post_id) ?? 0);
+        $price_half = (float)(get_field('boat_price_half',     $post_id) ?? 0);
         $half_time  = get_field('boat_half_day_time', $post_id);
-        $price_full = get_field('boat_price_full', $post_id);
+        $price_full = (float)(get_field('boat_price_full',     $post_id) ?? 0);
         $full_time  = get_field('boat_full_day_time', $post_id);
-        $deposit    = get_field('boat_deposit', $post_id);
-        $fuel_incl  = get_field('boat_fuel_included', $post_id);
         $zones      = get_field('boat_custom_price_by_departure', $post_id);
 
         $pax_max = $s['show_per_person'] === 'yes' ? (int) get_field('boat_pax_max', $post_id) : 0;
@@ -1388,11 +1452,7 @@ class BoatPricing extends AbstractBtWidget {
      * Rendu du formulaire de devis (onglet 2 du wrapper).
      */
     private function render_quote_form(array $s, int $post_id): void {
-        $post_type     = get_post_type($post_id);
         $pricing_mode  = $s['pricing_mode'] ?? 'boat';
-        $is_excursion  = ($post_type === 'excursion');
-        $is_boat       = ($post_type === 'boat');
-        $currency      = esc_html(($pricing_mode === 'excursion' ? ($s['exc_currency'] ?? '€') : ($s['currency'] ?? '€')) ?: '€');
 
         // Config JSON pour le JS (noms de champs, labels…)
         $config = [
@@ -1409,7 +1469,6 @@ class BoatPricing extends AbstractBtWidget {
                 'multi'  => $s['step_dates_opt_multi'] ?: __('Plusieurs jours', 'blacktenderscore'),
                 'custom' => $s['step_dates_opt_custom'] ?: __('Demande spécifique', 'blacktenderscore'),
             ],
-            'recipient'        => $s['step_submit_email'] ?: get_option('admin_email'),
             'msg_success'      => $s['step_submit_msg_success'] ?: __('Votre demande a bien été envoyée !', 'blacktenderscore'),
             'msg_error'        => $s['step_submit_msg_error'] ?: __('Une erreur est survenue.', 'blacktenderscore'),
             'pricing_mode'     => $pricing_mode,
@@ -1423,292 +1482,360 @@ class BoatPricing extends AbstractBtWidget {
            . ' data-nonce="' . esc_attr(wp_create_nonce('bt_quote_nonce')) . '"'
            . ' data-config="' . esc_attr(wp_json_encode($config)) . '">';
 
-        $step_num = 0;
+        $step_num  = 0;
+        $post_type = get_post_type($post_id);
+        $is_excursion = ($post_type === 'excursion');
+
+        // Step — Excursion
+        if ($pricing_mode === 'excursion') {
+            if ($is_excursion) {
+                $step_num++;
+                $this->render_quote_step_excursion($s, $post_id, $step_num);
+            }
+        } else {
+            if ($s['step_exc_enable'] === 'yes') {
+                $step_num++;
+                $this->render_quote_step_excursion($s, $post_id, $step_num);
+            }
+        }
+
+        // Step — Bateau
+        if ($pricing_mode === 'excursion') {
+            if (($s['step_boat_enable'] ?? 'yes') === 'yes') {
+                $step_num++;
+                $this->render_quote_step_boat($s, $post_id, $step_num);
+            }
+        } else {
+            if ($s['step_boat_enable'] === 'yes') {
+                $step_num++;
+                $this->render_quote_step_boat($s, $post_id, $step_num);
+            }
+        }
+
+        // Step — Dates
+        if ($s['step_dates_enable'] === 'yes') {
+            $step_num++;
+            $this->render_quote_step_dates($s, $step_num);
+        }
+
+        // Step — Coordonnées
+        if ($s['step_contact_enable'] === 'yes') {
+            $step_num++;
+            $this->render_quote_step_contact($s, $step_num);
+        }
+
+        // Step — Envoi
+        $step_num++;
+        $this->render_quote_step_submit($s, $step_num);
+
+        echo '</div>'; // .bt-quote
+
+        // ── Dialog popup bateau ──────────────────────────────────────────
+        echo '<dialog class="bt-quote-popup" data-bt-quote-popup role="dialog" aria-modal="true">';
+        echo '<button type="button" class="bt-quote-popup__close" aria-label="' . esc_attr__('Fermer', 'blacktenderscore') . '">&times;</button>';
+        echo '<div class="bt-quote-popup__content" data-bt-quote-popup-content></div>';
+        echo '</dialog>';
+    }
+
+    // ── Sous-méthodes de rendu des étapes du formulaire de devis ─────────────
+
+    /**
+     * Rendu de l'étape excursion.
+     * Mode excursion : affiche l'excursion courante + choix sur mesure.
+     * Mode bateau : affiche un sélecteur d'excursion ou auto-select.
+     */
+    private function render_quote_step_excursion(array $s, int $post_id, int $step_num): void {
+        $post_type    = get_post_type($post_id);
+        $pricing_mode = $s['pricing_mode'] ?? 'boat';
+        $is_excursion = ($post_type === 'excursion');
 
         if ($pricing_mode === 'excursion') {
             // ── Mode excursion ──────────────────────────────────────────────
+            $step_cls = 'bt-quote-step' . ($step_num === 1 ? ' bt-quote-step--active' : '');
+            $aria_exp = $step_num === 1 ? 'true' : 'false';
+            $aria_cur = $step_num === 1 ? ' aria-current="step"' : '';
 
-            // Step 1 — Excursion : "Cette excursion" / "Expérience sur mesure"
-            if ($is_excursion) {
-                $step_num++;
-                $step_cls = 'bt-quote-step' . ($step_num === 1 ? ' bt-quote-step--active' : '');
-                $aria_exp = $step_num === 1 ? 'true' : 'false';
-                $aria_cur = $step_num === 1 ? ' aria-current="step"' : '';
+            echo '<div class="' . esc_attr($step_cls) . '" role="listitem"'
+               . $aria_cur . ' aria-expanded="' . $aria_exp . '" data-step="' . $step_num . '" data-step-type="excursion">';
+            echo '<div class="bt-quote-step__header">';
+            echo '<span class="bt-quote-step__number">' . $step_num . '</span>';
+            echo '<span class="bt-quote-step__title">' . esc_html($s['step_exc_title'] ?? __('Votre excursion', 'blacktenderscore')) . '</span>';
+            echo '<span class="bt-quote-step__summary"></span>';
+            echo '</div>';
+            echo '<div class="bt-quote-step__content">';
 
-                echo '<div class="' . esc_attr($step_cls) . '" role="listitem"'
-                   . $aria_cur . ' aria-expanded="' . $aria_exp . '" data-step="' . $step_num . '" data-step-type="excursion">';
-                echo '<div class="bt-quote-step__header">';
-                echo '<span class="bt-quote-step__number">' . $step_num . '</span>';
-                echo '<span class="bt-quote-step__title">' . esc_html($s['step_exc_title'] ?? __('Votre excursion', 'blacktenderscore')) . '</span>';
-                echo '<span class="bt-quote-step__summary"></span>';
-                echo '</div>';
-                echo '<div class="bt-quote-step__content">';
+            // Excursion courante
+            echo '<div class="bt-quote-exc-auto" data-exc-id="' . esc_attr($post_id) . '">';
+            echo '<p class="bt-quote-exc-auto__name">' . esc_html(get_the_title($post_id)) . '</p>';
+            echo '<input type="hidden" name="excursion_id" value="' . esc_attr($post_id) . '">';
+            echo '</div>';
 
-                // Excursion courante
+            // Choix : cette excursion OU sur mesure
+            echo '<div class="bt-quote-exc-choice" data-bt-exc-choice>';
+            echo '<button type="button" class="bt-quote-exc-choice__btn bt-quote-exc-choice__btn--selected" data-exc-choice="current" aria-selected="true">';
+            echo esc_html__('Cette excursion', 'blacktenderscore');
+            echo '</button>';
+            echo '<button type="button" class="bt-quote-exc-choice__btn" data-exc-choice="custom" aria-selected="false">';
+            echo esc_html__('Expérience sur mesure', 'blacktenderscore');
+            echo '</button>';
+            echo '</div>';
+
+            // Zone texte sur mesure (cachée par défaut)
+            echo '<div class="bt-quote-exc-custom" style="display:none">';
+            echo '<textarea class="bt-quote-fields__input bt-quote-fields__textarea" name="exc_custom_request" placeholder="' . esc_attr__('Décrivez votre projet...', 'blacktenderscore') . '" rows="3"></textarea>';
+            echo '</div>';
+
+            echo '</div>'; // __content
+            echo '<div class="bt-quote-step__actions">';
+            echo '<button type="button" class="bt-quote-step__next" data-step-next>' . esc_html__('Suivant', 'blacktenderscore') . '</button>';
+            echo '</div>';
+            echo '</div>'; // .bt-quote-step
+        } else {
+            // ── Mode bateau ─────────────────────────────────────────────────
+            $auto_selected = $is_excursion;
+            $step_cls = 'bt-quote-step' . ($step_num === 1 ? ' bt-quote-step--active' : '');
+            $aria_exp = $step_num === 1 ? 'true' : 'false';
+            $aria_cur = $step_num === 1 ? ' aria-current="step"' : '';
+
+            echo '<div class="' . esc_attr($step_cls) . '" role="listitem"'
+               . $aria_cur . ' aria-expanded="' . $aria_exp . '" data-step="' . $step_num . '" data-step-type="excursion">';
+
+            echo '<div class="bt-quote-step__header">';
+            echo '<span class="bt-quote-step__number">' . $step_num . '</span>';
+            echo '<span class="bt-quote-step__title">' . esc_html($s['step_exc_title'] ?: __('Choix de l\'excursion', 'blacktenderscore')) . '</span>';
+            echo '<span class="bt-quote-step__summary"></span>';
+            echo '</div>';
+
+            echo '<div class="bt-quote-step__content">';
+
+            if ($auto_selected) {
                 echo '<div class="bt-quote-exc-auto" data-exc-id="' . esc_attr($post_id) . '">';
                 echo '<p class="bt-quote-exc-auto__name">' . esc_html(get_the_title($post_id)) . '</p>';
                 echo '<input type="hidden" name="excursion_id" value="' . esc_attr($post_id) . '">';
                 echo '</div>';
-
-                // Choix : cette excursion OU sur mesure
-                echo '<div class="bt-quote-exc-choice" data-bt-exc-choice>';
-                echo '<button type="button" class="bt-quote-exc-choice__btn bt-quote-exc-choice__btn--selected" data-exc-choice="current" aria-selected="true">';
-                echo esc_html__('Cette excursion', 'blacktenderscore');
-                echo '</button>';
-                echo '<button type="button" class="bt-quote-exc-choice__btn" data-exc-choice="custom" aria-selected="false">';
-                echo esc_html__('Expérience sur mesure', 'blacktenderscore');
-                echo '</button>';
-                echo '</div>';
-
-                // Zone texte sur mesure (cachée par défaut)
-                echo '<div class="bt-quote-exc-custom" style="display:none">';
-                echo '<textarea class="bt-quote-fields__input bt-quote-fields__textarea" name="exc_custom_request" placeholder="' . esc_attr__('Décrivez votre projet...', 'blacktenderscore') . '" rows="3"></textarea>';
-                echo '</div>';
-
-                echo '</div>'; // __content
-                echo '<div class="bt-quote-step__actions">';
-                echo '<button type="button" class="bt-quote-step__next" data-step-next>' . esc_html__('Suivant', 'blacktenderscore') . '</button>';
-                echo '</div>';
-                echo '</div>'; // .bt-quote-step
-            }
-
-            // Step 2 — Choix du bateau (bateaux liés à l'excursion)
-            if (($s['step_boat_enable'] ?? 'yes') === 'yes') {
-                $step_num++;
-                $auto_boat = $is_boat;
-                $step_cls  = 'bt-quote-step' . ($step_num === 1 ? ' bt-quote-step--active' : '');
-                $aria_exp  = $step_num === 1 ? 'true' : 'false';
-                $aria_cur  = $step_num === 1 ? ' aria-current="step"' : '';
-
-                echo '<div class="' . esc_attr($step_cls) . '" role="listitem"'
-                   . $aria_cur . ' aria-expanded="' . $aria_exp . '" data-step="' . $step_num . '" data-step-type="boat">';
-                echo '<div class="bt-quote-step__header">';
-                echo '<span class="bt-quote-step__number">' . $step_num . '</span>';
-                echo '<span class="bt-quote-step__title">' . esc_html($s['step_boat_title'] ?: __('Choix du bateau', 'blacktenderscore')) . '</span>';
-                echo '<span class="bt-quote-step__summary"></span>';
-                echo '</div>';
-                echo '<div class="bt-quote-step__content">';
-
-                if ($auto_boat) {
-                    // Auto-select boat (on est sur une page bateau)
-                    echo '<div class="bt-quote-boat-auto" data-boat-id="' . esc_attr($post_id) . '">';
-                    echo '<p class="bt-quote-boat-auto__name">' . esc_html(get_the_title($post_id)) . '</p>';
-                    echo '<input type="hidden" name="boat_id" value="' . esc_attr($post_id) . '">';
-                    echo '</div>';
-                } elseif ($is_excursion) {
-                    // Bateaux liés à l'excursion — chargés statiquement
-                    $this->render_linked_boat_cards($s, $post_id);
-                } else {
-                    // Chargés via AJAX
-                    echo '<div class="bt-quote-boat-cards" data-bt-quote-boats></div>';
-                }
-
-                echo '</div>'; // __content
-                echo '<div class="bt-quote-step__actions">';
-                echo '<button type="button" class="bt-quote-step__next" data-step-next>' . esc_html__('Suivant', 'blacktenderscore') . '</button>';
-                echo '</div>';
-                echo '</div>'; // .bt-quote-step
-            }
-        } else {
-            // ── Mode bateau : step 1 = excursion, step 2 = bateau (existant) ─
-
-            // Step 1 — Excursion
-            if ($s['step_exc_enable'] === 'yes') {
-                $step_num++;
-                $auto_selected = $is_excursion;
-                $step_cls = 'bt-quote-step' . ($step_num === 1 ? ' bt-quote-step--active' : '');
-                $aria_exp = $step_num === 1 ? 'true' : 'false';
-                $aria_cur = $step_num === 1 ? ' aria-current="step"' : '';
-
-                echo '<div class="' . esc_attr($step_cls) . '" role="listitem"'
-                   . $aria_cur . ' aria-expanded="' . $aria_exp . '" data-step="' . $step_num . '" data-step-type="excursion">';
-
-                echo '<div class="bt-quote-step__header">';
-                echo '<span class="bt-quote-step__number">' . $step_num . '</span>';
-                echo '<span class="bt-quote-step__title">' . esc_html($s['step_exc_title'] ?: __('Choix de l\'excursion', 'blacktenderscore')) . '</span>';
-                echo '<span class="bt-quote-step__summary"></span>';
-                echo '</div>';
-
-                echo '<div class="bt-quote-step__content">';
-
-                if ($auto_selected) {
-                    echo '<div class="bt-quote-exc-auto" data-exc-id="' . esc_attr($post_id) . '">';
-                    echo '<p class="bt-quote-exc-auto__name">' . esc_html(get_the_title($post_id)) . '</p>';
-                    echo '<input type="hidden" name="excursion_id" value="' . esc_attr($post_id) . '">';
-                    echo '</div>';
-                } else {
-                    $this->render_excursion_cards($s);
-                }
-
-                echo '</div>'; // __content
-                echo '<div class="bt-quote-step__actions">';
-                echo '<button type="button" class="bt-quote-step__next" data-step-next>' . esc_html__('Suivant', 'blacktenderscore') . '</button>';
-                echo '</div>';
-                echo '</div>'; // .bt-quote-step
-            }
-
-            // Step 2 — Bateau (AJAX)
-            if ($s['step_boat_enable'] === 'yes') {
-                $step_num++;
-                echo '<div class="bt-quote-step" role="listitem" aria-expanded="false" data-step="' . $step_num . '" data-step-type="boat">';
-                echo '<div class="bt-quote-step__header">';
-                echo '<span class="bt-quote-step__number">' . $step_num . '</span>';
-                echo '<span class="bt-quote-step__title">' . esc_html($s['step_boat_title'] ?: __('Choix du bateau', 'blacktenderscore')) . '</span>';
-                echo '<span class="bt-quote-step__summary"></span>';
-                echo '</div>';
-                echo '<div class="bt-quote-step__content">';
-                echo '<div class="bt-quote-boat-cards" data-bt-quote-boats></div>';
-                echo '</div>';
-                echo '<div class="bt-quote-step__actions">';
-                echo '<button type="button" class="bt-quote-step__next" data-step-next>' . esc_html__('Suivant', 'blacktenderscore') . '</button>';
-                echo '</div>';
-                echo '</div>';
-            }
-        }
-
-        // ── Étape 3 — Dates (duration funnel) ──────────────────────────
-        if ($s['step_dates_enable'] === 'yes') {
-            $step_num++;
-            $opt_half   = esc_html($s['step_dates_opt_half']   ?: __('Demi-journée', 'blacktenderscore'));
-            $opt_full   = esc_html($s['step_dates_opt_full']   ?: __('Journée entière', 'blacktenderscore'));
-            $opt_multi  = esc_html($s['step_dates_opt_multi']  ?: __('Plusieurs jours', 'blacktenderscore'));
-            $opt_custom = esc_html($s['step_dates_opt_custom'] ?: __('Demande spécifique', 'blacktenderscore'));
-            $lbl_date   = esc_html($s['step_dates_label_date']  ?: __('Date souhaitée', 'blacktenderscore'));
-            $lbl_start  = esc_html($s['step_dates_label_start'] ?: __('Date de début', 'blacktenderscore'));
-            $lbl_end    = esc_html($s['step_dates_label_end']   ?: __('Date de fin', 'blacktenderscore'));
-            $ph_custom  = esc_attr($s['step_dates_custom_placeholder'] ?: __('Décrivez vos disponibilités...', 'blacktenderscore'));
-
-            echo '<div class="bt-quote-step" role="listitem" aria-expanded="false" data-step="' . $step_num . '" data-step-type="dates">';
-            echo '<div class="bt-quote-step__header">';
-            echo '<span class="bt-quote-step__number">' . $step_num . '</span>';
-            echo '<span class="bt-quote-step__title">' . esc_html($s['step_dates_title'] ?: __('Dates de location', 'blacktenderscore')) . '</span>';
-            echo '<span class="bt-quote-step__summary"></span>';
-            echo '</div>';
-            echo '<div class="bt-quote-step__content">';
-
-            // Duration cards
-            echo '<div class="bt-quote-duration-cards" data-bt-duration-select>';
-            echo '<div class="bt-quote-duration-card" data-duration="half" tabindex="0" role="option" aria-selected="false">';
-            echo '<span class="bt-quote-duration-card__label">' . $opt_half . '</span>';
-            echo '</div>';
-            echo '<div class="bt-quote-duration-card" data-duration="full" tabindex="0" role="option" aria-selected="false">';
-            echo '<span class="bt-quote-duration-card__label">' . $opt_full . '</span>';
-            echo '</div>';
-            echo '<div class="bt-quote-duration-card" data-duration="multi" tabindex="0" role="option" aria-selected="false">';
-            echo '<span class="bt-quote-duration-card__label">' . $opt_multi . '</span>';
-            echo '</div>';
-            echo '<div class="bt-quote-duration-card" data-duration="custom" tabindex="0" role="option" aria-selected="false">';
-            echo '<span class="bt-quote-duration-card__label">' . $opt_custom . '</span>';
-            echo '</div>';
-            echo '</div>'; // .bt-quote-duration-cards
-
-            // Single date picker (for half/full) — hidden by default
-            echo '<div class="bt-quote-datepicker bt-quote-datepicker--single" data-bt-datepicker data-range="0" style="display:none">';
-            echo '<div class="bt-quote-datepicker__labels">';
-            echo '<div class="bt-quote-datepicker__field">';
-            echo '<label class="bt-quote-datepicker__label">' . $lbl_date . '</label>';
-            echo '<input type="text" class="bt-quote-datepicker__input" name="date_start" readonly placeholder="jj/mm/aaaa">';
-            echo '</div>';
-            echo '</div>';
-            echo '<div class="bt-quote-datepicker__calendar"></div>';
-
-            // Matin / Après-midi (visible uniquement pour demi-journée)
-            echo '<div class="bt-quote-timeslot" data-bt-timeslot style="display:none">';
-            echo '<div class="bt-quote-timeslot__options">';
-            echo '<button type="button" class="bt-quote-timeslot__btn" data-timeslot="matin" aria-selected="false">'
-               . esc_html__('Matin', 'blacktenderscore') . '</button>';
-            echo '<button type="button" class="bt-quote-timeslot__btn" data-timeslot="apres-midi" aria-selected="false">'
-               . esc_html__('Après-midi', 'blacktenderscore') . '</button>';
-            echo '</div>';
-            echo '<input type="hidden" name="timeslot" value="">';
-            echo '</div>';
-
-            echo '</div>'; // .bt-quote-datepicker--single
-
-            // Range date picker (for multi) — hidden by default
-            echo '<div class="bt-quote-datepicker bt-quote-datepicker--range" data-bt-datepicker data-range="1" style="display:none">';
-            echo '<div class="bt-quote-datepicker__labels">';
-            echo '<div class="bt-quote-datepicker__field">';
-            echo '<label class="bt-quote-datepicker__label">' . $lbl_start . '</label>';
-            echo '<input type="text" class="bt-quote-datepicker__input" name="date_start" readonly placeholder="jj/mm/aaaa">';
-            echo '</div>';
-            echo '<div class="bt-quote-datepicker__field">';
-            echo '<label class="bt-quote-datepicker__label">' . $lbl_end . '</label>';
-            echo '<input type="text" class="bt-quote-datepicker__input" name="date_end" readonly placeholder="jj/mm/aaaa">';
-            echo '</div>';
-            echo '</div>';
-            echo '<div class="bt-quote-datepicker__calendar"></div>';
-            echo '</div>'; // .bt-quote-datepicker--range
-
-            // Custom textarea — hidden by default
-            echo '<div class="bt-quote-custom-dates" style="display:none">';
-            echo '<textarea class="bt-quote-fields__input bt-quote-fields__textarea" name="date_custom" placeholder="' . $ph_custom . '" rows="3"></textarea>';
-            echo '</div>';
-
-            // Hidden input to store selected duration type
-            echo '<input type="hidden" name="duration_type" value="">';
-
-            echo '</div>'; // __content
-            echo '<div class="bt-quote-step__actions">';
-            echo '<button type="button" class="bt-quote-step__next" data-step-next>' . esc_html__('Suivant', 'blacktenderscore') . '</button>';
-            echo '</div>';
-            echo '</div>';
-        }
-
-        // ── Étape 4 — Coordonnées ───────────────────────────────────────
-        if ($s['step_contact_enable'] === 'yes') {
-            $step_num++;
-            $name_mode = $s['step_contact_name_mode'] ?: 'split';
-
-            echo '<div class="bt-quote-step" role="listitem" aria-expanded="false" data-step="' . $step_num . '" data-step-type="contact">';
-            echo '<div class="bt-quote-step__header">';
-            echo '<span class="bt-quote-step__number">' . $step_num . '</span>';
-            echo '<span class="bt-quote-step__title">' . esc_html($s['step_contact_title'] ?: __('Vos coordonnées', 'blacktenderscore')) . '</span>';
-            echo '<span class="bt-quote-step__summary"></span>';
-            echo '</div>';
-            echo '<div class="bt-quote-step__content">';
-
-            echo '<div class="bt-quote-fields">';
-
-            if ($name_mode === 'split') {
-                echo '<div class="bt-quote-fields__row">';
-                echo '<div class="bt-quote-fields__group">';
-                echo '<label class="bt-quote-fields__label">' . esc_html($s['step_contact_label_firstname'] ?: __('Prénom', 'blacktenderscore')) . '</label>';
-                echo '<input type="text" class="bt-quote-fields__input" name="client_firstname" placeholder="' . esc_attr($s['step_contact_ph_firstname'] ?: __('Votre prénom', 'blacktenderscore')) . '" required>';
-                echo '</div>';
-                echo '<div class="bt-quote-fields__group">';
-                echo '<label class="bt-quote-fields__label">' . esc_html($s['step_contact_label_name'] ?: __('Nom', 'blacktenderscore')) . '</label>';
-                echo '<input type="text" class="bt-quote-fields__input" name="client_name" placeholder="' . esc_attr($s['step_contact_ph_name'] ?: __('Votre nom', 'blacktenderscore')) . '" required>';
-                echo '</div>';
-                echo '</div>';
             } else {
-                echo '<div class="bt-quote-fields__group">';
-                echo '<label class="bt-quote-fields__label">' . esc_html($s['step_contact_label_name'] ?: __('Nom complet', 'blacktenderscore')) . '</label>';
-                echo '<input type="text" class="bt-quote-fields__input" name="client_name" placeholder="' . esc_attr($s['step_contact_ph_name'] ?: __('Votre nom', 'blacktenderscore')) . '" required>';
-                echo '</div>';
+                $this->render_excursion_cards($s);
             }
 
-            echo '<div class="bt-quote-fields__group">';
-            echo '<label class="bt-quote-fields__label">' . esc_html($s['step_contact_label_email'] ?: __('E-mail', 'blacktenderscore')) . '</label>';
-            echo '<input type="email" class="bt-quote-fields__input" name="client_email" placeholder="' . esc_attr($s['step_contact_ph_email'] ?: 'votre@email.com') . '" required>';
-            echo '</div>';
-
-            echo '<div class="bt-quote-fields__group">';
-            echo '<label class="bt-quote-fields__label">' . esc_html($s['step_contact_label_phone'] ?: __('Téléphone', 'blacktenderscore')) . '</label>';
-            echo '<input type="tel" class="bt-quote-fields__input" name="client_phone" placeholder="' . esc_attr($s['step_contact_ph_phone'] ?: '06 12 34 56 78') . '">';
-            echo '</div>';
-
-            echo '</div>'; // .bt-quote-fields
             echo '</div>'; // __content
+            echo '<div class="bt-quote-step__actions">';
+            echo '<button type="button" class="bt-quote-step__next" data-step-next>' . esc_html__('Suivant', 'blacktenderscore') . '</button>';
+            echo '</div>';
+            echo '</div>'; // .bt-quote-step
+        }
+    }
 
+    /**
+     * Rendu de l'étape bateau.
+     * Mode excursion : affiche les bateaux liés ou auto-select.
+     * Mode bateau : affiche un conteneur AJAX pour le chargement dynamique.
+     */
+    private function render_quote_step_boat(array $s, int $post_id, int $step_num): void {
+        $post_type    = get_post_type($post_id);
+        $pricing_mode = $s['pricing_mode'] ?? 'boat';
+        $is_excursion = ($post_type === 'excursion');
+        $is_boat      = ($post_type === 'boat');
+
+        if ($pricing_mode === 'excursion') {
+            // ── Mode excursion ──────────────────────────────────────────────
+            $auto_boat = $is_boat;
+            $step_cls  = 'bt-quote-step' . ($step_num === 1 ? ' bt-quote-step--active' : '');
+            $aria_exp  = $step_num === 1 ? 'true' : 'false';
+            $aria_cur  = $step_num === 1 ? ' aria-current="step"' : '';
+
+            echo '<div class="' . esc_attr($step_cls) . '" role="listitem"'
+               . $aria_cur . ' aria-expanded="' . $aria_exp . '" data-step="' . $step_num . '" data-step-type="boat">';
+            echo '<div class="bt-quote-step__header">';
+            echo '<span class="bt-quote-step__number">' . $step_num . '</span>';
+            echo '<span class="bt-quote-step__title">' . esc_html($s['step_boat_title'] ?: __('Choix du bateau', 'blacktenderscore')) . '</span>';
+            echo '<span class="bt-quote-step__summary"></span>';
+            echo '</div>';
+            echo '<div class="bt-quote-step__content">';
+
+            if ($auto_boat) {
+                // Auto-select boat (on est sur une page bateau)
+                echo '<div class="bt-quote-boat-auto" data-boat-id="' . esc_attr($post_id) . '">';
+                echo '<p class="bt-quote-boat-auto__name">' . esc_html(get_the_title($post_id)) . '</p>';
+                echo '<input type="hidden" name="boat_id" value="' . esc_attr($post_id) . '">';
+                echo '</div>';
+            } elseif ($is_excursion) {
+                // Bateaux liés à l'excursion — chargés statiquement
+                $this->render_linked_boat_cards($s, $post_id);
+            } else {
+                // Chargés via AJAX
+                echo '<div class="bt-quote-boat-cards" data-bt-quote-boats></div>';
+            }
+
+            echo '</div>'; // __content
+            echo '<div class="bt-quote-step__actions">';
+            echo '<button type="button" class="bt-quote-step__next" data-step-next>' . esc_html__('Suivant', 'blacktenderscore') . '</button>';
+            echo '</div>';
+            echo '</div>'; // .bt-quote-step
+        } else {
+            // ── Mode bateau ─────────────────────────────────────────────────
+            echo '<div class="bt-quote-step" role="listitem" aria-expanded="false" data-step="' . $step_num . '" data-step-type="boat">';
+            echo '<div class="bt-quote-step__header">';
+            echo '<span class="bt-quote-step__number">' . $step_num . '</span>';
+            echo '<span class="bt-quote-step__title">' . esc_html($s['step_boat_title'] ?: __('Choix du bateau', 'blacktenderscore')) . '</span>';
+            echo '<span class="bt-quote-step__summary"></span>';
+            echo '</div>';
+            echo '<div class="bt-quote-step__content">';
+            echo '<div class="bt-quote-boat-cards" data-bt-quote-boats></div>';
+            echo '</div>';
             echo '<div class="bt-quote-step__actions">';
             echo '<button type="button" class="bt-quote-step__next" data-step-next>' . esc_html__('Suivant', 'blacktenderscore') . '</button>';
             echo '</div>';
             echo '</div>';
         }
+    }
 
-        // ── Étape 5 — Envoi ─────────────────────────────────────────────
-        $step_num++;
+    /**
+     * Rendu de l'étape dates (duration funnel, date pickers, timeslot).
+     */
+    private function render_quote_step_dates(array $s, int $step_num): void {
+        $opt_half   = esc_html($s['step_dates_opt_half']   ?: __('Demi-journée', 'blacktenderscore'));
+        $opt_full   = esc_html($s['step_dates_opt_full']   ?: __('Journée entière', 'blacktenderscore'));
+        $opt_multi  = esc_html($s['step_dates_opt_multi']  ?: __('Plusieurs jours', 'blacktenderscore'));
+        $opt_custom = esc_html($s['step_dates_opt_custom'] ?: __('Demande spécifique', 'blacktenderscore'));
+        $lbl_date   = esc_html($s['step_dates_label_date']  ?: __('Date souhaitée', 'blacktenderscore'));
+        $lbl_start  = esc_html($s['step_dates_label_start'] ?: __('Date de début', 'blacktenderscore'));
+        $lbl_end    = esc_html($s['step_dates_label_end']   ?: __('Date de fin', 'blacktenderscore'));
+        $ph_custom  = esc_attr($s['step_dates_custom_placeholder'] ?: __('Décrivez vos disponibilités...', 'blacktenderscore'));
+
+        echo '<div class="bt-quote-step" role="listitem" aria-expanded="false" data-step="' . $step_num . '" data-step-type="dates">';
+        echo '<div class="bt-quote-step__header">';
+        echo '<span class="bt-quote-step__number">' . $step_num . '</span>';
+        echo '<span class="bt-quote-step__title">' . esc_html($s['step_dates_title'] ?: __('Dates de location', 'blacktenderscore')) . '</span>';
+        echo '<span class="bt-quote-step__summary"></span>';
+        echo '</div>';
+        echo '<div class="bt-quote-step__content">';
+
+        // Duration cards
+        echo '<div class="bt-quote-duration-cards" data-bt-duration-select>';
+        echo '<div class="bt-quote-duration-card" data-duration="half" tabindex="0" role="option" aria-selected="false">';
+        echo '<span class="bt-quote-duration-card__label">' . $opt_half . '</span>';
+        echo '</div>';
+        echo '<div class="bt-quote-duration-card" data-duration="full" tabindex="0" role="option" aria-selected="false">';
+        echo '<span class="bt-quote-duration-card__label">' . $opt_full . '</span>';
+        echo '</div>';
+        echo '<div class="bt-quote-duration-card" data-duration="multi" tabindex="0" role="option" aria-selected="false">';
+        echo '<span class="bt-quote-duration-card__label">' . $opt_multi . '</span>';
+        echo '</div>';
+        echo '<div class="bt-quote-duration-card" data-duration="custom" tabindex="0" role="option" aria-selected="false">';
+        echo '<span class="bt-quote-duration-card__label">' . $opt_custom . '</span>';
+        echo '</div>';
+        echo '</div>'; // .bt-quote-duration-cards
+
+        // Single date picker (for half/full) — hidden by default
+        echo '<div class="bt-quote-datepicker bt-quote-datepicker--single" data-bt-datepicker data-range="0" style="display:none">';
+        echo '<div class="bt-quote-datepicker__labels">';
+        echo '<div class="bt-quote-datepicker__field">';
+        echo '<label class="bt-quote-datepicker__label">' . $lbl_date . '</label>';
+        echo '<input type="text" class="bt-quote-datepicker__input" name="date_start" readonly placeholder="jj/mm/aaaa">';
+        echo '</div>';
+        echo '</div>';
+        echo '<div class="bt-quote-datepicker__calendar"></div>';
+
+        // Matin / Après-midi (visible uniquement pour demi-journée)
+        echo '<div class="bt-quote-timeslot" data-bt-timeslot style="display:none">';
+        echo '<div class="bt-quote-timeslot__options">';
+        echo '<button type="button" class="bt-quote-timeslot__btn" data-timeslot="matin" aria-selected="false">'
+           . esc_html__('Matin', 'blacktenderscore') . '</button>';
+        echo '<button type="button" class="bt-quote-timeslot__btn" data-timeslot="apres-midi" aria-selected="false">'
+           . esc_html__('Après-midi', 'blacktenderscore') . '</button>';
+        echo '</div>';
+        echo '<input type="hidden" name="timeslot" value="">';
+        echo '</div>';
+
+        echo '</div>'; // .bt-quote-datepicker--single
+
+        // Range date picker (for multi) — hidden by default
+        echo '<div class="bt-quote-datepicker bt-quote-datepicker--range" data-bt-datepicker data-range="1" style="display:none">';
+        echo '<div class="bt-quote-datepicker__labels">';
+        echo '<div class="bt-quote-datepicker__field">';
+        echo '<label class="bt-quote-datepicker__label">' . $lbl_start . '</label>';
+        echo '<input type="text" class="bt-quote-datepicker__input" name="date_start" readonly placeholder="jj/mm/aaaa">';
+        echo '</div>';
+        echo '<div class="bt-quote-datepicker__field">';
+        echo '<label class="bt-quote-datepicker__label">' . $lbl_end . '</label>';
+        echo '<input type="text" class="bt-quote-datepicker__input" name="date_end" readonly placeholder="jj/mm/aaaa">';
+        echo '</div>';
+        echo '</div>';
+        echo '<div class="bt-quote-datepicker__calendar"></div>';
+        echo '</div>'; // .bt-quote-datepicker--range
+
+        // Custom textarea — hidden by default
+        echo '<div class="bt-quote-custom-dates" style="display:none">';
+        echo '<textarea class="bt-quote-fields__input bt-quote-fields__textarea" name="date_custom" placeholder="' . $ph_custom . '" rows="3"></textarea>';
+        echo '</div>';
+
+        // Hidden input to store selected duration type
+        echo '<input type="hidden" name="duration_type" value="">';
+
+        echo '</div>'; // __content
+        echo '<div class="bt-quote-step__actions">';
+        echo '<button type="button" class="bt-quote-step__next" data-step-next>' . esc_html__('Suivant', 'blacktenderscore') . '</button>';
+        echo '</div>';
+        echo '</div>';
+    }
+
+    /**
+     * Rendu de l'étape coordonnées (nom, email, téléphone).
+     */
+    private function render_quote_step_contact(array $s, int $step_num): void {
+        $name_mode = $s['step_contact_name_mode'] ?: 'split';
+
+        echo '<div class="bt-quote-step" role="listitem" aria-expanded="false" data-step="' . $step_num . '" data-step-type="contact">';
+        echo '<div class="bt-quote-step__header">';
+        echo '<span class="bt-quote-step__number">' . $step_num . '</span>';
+        echo '<span class="bt-quote-step__title">' . esc_html($s['step_contact_title'] ?: __('Vos coordonnées', 'blacktenderscore')) . '</span>';
+        echo '<span class="bt-quote-step__summary"></span>';
+        echo '</div>';
+        echo '<div class="bt-quote-step__content">';
+
+        echo '<div class="bt-quote-fields">';
+
+        if ($name_mode === 'split') {
+            echo '<div class="bt-quote-fields__row">';
+            echo '<div class="bt-quote-fields__group">';
+            echo '<label class="bt-quote-fields__label">' . esc_html($s['step_contact_label_firstname'] ?: __('Prénom', 'blacktenderscore')) . '</label>';
+            echo '<input type="text" class="bt-quote-fields__input" name="client_firstname" placeholder="' . esc_attr($s['step_contact_ph_firstname'] ?: __('Votre prénom', 'blacktenderscore')) . '" required>';
+            echo '</div>';
+            echo '<div class="bt-quote-fields__group">';
+            echo '<label class="bt-quote-fields__label">' . esc_html($s['step_contact_label_name'] ?: __('Nom', 'blacktenderscore')) . '</label>';
+            echo '<input type="text" class="bt-quote-fields__input" name="client_name" placeholder="' . esc_attr($s['step_contact_ph_name'] ?: __('Votre nom', 'blacktenderscore')) . '" required>';
+            echo '</div>';
+            echo '</div>';
+        } else {
+            echo '<div class="bt-quote-fields__group">';
+            echo '<label class="bt-quote-fields__label">' . esc_html($s['step_contact_label_name'] ?: __('Nom complet', 'blacktenderscore')) . '</label>';
+            echo '<input type="text" class="bt-quote-fields__input" name="client_name" placeholder="' . esc_attr($s['step_contact_ph_name'] ?: __('Votre nom', 'blacktenderscore')) . '" required>';
+            echo '</div>';
+        }
+
+        echo '<div class="bt-quote-fields__group">';
+        echo '<label class="bt-quote-fields__label">' . esc_html($s['step_contact_label_email'] ?: __('E-mail', 'blacktenderscore')) . '</label>';
+        echo '<input type="email" class="bt-quote-fields__input" name="client_email" placeholder="' . esc_attr($s['step_contact_ph_email'] ?: 'votre@email.com') . '" required>';
+        echo '</div>';
+
+        echo '<div class="bt-quote-fields__group">';
+        echo '<label class="bt-quote-fields__label">' . esc_html($s['step_contact_label_phone'] ?: __('Téléphone', 'blacktenderscore')) . '</label>';
+        echo '<input type="tel" class="bt-quote-fields__input" name="client_phone" placeholder="' . esc_attr($s['step_contact_ph_phone'] ?: '06 12 34 56 78') . '">';
+        echo '</div>';
+
+        echo '</div>'; // .bt-quote-fields
+        echo '</div>'; // __content
+
+        echo '<div class="bt-quote-step__actions">';
+        echo '<button type="button" class="bt-quote-step__next" data-step-next>' . esc_html__('Suivant', 'blacktenderscore') . '</button>';
+        echo '</div>';
+        echo '</div>';
+    }
+
+    /**
+     * Rendu de l'étape de confirmation et envoi.
+     */
+    private function render_quote_step_submit(array $s, int $step_num): void {
         echo '<div class="bt-quote-step" role="listitem" aria-expanded="false" data-step="' . $step_num . '" data-step-type="submit">';
         echo '<div class="bt-quote-step__header">';
         echo '<span class="bt-quote-step__number">' . $step_num . '</span>';
@@ -1723,14 +1850,6 @@ class BoatPricing extends AbstractBtWidget {
         echo '<div class="bt-quote-message" data-bt-quote-message></div>';
         echo '</div>'; // __content
         echo '</div>'; // step
-
-        echo '</div>'; // .bt-quote
-
-        // ── Dialog popup bateau ──────────────────────────────────────────
-        echo '<dialog class="bt-quote-popup" data-bt-quote-popup role="dialog" aria-modal="true">';
-        echo '<button type="button" class="bt-quote-popup__close" aria-label="' . esc_attr__('Fermer', 'blacktenderscore') . '">&times;</button>';
-        echo '<div class="bt-quote-popup__content" data-bt-quote-popup-content></div>';
-        echo '</dialog>';
     }
 
     /**
@@ -1747,6 +1866,12 @@ class BoatPricing extends AbstractBtWidget {
     // Provided by BtExcursionPricing trait
 
     // ── Helpers existants (inchangés) ────────────────────────────────────────
+
+    private function render_deposit_html(float $deposit, array $s, string $currency): string {
+        if ($s['show_deposit'] !== 'yes' || $deposit <= 0) return '';
+        $dep_lbl = esc_html($s['label_deposit'] ?: __('Caution', 'blacktenderscore'));
+        return '<p class="bt-bprice__deposit">' . $dep_lbl . ' : <strong>' . $this->format_price($deposit, $currency) . '</strong></p>';
+    }
 
     private function format_price(float $price, string $currency): string {
         return esc_html(number_format($price, 0, ',', ' ') . ' ' . $currency);
@@ -1768,7 +1893,7 @@ class BoatPricing extends AbstractBtWidget {
         return '<span class="bt-bprice__fuel ' . $cls . '">' . $lbl . '</span>';
     }
 
-    private function card_body_html(array $card, array $s, string $currency, string $note, $deposit, int $pax_max): string {
+    private function card_body_html(array $card, array $s, string $currency, string $note, float $deposit, int $pax_max): string {
         $out = '';
         if ($s['show_price_note'] === 'yes' && $note) {
             $out .= '<span class="bt-bprice__note">' . esc_html($note) . '</span>';
@@ -1780,16 +1905,13 @@ class BoatPricing extends AbstractBtWidget {
             $out .= ' <span class="bt-bprice__duration">— ' . esc_html($card['duration']) . '</span>';
         }
         $out .= '</div>';
-        if ($s['show_deposit'] === 'yes' && $deposit) {
-            $dep_lbl = esc_html($s['label_deposit'] ?: __('Caution', 'blacktenderscore'));
-            $out .= '<p class="bt-bprice__deposit">' . $dep_lbl . ' : <strong>' . $this->format_price((float) $deposit, $currency) . '</strong></p>';
-        }
+        $out .= $this->render_deposit_html($deposit, $s, $currency);
         return $out;
     }
 
     // ── Render : Tabs ───────────────────────────────────────────────────────
 
-    private function render_tabs(array $cards, array $s, string $currency, string $note, $deposit, bool $fuel_incl, int $pax_max): void {
+    private function render_tabs(array $cards, array $s, string $currency, string $note, float $deposit, bool $fuel_incl, int $pax_max): void {
         $uid = 'bt-bprice-' . $this->get_id();
 
         echo '<div class="bt-bprice__tabs" data-bt-tabs>';
@@ -1828,7 +1950,7 @@ class BoatPricing extends AbstractBtWidget {
 
     // ── Render : Cartes ─────────────────────────────────────────────────────
 
-    private function render_cards(array $cards, array $s, string $currency, string $note, $deposit, bool $fuel_incl, int $pax_max): void {
+    private function render_cards(array $cards, array $s, string $currency, string $note, float $deposit, bool $fuel_incl, int $pax_max): void {
         echo '<div class="bt-bprice__cards">';
         foreach ($cards as $card) {
             echo '<div class="bt-bprice__card">';
@@ -1842,7 +1964,7 @@ class BoatPricing extends AbstractBtWidget {
 
     // ── Render : Tableau ────────────────────────────────────────────────────
 
-    private function render_table(array $cards, array $s, string $currency, string $note, $deposit, bool $fuel_incl, int $pax_max): void {
+    private function render_table(array $cards, array $s, string $currency, string $note, float $deposit, bool $fuel_incl, int $pax_max): void {
         $col_forfait  = $s['table_col_forfait']  ?: __('Forfait', 'blacktenderscore');
         $col_duration = $s['table_col_duration'] ?: __('Durée', 'blacktenderscore');
         $col_price    = $s['table_col_price']    ?: __('Prix', 'blacktenderscore');
@@ -1858,10 +1980,7 @@ class BoatPricing extends AbstractBtWidget {
         }
         echo '</tbody></table></div>';
 
-        if ($s['show_deposit'] === 'yes' && $deposit) {
-            $dep_lbl = esc_html($s['label_deposit'] ?: __('Caution', 'blacktenderscore'));
-            echo '<p class="bt-bprice__deposit">' . $dep_lbl . ' : <strong>' . $this->format_price((float) $deposit, $currency) . '</strong></p>';
-        }
+        echo $this->render_deposit_html($deposit, $s, $currency);
         echo $this->fuel_badge_html($fuel_incl, $s);
     }
 
@@ -1896,8 +2015,8 @@ class BoatPricing extends AbstractBtWidget {
 
             echo '<tr>';
             echo '<td class="bt-bprice__card-label">' . esc_html($zone_label) . '</td>';
-            echo '<td class="bt-bprice__amount">' . ($p_half ? esc_html($p_half . ' ' . $currency) : '—') . '</td>';
-            echo '<td class="bt-bprice__amount">' . ($p_full ? esc_html($p_full . ' ' . $currency) : '—') . '</td>';
+            echo '<td class="bt-bprice__amount">' . ($p_half ? $this->format_price((float) $p_half, $currency) : '—') . '</td>';
+            echo '<td class="bt-bprice__amount">' . ($p_full ? $this->format_price((float) $p_full, $currency) : '—') . '</td>';
             echo '</tr>';
         }
 

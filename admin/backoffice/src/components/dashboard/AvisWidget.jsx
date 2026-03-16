@@ -72,7 +72,7 @@ export function AvisWidget({ from, to, compareFrom, compareTo }) {
     )
   }
 
-  if (!stats?.avg_rating || !stats?.total_rated) {
+  if (!stats || (!stats.avg_rating && !stats.total_rated && !stats.total)) {
     return (
       <div className="rounded-lg border bg-card p-5">
         <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium mb-2">
@@ -106,7 +106,7 @@ export function AvisWidget({ from, to, compareFrom, compareTo }) {
       {/* Note principale + delta */}
       <div className="flex items-end gap-3 mb-4">
         <span className="text-3xl font-bold tabular-nums leading-none">
-          {stats.avg_rating}
+          {stats.avg_rating != null ? Number(stats.avg_rating).toFixed(1) : '—'}
         </span>
         <div className="mb-0.5">
           <Stars rating={stats.avg_rating} />

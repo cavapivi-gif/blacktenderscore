@@ -228,7 +228,7 @@ class ReviewsDb {
                     ROUND(AVG(rating), 2) as avg_rating
              {$base_rated}
              AND review_date IS NOT NULL
-             GROUP BY month ORDER BY month ASC
+             GROUP BY DATE_FORMAT(review_date, '%Y-%m') ORDER BY month ASC
              LIMIT 36",
             ARRAY_A
         );
@@ -249,10 +249,12 @@ class ReviewsDb {
         $total_rated = (int) ($global['total'] ?? 0);
 
         // Projection : nombre d'avis 5★ supplémentaires pour atteindre 4.8
+        // Formule : chaque nouvel avis 5★ contribue (5 - avg_cible) au numérateur
+        // n = (target * total - current_sum) / (5 - target)
         $reviews_needed_4_8 = null;
         if ($avg !== null && $avg < 4.8 && $total_rated > 0) {
             $current_sum        = $avg * $total_rated;
-            $reviews_needed_4_8 = (int) ceil((4.8 * $total_rated - $current_sum) / 0.2);
+            $reviews_needed_4_8 = (int) ceil((4.8 * $total_rated - $current_sum) / (5 - 4.8));
         }
 
         // Par jour de la semaine (0=Dimanche … 6=Samedi)
@@ -262,7 +264,7 @@ class ReviewsDb {
                     ROUND(AVG(rating), 2) as avg_rating
              {$base_rated}
              AND review_date IS NOT NULL
-             GROUP BY weekday ORDER BY weekday ASC",
+             GROUP BY DAYOFWEEK(review_date) ORDER BY weekday ASC",
             ARRAY_A
         );
 
@@ -304,7 +306,7 @@ class ReviewsDb {
              AND event_date IS NOT NULL
              AND review_date IS NOT NULL
              AND review_date >= event_date
-             GROUP BY bucket",
+             GROUP BY 1",
             ARRAY_A
         );
         // Ordonner les buckets

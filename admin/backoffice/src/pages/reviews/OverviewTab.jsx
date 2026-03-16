@@ -44,24 +44,25 @@ export default function OverviewTab({ stats, compareStats, compareActive, from, 
     }))
   }, [monthly])
 
-  // Overlay comparison monthly data
-  const compareMonthly = useMemo(() => {
-    if (!compareActive || !compareStats?.monthly) return []
-    return compareStats.monthly.map((m, i) => ({
-      idx:       i,
-      avgCmp:    parseFloat(m.avg_rating) || 0,
-      countCmp:  parseInt(m.count)        || 0,
-    }))
+  // Overlay comparison monthly data — indexé par clé mois
+  const compareMonthlyMap = useMemo(() => {
+    if (!compareActive || !compareStats?.monthly) return {}
+    const map = {}
+    compareStats.monthly.forEach(m => {
+      const key = m.month?.slice(0, 7) ?? ''
+      if (key) map[key] = { avgCmp: parseFloat(m.avg_rating) || 0, countCmp: parseInt(m.count) || 0 }
+    })
+    return map
   }, [compareActive, compareStats])
 
-  // Merge monthly + compare by index (align by position)
+  // Merge monthly + compare par clé mois (pas par index)
   const mergedMonthly = useMemo(() => {
     if (!compareActive) return monthlyChart
-    return monthlyChart.map((d, i) => ({
+    return monthlyChart.map(d => ({
       ...d,
-      ...(compareMonthly[i] ?? {}),
+      ...(compareMonthlyMap[d.month] ?? {}),
     }))
-  }, [monthlyChart, compareMonthly, compareActive])
+  }, [monthlyChart, compareMonthlyMap, compareActive])
 
   // Weekday chart data (reorder from 1=Mon to 0=Sun at end for readability Mon-Sun)
   const weekdayChart = useMemo(() => {

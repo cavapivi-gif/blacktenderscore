@@ -12,3 +12,4 @@ acf-export-*.json
 .vscode/
 .idea/
 admin/backoffice/build_old/
+admin/backoffice/src/pages/reviews_old/

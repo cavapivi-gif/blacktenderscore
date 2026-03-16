@@ -50,3 +50,53 @@
   opacity: .65;
   margin-top: auto;
 }
+
+/* ── Étoiles ─────────────────────────────────────────────── */
+.bt-star {
+  display: inline-block;
+  font-size: inherit;
+  line-height: 1;
+}
+.bt-star--filled {
+  color: var(--bt-star-color, #f59e0b);
+}
+.bt-star--empty {
+  color: var(--bt-star-empty, #d1d5db);
+  opacity: .4;
+}
+
+/* ── Note chiffrée ───────────────────────────────────────── */
+.bt-reviews__rating-number {
+  font-size: .8em;
+  font-weight: 700;
+  opacity: .6;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+/* ── Meta (date + source) ────────────────────────────────── */
+.bt-reviews__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .75em;
+  opacity: .5;
+  margin-top: auto;
+}
+.bt-reviews__date {
+  white-space: nowrap;
+}
+.bt-reviews__source {
+  white-space: nowrap;
+}
+.bt-reviews__source::before {
+  content: "·";
+  margin-right: 8px;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .bt-reviews__grid {
+    grid-template-columns: 1fr;
+  }
+}
