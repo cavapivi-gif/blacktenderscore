@@ -65,6 +65,33 @@
 
   /* ── Tabs ────────────────────────────────────────────────────────────────── */
 
+  /**
+   * Remplace le <booking-widget> dans root par un nouveau avec le uuid donné.
+   * Idempotent : ne fait rien si widget-id est déjà correct.
+   * Utilisé par les layouts tabs et buttons de bt-pricing-tabs (booking_per_tab).
+   */
+  function _swapBookingWidget(root, uuid) {
+    var container = root.querySelector('.bt-pricing__booking');
+    if (!container) return;
+    var old = container.querySelector('booking-widget');
+    if (old && old.getAttribute('widget-id') === uuid) return;
+
+    var fresh = document.createElement('booking-widget');
+    fresh.setAttribute('widget-id', uuid);
+    // Préserver le <style> injecté (CSS custom Regiondo)
+    var oldStyle = old && old.querySelector('style');
+    if (oldStyle) {
+      var s = document.createElement('style');
+      s.textContent = oldStyle.textContent;
+      fresh.appendChild(s);
+    }
+    if (old) {
+      old.parentNode.replaceChild(fresh, old);
+    } else {
+      container.appendChild(fresh);
+    }
+  }
+
   function activateTab(root, tabs, activeTab) {
     // Generic panel class from data attr (ex: 'bt-pricing__panel' → toggles 'bt-pricing__panel--active')
     var panelCls = root.getAttribute('data-bt-panel-class');
@@ -95,6 +122,16 @@
     });
 
     activeTab.focus();
+
+    // Mise à jour UUID Regiondo quand booking_per_tab est actif
+    var uuidsRaw = root.getAttribute('data-tab-uuids');
+    if (uuidsRaw) {
+      try {
+        var uuids = JSON.parse(uuidsRaw);
+        var tabIdx = tabs.indexOf(activeTab);
+        if (uuids[tabIdx]) _swapBookingWidget(root, uuids[tabIdx]);
+      } catch (e) {}
+    }
   }
 
   function initTabs(root) {
@@ -188,6 +225,9 @@
           if (reveal) {
             reveal.classList.add('bt-pricing__booking-reveal--visible');
             injectBookingLazy(reveal);
+            // Mise à jour UUID Regiondo si booking_per_tab actif
+            var slotUuid = slot.getAttribute('data-uuid');
+            if (slotUuid) _swapBookingWidget(reveal, slotUuid);
             setTimeout(function () {
               reveal.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }, 80);
