@@ -3,6 +3,10 @@ namespace BlackTenders\Elementor\Widgets;
 
 use BlackTenders\Elementor\AbstractBtWidget;
 use BlackTenders\Elementor\Traits\BtSharedControls;
+use Elementor\Controls_Manager;
+use Elementor\Group_Control_Border;
+use Elementor\Group_Control_Box_Shadow;
+use Elementor\Group_Control_Typography;
 
 defined('ABSPATH') || exit;
 
@@ -31,6 +35,7 @@ class Itinerary extends AbstractBtWidget {
             'title'    => 'BT — Programme / Itinéraire',
             'icon'     => 'eicon-time-line',
             'keywords' => ['itinéraire', 'programme', 'timeline', 'étapes', 'carte', 'map', 'bt'],
+            'css'      => ['bt-itinerary'],
         ];
     }
 
@@ -53,53 +58,53 @@ class Itinerary extends AbstractBtWidget {
     private function section_content(): void {
         $this->start_controls_section('section_content', [
             'label' => __('Contenu', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('acf_field', [
             'label'   => __('Champ ACF repeater', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
+            'type'    => Controls_Manager::TEXT,
             'default' => 'exp_itinerary',
         ]);
 
         $this->add_control('section_title', [
             'label'   => __('Titre de section', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
+            'type'    => Controls_Manager::TEXT,
             'default' => __('Programme', 'blacktenderscore'),
             'dynamic' => ['active' => true],
         ]);
 
         $this->add_control('title_tag', [
             'label'   => __('Balise du titre', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
+            'type'    => Controls_Manager::SELECT,
             'options' => ['h2' => 'H2', 'h3' => 'H3', 'h4' => 'H4', 'p' => 'p'],
             'default' => 'h3',
         ]);
 
         $this->add_control('show_time', [
             'label'        => __('Afficher l\'heure / moment', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('show_duration', [
             'label'        => __('Afficher la durée de l\'étape', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('show_description', [
             'label'        => __('Afficher la description', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('connector', [
             'label'   => __('Connecteur timeline', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
+            'type'    => Controls_Manager::SELECT,
             'options' => [
                 'line' => __('Ligne verticale', 'blacktenderscore'),
                 'none' => __('Aucun', 'blacktenderscore'),
@@ -115,12 +120,12 @@ class Itinerary extends AbstractBtWidget {
     private function section_transport(): void {
         $this->start_controls_section('section_transport', [
             'label' => __('Transport & zones', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('show_transport', [
             'label'        => __('Afficher départ / transport / arrivée', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
@@ -128,14 +133,14 @@ class Itinerary extends AbstractBtWidget {
         // ── Départ ────────────────────────────────────────────────────────────
         $this->add_control('heading_departure', [
             'label'     => __('Zone de départ', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::HEADING,
+            'type'      => Controls_Manager::HEADING,
             'separator' => 'before',
             'condition' => ['show_transport' => 'yes'],
         ]);
 
         $this->add_control('label_departure', [
             'label'     => __('Label départ', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => __('Départ', 'blacktenderscore'),
             'condition' => ['show_transport' => 'yes'],
         ]);
@@ -143,7 +148,7 @@ class Itinerary extends AbstractBtWidget {
         // ICONS control → FA picker + SVG uploader → Icons_Manager::render_icon()
         $this->add_control('departure_dot_icon', [
             'label'       => __('Icône départ', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::ICONS,
+            'type'        => Controls_Manager::ICONS,
             'default'     => ['value' => 'fas fa-map-marker-alt', 'library' => 'fa-solid'],
             'skin'        => 'inline',
             'label_block' => false,
@@ -153,28 +158,28 @@ class Itinerary extends AbstractBtWidget {
         // ── Hors-bord ─────────────────────────────────────────────────────────
         $this->add_control('heading_outboard', [
             'label'     => __('Hors-bord', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::HEADING,
+            'type'      => Controls_Manager::HEADING,
             'separator' => 'before',
             'condition' => ['show_transport' => 'yes'],
         ]);
 
         $this->add_control('label_outboard', [
             'label'     => __('Label hors-bord aller', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => __('Hors-bord', 'blacktenderscore'),
             'condition' => ['show_transport' => 'yes'],
         ]);
 
         $this->add_control('label_outboard_return', [
             'label'     => __('Label hors-bord retour', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => __('Retour hors-bord', 'blacktenderscore'),
             'condition' => ['show_transport' => 'yes'],
         ]);
 
         $this->add_control('outboard_dot_icon', [
             'label'       => __('Icône hors-bord', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::ICONS,
+            'type'        => Controls_Manager::ICONS,
             'default'     => ['value' => 'fas fa-ship', 'library' => 'fa-solid'],
             'skin'        => 'inline',
             'label_block' => false,
@@ -184,21 +189,21 @@ class Itinerary extends AbstractBtWidget {
         // ── Arrivée ───────────────────────────────────────────────────────────
         $this->add_control('heading_arrival', [
             'label'     => __('Zone d\'arrivée', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::HEADING,
+            'type'      => Controls_Manager::HEADING,
             'separator' => 'before',
             'condition' => ['show_transport' => 'yes'],
         ]);
 
         $this->add_control('label_return', [
             'label'     => __('Label arrivée', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => __('Arrivée', 'blacktenderscore'),
             'condition' => ['show_transport' => 'yes'],
         ]);
 
         $this->add_control('arrival_dot_icon', [
             'label'       => __('Icône arrivée', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::ICONS,
+            'type'        => Controls_Manager::ICONS,
             'default'     => ['value' => 'fas fa-anchor', 'library' => 'fa-solid'],
             'skin'        => 'inline',
             'label_block' => false,
@@ -213,19 +218,19 @@ class Itinerary extends AbstractBtWidget {
     private function section_map_content(): void {
         $this->start_controls_section('section_map', [
             'label' => __('Carte interactive', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('show_map', [
             'label'        => __('Afficher la carte', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => '',
         ]);
 
         $this->add_control('map_engine', [
             'label'     => __('Moteur de carte', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::SELECT,
+            'type'      => Controls_Manager::SELECT,
             'options'   => [
                 'leaflet'    => __('Leaflet / OpenStreetMap (interactif, sans clé API)', 'blacktenderscore'),
                 'static_api' => __('Google Maps Static (image, clé API requise)', 'blacktenderscore'),
@@ -236,13 +241,13 @@ class Itinerary extends AbstractBtWidget {
 
         $this->add_control('map_line_color', [
             'label'     => __('Couleur de la route', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'default'   => '#0066cc',
             'condition' => ['show_map' => 'yes'],
         ]);
 
         $this->add_control('map_acf_notice', [
-            'type'            => \Elementor\Controls_Manager::RAW_HTML,
+            'type'            => Controls_Manager::RAW_HTML,
             'raw'             => implode('', [
                 '<strong>', __('Champs ACF à créer :', 'blacktenderscore'), '</strong><br>',
                 '• Repeater → <code>step_coords</code> <em>(type : Google Map)</em><br>',
@@ -257,7 +262,7 @@ class Itinerary extends AbstractBtWidget {
 
         $this->add_control('map_position', [
             'label'     => __('Position de la carte', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::SELECT,
+            'type'      => Controls_Manager::SELECT,
             'options'   => [
                 'below'      => __('Sous la timeline', 'blacktenderscore'),
                 'above'      => __('Au-dessus de la timeline', 'blacktenderscore'),
@@ -271,7 +276,7 @@ class Itinerary extends AbstractBtWidget {
         $this->add_responsive_control('map_col_ratio', [
             'label'       => __('Largeur carte (%)', 'blacktenderscore'),
             'description' => __('Uniquement en mode côte-à-côte. Sur mobile → pleine largeur.', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::SLIDER,
+            'type'        => Controls_Manager::SLIDER,
             'size_units'  => ['%'],
             'range'       => ['%' => ['min' => 25, 'max' => 75]],
             'default'     => ['size' => 50, 'unit' => '%'],
@@ -287,7 +292,7 @@ class Itinerary extends AbstractBtWidget {
 
         $this->add_responsive_control('map_height', [
             'label'      => __('Hauteur de la carte', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px', 'vh'],
             'range'      => ['px' => ['min' => 150, 'max' => 900], 'vh' => ['min' => 20, 'max' => 80]],
             'default'    => ['size' => 400, 'unit' => 'px'],
@@ -297,7 +302,7 @@ class Itinerary extends AbstractBtWidget {
 
         $this->add_responsive_control('map_gap', [
             'label'      => __('Espace timeline ↔ carte', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px', 'em'],
             'range'      => ['px' => ['min' => 0, 'max' => 60]],
             'default'    => ['size' => 24, 'unit' => 'px'],
@@ -312,7 +317,7 @@ class Itinerary extends AbstractBtWidget {
 
         $this->add_control('map_type', [
             'label'     => __('Type de vue', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::SELECT,
+            'type'      => Controls_Manager::SELECT,
             'options'   => [
                 'roadmap'   => __('Plan (roadmap)', 'blacktenderscore'),
                 'satellite' => __('Satellite', 'blacktenderscore'),
@@ -329,10 +334,10 @@ class Itinerary extends AbstractBtWidget {
     private function section_style_timeline(): void {
         $this->start_controls_section('style_timeline', [
             'label' => __('Style — Timeline', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+            'tab'   => Controls_Manager::TAB_STYLE,
         ]);
 
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+        $this->add_group_control(Group_Control_Typography::get_type(), [
             'name'     => 'section_title_typo',
             'label'    => __('Typographie titre section', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-itin__title',
@@ -340,13 +345,13 @@ class Itinerary extends AbstractBtWidget {
 
         $this->add_control('section_title_color', [
             'label'     => __('Couleur titre section', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-itin__title' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_responsive_control('steps_gap', [
             'label'      => __('Espacement entre étapes', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px', 'em'],
             'range'      => ['px' => ['min' => 8, 'max' => 80]],
             'default'    => ['size' => 32, 'unit' => 'px'],
@@ -360,14 +365,14 @@ class Itinerary extends AbstractBtWidget {
         // ── Ligne de connexion ────────────────────────────────────────────────
         $this->add_control('heading_connector', [
             'label'     => __('Ligne de connexion', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::HEADING,
+            'type'      => Controls_Manager::HEADING,
             'separator' => 'before',
             'condition' => ['connector' => 'line'],
         ]);
 
         $this->add_control('line_color', [
             'label'     => __('Couleur (étapes aller)', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => [
                 // CSS var consommée par repeating-linear-gradient dans le CSS
                 '{{WRAPPER}} .bt-itin' => '--bt-itin-line-color: {{VALUE}}',
@@ -378,7 +383,7 @@ class Itinerary extends AbstractBtWidget {
         $this->add_control('return_line_color', [
             'label'       => __('Couleur — étapes retour', 'blacktenderscore'),
             'description' => __('Si vide, reprend la couleur aller.', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::COLOR,
+            'type'        => Controls_Manager::COLOR,
             'selectors'   => [
                 '{{WRAPPER}} .bt-itin' => '--bt-itin-return-line-color: {{VALUE}}',
             ],
@@ -387,7 +392,7 @@ class Itinerary extends AbstractBtWidget {
 
         $this->add_responsive_control('line_width', [
             'label'      => __('Épaisseur', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'range'      => ['px' => ['min' => 1, 'max' => 8]],
             'default'    => ['size' => 2, 'unit' => 'px'],
@@ -401,13 +406,13 @@ class Itinerary extends AbstractBtWidget {
         // ── Dots — Étapes ACF ─────────────────────────────────────────────────
         $this->add_control('heading_step_dots', [
             'label'     => __('Points — Étapes ACF', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::HEADING,
+            'type'      => Controls_Manager::HEADING,
             'separator' => 'before',
         ]);
 
         $this->add_control('dot_color', [
             'label'     => __('Couleur', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => [
                 '{{WRAPPER}} .bt-itin__step:not(.bt-itin__step--transport) .bt-itin__dot' =>
                     'color: {{VALUE}}; background-color: {{VALUE}}',
@@ -416,7 +421,7 @@ class Itinerary extends AbstractBtWidget {
 
         $this->add_responsive_control('dot_size', [
             'label'      => __('Taille', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'range'      => ['px' => ['min' => 6, 'max' => 32]],
             'default'    => ['size' => 14, 'unit' => 'px'],
@@ -428,7 +433,7 @@ class Itinerary extends AbstractBtWidget {
 
         $this->add_responsive_control('dot_icon_size', [
             'label'      => __('Taille icône dans le point', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px', 'em'],
             'range'      => ['px' => ['min' => 8, 'max' => 28]],
             'default'    => ['size' => 12, 'unit' => 'px'],
@@ -440,7 +445,7 @@ class Itinerary extends AbstractBtWidget {
 
         $this->add_responsive_control('dot_gap', [
             'label'      => __('Espace dot ↔ contenu', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'range'      => ['px' => ['min' => 8, 'max' => 48]],
             'default'    => ['size' => 20, 'unit' => 'px'],
@@ -451,7 +456,7 @@ class Itinerary extends AbstractBtWidget {
         $this->add_control('step_dot_icon', [
             'label'       => __('Icône par défaut des étapes', 'blacktenderscore'),
             'description' => __('Appliquée aux étapes sans icône individuelle. Vide = numéro de l\'étape.', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::ICONS,
+            'type'        => Controls_Manager::ICONS,
             'skin'        => 'inline',
             'label_block' => false,
             'separator'   => 'before',
@@ -459,7 +464,7 @@ class Itinerary extends AbstractBtWidget {
 
         $this->add_control('return_dot_color', [
             'label'     => __('Couleur point — étape retour', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => [
                 '{{WRAPPER}} .bt-itin__step--return .bt-itin__dot' =>
                     'color: {{VALUE}}; background-color: {{VALUE}}',
@@ -469,13 +474,13 @@ class Itinerary extends AbstractBtWidget {
         // ── Dots — Transport (ICONS / SVG) ────────────────────────────────────
         $this->add_control('heading_transport_dots', [
             'label'     => __('Points — Transport (icônes)', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::HEADING,
+            'type'      => Controls_Manager::HEADING,
             'separator' => 'before',
         ]);
 
         $this->add_control('transport_dot_color', [
             'label'     => __('Couleur', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => [
                 '{{WRAPPER}} .bt-itin__step--transport .bt-itin__dot--transport' =>
                     'color: {{VALUE}}',
@@ -484,7 +489,7 @@ class Itinerary extends AbstractBtWidget {
 
         $this->add_responsive_control('transport_dot_size', [
             'label'      => __('Taille', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'range'      => ['px' => ['min' => 12, 'max' => 48]],
             'default'    => ['size' => 22, 'unit' => 'px'],
@@ -505,10 +510,10 @@ class Itinerary extends AbstractBtWidget {
     private function section_style_text(): void {
         $this->start_controls_section('style_text', [
             'label' => __('Style — Texte des étapes', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+            'tab'   => Controls_Manager::TAB_STYLE,
         ]);
 
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+        $this->add_group_control(Group_Control_Typography::get_type(), [
             'name'     => 'time_typo',
             'label'    => __('Typographie heure', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-itin__time',
@@ -516,11 +521,11 @@ class Itinerary extends AbstractBtWidget {
 
         $this->add_control('time_color', [
             'label'     => __('Couleur heure', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-itin__time' => 'color: {{VALUE}}'],
         ]);
 
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+        $this->add_group_control(Group_Control_Typography::get_type(), [
             'name'     => 'step_title_typo',
             'label'    => __('Typographie titre étape', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-itin__step-title',
@@ -528,11 +533,11 @@ class Itinerary extends AbstractBtWidget {
 
         $this->add_control('step_title_color', [
             'label'     => __('Couleur titre étape', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-itin__step-title' => 'color: {{VALUE}}'],
         ]);
 
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+        $this->add_group_control(Group_Control_Typography::get_type(), [
             'name'     => 'desc_typo',
             'label'    => __('Typographie description', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-itin__step-desc',
@@ -540,13 +545,13 @@ class Itinerary extends AbstractBtWidget {
 
         $this->add_control('desc_color', [
             'label'     => __('Couleur description', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-itin__step-desc' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_responsive_control('content_padding', [
             'label'      => __('Padding contenu étape', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::DIMENSIONS,
+            'type'       => Controls_Manager::DIMENSIONS,
             'size_units' => ['px', 'em'],
             'selectors'  => [
                 '{{WRAPPER}} .bt-itin__step:not(.bt-itin__step--transport) .bt-itin__step-body' =>
@@ -557,7 +562,7 @@ class Itinerary extends AbstractBtWidget {
         $this->add_responsive_control('step_content_indent', [
             'label'       => __('Décalage hiérarchique', 'blacktenderscore'),
             'description' => __('Indente le contenu des étapes ACF pour créer une hiérarchie visuelle sous les blocs transport.', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::SLIDER,
+            'type'        => Controls_Manager::SLIDER,
             'size_units'  => ['px'],
             'range'       => ['px' => ['min' => 0, 'max' => 48]],
             'default'     => ['size' => 0, 'unit' => 'px'],
@@ -569,7 +574,7 @@ class Itinerary extends AbstractBtWidget {
 
         $this->add_control('step_bg', [
             'label'     => __('Fond des étapes', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => [
                 '{{WRAPPER}} .bt-itin__step:not(.bt-itin__step--transport) .bt-itin__step-body' =>
                     'background-color: {{VALUE}}',
@@ -579,20 +584,20 @@ class Itinerary extends AbstractBtWidget {
 
         $this->add_control('return_step_bg', [
             'label'     => __('Fond — étape retour', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => [
                 '{{WRAPPER}} .bt-itin__step--return .bt-itin__step-body' => 'background-color: {{VALUE}}',
             ],
         ]);
 
-        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
+        $this->add_group_control(Group_Control_Border::get_type(), [
             'name'     => 'step_border',
             'selector' => '{{WRAPPER}} .bt-itin__step:not(.bt-itin__step--transport) .bt-itin__step-body',
         ]);
 
         $this->add_responsive_control('step_radius', [
             'label'      => __('Border radius', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'selectors'  => [
                 '{{WRAPPER}} .bt-itin__step:not(.bt-itin__step--transport) .bt-itin__step-body' =>
@@ -600,7 +605,7 @@ class Itinerary extends AbstractBtWidget {
             ],
         ]);
 
-        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), [
+        $this->add_group_control(Group_Control_Box_Shadow::get_type(), [
             'name'     => 'step_shadow',
             'selector' => '{{WRAPPER}} .bt-itin__step:not(.bt-itin__step--transport) .bt-itin__step-body',
         ]);
@@ -613,18 +618,18 @@ class Itinerary extends AbstractBtWidget {
     private function section_style_transport(): void {
         $this->start_controls_section('style_transport', [
             'label' => __('Style — Zones transport', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+            'tab'   => Controls_Manager::TAB_STYLE,
         ]);
 
         $this->add_control('transport_bg', [
             'label'     => __('Fond (tous blocs transport)', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => [
                 '{{WRAPPER}} .bt-itin__step--transport .bt-itin__step-body' => 'background-color: {{VALUE}}',
             ],
         ]);
 
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+        $this->add_group_control(Group_Control_Typography::get_type(), [
             'name'     => 'transport_typo',
             'label'    => __('Typographie transport', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-itin__step--transport .bt-itin__step-body',
@@ -632,7 +637,7 @@ class Itinerary extends AbstractBtWidget {
 
         $this->add_control('transport_color', [
             'label'     => __('Couleur texte transport', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => [
                 '{{WRAPPER}} .bt-itin__step--transport .bt-itin__step-body' => 'color: {{VALUE}}',
             ],
@@ -640,7 +645,7 @@ class Itinerary extends AbstractBtWidget {
 
         $this->add_responsive_control('transport_padding', [
             'label'      => __('Padding', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::DIMENSIONS,
+            'type'       => Controls_Manager::DIMENSIONS,
             'size_units' => ['px', 'em'],
             'selectors'  => [
                 '{{WRAPPER}} .bt-itin__step--transport .bt-itin__step-body' =>
@@ -650,26 +655,26 @@ class Itinerary extends AbstractBtWidget {
 
         $this->add_responsive_control('transport_radius', [
             'label'      => __('Border radius', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px', '%'],
             'selectors'  => [
                 '{{WRAPPER}} .bt-itin__step--transport .bt-itin__step-body' => 'border-radius: {{SIZE}}{{UNIT}}',
             ],
         ]);
 
-        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
+        $this->add_group_control(Group_Control_Border::get_type(), [
             'name'     => 'transport_border',
             'selector' => '{{WRAPPER}} .bt-itin__step--transport .bt-itin__step-body',
         ]);
 
-        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), [
+        $this->add_group_control(Group_Control_Box_Shadow::get_type(), [
             'name'     => 'transport_shadow',
             'selector' => '{{WRAPPER}} .bt-itin__step--transport .bt-itin__step-body',
         ]);
 
         $this->add_control('departure_bg', [
             'label'     => __('Override fond — Départ uniquement', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => [
                 '{{WRAPPER}} .bt-itin__step--departure .bt-itin__step-body' => 'background-color: {{VALUE}}',
             ],
@@ -678,7 +683,7 @@ class Itinerary extends AbstractBtWidget {
 
         $this->add_control('arrival_bg', [
             'label'     => __('Override fond — Arrivée uniquement', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => [
                 '{{WRAPPER}} .bt-itin__step--arrival .bt-itin__step-body' => 'background-color: {{VALUE}}',
             ],
@@ -686,7 +691,7 @@ class Itinerary extends AbstractBtWidget {
 
         $this->add_control('transport_label_color', [
             'label'     => __('Couleur label (DÉPART / ARRIVÉE)', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => [
                 '{{WRAPPER}} .bt-itin__transport-label' => 'color: {{VALUE}}',
             ],
@@ -701,13 +706,13 @@ class Itinerary extends AbstractBtWidget {
     private function section_style_map(): void {
         $this->start_controls_section('style_map', [
             'label'     => __('Style — Carte', 'blacktenderscore'),
-            'tab'       => \Elementor\Controls_Manager::TAB_STYLE,
+            'tab'       => Controls_Manager::TAB_STYLE,
             'condition' => ['show_map' => 'yes'],
         ]);
 
         $this->add_responsive_control('map_margin', [
             'label'      => __('Marge', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::DIMENSIONS,
+            'type'       => Controls_Manager::DIMENSIONS,
             'size_units' => ['px', 'em'],
             'selectors'  => [
                 '{{WRAPPER}} .bt-itin__map-wrap' =>
@@ -717,7 +722,7 @@ class Itinerary extends AbstractBtWidget {
 
         $this->add_responsive_control('map_border_radius', [
             'label'      => __('Border radius', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'selectors'  => [
                 '{{WRAPPER}} .bt-itin__map'      => 'border-radius: {{SIZE}}{{UNIT}}',
@@ -725,12 +730,12 @@ class Itinerary extends AbstractBtWidget {
             ],
         ]);
 
-        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
+        $this->add_group_control(Group_Control_Border::get_type(), [
             'name'     => 'map_border',
             'selector' => '{{WRAPPER}} .bt-itin__map-wrap',
         ]);
 
-        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), [
+        $this->add_group_control(Group_Control_Box_Shadow::get_type(), [
             'name'     => 'map_shadow',
             'selector' => '{{WRAPPER}} .bt-itin__map-wrap',
         ]);

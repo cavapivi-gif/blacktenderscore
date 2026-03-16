@@ -1,0 +1,84 @@
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Related Boats
+   ══════════════════════════════════════════════════════════ */
+.bt-relboats__title {
+  margin: 0 0 20px;
+}
+
+.bt-relboats__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.bt-relboats__card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.bt-relboats__img-wrap {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  padding-bottom: 60%;
+  background: #f0f0f0;
+}
+
+.bt-relboats__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .3s ease;
+}
+
+.bt-relboats__img-wrap:hover .bt-relboats__img {
+  transform: scale(1.04);
+}
+
+.bt-relboats__body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.bt-relboats__card-title {
+  margin: 0;
+  font-size: 1.1em;
+  font-weight: 700;
+}
+
+.bt-relboats__card-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.bt-relboats__tagline {
+  margin: 0;
+  opacity: .7;
+  font-size: .9em;
+}
+
+.bt-relboats__specs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: .85em;
+}
+
+.bt-relboats__btn {
+  display: inline-block;
+  margin-top: auto;
+  text-decoration: none;
+  font-weight: 600;
+  transition: opacity .15s;
+}
+
+.bt-relboats__btn:hover { opacity: .75; }

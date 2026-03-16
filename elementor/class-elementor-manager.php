@@ -282,6 +282,7 @@ class ElementorManager {
     }
 
     public function enqueue_assets(): void {
+        // Global styles (variables, shared tab component, collapsible block, placeholder)
         wp_enqueue_style(
             'bt-elementor',
             BT_URL . 'elementor/assets/bt-elementor.css',
@@ -295,6 +296,39 @@ class ElementorManager {
             BT_VERSION,
             true
         );
+
+        // Per-widget styles — registered here, enqueued on-demand via get_style_depends()
+        $widget_styles = [
+            'bt-taxonomy-list',
+            'bt-faq-accordion',
+            'bt-pricing-tabs',
+            'bt-boat-pricing',
+            'bt-boat-specs',
+            'bt-related-boats',
+            'bt-related-excursions',
+            'bt-itinerary',
+            'bt-departure-times',
+            'bt-reviews',
+            'bt-gallery',
+            'bt-lightbox',
+            'bt-gallery-preview',
+            'bt-repeater-section',
+            'bt-highlights',
+            'bt-captain',
+            'bt-included-excluded',
+            'bt-share',
+            'bt-google-map',
+            'bt-title-icon-desc',
+            'bt-taxonomy-display',
+        ];
+        foreach ($widget_styles as $handle) {
+            wp_register_style(
+                $handle,
+                BT_URL . 'elementor/assets/' . $handle . '.css',
+                ['bt-elementor'],
+                BT_VERSION
+            );
+        }
 
         // Leaflet — enregistré seulement (enqueued à la demande dans render_map_leaflet)
         wp_register_style('bt-leaflet-css', BT_URL . 'elementor/assets/leaflet.min.css', [], '1.9.4');

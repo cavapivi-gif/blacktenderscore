@@ -23,6 +23,7 @@ class Captain extends AbstractBtWidget {
             'title'    => 'BT — Profil capitaine',
             'icon'     => 'eicon-person',
             'keywords' => ['capitaine', 'skipper', 'profil', 'équipage', 'bt'],
+            'css'      => ['bt-captain'],
         ];
     }
 

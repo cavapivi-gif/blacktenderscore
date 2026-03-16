@@ -1,0 +1,12 @@
+/* ══════════════════════════════════════════════════════════
+   WIDGET : BT — Titre + Icône + Descriptif
+   ══════════════════════════════════════════════════════════ */
+
+.bt-tid { display: block; }
+.bt-tid__inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.bt-tid__icon { flex-shrink: 0; }
+.bt-tid__desc { flex: 1; margin: 0; }

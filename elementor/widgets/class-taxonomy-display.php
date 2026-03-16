@@ -4,6 +4,7 @@ namespace BlackTenders\Elementor\Widgets;
 use BlackTenders\Elementor\AbstractBtWidget;
 use BlackTenders\Elementor\Traits\BtSharedControls;
 use Elementor\Controls_Manager;
+use Elementor\Group_Control_Typography;
 
 defined('ABSPATH') || exit;
 
@@ -24,6 +25,7 @@ class TaxonomyDisplay extends AbstractBtWidget {
             'title'    => 'BT — Affichage Taxonomie',
             'icon'     => 'eicon-tags',
             'keywords' => ['taxonomie', 'terme', 'acf', 'champ', 'bt'],
+            'css'      => ['bt-taxonomy-display'],
         ];
     }
 
@@ -87,7 +89,7 @@ class TaxonomyDisplay extends AbstractBtWidget {
             'label' => __('Style — Texte', 'blacktenderscore'),
             'tab'   => Controls_Manager::TAB_STYLE,
         ]);
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+        $this->add_group_control(Group_Control_Typography::get_type(), [
             'name'     => 'text_typography',
             'selector' => '{{WRAPPER}} .bt-taxdisp__text',
         ]);

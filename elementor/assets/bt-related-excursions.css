@@ -1,0 +1,79 @@
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Related Excursions
+   ══════════════════════════════════════════════════════════ */
+.bt-relexp__title {
+  margin: 0 0 20px;
+}
+
+.bt-relexp__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.bt-relexp__card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.bt-relexp__img-wrap {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  padding-bottom: 56%;
+  background: #f0f0f0;
+}
+
+.bt-relexp__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .3s ease;
+}
+
+.bt-relexp__img-wrap:hover .bt-relexp__img {
+  transform: scale(1.04);
+}
+
+.bt-relexp__body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.bt-relexp__card-title {
+  margin: 0;
+  font-size: 1.05em;
+  font-weight: 700;
+}
+
+.bt-relexp__card-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.bt-relexp__tagline {
+  margin: 0;
+  opacity: .7;
+  font-size: .9em;
+}
+
+.bt-relexp__price {
+  margin: 0;
+  font-size: .95em;
+}
+
+.bt-relexp__btn {
+  display: inline-block;
+  margin-top: auto;
+  text-decoration: none;
+  font-weight: 600;
+  transition: opacity .15s;
+}
+
+.bt-relexp__btn:hover { opacity: .75; }

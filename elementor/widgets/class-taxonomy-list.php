@@ -3,6 +3,8 @@ namespace BlackTenders\Elementor\Widgets;
 
 use BlackTenders\Elementor\AbstractBtWidget;
 use BlackTenders\Elementor\Traits\BtSharedControls;
+use Elementor\Controls_Manager;
+use Elementor\Group_Control_Typography;
 
 defined('ABSPATH') || exit;
 
@@ -23,6 +25,7 @@ class TaxonomyList extends AbstractBtWidget {
             'title'    => 'BT — Taxonomie',
             'icon'     => 'eicon-tags',
             'keywords' => ['taxonomie', 'inclus', 'liste', 'terme', 'bt'],
+            'css'      => ['bt-taxonomy-list'],
         ];
     }
 
@@ -33,12 +36,12 @@ class TaxonomyList extends AbstractBtWidget {
         // ── Section Content ───────────────────────────────────────────────
         $this->start_controls_section('section_content', [
             'label' => __('Contenu', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('acf_field', [
             'label'   => __('Champ ACF (taxonomy)', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
+            'type'    => Controls_Manager::SELECT,
             'options' => [
                 'exp_included'            => __('Ce qui est inclus (exp_included)', 'blacktenderscore'),
                 'exp_to_excluded'         => __('Ce qui est exclu (exp_to_excluded)', 'blacktenderscore'),
@@ -54,18 +57,19 @@ class TaxonomyList extends AbstractBtWidget {
 
         $this->add_control('layout', [
             'label'   => __('Disposition', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
+            'type'    => Controls_Manager::CHOOSE,
             'options' => [
-                'list'   => __('Liste verticale', 'blacktenderscore'),
-                'grid'   => __('Grille', 'blacktenderscore'),
-                'inline' => __('Inline (puces)', 'blacktenderscore'),
+                'list'   => ['title' => __('Liste',   'blacktenderscore'), 'icon' => 'eicon-post-list'],
+                'grid'   => ['title' => __('Grille',  'blacktenderscore'), 'icon' => 'eicon-gallery-grid'],
+                'inline' => ['title' => __('Inline',  'blacktenderscore'), 'icon' => 'eicon-flex'],
             ],
             'default' => 'list',
+            'toggle'  => false,
         ]);
 
         $this->add_control('show_icon', [
             'label'        => __("Afficher l'icône du terme", 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'label_on'     => __('Oui', 'blacktenderscore'),
             'label_off'    => __('Non', 'blacktenderscore'),
             'return_value' => 'yes',
@@ -74,7 +78,7 @@ class TaxonomyList extends AbstractBtWidget {
 
         $this->add_control('show_description', [
             'label'        => __('Afficher la description', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'label_on'     => __('Oui', 'blacktenderscore'),
             'label_off'    => __('Non', 'blacktenderscore'),
             'return_value' => 'yes',
@@ -83,7 +87,7 @@ class TaxonomyList extends AbstractBtWidget {
 
         $this->add_control('description_position', [
             'label'     => __('Position de la description', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::SELECT,
+            'type'      => Controls_Manager::SELECT,
             'options'   => [
                 'inline' => __('En ligne (après le nom)', 'blacktenderscore'),
                 'below'  => __('En dessous', 'blacktenderscore'),
@@ -99,12 +103,12 @@ class TaxonomyList extends AbstractBtWidget {
         // ── Section Style — Éléments ──────────────────────────────────────
         $this->start_controls_section('style_items', [
             'label' => __('Style — Éléments', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+            'tab'   => Controls_Manager::TAB_STYLE,
         ]);
 
         $this->add_responsive_control('item_gap', [
             'label'      => __('Espacement entre éléments', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'range'      => ['px' => ['min' => 0, 'max' => 48]],
             'default'    => ['size' => 12, 'unit' => 'px'],
@@ -113,7 +117,7 @@ class TaxonomyList extends AbstractBtWidget {
 
         $this->add_responsive_control('grid_columns', [
             'label'     => __('Colonnes (grille)', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::NUMBER,
+            'type'      => Controls_Manager::NUMBER,
             'min'       => 1,
             'max'       => 6,
             'default'   => 2,
@@ -121,26 +125,26 @@ class TaxonomyList extends AbstractBtWidget {
             'condition' => ['layout' => 'grid'],
         ]);
 
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+        $this->add_group_control(Group_Control_Typography::get_type(), [
             'name'     => 'item_typography',
             'selector' => '{{WRAPPER}} .bt-taxlist__item-name',
         ]);
 
         $this->add_control('item_color', [
             'label'     => __('Couleur texte', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-taxlist__item-name' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_control('item_bg', [
             'label'     => __('Fond des éléments', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-taxlist__item' => 'background-color: {{VALUE}}'],
         ]);
 
         $this->add_responsive_control('item_border_radius', [
             'label'      => __('Border radius', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px', '%'],
             'range'      => ['px' => ['min' => 0, 'max' => 100]],
             'selectors'  => ['{{WRAPPER}} .bt-taxlist__item' => 'border-radius: {{SIZE}}{{UNIT}}'],
@@ -148,14 +152,14 @@ class TaxonomyList extends AbstractBtWidget {
 
         $this->add_responsive_control('item_padding', [
             'label'      => __('Padding des éléments', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::DIMENSIONS,
+            'type'       => Controls_Manager::DIMENSIONS,
             'size_units' => ['px', 'em'],
             'selectors'  => ['{{WRAPPER}} .bt-taxlist__item' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
         ]);
 
         $this->add_responsive_control('icon_size', [
             'label'      => __('Taille icône', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'range'      => ['px' => ['min' => 12, 'max' => 80]],
             'default'    => ['size' => 24, 'unit' => 'px'],
@@ -169,7 +173,7 @@ class TaxonomyList extends AbstractBtWidget {
 
         $this->add_control('icon_color', [
             'label'     => __('Couleur icône (FA / fallback)', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => [
                 '{{WRAPPER}} .bt-taxlist__item-icon i'                     => 'color: {{VALUE}}',
                 '{{WRAPPER}} .bt-taxlist__item-icon-fallback'              => 'color: {{VALUE}}; opacity: 1',
@@ -179,12 +183,12 @@ class TaxonomyList extends AbstractBtWidget {
 
         $this->add_control('fallback_icon', [
             'label'     => __('Icône de remplacement (si aucune sur le terme)', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::ICONS,
+            'type'      => Controls_Manager::ICONS,
             'default'   => ['value' => '', 'library' => ''],
             'condition' => ['show_icon' => 'yes'],
         ]);
 
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+        $this->add_group_control(Group_Control_Typography::get_type(), [
             'name'      => 'desc_typography',
             'label'     => __('Typographie description', 'blacktenderscore'),
             'selector'  => '{{WRAPPER}} .bt-taxlist__item-desc',
@@ -193,7 +197,7 @@ class TaxonomyList extends AbstractBtWidget {
 
         $this->add_control('desc_color', [
             'label'     => __('Couleur description', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-taxlist__item-desc' => 'color: {{VALUE}}'],
             'condition' => ['show_description' => 'yes'],
         ]);

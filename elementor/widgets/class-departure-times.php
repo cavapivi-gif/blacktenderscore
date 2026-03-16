@@ -3,6 +3,7 @@ namespace BlackTenders\Elementor\Widgets;
 
 use BlackTenders\Elementor\AbstractBtWidget;
 use BlackTenders\Elementor\Traits\BtSharedControls;
+use Elementor\Controls_Manager;
 
 defined('ABSPATH') || exit;
 
@@ -23,6 +24,7 @@ class DepartureTimes extends AbstractBtWidget {
             'title'    => 'BT — Horaires de départ',
             'icon'     => 'eicon-clock-o',
             'keywords' => ['horaires', 'départ', 'temps', 'saison', 'bt'],
+            'css'      => ['bt-departure-times'],
         ];
     }
 
@@ -42,25 +44,25 @@ class DepartureTimes extends AbstractBtWidget {
         // ── Contenu ───────────────────────────────────────────────────────
         $this->start_controls_section('section_content', [
             'label' => __('Contenu', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('acf_field', [
             'label'   => __('Champ ACF horaires (repeater)', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
+            'type'    => Controls_Manager::TEXT,
             'default' => 'exp_departure_times',
         ]);
 
         $this->add_control('subfield_time', [
             'label'       => __('Sous-champ heure', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::TEXT,
+            'type'        => Controls_Manager::TEXT,
             'default'     => 'time',
             'description' => __('Nom du sous-champ ACF contenant l\'heure dans le repeater.', 'blacktenderscore'),
         ]);
 
         $this->add_control('subfield_season', [
             'label'       => __('Sous-champ saison', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::TEXT,
+            'type'        => Controls_Manager::TEXT,
             'default'     => 'season',
             'description' => __('Nom du sous-champ ACF contenant la saison dans le repeater.', 'blacktenderscore'),
         ]);
@@ -69,18 +71,19 @@ class DepartureTimes extends AbstractBtWidget {
 
         $this->add_control('layout', [
             'label'   => __('Disposition', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
+            'type'    => Controls_Manager::CHOOSE,
             'options' => [
-                'grid'   => __('Grille', 'blacktenderscore'),
-                'inline' => __('Inline', 'blacktenderscore'),
-                'list'   => __('Liste', 'blacktenderscore'),
+                'grid'   => ['title' => __('Grille',  'blacktenderscore'), 'icon' => 'eicon-gallery-grid'],
+                'inline' => ['title' => __('Inline',  'blacktenderscore'), 'icon' => 'eicon-flex'],
+                'list'   => ['title' => __('Liste',   'blacktenderscore'), 'icon' => 'eicon-post-list'],
             ],
             'default' => 'grid',
+            'toggle'  => false,
         ]);
 
         $this->add_responsive_control('grid_columns', [
             'label'          => __('Colonnes', 'blacktenderscore'),
-            'type'           => \Elementor\Controls_Manager::NUMBER,
+            'type'           => Controls_Manager::NUMBER,
             'min'            => 2,
             'max'            => 8,
             'default'        => 4,
@@ -95,12 +98,12 @@ class DepartureTimes extends AbstractBtWidget {
         // ── Filtres saison ────────────────────────────────────────────────
         $this->start_controls_section('section_season', [
             'label' => __('Filtre saison', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('filter_season', [
             'label'        => __('Filtrer par saison', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => '',
             'description'  => __('Affiche uniquement les horaires de la saison sélectionnée.', 'blacktenderscore'),
@@ -108,7 +111,7 @@ class DepartureTimes extends AbstractBtWidget {
 
         $this->add_control('active_season', [
             'label'     => __('Saison active', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::SELECT,
+            'type'      => Controls_Manager::SELECT,
             'options'   => $this->season_options(),
             'default'   => 'summer',
             'condition' => ['filter_season' => 'yes'],
@@ -116,28 +119,28 @@ class DepartureTimes extends AbstractBtWidget {
 
         $this->add_control('show_season_badge', [
             'label'        => __('Afficher le badge saison', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('label_season_all', [
             'label'     => __('Label "Toute l\'année"', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => __('Toute l\'année', 'blacktenderscore'),
             'condition' => ['show_season_badge' => 'yes'],
         ]);
 
         $this->add_control('label_season_summer', [
             'label'     => __('Label "Été"', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => __('Été', 'blacktenderscore'),
             'condition' => ['show_season_badge' => 'yes'],
         ]);
 
         $this->add_control('label_season_offseason', [
             'label'     => __('Label "Hors saison"', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => __('Hors saison', 'blacktenderscore'),
             'condition' => ['show_season_badge' => 'yes'],
         ]);
@@ -147,12 +150,12 @@ class DepartureTimes extends AbstractBtWidget {
         // ── Point de départ ───────────────────────────────────────────────
         $this->start_controls_section('section_departure_point', [
             'label' => __('Point de départ', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('show_departure_point', [
             'label'        => __('Afficher le point de départ', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'description'  => __('Lit le champ ACF exp_departure_point (taxonomie city).', 'blacktenderscore'),
             'return_value' => 'yes',
             'default'      => 'yes',
@@ -160,14 +163,14 @@ class DepartureTimes extends AbstractBtWidget {
 
         $this->add_control('departure_icon', [
             'label'     => __('Icône départ', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::ICONS,
+            'type'      => Controls_Manager::ICONS,
             'default'   => ['value' => 'fas fa-map-marker-alt', 'library' => 'fa-solid'],
             'condition' => ['show_departure_point' => 'yes'],
         ]);
 
         $this->add_responsive_control('departure_icon_size', [
             'label'      => __('Taille icône', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px', 'em'],
             'range'      => ['px' => ['min' => 10, 'max' => 40]],
             'default'    => ['size' => 16, 'unit' => 'px'],
@@ -177,14 +180,14 @@ class DepartureTimes extends AbstractBtWidget {
 
         $this->add_control('departure_icon_color', [
             'label'     => __('Couleur icône', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-deptimes__departure-icon' => 'color: {{VALUE}}'],
             'condition' => ['show_departure_point' => 'yes'],
         ]);
 
         $this->add_control('show_map_link', [
             'label'        => __('Afficher un lien Google Maps', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'description'  => __('Lit exp_departure_coords (lat, lon) et génère un lien Maps.', 'blacktenderscore'),
             'return_value' => 'yes',
             'default'      => 'yes',
@@ -193,7 +196,7 @@ class DepartureTimes extends AbstractBtWidget {
 
         $this->add_control('map_link_label', [
             'label'     => __('Texte du lien Maps', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => __('Voir sur la carte', 'blacktenderscore'),
             'condition' => ['show_departure_point' => 'yes', 'show_map_link' => 'yes'],
         ]);
@@ -210,7 +213,7 @@ class DepartureTimes extends AbstractBtWidget {
         // Espacement + badge saison (petite section custom)
         $this->start_controls_section('style_badges_extra', [
             'label' => __('Style — Espacement & saison', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+            'tab'   => Controls_Manager::TAB_STYLE,
         ]);
 
         $this->register_gap_control(
@@ -249,19 +252,19 @@ class DepartureTimes extends AbstractBtWidget {
 
         $this->start_controls_section('style_map_link', [
             'label'     => __('Style — Lien Maps', 'blacktenderscore'),
-            'tab'       => \Elementor\Controls_Manager::TAB_STYLE,
+            'tab'       => Controls_Manager::TAB_STYLE,
             'condition' => ['show_departure_point' => 'yes', 'show_map_link' => 'yes'],
         ]);
 
         $this->add_control('map_link_color', [
             'label'     => __('Couleur lien Maps', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-deptimes__map-link' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_control('map_link_color_hover', [
             'label'     => __('Couleur au survol', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-deptimes__map-link:hover' => 'color: {{VALUE}}'],
         ]);
 

@@ -3,6 +3,7 @@ namespace BlackTenders\Elementor\Widgets;
 
 use BlackTenders\Elementor\AbstractBtWidget;
 use BlackTenders\Elementor\Traits\BtSharedControls;
+use Elementor\Controls_Manager;
 
 defined('ABSPATH') || exit;
 
@@ -35,11 +36,11 @@ class ExcursionSchema extends AbstractBtWidget {
         // ── Source données ────────────────────────────────────────────────
         $this->start_controls_section('section_schema', [
             'label' => __('Configuration Schema.org', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('schema_info', [
-            'type'            => \Elementor\Controls_Manager::RAW_HTML,
+            'type'            => Controls_Manager::RAW_HTML,
             'raw'             => '<div style="padding:10px;background:#f0f6ff;border-radius:4px;font-size:12px;line-height:1.6">'
                 . '<strong>Widget invisible</strong><br>'
                 . 'Ce widget n\'affiche rien visuellement. Il injecte uniquement un JSON-LD <code>TouristTrip</code> dans la page pour les moteurs de recherche.<br><br>'
@@ -50,7 +51,7 @@ class ExcursionSchema extends AbstractBtWidget {
 
         $this->add_control('provider_name', [
             'label'       => __('Nom du prestataire', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::TEXT,
+            'type'        => Controls_Manager::TEXT,
             'default'     => '',
             'description' => __('Vide = nom du site WordPress automatiquement.', 'blacktenderscore'),
             'dynamic'     => ['active' => true],
@@ -58,20 +59,20 @@ class ExcursionSchema extends AbstractBtWidget {
 
         $this->add_control('provider_url', [
             'label'       => __('URL du prestataire', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::TEXT,
+            'type'        => Controls_Manager::TEXT,
             'default'     => '',
             'description' => __('Vide = URL du site WordPress automatiquement.', 'blacktenderscore'),
         ]);
 
         $this->add_control('currency', [
             'label'   => __('Devise (ISO 4217)', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
+            'type'    => Controls_Manager::TEXT,
             'default' => 'EUR',
         ]);
 
         $this->add_control('audience_type', [
             'label'   => __('Type d\'audience', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
+            'type'    => Controls_Manager::TEXT,
             'default' => __('Touristes, familles, groupes', 'blacktenderscore'),
         ]);
 
@@ -80,12 +81,12 @@ class ExcursionSchema extends AbstractBtWidget {
         // ── Prix ──────────────────────────────────────────────────────────
         $this->start_controls_section('section_price', [
             'label' => __('Prix', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('price_source', [
             'label'       => __('Source du prix', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::SELECT,
+            'type'        => Controls_Manager::SELECT,
             'options'     => [
                 'auto'   => __('Auto (depuis tarification_par_forfait)', 'blacktenderscore'),
                 'manual' => __('Manuel (saisir les valeurs)', 'blacktenderscore'),
@@ -95,7 +96,7 @@ class ExcursionSchema extends AbstractBtWidget {
 
         $this->add_control('manual_min_price', [
             'label'     => __('Prix minimum', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::NUMBER,
+            'type'      => Controls_Manager::NUMBER,
             'min'       => 0,
             'step'      => 1,
             'default'   => '',
@@ -105,7 +106,7 @@ class ExcursionSchema extends AbstractBtWidget {
 
         $this->add_control('manual_max_price', [
             'label'     => __('Prix maximum', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::NUMBER,
+            'type'      => Controls_Manager::NUMBER,
             'min'       => 0,
             'step'      => 1,
             'default'   => '',
@@ -115,7 +116,7 @@ class ExcursionSchema extends AbstractBtWidget {
 
         $this->add_control('price_note_in_schema', [
             'label'       => __('Description offre (optionnel)', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::TEXT,
+            'type'        => Controls_Manager::TEXT,
             'default'     => __('Par personne', 'blacktenderscore'),
             'description' => __('Texte affiché dans le champ description de l\'Offer.', 'blacktenderscore'),
         ]);
@@ -125,12 +126,12 @@ class ExcursionSchema extends AbstractBtWidget {
         // ── Données additionnelles ────────────────────────────────────────
         $this->start_controls_section('section_extra', [
             'label' => __('Données additionnelles', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('include_languages', [
             'label'        => __('Inclure les langues parlées', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'description'  => __('Lit le champ ACF exp_languages.', 'blacktenderscore'),
             'return_value' => 'yes',
             'default'      => 'yes',
@@ -138,14 +139,14 @@ class ExcursionSchema extends AbstractBtWidget {
 
         $this->add_control('include_capacity', [
             'label'        => __('Inclure capacité (pax min/max)', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('include_departure', [
             'label'        => __('Inclure le point de départ', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'description'  => __('Lit exp_departure_point (city taxonomy).', 'blacktenderscore'),
             'return_value' => 'yes',
             'default'      => 'yes',
@@ -153,7 +154,7 @@ class ExcursionSchema extends AbstractBtWidget {
 
         $this->add_control('include_image', [
             'label'        => __('Inclure l\'image', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'description'  => __('Lit exp_cover ou la featured image.', 'blacktenderscore'),
             'return_value' => 'yes',
             'default'      => 'yes',
@@ -161,7 +162,7 @@ class ExcursionSchema extends AbstractBtWidget {
 
         $this->add_control('include_boats', [
             'label'        => __('Inclure les bateaux (isPartOf / vehicle)', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'description'  => __('Liste les bateaux liés via exp_boats dans subjectOf.', 'blacktenderscore'),
             'return_value' => 'yes',
             'default'      => '',

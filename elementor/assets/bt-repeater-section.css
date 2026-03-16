@@ -1,0 +1,52 @@
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Repeater Section
+   ══════════════════════════════════════════════════════════ */
+
+/* En-tête */
+.bt-rsection__header { margin-bottom: 1em; }
+.bt-rsection__title  { margin: 0 0 .5em; }
+.bt-rsection__desc   { margin: 0; }
+
+/* Liste */
+.bt-rsection__items--list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Grille — colonnes définies par le control responsive Elementor */
+.bt-rsection__items--grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* Item */
+.bt-rsection__item {
+  display: flex;
+  align-items: flex-start;
+  gap: .75em;
+}
+
+.bt-rsection__item-link {
+  display: flex;
+  align-items: flex-start;
+  gap: .75em;
+  width: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
+.bt-rsection__item-icon    { flex-shrink: 0; line-height: 1; }
+.bt-rsection__item-icon img { display: block; max-width: 1em; height: auto; }
+.bt-rsection__item-content { flex: 1; }
+.bt-rsection__item-title   { display: block; }
+.bt-rsection__item-body    { margin: .25em 0 0; }
+
+/* Mode auto : chaque sous-champ sur sa propre ligne */
+.bt-rsection__item-field     { display: block; }
+.bt-rsection__item-field img { max-width: 100%; height: auto; }
+
+/* État vide */
+.bt-rsection__empty { margin: 0; }

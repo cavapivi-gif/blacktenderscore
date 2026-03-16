@@ -3,6 +3,9 @@ namespace BlackTenders\Elementor\Widgets;
 
 use BlackTenders\Elementor\AbstractBtWidget;
 use BlackTenders\Elementor\Traits\BtSharedControls;
+use Elementor\Controls_Manager;
+use Elementor\Group_Control_Border;
+use Elementor\Group_Control_Typography;
 
 defined('ABSPATH') || exit;
 
@@ -29,6 +32,7 @@ class FaqAccordion extends AbstractBtWidget {
             'title'    => 'BT — FAQ',
             'icon'     => 'eicon-toggle',
             'keywords' => ['faq', 'accordéon', 'accordion', 'tabs', 'question', 'bt'],
+            'css'      => ['bt-faq-accordion'],
             'js'       => ['bt-elementor'],
         ];
     }
@@ -40,21 +44,21 @@ class FaqAccordion extends AbstractBtWidget {
         // ── Contenu ───────────────────────────────────────────────────────────
         $this->start_controls_section('section_content', [
             'label' => __('Contenu', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->register_section_title_controls();
 
         $this->add_control('acf_field', [
             'label'   => __('Champ ACF (FAQ)', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
+            'type'    => Controls_Manager::SELECT,
             'options' => self::get_faq_field_options(),
             'default' => 'exp_faq',
         ]);
 
         $this->add_control('prioritize_page_questions', [
             'label'        => __('Mettre en avant les questions de la page', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'label_on'     => __('Oui', 'blacktenderscore'),
             'label_off'    => __('Non', 'blacktenderscore'),
             'return_value' => 'yes',
@@ -65,7 +69,7 @@ class FaqAccordion extends AbstractBtWidget {
 
         $this->add_control('combined_local_fields', [
             'label'       => __('Champs ACF locaux (FAQ)', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::SELECT2,
+            'type'        => Controls_Manager::SELECT2,
             'multiple'    => true,
             'options'     => self::get_faq_repeater_options(),
             'default'     => ['exp_faq_current', 'city_faq'],
@@ -76,7 +80,7 @@ class FaqAccordion extends AbstractBtWidget {
 
         $this->add_control('combined_relationship_field', [
             'label'       => __('Champ relation vers pages FAQ', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::SELECT,
+            'type'        => Controls_Manager::SELECT,
             'options'     => self::get_faq_relationship_options(),
             'default'     => 'exp_faq',
             'label_block' => true,
@@ -86,31 +90,32 @@ class FaqAccordion extends AbstractBtWidget {
 
         $this->add_control('layout', [
             'label'   => __('Disposition', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
+            'type'    => Controls_Manager::CHOOSE,
             'options' => [
-                'accordion' => __('Accordéon', 'blacktenderscore'),
-                'tabs'      => __('Tabs', 'blacktenderscore'),
+                'accordion' => ['title' => __('Accordéon', 'blacktenderscore'), 'icon' => 'eicon-toggle'],
+                'tabs'      => ['title' => __('Tabs', 'blacktenderscore'),      'icon' => 'eicon-tabs'],
             ],
             'default' => 'accordion',
+            'toggle'  => false,
         ]);
 
         $this->add_control('selected_icon', [
             'label'     => __('Icône (fermé)', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::ICONS,
+            'type'      => Controls_Manager::ICONS,
             'default'   => ['value' => 'fas fa-plus', 'library' => 'fa-solid'],
             'condition' => ['layout' => 'accordion'],
         ]);
 
         $this->add_control('selected_active_icon', [
             'label'     => __('Icône (ouvert)', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::ICONS,
+            'type'      => Controls_Manager::ICONS,
             'default'   => ['value' => 'fas fa-minus', 'library' => 'fa-solid'],
             'condition' => ['layout' => 'accordion'],
         ]);
 
         $this->add_control('icon_align', [
             'label'     => __('Position icône', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::CHOOSE,
+            'type'      => Controls_Manager::CHOOSE,
             'options'   => [
                 'left'  => ['title' => __('Gauche', 'blacktenderscore'), 'icon' => 'eicon-h-align-left'],
                 'right' => ['title' => __('Droite', 'blacktenderscore'), 'icon' => 'eicon-h-align-right'],
@@ -121,7 +126,7 @@ class FaqAccordion extends AbstractBtWidget {
 
         $this->add_control('faq_mode', [
             'label'        => __('Un seul ouvert à la fois', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'label_on'     => __('Oui', 'blacktenderscore'),
             'label_off'    => __('Non', 'blacktenderscore'),
             'return_value' => 'yes',
@@ -131,7 +136,7 @@ class FaqAccordion extends AbstractBtWidget {
 
         $this->add_control('open_first', [
             'label'        => __('Ouvrir le premier élément', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'label_on'     => __('Oui', 'blacktenderscore'),
             'label_off'    => __('Non', 'blacktenderscore'),
             'return_value' => 'yes',
@@ -141,7 +146,7 @@ class FaqAccordion extends AbstractBtWidget {
 
         $this->add_control('schema_faq', [
             'label'        => __('Injecter Schema FAQPage (SEO)', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'label_on'     => __('Oui', 'blacktenderscore'),
             'label_off'    => __('Non', 'blacktenderscore'),
             'return_value' => 'yes',
@@ -155,7 +160,7 @@ class FaqAccordion extends AbstractBtWidget {
         // ── Style — Espacement ────────────────────────────────────────────────
         $this->start_controls_section('style_accordion_layout', [
             'label' => __('Style — Espacement', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+            'tab'   => Controls_Manager::TAB_STYLE,
         ]);
         $this->register_gap_control(
             'items_gap',
@@ -177,10 +182,10 @@ class FaqAccordion extends AbstractBtWidget {
         // ── Style — Questions ─────────────────────────────────────────────────
         $this->start_controls_section('style_question', [
             'label' => __('Style — Questions', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+            'tab'   => Controls_Manager::TAB_STYLE,
         ]);
 
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+        $this->add_group_control(Group_Control_Typography::get_type(), [
             'name'     => 'question_typography',
             'selector' => '{{WRAPPER}} .bt-faq__header',
         ]);
@@ -190,12 +195,12 @@ class FaqAccordion extends AbstractBtWidget {
         $this->start_controls_tab('question_tab_normal', ['label' => __('Normal', 'blacktenderscore')]);
         $this->add_control('question_color', [
             'label'     => __('Couleur', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-faq__header' => 'color: {{VALUE}}'],
         ]);
         $this->add_control('question_bg', [
             'label'     => __('Fond', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-faq__header' => 'background-color: {{VALUE}}'],
         ]);
         $this->end_controls_tab();
@@ -203,12 +208,12 @@ class FaqAccordion extends AbstractBtWidget {
         $this->start_controls_tab('question_tab_hover', ['label' => __('Survol', 'blacktenderscore')]);
         $this->add_control('question_color_hover', [
             'label'     => __('Couleur', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-faq__header:hover' => 'color: {{VALUE}}'],
         ]);
         $this->add_control('question_bg_hover', [
             'label'     => __('Fond', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-faq__header:hover' => 'background-color: {{VALUE}}'],
         ]);
         $this->end_controls_tab();
@@ -216,7 +221,7 @@ class FaqAccordion extends AbstractBtWidget {
         $this->start_controls_tab('question_tab_active', ['label' => __('Actif', 'blacktenderscore')]);
         $this->add_control('question_color_active', [
             'label'     => __('Couleur', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => [
                 '{{WRAPPER}} .bt-faq__item--active .bt-faq__header' => 'color: {{VALUE}}',
                 '{{WRAPPER}} .bt-faq__tab--active'                  => 'color: {{VALUE}}',
@@ -224,7 +229,7 @@ class FaqAccordion extends AbstractBtWidget {
         ]);
         $this->add_control('question_bg_active', [
             'label'     => __('Fond', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => [
                 '{{WRAPPER}} .bt-faq__item--active .bt-faq__header' => 'background-color: {{VALUE}}',
                 '{{WRAPPER}} .bt-faq__tab--active'                  => 'background-color: {{VALUE}}',
@@ -236,14 +241,14 @@ class FaqAccordion extends AbstractBtWidget {
 
         $this->add_responsive_control('question_padding', [
             'label'      => __('Padding', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::DIMENSIONS,
+            'type'       => Controls_Manager::DIMENSIONS,
             'size_units' => ['px', 'em'],
             'selectors'  => ['{{WRAPPER}} .bt-faq__header' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
         ]);
 
         $this->add_responsive_control('question_border_radius', [
             'label'      => __('Border radius', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::DIMENSIONS,
+            'type'       => Controls_Manager::DIMENSIONS,
             'size_units' => ['px', '%'],
             'selectors'  => ['{{WRAPPER}} .bt-faq__header' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
         ]);
@@ -253,7 +258,7 @@ class FaqAccordion extends AbstractBtWidget {
         // ── Style — Icône ─────────────────────────────────────────────────────
         $this->start_controls_section('style_icon', [
             'label'     => __('Style — Icône', 'blacktenderscore'),
-            'tab'       => \Elementor\Controls_Manager::TAB_STYLE,
+            'tab'       => Controls_Manager::TAB_STYLE,
             'condition' => ['layout' => 'accordion'],
         ]);
 
@@ -262,7 +267,7 @@ class FaqAccordion extends AbstractBtWidget {
         $this->start_controls_tab('icon_tab_normal', ['label' => __('Normal', 'blacktenderscore')]);
         $this->add_control('icon_color', [
             'label'     => __('Couleur icône', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => [
                 '{{WRAPPER}} .bt-faq__icon'         => 'color: {{VALUE}}',
                 '{{WRAPPER}} .bt-faq__icon--closed' => 'color: {{VALUE}}',
@@ -273,7 +278,7 @@ class FaqAccordion extends AbstractBtWidget {
         $this->start_controls_tab('icon_tab_active', ['label' => __('Actif', 'blacktenderscore')]);
         $this->add_control('icon_color_active', [
             'label'     => __('Couleur icône (actif)', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => [
                 '{{WRAPPER}} .bt-faq__item--active .bt-faq__icon'       => 'color: {{VALUE}}',
                 '{{WRAPPER}} .bt-faq__item--active .bt-faq__icon--open' => 'color: {{VALUE}}',
@@ -285,7 +290,7 @@ class FaqAccordion extends AbstractBtWidget {
 
         $this->add_responsive_control('icon_size', [
             'label'      => __('Taille icône', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'range'      => ['px' => ['min' => 8, 'max' => 48]],
             'selectors'  => [
@@ -297,7 +302,7 @@ class FaqAccordion extends AbstractBtWidget {
 
         $this->add_responsive_control('icon_spacing', [
             'label'      => __('Espacement icône / texte', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'selectors'  => ['{{WRAPPER}} .bt-faq__header' => 'gap: {{SIZE}}{{UNIT}}'],
         ]);
@@ -307,41 +312,41 @@ class FaqAccordion extends AbstractBtWidget {
         // ── Style — Réponses ──────────────────────────────────────────────────
         $this->start_controls_section('style_answer', [
             'label' => __('Style — Réponses', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+            'tab'   => Controls_Manager::TAB_STYLE,
         ]);
 
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+        $this->add_group_control(Group_Control_Typography::get_type(), [
             'name'     => 'answer_typography',
             'selector' => '{{WRAPPER}} .bt-faq__body-inner',
         ]);
 
         $this->add_control('answer_color', [
             'label'     => __('Couleur', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-faq__body-inner' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_control('answer_bg', [
             'label'     => __('Fond', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-faq__body-inner' => 'background-color: {{VALUE}}'],
         ]);
 
         $this->add_responsive_control('answer_padding', [
             'label'      => __('Padding', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::DIMENSIONS,
+            'type'       => Controls_Manager::DIMENSIONS,
             'size_units' => ['px', 'em'],
             'selectors'  => ['{{WRAPPER}} .bt-faq__body-inner' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
         ]);
 
-        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
+        $this->add_group_control(Group_Control_Border::get_type(), [
             'name'     => 'answer_border',
             'selector' => '{{WRAPPER}} .bt-faq__body-inner',
         ]);
 
         $this->add_responsive_control('answer_border_radius', [
             'label'      => __('Border radius', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::DIMENSIONS,
+            'type'       => Controls_Manager::DIMENSIONS,
             'size_units' => ['px', '%'],
             'selectors'  => ['{{WRAPPER}} .bt-faq__body-inner' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
         ]);
@@ -351,11 +356,11 @@ class FaqAccordion extends AbstractBtWidget {
         // ── Style — Tabs ──────────────────────────────────────────────────────
         $this->start_controls_section('style_tabs', [
             'label'     => __('Style — Tabs', 'blacktenderscore'),
-            'tab'       => \Elementor\Controls_Manager::TAB_STYLE,
+            'tab'       => Controls_Manager::TAB_STYLE,
             'condition' => ['layout' => 'tabs'],
         ]);
 
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+        $this->add_group_control(Group_Control_Typography::get_type(), [
             'name'     => 'tab_typography',
             'selector' => '{{WRAPPER}} .bt-faq__tab',
         ]);
@@ -365,12 +370,12 @@ class FaqAccordion extends AbstractBtWidget {
         $this->start_controls_tab('tab_tab_normal', ['label' => __('Normal', 'blacktenderscore')]);
         $this->add_control('tab_color', [
             'label'     => __('Couleur', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-faq__tab' => 'color: {{VALUE}}'],
         ]);
         $this->add_control('tab_bg', [
             'label'     => __('Fond', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-faq__tab' => 'background-color: {{VALUE}}'],
         ]);
         $this->end_controls_tab();
@@ -378,17 +383,17 @@ class FaqAccordion extends AbstractBtWidget {
         $this->start_controls_tab('tab_tab_active', ['label' => __('Actif', 'blacktenderscore')]);
         $this->add_control('tab_color_active', [
             'label'     => __('Couleur', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-faq__tab--active' => 'color: {{VALUE}}'],
         ]);
         $this->add_control('tab_bg_active', [
             'label'     => __('Fond', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-faq__tab--active' => 'background-color: {{VALUE}}'],
         ]);
         $this->add_control('tab_active_border_color', [
             'label'     => __('Couleur bordure active', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-faq__tab--active' => 'border-bottom-color: {{VALUE}}'],
         ]);
         $this->end_controls_tab();
@@ -397,14 +402,14 @@ class FaqAccordion extends AbstractBtWidget {
 
         $this->add_responsive_control('tab_padding', [
             'label'      => __('Padding', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::DIMENSIONS,
+            'type'       => Controls_Manager::DIMENSIONS,
             'size_units' => ['px', 'em'],
             'selectors'  => ['{{WRAPPER}} .bt-faq__tab' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
         ]);
 
         $this->add_responsive_control('tab_gap', [
             'label'      => __('Espacement entre tabs', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'selectors'  => ['{{WRAPPER}} .bt-faq__tablist' => 'gap: {{SIZE}}{{UNIT}}'],
         ]);

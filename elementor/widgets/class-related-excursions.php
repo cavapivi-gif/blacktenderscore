@@ -3,6 +3,7 @@ namespace BlackTenders\Elementor\Widgets;
 
 use BlackTenders\Elementor\AbstractBtWidget;
 use BlackTenders\Elementor\Traits\BtSharedControls;
+use Elementor\Controls_Manager;
 
 defined('ABSPATH') || exit;
 
@@ -22,6 +23,7 @@ class RelatedExcursions extends AbstractBtWidget {
             'title'    => 'BT — Excursions de ce bateau',
             'icon'     => 'eicon-post-list',
             'keywords' => ['excursion', 'bateau', 'related', 'relation', 'bt'],
+            'css'      => ['bt-related-excursions'],
         ];
     }
 
@@ -32,12 +34,12 @@ class RelatedExcursions extends AbstractBtWidget {
         // ── Contenu ───────────────────────────────────────────────────────
         $this->start_controls_section('section_content', [
             'label' => __('Contenu', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('acf_relation_field', [
             'label'       => __('Champ ACF relation (sur excursion)', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::TEXT,
+            'type'        => Controls_Manager::TEXT,
             'default'     => 'exp_boats',
             'description' => __('Champ ACF relationship sur les excursions pointant vers les bateaux.', 'blacktenderscore'),
         ]);
@@ -46,7 +48,7 @@ class RelatedExcursions extends AbstractBtWidget {
 
         $this->add_control('max_results', [
             'label'   => __('Nombre max d\'excursions', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::NUMBER,
+            'type'    => Controls_Manager::NUMBER,
             'min'     => 1,
             'max'     => 24,
             'default' => 6,
@@ -54,7 +56,7 @@ class RelatedExcursions extends AbstractBtWidget {
 
         $this->add_control('orderby', [
             'label'   => __('Trier par', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
+            'type'    => Controls_Manager::SELECT,
             'options' => [
                 'post__in' => __('Ordre de relation', 'blacktenderscore'),
                 'date'     => __('Date (récent → ancien)', 'blacktenderscore'),
@@ -69,12 +71,12 @@ class RelatedExcursions extends AbstractBtWidget {
         // ── Affichage cartes ──────────────────────────────────────────────
         $this->start_controls_section('section_display', [
             'label' => __('Affichage des cartes', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_responsive_control('columns', [
             'label'          => __('Colonnes', 'blacktenderscore'),
-            'type'           => \Elementor\Controls_Manager::NUMBER,
+            'type'           => Controls_Manager::NUMBER,
             'min'            => 1,
             'max'            => 4,
             'default'        => 3,
@@ -85,14 +87,14 @@ class RelatedExcursions extends AbstractBtWidget {
 
         $this->add_control('image_size', [
             'label'   => __('Taille d\'image', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
+            'type'    => Controls_Manager::SELECT,
             'options' => ['thumbnail' => 'Miniature', 'medium' => 'Moyenne', 'large' => 'Grande', 'full' => 'Originale'],
             'default' => 'medium',
         ]);
 
         $this->add_responsive_control('image_ratio', [
             'label'     => __('Ratio image (%)', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::SLIDER,
+            'type'      => Controls_Manager::SLIDER,
             'range'     => ['px' => ['min' => 30, 'max' => 120]],
             'default'   => ['size' => 56],
             'selectors' => ['{{WRAPPER}} .bt-relexp__img-wrap' => 'padding-bottom: {{SIZE}}%'],
@@ -100,77 +102,77 @@ class RelatedExcursions extends AbstractBtWidget {
 
         $this->add_control('show_image', [
             'label'        => __('Afficher l\'image', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('card_title_tag', [
             'label'   => __('Balise titre carte', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
+            'type'    => Controls_Manager::SELECT,
             'options' => ['h2' => 'H2', 'h3' => 'H3', 'h4' => 'H4', 'h5' => 'H5', 'h6' => 'H6', 'p' => 'p', 'span' => 'span'],
             'default' => 'h4',
         ]);
 
         $this->add_control('show_tagline', [
             'label'        => __('Afficher l\'accroche', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('show_duration', [
             'label'        => __('Afficher la durée', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => '',
         ]);
 
         $this->add_control('duration_subfield', [
             'label'     => __('Champ ACF durée', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => 'exp_duration',
             'condition' => ['show_duration' => 'yes'],
         ]);
 
         $this->add_control('duration_label', [
             'label'     => __('Icône / préfixe durée', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => '⏱',
             'condition' => ['show_duration' => 'yes'],
         ]);
 
         $this->add_control('show_price', [
             'label'        => __('Afficher le prix de départ', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('price_prefix', [
             'label'     => __('Préfixe prix', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => __('Dès', 'blacktenderscore'),
             'condition' => ['show_price' => 'yes'],
         ]);
 
         $this->add_control('currency', [
             'label'     => __('Symbole monnaie', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => '€',
             'condition' => ['show_price' => 'yes'],
         ]);
 
         $this->add_control('show_link', [
             'label'        => __('Afficher le bouton', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('link_label', [
             'label'     => __('Texte du bouton', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => __('Voir l\'excursion', 'blacktenderscore'),
             'condition' => ['show_link' => 'yes'],
         ]);
@@ -183,18 +185,18 @@ class RelatedExcursions extends AbstractBtWidget {
 
         $this->start_controls_section('style_grid', [
             'label' => __('Style — Grille', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+            'tab'   => Controls_Manager::TAB_STYLE,
         ]);
         $this->add_responsive_control('cards_gap', [
             'label'      => __('Espacement', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'default'    => ['size' => 24, 'unit' => 'px'],
             'selectors'  => ['{{WRAPPER}} .bt-relexp__grid' => 'gap: {{SIZE}}{{UNIT}}'],
         ]);
         $this->add_responsive_control('body_padding', [
             'label'      => __('Padding contenu carte', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::DIMENSIONS,
+            'type'       => Controls_Manager::DIMENSIONS,
             'size_units' => ['px', 'em'],
             'default'    => ['top' => '16', 'right' => '16', 'bottom' => '16', 'left' => '16', 'unit' => 'px', 'isLinked' => true],
             'selectors'  => ['{{WRAPPER}} .bt-relexp__body' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],

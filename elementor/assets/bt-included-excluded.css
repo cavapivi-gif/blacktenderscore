@@ -1,0 +1,39 @@
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Included / Excluded
+   ══════════════════════════════════════════════════════════ */
+
+.bt-inclexcl__section-title { margin: 0 0 1em; }
+
+.bt-inclexcl__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+
+.bt-inclexcl__col-title { margin: 0 0 .75em; font-weight: 700; }
+
+.bt-inclexcl__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bt-inclexcl__item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.bt-inclexcl__icon { flex-shrink: 0; }
+.bt-inclexcl__text { flex: 1; }
+.bt-inclexcl__desc { display: block; font-size: .875em; }
+
+.bt-inclexcl__col--included .bt-inclexcl__icon { color: #22c55e; }
+.bt-inclexcl__col--excluded .bt-inclexcl__icon { color: #ef4444; }
+
+@media (max-width: 600px) {
+  .bt-inclexcl__grid { grid-template-columns: 1fr; }
+}

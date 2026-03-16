@@ -3,6 +3,9 @@ namespace BlackTenders\Elementor\Widgets;
 
 use BlackTenders\Elementor\AbstractBtWidget;
 use BlackTenders\Elementor\Traits\BtSharedControls;
+use Elementor\Controls_Manager;
+use Elementor\Group_Control_Border;
+use Elementor\Group_Control_Typography;
 
 defined('ABSPATH') || exit;
 
@@ -28,6 +31,7 @@ class RepeaterSection extends AbstractBtWidget {
             'title'    => 'BT — Section Repeater',
             'icon'     => 'eicon-post-list',
             'keywords' => ['repeater', 'section', 'liste', 'grille', 'acf', 'bt'],
+            'css'      => ['bt-repeater-section'],
         ];
     }
 
@@ -48,19 +52,19 @@ class RepeaterSection extends AbstractBtWidget {
 
         $this->start_controls_section('sec_header', [
             'label' => __('En-tête', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('show_header', [
             'label'        => __('Afficher l\'en-tête', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('header_title', [
             'label'       => __('Titre', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::TEXT,
+            'type'        => Controls_Manager::TEXT,
             'label_block' => true,
             'dynamic'     => ['active' => true],
             'condition'   => ['show_header' => 'yes'],
@@ -68,7 +72,7 @@ class RepeaterSection extends AbstractBtWidget {
 
         $this->add_control('header_title_tag', [
             'label'     => __('Balise', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::SELECT,
+            'type'      => Controls_Manager::SELECT,
             'options'   => ['h2' => 'H2', 'h3' => 'H3', 'h4' => 'H4', 'h5' => 'H5', 'p' => 'p'],
             'default'   => 'h3',
             'condition' => ['show_header' => 'yes', 'header_title!' => ''],
@@ -76,7 +80,7 @@ class RepeaterSection extends AbstractBtWidget {
 
         $this->add_control('header_desc', [
             'label'     => __('Description', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXTAREA,
+            'type'      => Controls_Manager::TEXTAREA,
             'rows'      => 3,
             'dynamic'   => ['active' => true],
             'condition' => ['show_header' => 'yes'],
@@ -89,7 +93,7 @@ class RepeaterSection extends AbstractBtWidget {
 
         $this->start_controls_section('sec_data', [
             'label' => __('Données', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         // ── Champ ACF ─────────────────────────────────────────────────────────
@@ -100,20 +104,20 @@ class RepeaterSection extends AbstractBtWidget {
 
         $this->add_control('acf_field', [
             'label'   => __('Champ ACF Repeater', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
+            'type'    => Controls_Manager::SELECT,
             'options' => $repeater_opts,
             'default' => $repeater_default,
         ]);
 
         $this->add_control('acf_field_custom', [
             'label'       => __('Clé du champ (manuelle)', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::TEXT,
+            'type'        => Controls_Manager::TEXT,
             'placeholder' => 'mon_repeater',
             'condition'   => ['acf_field' => '_custom'],
         ]);
 
         $this->add_control('divider_map', [
-            'type' => \Elementor\Controls_Manager::DIVIDER,
+            'type' => Controls_Manager::DIVIDER,
         ]);
 
         // ── Mapping sous-champs ───────────────────────────────────────────────
@@ -121,21 +125,21 @@ class RepeaterSection extends AbstractBtWidget {
         $this->add_control('auto_map', [
             'label'        => __('Affichage automatique', 'blacktenderscore'),
             'description'  => __('Affiche tous les sous-champs du repeater tels quels.', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => '',
         ]);
 
         $this->add_control('sf_title', [
             'label'       => __('Sous-champ — Titre', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::TEXT,
+            'type'        => Controls_Manager::TEXT,
             'placeholder' => 'item_title',
             'condition'   => ['auto_map!' => 'yes'],
         ]);
 
         $this->add_control('sf_body', [
             'label'       => __('Sous-champ — Description', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::TEXT,
+            'type'        => Controls_Manager::TEXT,
             'placeholder' => 'item_desc',
             'condition'   => ['auto_map!' => 'yes'],
         ]);
@@ -143,7 +147,7 @@ class RepeaterSection extends AbstractBtWidget {
         $this->add_control('sf_icon', [
             'label'       => __('Sous-champ — Icône', 'blacktenderscore'),
             'description' => __('Classe CSS (fas fa-anchor), emoji, ou champ image ACF.', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::TEXT,
+            'type'        => Controls_Manager::TEXT,
             'placeholder' => 'item_icon',
             'condition'   => ['auto_map!' => 'yes'],
         ]);
@@ -151,7 +155,7 @@ class RepeaterSection extends AbstractBtWidget {
         $this->add_control('sf_link', [
             'label'       => __('Sous-champ — Lien', 'blacktenderscore'),
             'description' => __('Champ link ACF ou URL directe. Rend l\'item cliquable.', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::TEXT,
+            'type'        => Controls_Manager::TEXT,
             'placeholder' => 'item_url',
             'condition'   => ['auto_map!' => 'yes'],
         ]);
@@ -163,12 +167,12 @@ class RepeaterSection extends AbstractBtWidget {
 
         $this->start_controls_section('sec_slice', [
             'label' => __('Découpe', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('slice_mode', [
             'label'   => __('Mode', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
+            'type'    => Controls_Manager::SELECT,
             'options' => [
                 'all'      => __('Tout afficher', 'blacktenderscore'),
                 'first_n'  => __('Les N premiers', 'blacktenderscore'),
@@ -180,7 +184,7 @@ class RepeaterSection extends AbstractBtWidget {
 
         $this->add_control('items_count', [
             'label'     => __('Nombre d\'items', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::NUMBER,
+            'type'      => Controls_Manager::NUMBER,
             'min'       => 1,
             'max'       => 100,
             'default'   => 3,
@@ -190,7 +194,7 @@ class RepeaterSection extends AbstractBtWidget {
         $this->add_control('items_offset', [
             'label'       => __('Départ depuis l\'index', 'blacktenderscore'),
             'description' => __('0 = premier item. Combiné avec « Nombre », permet de diviser le repeater en plusieurs blocs.', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::NUMBER,
+            'type'        => Controls_Manager::NUMBER,
             'min'         => 0,
             'default'     => 0,
             'condition'   => ['slice_mode' => 'offset_n'],
@@ -199,14 +203,14 @@ class RepeaterSection extends AbstractBtWidget {
         $this->add_control('items_specific', [
             'label'       => __('Indexes (1-basé)', 'blacktenderscore'),
             'description' => __('Ex : 1,3,5 — affiche les items 1, 3 et 5. Les indexes manquants sont ignorés.', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::TEXT,
+            'type'        => Controls_Manager::TEXT,
             'placeholder' => '1,3,5',
             'condition'   => ['slice_mode' => 'specific'],
         ]);
 
         $this->add_control('empty_text', [
             'label'       => __('Texte si vide', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::TEXT,
+            'type'        => Controls_Manager::TEXT,
             'placeholder' => __('Aucun contenu disponible.', 'blacktenderscore'),
         ]);
 
@@ -217,22 +221,23 @@ class RepeaterSection extends AbstractBtWidget {
 
         $this->start_controls_section('sec_layout', [
             'label' => __('Mise en page', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('layout', [
             'label'   => __('Disposition', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
+            'type'    => Controls_Manager::CHOOSE,
             'options' => [
-                'list' => __('Liste', 'blacktenderscore'),
-                'grid' => __('Grille', 'blacktenderscore'),
+                'list' => ['title' => __('Liste',  'blacktenderscore'), 'icon' => 'eicon-post-list'],
+                'grid' => ['title' => __('Grille', 'blacktenderscore'), 'icon' => 'eicon-gallery-grid'],
             ],
             'default' => 'list',
+            'toggle'  => false,
         ]);
 
         $this->add_responsive_control('columns', [
             'label'     => __('Colonnes', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::SELECT,
+            'type'      => Controls_Manager::SELECT,
             'options'   => ['1' => '1', '2' => '2', '3' => '3', '4' => '4', '5' => '5', '6' => '6'],
             'default'        => '3',
             'tablet_default' => '2',
@@ -245,7 +250,7 @@ class RepeaterSection extends AbstractBtWidget {
 
         $this->add_responsive_control('items_gap', [
             'label'      => __('Espacement', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px', 'em', 'rem'],
             'range'      => ['px' => ['min' => 0, 'max' => 80]],
             'default'    => ['size' => 16, 'unit' => 'px'],
@@ -263,11 +268,11 @@ class RepeaterSection extends AbstractBtWidget {
 
         $this->start_controls_section('style_header', [
             'label'     => __('En-tête', 'blacktenderscore'),
-            'tab'       => \Elementor\Controls_Manager::TAB_STYLE,
+            'tab'       => Controls_Manager::TAB_STYLE,
             'condition' => ['show_header' => 'yes'],
         ]);
 
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+        $this->add_group_control(Group_Control_Typography::get_type(), [
             'name'     => 'title_typography',
             'label'    => __('Typographie — Titre', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-rsection__title',
@@ -275,11 +280,11 @@ class RepeaterSection extends AbstractBtWidget {
 
         $this->add_control('title_color', [
             'label'     => __('Couleur — Titre', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-rsection__title' => 'color: {{VALUE}};'],
         ]);
 
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+        $this->add_group_control(Group_Control_Typography::get_type(), [
             'name'     => 'desc_typography',
             'label'    => __('Typographie — Description', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-rsection__desc',
@@ -287,13 +292,13 @@ class RepeaterSection extends AbstractBtWidget {
 
         $this->add_control('desc_color', [
             'label'     => __('Couleur — Description', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-rsection__desc' => 'color: {{VALUE}};'],
         ]);
 
         $this->add_responsive_control('header_spacing', [
             'label'      => __('Espace sous l\'en-tête', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px', 'em', 'rem'],
             'selectors'  => ['{{WRAPPER}} .bt-rsection__header' => 'margin-bottom: {{SIZE}}{{UNIT}};'],
         ]);
@@ -305,29 +310,29 @@ class RepeaterSection extends AbstractBtWidget {
 
         $this->start_controls_section('style_items', [
             'label' => __('Items', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+            'tab'   => Controls_Manager::TAB_STYLE,
         ]);
 
         // Icône
         $this->add_control('item_icon_color', [
             'label'     => __('Couleur icône', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-rsection__item-icon' => 'color: {{VALUE}};'],
         ]);
 
         $this->add_responsive_control('item_icon_size', [
             'label'      => __('Taille icône', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px', 'em'],
             'selectors'  => ['{{WRAPPER}} .bt-rsection__item-icon' => 'font-size: {{SIZE}}{{UNIT}};'],
         ]);
 
         $this->add_control('divider_item_title', [
-            'type' => \Elementor\Controls_Manager::DIVIDER,
+            'type' => Controls_Manager::DIVIDER,
         ]);
 
         // Titre item
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+        $this->add_group_control(Group_Control_Typography::get_type(), [
             'name'     => 'item_title_typography',
             'label'    => __('Typographie — Titre item', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-rsection__item-title',
@@ -335,16 +340,16 @@ class RepeaterSection extends AbstractBtWidget {
 
         $this->add_control('item_title_color', [
             'label'     => __('Couleur — Titre item', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-rsection__item-title' => 'color: {{VALUE}};'],
         ]);
 
         $this->add_control('divider_item_body', [
-            'type' => \Elementor\Controls_Manager::DIVIDER,
+            'type' => Controls_Manager::DIVIDER,
         ]);
 
         // Body item
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+        $this->add_group_control(Group_Control_Typography::get_type(), [
             'name'     => 'item_body_typography',
             'label'    => __('Typographie — Description item', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-rsection__item-body',
@@ -352,36 +357,36 @@ class RepeaterSection extends AbstractBtWidget {
 
         $this->add_control('item_body_color', [
             'label'     => __('Couleur — Description item', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-rsection__item-body' => 'color: {{VALUE}};'],
         ]);
 
         $this->add_control('divider_item_card', [
-            'type' => \Elementor\Controls_Manager::DIVIDER,
+            'type' => Controls_Manager::DIVIDER,
         ]);
 
         // Carte / conteneur item
         $this->add_control('item_bg', [
             'label'     => __('Fond de l\'item', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-rsection__item' => 'background-color: {{VALUE}};'],
         ]);
 
-        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
+        $this->add_group_control(Group_Control_Border::get_type(), [
             'name'     => 'item_border',
             'selector' => '{{WRAPPER}} .bt-rsection__item',
         ]);
 
         $this->add_responsive_control('item_border_radius', [
             'label'      => __('Border radius', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px', 'em', '%'],
             'selectors'  => ['{{WRAPPER}} .bt-rsection__item' => 'border-radius: {{SIZE}}{{UNIT}};'],
         ]);
 
         $this->add_responsive_control('item_padding', [
             'label'      => __('Padding', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::DIMENSIONS,
+            'type'       => Controls_Manager::DIMENSIONS,
             'size_units' => ['px', 'em', 'rem'],
             'selectors'  => ['{{WRAPPER}} .bt-rsection__item' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};'],
         ]);

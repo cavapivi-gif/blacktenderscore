@@ -3,6 +3,7 @@ namespace BlackTenders\Elementor\Widgets;
 
 use BlackTenders\Elementor\AbstractBtWidget;
 use BlackTenders\Elementor\Traits\BtSharedControls;
+use Elementor\Controls_Manager;
 
 defined('ABSPATH') || exit;
 
@@ -22,6 +23,7 @@ class RelatedBoats extends AbstractBtWidget {
             'title'    => 'BT — Bateaux de l\'excursion',
             'icon'     => 'eicon-posts-grid',
             'keywords' => ['bateau', 'related', 'excursion', 'relation', 'bt'],
+            'css'      => ['bt-related-boats'],
         ];
     }
 
@@ -32,12 +34,12 @@ class RelatedBoats extends AbstractBtWidget {
         // ── Contenu ───────────────────────────────────────────────────────
         $this->start_controls_section('section_content', [
             'label' => __('Contenu', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('acf_field', [
             'label'       => __('Champ ACF relationship', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::TEXT,
+            'type'        => Controls_Manager::TEXT,
             'default'     => 'exp_boats',
             'description' => __('Nom du champ ACF de type relationship pointant vers boat.', 'blacktenderscore'),
         ]);
@@ -49,12 +51,12 @@ class RelatedBoats extends AbstractBtWidget {
         // ── Affichage ─────────────────────────────────────────────────────
         $this->start_controls_section('section_display', [
             'label' => __('Affichage des cartes', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_responsive_control('columns', [
             'label'          => __('Colonnes', 'blacktenderscore'),
-            'type'           => \Elementor\Controls_Manager::NUMBER,
+            'type'           => Controls_Manager::NUMBER,
             'min'            => 1,
             'max'            => 4,
             'default'        => 2,
@@ -65,14 +67,14 @@ class RelatedBoats extends AbstractBtWidget {
 
         $this->add_control('image_size', [
             'label'   => __('Taille d\'image', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
+            'type'    => Controls_Manager::SELECT,
             'options' => ['thumbnail' => 'Miniature', 'medium' => 'Moyenne', 'large' => 'Grande', 'full' => 'Originale'],
             'default' => 'medium',
         ]);
 
         $this->add_responsive_control('image_ratio', [
             'label'      => __('Ratio image (%)', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'range'      => ['px' => ['min' => 30, 'max' => 120]],
             'default'    => ['size' => 60],
             'selectors'  => ['{{WRAPPER}} .bt-relboats__img-wrap' => 'padding-bottom: {{SIZE}}%'],
@@ -80,21 +82,21 @@ class RelatedBoats extends AbstractBtWidget {
 
         $this->add_control('show_image', [
             'label'        => __('Afficher l\'image', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('show_tagline', [
             'label'        => __('Afficher l\'accroche (boat_tagline)', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('card_title_tag', [
             'label'   => __('Balise titre carte', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
+            'type'    => Controls_Manager::SELECT,
             'options' => ['h2' => 'H2', 'h3' => 'H3', 'h4' => 'H4', 'h5' => 'H5', 'h6' => 'H6', 'p' => 'p', 'span' => 'span'],
             'default' => 'h4',
         ]);
@@ -104,26 +106,26 @@ class RelatedBoats extends AbstractBtWidget {
         // ── Specs affichées sur la carte ──────────────────────────────────
         $this->start_controls_section('section_specs', [
             'label' => __('Specs bateau', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('show_specs', [
             'label'        => __('Afficher les specs bateau', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('spec_pax_label', [
             'label'     => __('Icône passagers max', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => '👥',
             'condition' => ['show_specs' => 'yes'],
         ]);
 
         $this->add_control('show_pax_comfort', [
             'label'        => __('Afficher passagers confort', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => '',
             'condition'    => ['show_specs' => 'yes'],
@@ -131,14 +133,14 @@ class RelatedBoats extends AbstractBtWidget {
 
         $this->add_control('spec_comfort_label', [
             'label'     => __('Icône passagers confort', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => '🪑',
             'condition' => ['show_specs' => 'yes', 'show_pax_comfort' => 'yes'],
         ]);
 
         $this->add_control('show_cabins', [
             'label'        => __('Afficher cabines', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => '',
             'condition'    => ['show_specs' => 'yes'],
@@ -146,21 +148,21 @@ class RelatedBoats extends AbstractBtWidget {
 
         $this->add_control('spec_cabins_label', [
             'label'     => __('Icône cabines', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => '🛏',
             'condition' => ['show_specs' => 'yes', 'show_cabins' => 'yes'],
         ]);
 
         $this->add_control('spec_engine_label', [
             'label'     => __('Icône motorisation', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => '⚡',
             'condition' => ['show_specs' => 'yes'],
         ]);
 
         $this->add_control('show_year', [
             'label'        => __('Afficher l\'année', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => '',
             'condition'    => ['show_specs' => 'yes'],
@@ -168,7 +170,7 @@ class RelatedBoats extends AbstractBtWidget {
 
         $this->add_control('spec_year_label', [
             'label'     => __('Icône année', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => '📅',
             'condition' => ['show_specs' => 'yes', 'show_year' => 'yes'],
         ]);
@@ -178,19 +180,19 @@ class RelatedBoats extends AbstractBtWidget {
         // ── Bouton lien ───────────────────────────────────────────────────
         $this->start_controls_section('section_link', [
             'label' => __('Bouton lien', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('show_link', [
             'label'        => __('Afficher le bouton lien', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('link_label', [
             'label'     => __('Texte du bouton', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => __('Voir le bateau', 'blacktenderscore'),
             'condition' => ['show_link' => 'yes'],
         ]);
@@ -203,18 +205,18 @@ class RelatedBoats extends AbstractBtWidget {
 
         $this->start_controls_section('style_grid', [
             'label' => __('Style — Grille', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+            'tab'   => Controls_Manager::TAB_STYLE,
         ]);
         $this->add_responsive_control('cards_gap', [
             'label'      => __('Espacement', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'default'    => ['size' => 24, 'unit' => 'px'],
             'selectors'  => ['{{WRAPPER}} .bt-relboats__grid' => 'gap: {{SIZE}}{{UNIT}}'],
         ]);
         $this->add_responsive_control('body_padding', [
             'label'      => __('Padding contenu carte', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::DIMENSIONS,
+            'type'       => Controls_Manager::DIMENSIONS,
             'size_units' => ['px', 'em'],
             'default'    => ['top' => '16', 'right' => '16', 'bottom' => '16', 'left' => '16', 'unit' => 'px', 'isLinked' => true],
             'selectors'  => ['{{WRAPPER}} .bt-relboats__body' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],

@@ -3,6 +3,7 @@ namespace BlackTenders\Elementor\Widgets;
 
 use BlackTenders\Elementor\AbstractBtWidget;
 use BlackTenders\Elementor\Traits\BtSharedControls;
+use Elementor\Controls_Manager;
 
 defined('ABSPATH') || exit;
 
@@ -23,6 +24,7 @@ class Reviews extends AbstractBtWidget {
             'title'    => 'BT — Avis clients',
             'icon'     => 'eicon-rating',
             'keywords' => ['avis', 'reviews', 'rating', 'étoiles', 'bt'],
+            'css'      => ['bt-reviews'],
         ];
     }
 
@@ -33,12 +35,12 @@ class Reviews extends AbstractBtWidget {
         // ── Contenu ───────────────────────────────────────────────────────
         $this->start_controls_section('section_content', [
             'label' => __('Contenu', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('acf_field', [
             'label'   => __('Champ ACF repeater', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
+            'type'    => Controls_Manager::TEXT,
             'default' => 'exp_reviews_highlight',
         ]);
 
@@ -46,7 +48,7 @@ class Reviews extends AbstractBtWidget {
 
         $this->add_control('max_reviews', [
             'label'   => __('Nombre max d\'avis', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::NUMBER,
+            'type'    => Controls_Manager::NUMBER,
             'min'     => 1,
             'max'     => 20,
             'default' => 5,
@@ -57,19 +59,23 @@ class Reviews extends AbstractBtWidget {
         // ── Affichage ─────────────────────────────────────────────────────
         $this->start_controls_section('section_display', [
             'label' => __('Affichage', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('layout', [
             'label'   => __('Disposition', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
-            'options' => ['grid' => __('Grille', 'blacktenderscore'), 'list' => __('Liste', 'blacktenderscore')],
+            'type'    => Controls_Manager::CHOOSE,
+            'options' => [
+                'grid' => ['title' => __('Grille', 'blacktenderscore'), 'icon' => 'eicon-gallery-grid'],
+                'list' => ['title' => __('Liste',  'blacktenderscore'), 'icon' => 'eicon-post-list'],
+            ],
             'default' => 'grid',
+            'toggle'  => false,
         ]);
 
         $this->add_responsive_control('columns', [
             'label'          => __('Colonnes', 'blacktenderscore'),
-            'type'           => \Elementor\Controls_Manager::NUMBER,
+            'type'           => Controls_Manager::NUMBER,
             'min'            => 1,
             'max'            => 4,
             'default'        => 3,
@@ -81,7 +87,7 @@ class Reviews extends AbstractBtWidget {
 
         $this->add_control('rating_display', [
             'label'   => __('Affichage de la note', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
+            'type'    => Controls_Manager::SELECT,
             'options' => [
                 'stars'  => __('Étoiles', 'blacktenderscore'),
                 'number' => __('Note numérique', 'blacktenderscore'),
@@ -93,21 +99,21 @@ class Reviews extends AbstractBtWidget {
 
         $this->add_control('star_filled', [
             'label'     => __('Étoile pleine', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => '★',
             'condition' => ['rating_display' => ['stars', 'both']],
         ]);
 
         $this->add_control('star_empty', [
             'label'     => __('Étoile vide', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => '☆',
             'condition' => ['rating_display' => ['stars', 'both']],
         ]);
 
         $this->add_control('max_stars', [
             'label'     => __('Note max', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::NUMBER,
+            'type'      => Controls_Manager::NUMBER,
             'min'       => 3,
             'max'       => 10,
             'default'   => 5,
@@ -116,49 +122,49 @@ class Reviews extends AbstractBtWidget {
 
         $this->add_control('show_name', [
             'label'        => __('Afficher le prénom', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('show_text', [
             'label'        => __('Afficher le texte de l\'avis', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('quote_char', [
             'label'     => __('Caractère de citation', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => '"',
             'condition' => ['show_text' => 'yes'],
         ]);
 
         $this->add_control('show_date', [
             'label'        => __('Afficher la date', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => '',
         ]);
 
         $this->add_control('date_subfield', [
             'label'     => __('Sous-champ date', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => 'rev_date',
             'condition' => ['show_date' => 'yes'],
         ]);
 
         $this->add_control('show_source', [
             'label'        => __('Afficher la source (Google, Tripadvisor…)', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => '',
         ]);
 
         $this->add_control('source_subfield', [
             'label'     => __('Sous-champ source', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => 'rev_source',
             'condition' => ['show_source' => 'yes'],
         ]);
@@ -168,12 +174,12 @@ class Reviews extends AbstractBtWidget {
         // ── Schema.org ────────────────────────────────────────────────────
         $this->start_controls_section('section_schema', [
             'label' => __('Schema.org', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('schema_reviews', [
             'label'        => __('Injecter le schema AggregateRating (SEO)', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'description'  => __('Injecte un JSON-LD AggregateRating + Review calculé depuis les avis ACF.', 'blacktenderscore'),
             'return_value' => 'yes',
             'default'      => 'yes',
@@ -181,7 +187,7 @@ class Reviews extends AbstractBtWidget {
 
         $this->add_control('schema_item_type', [
             'label'     => __('@type de l\'entité', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::SELECT,
+            'type'      => Controls_Manager::SELECT,
             'options'   => [
                 'Product'       => 'Product',
                 'LocalBusiness' => 'LocalBusiness',
@@ -194,7 +200,7 @@ class Reviews extends AbstractBtWidget {
 
         $this->add_control('schema_item_name', [
             'label'       => __('Nom de l\'entité (vide = titre du post)', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::TEXT,
+            'type'        => Controls_Manager::TEXT,
             'default'     => '',
             'description' => __('Laissez vide pour utiliser automatiquement le titre du post.', 'blacktenderscore'),
             'condition'   => ['schema_reviews' => 'yes'],
@@ -209,11 +215,11 @@ class Reviews extends AbstractBtWidget {
 
         $this->start_controls_section('style_layout', [
             'label' => __('Style — Espacement', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+            'tab'   => Controls_Manager::TAB_STYLE,
         ]);
         $this->add_responsive_control('cards_gap', [
             'label'      => __('Espacement entre cartes', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'default'    => ['size' => 24, 'unit' => 'px'],
             'selectors'  => [

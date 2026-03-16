@@ -1,0 +1,20 @@
+/* ══════════════════════════════════════════════════════════
+   WIDGET : BT — Carte Google Maps (bt-google-map)
+   ══════════════════════════════════════════════════════════ */
+
+.bt-gmap {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.bt-gmap__canvas {
+  display: block;
+  width: 100%;
+  height: 420px; /* fallback — remplacé par le contrôle responsive Elementor */
+}
+
+/* Éditeur : l'iframe de preview prend la même classe que le canvas JS */
+.bt-gmap--editor .bt-gmap__canvas {
+  border: 0;
+}

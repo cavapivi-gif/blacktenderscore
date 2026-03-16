@@ -28,6 +28,7 @@ class Share extends AbstractBtWidget {
             'title'    => 'BT — Partager',
             'icon'     => 'eicon-share',
             'keywords' => ['partager', 'share', 'ia', 'claude', 'chatgpt', 'gemini', 'facebook', 'twitter', 'x', 'whatsapp', 'bt'],
+            'css'      => ['bt-share'],
             'js'       => ['bt-elementor'],
         ];
     }

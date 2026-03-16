@@ -33,6 +33,7 @@ class GalleryPreview extends AbstractBtWidget {
             'title'    => 'BT — Galerie Preview',
             'icon'     => 'eicon-media-carousel',
             'keywords' => ['galerie', 'preview', 'photos', 'airbnb', 'images', 'lightbox', 'bt'],
+            'css'      => ['bt-gallery-preview', 'bt-lightbox'],
         ];
     }
 
