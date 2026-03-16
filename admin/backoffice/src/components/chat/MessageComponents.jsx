@@ -1,7 +1,7 @@
 import { useState, memo } from 'react'
 import { motion } from 'motion/react'
 import Lottie from 'lottie-react'
-import { Copy, Check, ShareAndroid } from 'iconoir-react'
+import { Copy, Check, ShareAndroid, Reply } from 'iconoir-react'
 import { getProvider } from '../../lib/aiProviders'
 import AiProviderIcon from '../AiProviderIcon'
 import { Markdown } from './Markdown'
@@ -10,7 +10,40 @@ import { SuggestedReplies } from './SuggestedReplies'
 import { ResponseStream } from '../ui/response-stream'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Message components
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Renders text with @mention spans highlighted. */
+function renderWithMentions(text) {
+  if (!text || !text.includes('@')) return text
+  const parts = text.split(/(@\w[\w-]*)/g)
+  return parts.map((part, i) =>
+    /^@\w/.test(part)
+      ? <span key={i} className="text-primary/80 font-medium bg-primary/8 rounded px-0.5">{part}</span>
+      : part
+  )
+}
+
+/** Quote strip shown inside a message bubble when it's a reply. */
+function QuoteStrip({ replyTo }) {
+  if (!replyTo) return null
+  const label = replyTo.role === 'user'
+    ? (replyTo.authorName ?? 'Vous')
+    : (replyTo.authorName ?? 'IA')
+  return (
+    <div className="flex items-start gap-1.5 mb-2 pl-2 border-l-2 border-muted-foreground/30">
+      <div className="min-w-0">
+        <span className="text-[10px] font-semibold text-muted-foreground">{label}</span>
+        <p className="text-[11px] text-muted-foreground/70 line-clamp-2 leading-snug">
+          {replyTo.content?.slice(0, 120)}{(replyTo.content?.length ?? 0) > 120 ? '…' : ''}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Copy button
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function CopyBtn({ text, onCopy }) {
@@ -32,7 +65,11 @@ export function CopyBtn({ text, onCopy }) {
   )
 }
 
-export function UserMsg({ msg, participants, currentUserId }) {
+// ─────────────────────────────────────────────────────────────────────────────
+// User message
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function UserMsg({ msg, participants, currentUserId, onReply }) {
   // Normalise les IDs en string pour éviter number/string mismatch (PHP ARRAY_A vs JSON)
   const myId    = currentUserId != null ? String(currentUserId) : null
   const msgUid  = msg.user_id   != null ? String(msg.user_id)   : null
@@ -41,13 +78,14 @@ export function UserMsg({ msg, participants, currentUserId }) {
   const isMe        = !msgUid || msgUid === myId
   const participant = participants?.find(p => String(p.user_id) === (isMe ? myId : msgUid))
   const bubbleColor = participant?.color ?? '#dbd2c0'
+  const authorName  = isMe ? 'Vous' : (participant?.display_name ?? null)
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10, scale: 0.98 }}
       animate={{ opacity: 1, y: 0,  scale: 1    }}
       transition={{ duration: 0.18, ease: 'easeOut' }}
-      className="flex justify-end gap-3"
+      className="flex justify-end gap-3 group"
     >
       <div className="max-w-[76%] space-y-1.5">
         {/* Nom + avatar si c'est un autre participant */}
@@ -70,15 +108,44 @@ export function UserMsg({ msg, participants, currentUserId }) {
           className="rounded-2xl rounded-tr-sm px-4 py-3 text-sm leading-relaxed text-foreground"
           style={{ backgroundColor: bubbleColor }}
         >
-          {msg.content}
+          <QuoteStrip replyTo={msg.replyTo} />
+          {renderWithMentions(msg.content)}
         </div>
+
+        {/* Reply button */}
+        {onReply && (
+          <div className="flex justify-end">
+            <button
+              onClick={() => onReply({ id: msg.id, role: 'user', content: msg.content, authorName })}
+              title="Répondre"
+              className="flex items-center gap-1 text-[10px] text-muted-foreground/60 hover:text-muted-foreground opacity-0 group-hover:opacity-100 transition-all px-1.5 py-0.5 rounded-md hover:bg-muted/50"
+            >
+              <Reply width={10} height={10} strokeWidth={1.5} />
+              Répondre
+            </button>
+          </div>
+        )}
       </div>
     </motion.div>
   )
 }
 
-export const AssistantMsg = memo(function AssistantMsg({ msg, streaming = false, onCopy, onShare, isLast = false, onSend }) {
+// ─────────────────────────────────────────────────────────────────────────────
+// Assistant message
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const AssistantMsg = memo(function AssistantMsg({ msg, streaming = false, onCopy, onShare, onReply, isLast = false, onSend, participants, currentUserId }) {
   const cfg = getProvider(msg.provider || 'anthropic')
+
+  // Attribution — "Réponse à @Name" quand plusieurs participants
+  const requestedBy = msg.requestedBy != null ? String(msg.requestedBy) : null
+  const myId        = currentUserId != null ? String(currentUserId) : null
+  const requester   = requestedBy && requestedBy !== myId
+    ? participants?.find(p => String(p.user_id) === requestedBy)
+    : null
+
+  const authorName = cfg.label
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -96,7 +163,15 @@ export const AssistantMsg = memo(function AssistantMsg({ msg, streaming = false,
 
       {/* Bubble */}
       <div className="flex-1 min-w-0">
+        {/* Attribution badge */}
+        {requester && (
+          <p className="text-[10px] text-muted-foreground/60 mb-1 pl-1">
+            En réponse à <span className="font-medium text-primary/70">@{requester.display_name}</span>
+          </p>
+        )}
+
         <div className="bg-card border border-border/70 rounded-2xl rounded-tl-sm px-4 py-3.5 shadow-sm">
+          {msg.replyTo && <QuoteStrip replyTo={msg.replyTo} />}
           {streaming
             ? (
               <div className="text-sm leading-relaxed">
@@ -129,6 +204,15 @@ export const AssistantMsg = memo(function AssistantMsg({ msg, streaming = false,
                   className="p-1 rounded hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100"
                 >
                   <ShareAndroid width={12} height={12} strokeWidth={1.5} />
+                </button>
+              )}
+              {onReply && (
+                <button
+                  onClick={() => onReply({ id: msg.id, role: 'assistant', content: msg.content, authorName })}
+                  title="Répondre à ce message"
+                  className="p-1 rounded hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100"
+                >
+                  <Reply width={12} height={12} strokeWidth={1.5} />
                 </button>
               )}
               <span className="text-[10px] text-muted-foreground/50 self-center ml-1">{cfg.label}</span>

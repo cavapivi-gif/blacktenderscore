@@ -69,11 +69,14 @@ export default function AIChat() {
   const [shareModal,     setShareModal]     = useState({ open: false, mode: 'conv', msgContent: '' })
   const [sharePanelOpen, setSharePanelOpen] = useState(false)
   const [sharedLoading,  setSharedLoading]  = useState(false)
+  const [replyTo,        setReplyTo]        = useState(null) // { id, role, content, authorName }
 
-  const lastFailedRef = useRef(null)
-  const statsDataRef  = useRef(null)
-  const sendingRef    = useRef(false)
-  const convIdRef     = useRef(null) // capture convId au moment du stream
+  const lastFailedRef   = useRef(null)
+  const statsDataRef    = useRef(null)
+  const sendingRef      = useRef(false)
+  const convIdRef       = useRef(null)  // capture convId au moment du stream
+  const replyToRef      = useRef(null)  // capture replyTo au moment du stream
+  const requestedByRef  = useRef(null)  // user_id de l'auteur du message envoyé (pour attribution)
 
   const { toasts, push: toast } = useToast()
   const scrollRef = useRef(null)
@@ -92,13 +95,17 @@ export default function AIChat() {
       const finalMsg = {
         role: 'assistant', content, provider,
         id: `m_${Date.now()}`,
-        statsData: statsDataRef.current,
+        statsData:   statsDataRef.current,
+        replyTo:     replyToRef.current,      // A4: contexte de la réponse
+        requestedBy: requestedByRef.current,  // A8: attribution (user_id)
       }
       const finalMsgs = [...prevMsgs, finalMsg]
       updateMessages(convId, finalMsgs)
       if (conv?.db_id) syncChat({ ...conv, messages: finalMsgs }).catch(() => {})
-      lastFailedRef.current = null
-      statsDataRef.current  = null
+      lastFailedRef.current  = null
+      statsDataRef.current   = null
+      replyToRef.current     = null
+      requestedByRef.current = null
     },
 
     onError: (err) => {
@@ -201,24 +208,27 @@ export default function AIChat() {
   }, [messages, streamText, showThinking, activeId])
 
   // ── Send ─────────────────────────────────────────────────────────────────────
-  const send = useCallback(async (content, attachedImages = []) => {
+  const send = useCallback(async (content, attachedImages = [], currentReplyTo = null) => {
     if (!content.trim() || isLoading || sendingRef.current) return
     sendingRef.current = true
     setError(null)
 
     let convId = activeId
     if (!convId) convId = create(activeProvider, filterParams)
-    convIdRef.current = convId
+    convIdRef.current    = convId
+    replyToRef.current   = currentReplyTo
+    requestedByRef.current = window.btBackoffice?.current_user?.id ?? null
 
     const userMsg = {
       role: 'user', content, images: attachedImages,
       id: `m_${Date.now()}`,
       user_id: window.btBackoffice?.current_user?.id,
+      replyTo: currentReplyTo ?? undefined,
     }
     const updatedMsgs = [...messages, userMsg]
     const autoTitle   = messages.length === 0 ? content.slice(0, 50) + (content.length > 50 ? '…' : '') : null
     updateMessages(convId, updatedMsgs, autoTitle)
-    setInput(''); setImages([])
+    setInput(''); setImages([]); setReplyTo(null)
 
     // ── Intent detection + stats fetch ─────────────────────────────────────
     const intents     = detectDataIntent(content)
@@ -237,15 +247,25 @@ export default function AIChat() {
 
     statsDataRef.current = statsData ? { data: statsData, intents, range: statsRange } : null
 
-    // Contenu envoyé à l'IA : contexte données + message user
-    const aiContent = contextBlock ? `${contextBlock}\n\n---\n${content}` : content
+    // Contenu envoyé à l'IA : contexte reply + contexte données + message user
+    let aiContent = content
+    if (currentReplyTo) {
+      const replyLabel = currentReplyTo.role === 'user'
+        ? (currentReplyTo.authorName ?? 'utilisateur')
+        : (currentReplyTo.authorName ?? 'IA')
+      aiContent = `[En réponse au message de ${replyLabel} : "${currentReplyTo.content?.slice(0, 300)}"]\n\n${content}`
+    }
+    if (contextBlock) aiContent = `${contextBlock}\n\n---\n${aiContent}`
 
     // stream() → useAiChat → useChat → PHP admin-ajax → Anthropic/OpenAI/etc.
-    lastFailedRef.current = { content, images: attachedImages }
+    lastFailedRef.current = { content, images: attachedImages, replyTo: currentReplyTo }
     await stream(updatedMsgs, aiContent, activeProvider, statsRange)
   }, [messages, isLoading, filterParams, activeProvider, activeId, create, updateMessages, stream])
 
-  function handleSubmit(e)  { e?.preventDefault(); send(input, images) }
+  function handleSubmit(e) {
+    e?.preventDefault()
+    send(input, images, replyTo)
+  }
   function handleProviderChange(key) {
     setActiveProvider(key)
     if (activeId) updateProvider(activeId, key)
@@ -348,7 +368,13 @@ export default function AIChat() {
                     const lastAsstIdx = messages.map(m => m.role).lastIndexOf('assistant')
                     return messages.map((msg, idx) => (
                       msg.role === 'user'
-                        ? <UserMsg key={msg.id} msg={msg} participants={activeConv?.participants} currentUserId={window.btBackoffice?.current_user?.id} />
+                        ? <UserMsg
+                            key={msg.id}
+                            msg={msg}
+                            participants={activeConv?.participants}
+                            currentUserId={window.btBackoffice?.current_user?.id}
+                            onReply={setReplyTo}
+                          />
                         : <AssistantMsg
                             key={msg.id}
                             msg={msg}
@@ -356,6 +382,9 @@ export default function AIChat() {
                             onSend={idx === lastAsstIdx && !isLoading ? send : undefined}
                             onCopy={() => toast('Copié dans le presse-papier')}
                             onShare={content => setShareModal({ open: true, mode: 'msg', msgContent: content })}
+                            onReply={setReplyTo}
+                            participants={activeConv?.participants}
+                            currentUserId={window.btBackoffice?.current_user?.id}
                           />
                     ))
                   })()}
@@ -396,9 +425,12 @@ export default function AIChat() {
             const f = lastFailedRef.current
             lastFailedRef.current = null
             setError(null)
-            send(f.content, f.images)
+            send(f.content, f.images, f.replyTo)
           }}
           onErrorDismiss={() => { setError(null); lastFailedRef.current = null }}
+          replyTo={replyTo}
+          onReplyCancel={() => setReplyTo(null)}
+          participants={activeConv?.participants}
         />
       </div>
 
