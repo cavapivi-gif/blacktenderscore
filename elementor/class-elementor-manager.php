@@ -3,9 +3,9 @@ namespace BlackTenders\Elementor;
 
 use BlackTenders\Elementor\Widgets\TaxonomyList;
 use BlackTenders\Elementor\Widgets\FaqAccordion;
-use BlackTenders\Elementor\Widgets\PricingTabs;
 use BlackTenders\Elementor\Widgets\BoatSpecs;
 use BlackTenders\Elementor\Widgets\BoatPricing;
+use BlackTenders\Elementor\Widgets\ExcursionPricing;
 use BlackTenders\Elementor\Widgets\RelatedBoats;
 use BlackTenders\Elementor\Widgets\RelatedExcursions;
 use BlackTenders\Elementor\Widgets\Itinerary;
@@ -22,6 +22,8 @@ use BlackTenders\Elementor\Widgets\Share;
 use BlackTenders\Elementor\Widgets\GoogleMap;
 use BlackTenders\Elementor\Widgets\TitleIconDesc;
 use BlackTenders\Elementor\Widgets\TaxonomyDisplay;
+use BlackTenders\Elementor\Widgets\QuoteForm;
+use BlackTenders\Elementor\Widgets\PricingBody;
 
 defined('ABSPATH') || exit;
 
@@ -209,7 +211,6 @@ class ElementorManager {
         // ── Widgets excursion ─────────────────────────────────────────────
         $manager->register(new TaxonomyList());
         $manager->register(new FaqAccordion());
-        $manager->register(new PricingTabs());
         $manager->register(new Itinerary());
         $manager->register(new DepartureTimes());
         $manager->register(new Reviews());
@@ -223,6 +224,7 @@ class ElementorManager {
         // ── Widgets bateau ────────────────────────────────────────────────
         $manager->register(new BoatSpecs());
         $manager->register(new BoatPricing());
+        $manager->register(new ExcursionPricing());
         // ── Widgets contenu générique ─────────────────────────────────────
         $manager->register(new Highlights());
         $manager->register(new Captain());
@@ -230,7 +232,10 @@ class ElementorManager {
         $manager->register(new Share());
         $manager->register(new TitleIconDesc());
         $manager->register(new TaxonomyDisplay());
+        // ── Formulaire devis ─────────────────────────────────────────────────
+        $manager->register(new QuoteForm());
         // ── Utilitaires ───────────────────────────────────────────────────────
+        $manager->register(new PricingBody());
         $manager->register(new GoogleMap());
     }
 
@@ -320,6 +325,7 @@ class ElementorManager {
             'bt-google-map',
             'bt-title-icon-desc',
             'bt-taxonomy-display',
+            'bt-quote-form',
         ];
         foreach ($widget_styles as $handle) {
             wp_register_style(
@@ -330,9 +336,17 @@ class ElementorManager {
             );
         }
 
-        // Quote form JS (bt-boat-pricing devis multi-étapes)
+        // Quote form JS (devis multi-étapes — shared by bt-quote-form & bt-boat-pricing)
         wp_register_script(
             'bt-boat-pricing-quote',
+            BT_URL . 'elementor/assets/bt-boat-pricing-quote.js',
+            ['bt-elementor'],
+            BT_VERSION,
+            true
+        );
+        // Alias for the new bt-quote-form widget
+        wp_register_script(
+            'bt-quote-form',
             BT_URL . 'elementor/assets/bt-boat-pricing-quote.js',
             ['bt-elementor'],
             BT_VERSION,

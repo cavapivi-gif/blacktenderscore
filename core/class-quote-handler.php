@@ -429,7 +429,7 @@ class QuoteHandler {
             $type = $types[0]->name;
         }
 
-        $base_price = $price_full ?: $price_half;
+        $base_price = $price_half ?: $price_full;
         $pp_price   = ($base_price && $pax > 0) ? ceil($base_price / $pax) : 0;
         $pp_label   = $price_full ? __('journée complète', 'blacktenderscore') : __('demi-journée', 'blacktenderscore');
 

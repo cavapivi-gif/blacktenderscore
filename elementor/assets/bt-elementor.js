@@ -96,13 +96,24 @@
     // Generic panel class from data attr (ex: 'bt-pricing__panel' → toggles 'bt-pricing__panel--active')
     var panelCls = root.getAttribute('data-bt-panel-class');
 
+    // Déduire la classe tab active depuis panelCls (ex: 'bt-pricing__panel' → 'bt-pricing__tab--active')
+    var tabActiveCls = panelCls
+      ? panelCls.replace(/__panel$/, '__tab--active')
+      : '';
+
     tabs.forEach(function (tab) {
       var isActive = tab === activeTab;
 
-      // Tab button active classes (widget-specific, harmless if not present)
-      tab.classList.toggle('bt-faq__tab--active',     isActive);
-      tab.classList.toggle('bt-pricing__tab--active', isActive);
-      tab.classList.toggle('bt-bprice__tab--active',  isActive);
+      if (tabActiveCls) {
+        // Scoped : ne toggle que la classe correspondant à CE niveau de tabs
+        tab.classList.toggle(tabActiveCls, isActive);
+      } else {
+        // Legacy (pas de data-bt-panel-class) : toggle toutes les variantes
+        tab.classList.toggle('bt-faq__tab--active',             isActive);
+        tab.classList.toggle('bt-pricing__tab--active',         isActive);
+        tab.classList.toggle('bt-bprice__tab--active',          isActive);
+        tab.classList.toggle('bt-bprice-wrapper__tab--active',  isActive);
+      }
 
       tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
       tab.setAttribute('tabindex',      isActive ? '0'    : '-1');
@@ -111,12 +122,11 @@
       var panel   = panelId ? document.getElementById(panelId) : null;
       if (panel) {
         if (panelCls) {
-          // Generic: use data-bt-panel-class (PricingTabs, new widgets)
           panel.classList.toggle(panelCls + '--active', isActive);
         } else {
-          // Legacy hardcoded (FaqAccordion tabs, BoatPricing — no data attr set)
           panel.classList.toggle('bt-faq__tabpanel--active', isActive);
           panel.classList.toggle('bt-bprice__panel--active', isActive);
+          panel.classList.toggle('bt-bprice-wrapper__panel--active', isActive);
         }
       }
     });
@@ -135,13 +145,17 @@
   }
 
   function initTabs(root) {
-    var tablist = root.querySelector('[role="tablist"]');
+    var tablist = root.querySelector(':scope > [role="tablist"]');
     if (!tablist) return;
 
-    var tabs = Array.from(tablist.querySelectorAll('[role="tab"]'));
+    var tabs = Array.from(tablist.querySelectorAll(':scope > [role="tab"]'));
+    if (!tabs.length) return;
+
+    console.log('[BT tabs] init', root.className, '→', tabs.length, 'tabs', tabs.map(function(t){return t.textContent.trim();}));
 
     tabs.forEach(function (tab, idx) {
       tab.addEventListener('click', function () {
+        console.log('[BT tabs] click', tab.textContent.trim(), 'in', root.className);
         activateTab(root, tabs, tab);
       });
 
@@ -284,18 +298,50 @@
         var content = wrap.querySelector('.bt-pricing__reveal-content');
         if (!content) return;
 
-        // Optionnel : déplacer le contenu (forfaits + résa) dans un conteneur cible (ex. #booking)
+        var hideSel = wrap.getAttribute('data-bt-reveal-hide') || '';
+        var mobileBreakpoint = 727;
+
+        function toggleHiddenEl(show) {
+          if (!hideSel) return;
+          var el = document.querySelector(hideSel);
+          if (!el) return;
+          var isMobile = (window.innerWidth || document.documentElement.clientWidth) <= mobileBreakpoint;
+          if (!show && isMobile) {
+            el.style.visibility = 'hidden';
+            el.style.pointerEvents = 'none';
+          } else {
+            el.style.visibility = '';
+            el.style.pointerEvents = '';
+          }
+        }
+
+        // Déplacer le contenu dans un conteneur cible :
+        // 1. data-bt-reveal-inline → ne pas déplacer (contenu reste sous le bouton)
+        // 2. data-bt-reveal-target="id" → ID explicite (legacy)
+        // 3. Auto-détection du widget BT — Tarifs Body ([data-bt-pricing-body])
+        // Après le déplacement, on copie la classe elementor-element-XXX
+        // du widget source pour que les sélecteurs {{WRAPPER}} restent valides.
+        var isInline = wrap.hasAttribute('data-bt-reveal-inline');
         var targetId = wrap.getAttribute('data-bt-reveal-target');
-        if (targetId) {
-          var target = document.getElementById(targetId);
-          if (target && target !== wrap && !wrap.contains(target)) {
-            target.appendChild(content);
+        var target   = isInline ? null : (targetId ? document.getElementById(targetId) : document.querySelector('[data-bt-pricing-body]'));
+        if (target && target !== wrap && !wrap.contains(target)) {
+          target.appendChild(content);
+
+          // Propager le scope CSS Elementor du widget source
+          var sourceWidget = wrap.closest('.elementor-widget');
+          if (sourceWidget) {
+            sourceWidget.classList.forEach(function (cls) {
+              if (cls.indexOf('elementor-element-') === 0 && cls !== 'elementor-element') {
+                target.classList.add(cls);
+              }
+            });
           }
         }
 
         function openReveal(andScroll) {
           content.classList.add('bt-pricing__reveal-content--open');
           btn.setAttribute('aria-expanded', 'true');
+          toggleHiddenEl(false);
           injectBookingLazy(content);
           if (andScroll) {
             setTimeout(function () {
@@ -310,6 +356,7 @@
           if (isOpen) {
             content.classList.remove('bt-pricing__reveal-content--open');
             btn.setAttribute('aria-expanded', 'false');
+            toggleHiddenEl(true);
           } else {
             openReveal(true);
           }
@@ -678,6 +725,7 @@
     elementorFrontend.elementsHandler.attachHandler('bt-included-excluded', BtWidgetHandler);
     elementorFrontend.elementsHandler.attachHandler('bt-title-icon-desc',   BtWidgetHandler);
     elementorFrontend.elementsHandler.attachHandler('bt-taxonomy-display', BtWidgetHandler);
+    elementorFrontend.elementsHandler.attachHandler('bt-pricing-body',    BtWidgetHandler);
   });
 
   // Fallback : pages sans Elementor JS (ex. thème sans Elementor)

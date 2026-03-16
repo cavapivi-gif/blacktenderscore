@@ -33,23 +33,44 @@ class Tag_Acf_Map extends Abstract_BT_Tag {
             'options' => $opts,
             'default' => array_key_first($opts) ?? '',
         ]);
+
+        $this->add_control('format', [
+            'label'   => __('Format de sortie', 'blacktenderscore'),
+            'type'    => \Elementor\Controls_Manager::SELECT,
+            'options' => [
+                'geo'     => __('Coordonnées (lat,lng)', 'blacktenderscore'),
+                'address' => __('Adresse', 'blacktenderscore'),
+            ],
+            'default' => 'geo',
+        ]);
     }
 
     // ── Render ────────────────────────────────────────────────────────────────
 
     /**
-     * Retourne "lat,lng" — interprété comme coordonnées directes par le widget
-     * (pas de Geocoding API requise).
+     * Retourne les données du champ ACF Google Map selon le format choisi :
+     * - "geo"     → "lat,lng" (coordonnées directes, pas de Geocoding API)
+     * - "address" → l'adresse saisie dans le champ ACF
      */
     public function render(): void {
         $field_name = trim((string) ($this->get_settings('field') ?? ''));
         if ($field_name === '' || !function_exists('get_field')) return;
 
         $map = get_field($field_name, get_the_ID());
+        if (!is_array($map)) return;
 
-        if (!is_array($map) || !isset($map['lat'], $map['lng'])) return;
-        if ($map['lat'] === '' || $map['lng'] === '') return;
+        $format = $this->get_settings('format') ?: 'geo';
 
+        if ($format === 'address') {
+            $address = trim((string) ($map['address'] ?? ''));
+            if ($address !== '') {
+                echo esc_html($address);
+            }
+            return;
+        }
+
+        /* geo (défaut) */
+        if (!isset($map['lat'], $map['lng']) || $map['lat'] === '' || $map['lng'] === '') return;
         echo esc_html($map['lat'] . ',' . $map['lng']);
     }
 

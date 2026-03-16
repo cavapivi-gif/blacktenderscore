@@ -735,6 +735,7 @@
         boot(this.$element[0]);
       },
     });
+    elementorFrontend.elementsHandler.attachHandler('bt-quote-form', Handler);
     elementorFrontend.elementsHandler.attachHandler('bt-boat-pricing', Handler);
   });
 
