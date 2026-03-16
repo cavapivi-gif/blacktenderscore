@@ -3,6 +3,10 @@ namespace BlackTenders\Elementor\Widgets;
 
 use BlackTenders\Elementor\AbstractBtWidget;
 use BlackTenders\Elementor\Traits\BtSharedControls;
+use Elementor\Controls_Manager;
+use Elementor\Group_Control_Border;
+use Elementor\Group_Control_Box_Shadow;
+use Elementor\Group_Control_Css_Filter;
 
 defined('ABSPATH') || exit;
 
@@ -31,6 +35,7 @@ class GoogleMap extends AbstractBtWidget {
             'title'    => 'BT — Carte Google Maps',
             'icon'     => 'eicon-google-maps',
             'keywords' => ['carte', 'map', 'google', 'localisation', 'acf', 'bt'],
+            'css'      => ['bt-google-map'],
             'js'       => ['bt-gmaps-init'],
         ];
     }
@@ -48,13 +53,13 @@ class GoogleMap extends AbstractBtWidget {
     private function section_map_content(): void {
         $this->start_controls_section('section_map', [
             'label' => __('Carte', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         // ── Champ ACF Google Map — liste déroulante directe ───────────────────
         $this->add_control('acf_map_field', [
             'label'       => __('Champ ACF Google Map', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::SELECT,
+            'type'        => Controls_Manager::SELECT,
             'options'     => ['' => __('— Saisir manuellement ci-dessous —', 'blacktenderscore')]
                            + $this->google_map_field_options(),
             'default'     => '',
@@ -63,13 +68,13 @@ class GoogleMap extends AbstractBtWidget {
 
         // ── Séparateur visuel ─────────────────────────────────────────────────
         $this->add_control('divider_or', [
-            'type'  => \Elementor\Controls_Manager::DIVIDER,
+            'type'  => Controls_Manager::DIVIDER,
         ]);
 
         // ── Adresse manuelle ou dynamic tag ───────────────────────────────────
         $this->add_control('address', [
             'label'       => __('Adresse ou coordonnées', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::TEXT,
+            'type'        => Controls_Manager::TEXT,
             'default'     => '',
             'label_block' => true,
             'dynamic'     => ['active' => true],
@@ -79,7 +84,7 @@ class GoogleMap extends AbstractBtWidget {
         // ── Communs ───────────────────────────────────────────────────────────
         $this->add_control('zoom', [
             'label'     => __('Zoom', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::SLIDER,
+            'type'      => Controls_Manager::SLIDER,
             'default'   => ['size' => 14],
             'range'     => ['px' => ['min' => 1, 'max' => 20, 'step' => 1]],
             'separator' => 'before',
@@ -87,7 +92,7 @@ class GoogleMap extends AbstractBtWidget {
 
         $this->add_control('map_type', [
             'label'   => __('Type de carte', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
+            'type'    => Controls_Manager::SELECT,
             'default' => 'roadmap',
             'options' => [
                 'roadmap'   => __('Plan', 'blacktenderscore'),
@@ -99,7 +104,7 @@ class GoogleMap extends AbstractBtWidget {
 
         $this->add_control('ui_gestures', [
             'label'        => __('Zoom au scroll', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'label_on'     => __('Oui', 'blacktenderscore'),
             'label_off'    => __('Non (conseillé)', 'blacktenderscore'),
             'return_value' => 'yes',
@@ -114,12 +119,12 @@ class GoogleMap extends AbstractBtWidget {
     private function section_marker_content(): void {
         $this->start_controls_section('section_marker', [
             'label' => __('Marqueur', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('show_marker', [
             'label'        => __('Afficher un marqueur', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'label_on'     => __('Oui', 'blacktenderscore'),
             'label_off'    => __('Non', 'blacktenderscore'),
             'return_value' => 'yes',
@@ -128,7 +133,7 @@ class GoogleMap extends AbstractBtWidget {
 
         $this->add_control('marker_title', [
             'label'       => __('Titre (tooltip)', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::TEXT,
+            'type'        => Controls_Manager::TEXT,
             'dynamic'     => ['active' => true],
             'label_block' => true,
             'condition'   => ['show_marker' => 'yes'],
@@ -136,7 +141,7 @@ class GoogleMap extends AbstractBtWidget {
 
         $this->add_control('marker_popup', [
             'label'       => __('Infobulle (popup)', 'blacktenderscore'),
-            'type'        => \Elementor\Controls_Manager::TEXTAREA,
+            'type'        => Controls_Manager::TEXTAREA,
             'rows'        => 3,
             'dynamic'     => ['active' => true],
             'description' => __('HTML basique autorisé. Laissez vide pour désactiver.', 'blacktenderscore'),
@@ -145,14 +150,14 @@ class GoogleMap extends AbstractBtWidget {
 
         $this->add_control('marker_color', [
             'label'     => __('Couleur du marqueur', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'default'   => '#0066cc',
             'condition' => ['show_marker' => 'yes'],
         ]);
 
         $this->add_control('marker_open', [
             'label'        => __('Ouvrir l\'infobulle au chargement', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => '',
             'condition'    => ['show_marker' => 'yes', 'marker_popup!' => ''],
@@ -166,12 +171,12 @@ class GoogleMap extends AbstractBtWidget {
     private function section_map_style(): void {
         $this->start_controls_section('section_style_map', [
             'label' => __('Carte', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+            'tab'   => Controls_Manager::TAB_STYLE,
         ]);
 
         $this->add_responsive_control('height', [
             'label'      => __('Hauteur', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'default'    => ['size' => 420, 'unit' => 'px'],
             'size_units' => ['px', 'vh', 'em', 'rem'],
             'range'      => ['px' => ['min' => 80, 'max' => 1200], 'vh' => ['min' => 10, 'max' => 100]],
@@ -180,24 +185,24 @@ class GoogleMap extends AbstractBtWidget {
 
         $this->add_responsive_control('border_radius', [
             'label'      => __('Arrondi', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'default'    => ['size' => 8, 'unit' => 'px'],
             'size_units' => ['px', '%'],
             'range'      => ['px' => ['min' => 0, 'max' => 60]],
             'selectors'  => ['{{WRAPPER}} .bt-gmap' => 'border-radius: {{SIZE}}{{UNIT}}; overflow: hidden;'],
         ]);
 
-        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
+        $this->add_group_control(Group_Control_Border::get_type(), [
             'name'     => 'border',
             'selector' => '{{WRAPPER}} .bt-gmap',
         ]);
 
-        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), [
+        $this->add_group_control(Group_Control_Box_Shadow::get_type(), [
             'name'     => 'box_shadow',
             'selector' => '{{WRAPPER}} .bt-gmap',
         ]);
 
-        $this->add_group_control(\Elementor\Group_Control_Css_Filter::get_type(), [
+        $this->add_group_control(Group_Control_Css_Filter::get_type(), [
             'name'     => 'css_filter',
             'selector' => '{{WRAPPER}} .bt-gmap__canvas',
         ]);

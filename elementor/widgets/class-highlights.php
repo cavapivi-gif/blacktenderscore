@@ -28,6 +28,7 @@ class Highlights extends AbstractBtWidget {
             'title'    => 'BT — Points forts',
             'icon'     => 'eicon-check-circle',
             'keywords' => ['highlights', 'points', 'forts', 'inclus', 'avantages', 'bt'],
+            'css'      => ['bt-highlights'],
         ];
     }
 
@@ -196,12 +197,13 @@ class Highlights extends AbstractBtWidget {
 
         $this->add_control('layout', [
             'label'   => __('Disposition', 'blacktenderscore'),
-            'type'    => Controls_Manager::SELECT,
+            'type'    => Controls_Manager::CHOOSE,
             'options' => [
-                'grid' => __('Grille', 'blacktenderscore'),
-                'list' => __('Liste', 'blacktenderscore'),
+                'grid' => ['title' => __('Grille', 'blacktenderscore'), 'icon' => 'eicon-gallery-grid'],
+                'list' => ['title' => __('Liste',  'blacktenderscore'), 'icon' => 'eicon-post-list'],
             ],
             'default' => 'grid',
+            'toggle'  => false,
         ]);
 
         $this->add_responsive_control('columns', [

@@ -1,0 +1,147 @@
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Boat Pricing — layout tabs
+   ══════════════════════════════════════════════════════════ */
+
+/* Wrapper d'alignement (justify-content piloté par le control Elementor) */
+.bt-bprice__tablist-wrap {
+  display: flex;
+  justify-content: flex-start; /* override par tabs_align control */
+  margin-bottom: 0;
+}
+
+/* display:inline-flex = fit-content naturel (spécificité BoatPricing) */
+.bt-bprice__tablist {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  border-bottom: 2px solid var(--bt-border-light);
+}
+
+/* BoatPricing : poids et transition supplémentaire */
+.bt-bprice__tab {
+  font-weight: 600;
+  transition: color .15s, background-color .15s, border-color .15s;
+  white-space: nowrap;
+}
+
+/* Panneau de contenu */
+.bt-bprice__panel {
+  display: none;
+}
+
+.bt-bprice__panel--active {
+  display: block;
+  padding-top: 20px;
+}
+
+/* ── Tarification ───────────────────────────────────────── */
+.bt-bprice__title {
+  margin: 0 0 20px;
+}
+
+.bt-bprice__cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.bt-bprice__card {
+  flex: 1 1 200px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bt-bprice__card-label {
+  font-size: .85em;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  opacity: .7;
+}
+
+.bt-bprice__note {
+  font-size: .8em;
+  opacity: .6;
+}
+
+.bt-bprice__amount-block {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.bt-bprice__amount {
+  font-size: 2em;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.bt-bprice__duration {
+  font-size: .875em;
+  opacity: .65;
+}
+
+.bt-bprice__deposit {
+  font-size: .875em;
+  opacity: .75;
+  margin: 0;
+}
+
+.bt-bprice__fuel {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: .8em;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.bt-bprice__fuel--yes {
+  background: #e6f4ea;
+  color: #2d7a3a;
+}
+
+.bt-bprice__fuel--no {
+  background: #fff3e0;
+  color: #8a5300;
+}
+
+.bt-bprice__table-wrap {
+  overflow-x: auto;
+}
+
+.bt-bprice__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .95em;
+}
+
+.bt-bprice__table th,
+.bt-bprice__table td {
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid rgba(0,0,0,.08);
+}
+
+.bt-bprice__table thead th {
+  font-weight: 600;
+  font-size: .8em;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  opacity: .65;
+}
+
+.bt-bprice__zones {
+  margin-top: 32px;
+}
+
+.bt-bprice__zones-title {
+  margin: 0 0 12px;
+  font-size: 1em;
+  font-weight: 600;
+}

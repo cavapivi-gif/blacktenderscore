@@ -3,6 +3,7 @@ namespace BlackTenders\Elementor\Widgets;
 
 use BlackTenders\Elementor\AbstractBtWidget;
 use BlackTenders\Elementor\Traits\BtSharedControls;
+use Elementor\Controls_Manager;
 
 defined('ABSPATH') || exit;
 
@@ -21,6 +22,7 @@ class BoatPricing extends AbstractBtWidget {
             'title'    => 'BT — Tarifs bateau',
             'icon'     => 'eicon-price-list',
             'keywords' => ['tarif', 'prix', 'bateau', 'demi-journée', 'journée', 'bt'],
+            'css'      => ['bt-boat-pricing'],
             'js'       => ['bt-elementor'],
         ];
     }
@@ -32,20 +34,20 @@ class BoatPricing extends AbstractBtWidget {
         // ── Contenu ───────────────────────────────────────────────────────
         $this->start_controls_section('section_content', [
             'label' => __('Contenu', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->register_section_title_controls(['title' => __('Tarifs', 'blacktenderscore')]);
 
         $this->add_control('currency', [
             'label'   => __('Symbole monnaie', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
+            'type'    => Controls_Manager::TEXT,
             'default' => '€',
         ]);
 
         $this->add_control('layout', [
             'label'   => __('Disposition', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
+            'type'    => Controls_Manager::SELECT,
             'options' => [
                 'cards' => __('Cartes côte à côte', 'blacktenderscore'),
                 'tabs'  => __('Onglets (tabs)', 'blacktenderscore'),
@@ -59,40 +61,40 @@ class BoatPricing extends AbstractBtWidget {
         // ── Options d'affichage ───────────────────────────────────────────
         $this->start_controls_section('section_options', [
             'label' => __('Forfaits à afficher', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->add_control('show_half', [
             'label'        => __('Demi-journée', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('label_half', [
             'label'     => __('Label demi-journée', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => __('Demi-journée', 'blacktenderscore'),
             'condition' => ['show_half' => 'yes'],
         ]);
 
         $this->add_control('show_full', [
             'label'        => __('Journée complète', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('label_full', [
             'label'     => __('Label journée', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => __('Journée complète', 'blacktenderscore'),
             'condition' => ['show_full' => 'yes'],
         ]);
 
         $this->add_control('show_per_person', [
             'label'        => __('Afficher le prix / personne', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => '',
             'description'  => __('Divise le prix par le nombre de passagers max (boat_pax_max).', 'blacktenderscore'),
@@ -100,70 +102,70 @@ class BoatPricing extends AbstractBtWidget {
 
         $this->add_control('per_person_label', [
             'label'     => __('Suffixe prix / personne', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => __('/ pers.', 'blacktenderscore'),
             'condition' => ['show_per_person' => 'yes'],
         ]);
 
         $this->add_control('show_deposit', [
             'label'        => __('Caution', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('label_deposit', [
             'label'     => __('Label caution', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => __('Caution', 'blacktenderscore'),
             'condition' => ['show_deposit' => 'yes'],
         ]);
 
         $this->add_control('show_fuel_badge', [
             'label'        => __('Badge carburant inclus', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('label_fuel_yes', [
             'label'     => __('Label carburant inclus', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => __('Carburant inclus', 'blacktenderscore'),
             'condition' => ['show_fuel_badge' => 'yes'],
         ]);
 
         $this->add_control('label_fuel_no', [
             'label'     => __('Label carburant non inclus', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => __('Carburant en sus', 'blacktenderscore'),
             'condition' => ['show_fuel_badge' => 'yes'],
         ]);
 
         $this->add_control('show_price_note', [
             'label'        => __('Note tarifaire', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
         ]);
 
         $this->add_control('table_col_forfait', [
             'label'     => __('En-tête col. Forfait', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => __('Forfait', 'blacktenderscore'),
             'condition' => ['layout' => 'table'],
         ]);
 
         $this->add_control('table_col_duration', [
             'label'     => __('En-tête col. Durée', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => __('Durée', 'blacktenderscore'),
             'condition' => ['layout' => 'table'],
         ]);
 
         $this->add_control('table_col_price', [
             'label'     => __('En-tête col. Prix', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => __('Prix', 'blacktenderscore'),
             'condition' => ['layout' => 'table'],
         ]);
@@ -174,13 +176,13 @@ class BoatPricing extends AbstractBtWidget {
         // Zones pricing is incompatible with tabs layout (IF/ELSE).
         $this->start_controls_section('section_zones', [
             'label'     => __('Tarifs par zone de navigation', 'blacktenderscore'),
-            'tab'       => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'       => Controls_Manager::TAB_CONTENT,
             'condition' => ['layout!' => 'tabs'],
         ]);
 
         $this->add_control('show_zones', [
             'label'        => __('Afficher les tarifs par zone', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'type'         => Controls_Manager::SWITCHER,
             'description'  => __('Lit le repeater ACF boat_custom_price_by_departure.', 'blacktenderscore'),
             'return_value' => 'yes',
             'default'      => '',
@@ -188,28 +190,28 @@ class BoatPricing extends AbstractBtWidget {
 
         $this->add_control('zones_title', [
             'label'     => __('Titre du tableau par zone', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => __('Tarifs par zone de départ', 'blacktenderscore'),
             'condition' => ['show_zones' => 'yes'],
         ]);
 
         $this->add_control('zones_col_zone', [
             'label'     => __('En-tête colonne Zone', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => __('Zone de navigation', 'blacktenderscore'),
             'condition' => ['show_zones' => 'yes'],
         ]);
 
         $this->add_control('zones_col_half', [
             'label'     => __('En-tête colonne ½ journée', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => __('Demi-journée', 'blacktenderscore'),
             'condition' => ['show_zones' => 'yes'],
         ]);
 
         $this->add_control('zones_col_full', [
             'label'     => __('En-tête colonne journée', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::TEXT,
+            'type'      => Controls_Manager::TEXT,
             'default'   => __('Journée', 'blacktenderscore'),
             'condition' => ['show_zones' => 'yes'],
         ]);
@@ -246,13 +248,13 @@ class BoatPricing extends AbstractBtWidget {
 
         $this->start_controls_section('style_cards_gap', [
             'label'     => __('Style — Espacement cartes', 'blacktenderscore'),
-            'tab'       => \Elementor\Controls_Manager::TAB_STYLE,
+            'tab'       => Controls_Manager::TAB_STYLE,
             'condition' => ['layout' => 'cards'],
         ]);
 
         $this->add_responsive_control('cards_gap_extra', [
             'label'      => __('Espacement entre cartes', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px'],
             'default'    => ['size' => 16, 'unit' => 'px'],
             'selectors'  => ['{{WRAPPER}} .bt-bprice__cards' => 'gap: {{SIZE}}{{UNIT}}'],
@@ -281,40 +283,40 @@ class BoatPricing extends AbstractBtWidget {
         // ── Style — Carburant + Caution ───────────────────────────────────
         $this->start_controls_section('style_badges', [
             'label' => __('Style — Badges / Caution', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+            'tab'   => Controls_Manager::TAB_STYLE,
         ]);
 
         $this->add_control('deposit_color', [
             'label'     => __('Couleur caution', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-bprice__deposit' => 'color: {{VALUE}}'],
             'condition' => ['show_deposit' => 'yes'],
         ]);
 
         $this->add_control('fuel_yes_bg', [
             'label'     => __('Fond badge carburant inclus', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-bprice__fuel--yes' => 'background-color: {{VALUE}}'],
             'condition' => ['show_fuel_badge' => 'yes'],
         ]);
 
         $this->add_control('fuel_yes_color', [
             'label'     => __('Couleur texte badge inclus', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-bprice__fuel--yes' => 'color: {{VALUE}}'],
             'condition' => ['show_fuel_badge' => 'yes'],
         ]);
 
         $this->add_control('fuel_no_bg', [
             'label'     => __('Fond badge carburant en sus', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-bprice__fuel--no' => 'background-color: {{VALUE}}'],
             'condition' => ['show_fuel_badge' => 'yes'],
         ]);
 
         $this->add_control('fuel_no_color', [
             'label'     => __('Couleur texte badge en sus', 'blacktenderscore'),
-            'type'      => \Elementor\Controls_Manager::COLOR,
+            'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-bprice__fuel--no' => 'color: {{VALUE}}'],
             'condition' => ['show_fuel_badge' => 'yes'],
         ]);

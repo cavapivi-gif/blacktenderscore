@@ -39,6 +39,7 @@ class Gallery extends AbstractBtWidget {
             'title'    => 'BT — Galerie photos',
             'icon'     => 'eicon-gallery-grid',
             'keywords' => ['galerie', 'photos', 'images', 'lightbox', 'airbnb', 'bt'],
+            'css'      => ['bt-gallery', 'bt-lightbox'],
         ];
     }
 
@@ -66,12 +67,13 @@ class Gallery extends AbstractBtWidget {
 
         $this->add_control('layout', [
             'label'     => __('Disposition', 'blacktenderscore'),
-            'type'      => Controls_Manager::SELECT,
+            'type'      => Controls_Manager::CHOOSE,
             'options'   => [
-                'airbnb' => __('Airbnb (hero + vignettes)', 'blacktenderscore'),
-                'grid'   => __('Grille libre', 'blacktenderscore'),
+                'airbnb' => ['title' => __('Airbnb (hero + vignettes)', 'blacktenderscore'), 'icon' => 'eicon-image'],
+                'grid'   => ['title' => __('Grille libre', 'blacktenderscore'),               'icon' => 'eicon-gallery-grid'],
             ],
             'default'   => 'airbnb',
+            'toggle'    => false,
             'separator' => 'before',
         ]);
 

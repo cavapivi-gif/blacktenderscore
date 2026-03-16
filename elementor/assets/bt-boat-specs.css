@@ -1,0 +1,49 @@
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Boat Specs
+   ══════════════════════════════════════════════════════════ */
+.bt-bspecs__title {
+  margin: 0 0 20px;
+}
+
+.bt-bspecs__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.bt-bspecs__list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bt-bspecs__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+}
+
+.bt-bspecs__item-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.bt-bspecs__item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bt-bspecs__item-label {
+  font-size: .8em;
+  opacity: .65;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.bt-bspecs__item-value {
+  font-weight: 600;
+  font-size: 1.05em;
+}

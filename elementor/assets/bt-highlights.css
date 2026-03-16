@@ -1,0 +1,42 @@
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Highlights
+   ══════════════════════════════════════════════════════════ */
+
+.bt-highlights__section-title { margin: 0 0 1em; }
+
+.bt-highlights__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.bt-highlights__list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bt-highlights__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;          /* prevent grid/flex overflow */
+  /* flex-direction override par control icon_position */
+}
+
+/* Icône — peut contenir emoji, texte, fa, ou SVG Elementor */
+.bt-highlights__icon {
+  flex-shrink: 0;
+  font-size: 28px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bt-highlights__icon i   { font-size: inherit; color: inherit; }
+.bt-highlights__icon svg { width: 1em; height: 1em; fill: currentColor; }
+
+.bt-highlights__content { flex: 1; min-width: 0; overflow: hidden; word-break: break-word; }
+.bt-highlights__title   { display: block; font-weight: 600; }
+.bt-highlights__desc    { margin: .25em 0 0; }

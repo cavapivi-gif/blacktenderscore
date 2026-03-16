@@ -28,6 +28,7 @@ class PricingTabs extends AbstractBtWidget {
             'title'    => 'BT — Tarification',
             'icon'     => 'eicon-price-table',
             'keywords' => ['tarif', 'prix', 'forfait', 'réservation', 'booking', 'bt'],
+            'css'      => ['bt-pricing-tabs'],
             'js'       => ['bt-elementor'],
         ];
     }

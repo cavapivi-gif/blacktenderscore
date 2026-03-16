@@ -1,0 +1,7 @@
+/* ══════════════════════════════════════════════════════════
+   WIDGET : BT — Affichage Taxonomie
+   ══════════════════════════════════════════════════════════ */
+
+.bt-taxdisp { display: block; }
+.bt-taxdisp__section-title { margin: 0 0 8px; }
+.bt-taxdisp__text { margin: 0; }

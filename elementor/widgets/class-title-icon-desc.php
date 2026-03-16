@@ -4,6 +4,7 @@ namespace BlackTenders\Elementor\Widgets;
 use BlackTenders\Elementor\AbstractBtWidget;
 use BlackTenders\Elementor\Traits\BtSharedControls;
 use Elementor\Controls_Manager;
+use Elementor\Group_Control_Typography;
 
 defined('ABSPATH') || exit;
 
@@ -24,6 +25,7 @@ class TitleIconDesc extends AbstractBtWidget {
             'title'    => 'BT — Titre + Icône + Descriptif',
             'icon'     => 'eicon-info-circle',
             'keywords' => ['titre', 'icône', 'descriptif', 'bloc', 'bt'],
+            'css'      => ['bt-title-icon-desc'],
         ];
     }
 
@@ -88,7 +90,7 @@ class TitleIconDesc extends AbstractBtWidget {
             'label' => __('Style — Descriptif', 'blacktenderscore'),
             'tab'   => Controls_Manager::TAB_STYLE,
         ]);
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+        $this->add_group_control(Group_Control_Typography::get_type(), [
             'name'     => 'desc_typography',
             'selector' => '{{WRAPPER}} .bt-tid__desc',
         ]);

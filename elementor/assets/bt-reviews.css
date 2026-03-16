@@ -1,0 +1,52 @@
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Reviews
+   ══════════════════════════════════════════════════════════ */
+.bt-reviews__section-title {
+  margin: 0 0 24px;
+}
+
+.bt-reviews__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.bt-reviews__list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bt-reviews__card {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bt-reviews__stars {
+  font-size: 18px;
+  color: var(--bt-star-color);
+  letter-spacing: 2px;
+}
+
+.bt-reviews__text {
+  margin: 0;
+  font-style: italic;
+  line-height: 1.7;
+}
+
+.bt-reviews__quote {
+  font-size: 1.6em;
+  line-height: .5;
+  vertical-align: -0.3em;
+  margin-right: 2px;
+  opacity: .3;
+}
+
+.bt-reviews__name {
+  font-size: .85em;
+  font-weight: 600;
+  opacity: .65;
+  margin-top: auto;
+}

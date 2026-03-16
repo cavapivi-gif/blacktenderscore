@@ -1,0 +1,39 @@
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Captain
+   ══════════════════════════════════════════════════════════ */
+
+.bt-captain__section-title { margin: 0 0 1em; }
+
+.bt-captain__card {
+  display: flex;
+  flex-direction: row; /* override par control card_direction */
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.bt-captain__photo-wrap {
+  flex-shrink: 0;
+  width: 100px;
+  height: 100px;
+  overflow: hidden;
+  border-radius: 50%; /* override par photo_radius */
+}
+
+.bt-captain__photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+}
+
+.bt-captain__info  { flex: 1; min-width: 0; }
+.bt-captain__name  { font-weight: 700; margin: 0 0 .25em; }
+.bt-captain__since { margin: 0 0 .5em; font-size: .9em; opacity: .8; }
+.bt-captain__bio   { margin: 0; }
+.bt-captain__bio p { margin: 0 0 .5em; }
+.bt-captain__bio p:last-child { margin-bottom: 0; }
+
+@media (max-width: 480px) {
+  .bt-captain__card { flex-direction: column; }
+}

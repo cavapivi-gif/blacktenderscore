@@ -3,6 +3,7 @@ namespace BlackTenders\Elementor\Widgets;
 
 use BlackTenders\Elementor\AbstractBtWidget;
 use BlackTenders\Elementor\Traits\BtSharedControls;
+use Elementor\Controls_Manager;
 
 defined('ABSPATH') || exit;
 
@@ -22,6 +23,7 @@ class BoatSpecs extends AbstractBtWidget {
             'title'    => 'BT — Fiche technique bateau',
             'icon'     => 'eicon-info-box',
             'keywords' => ['bateau', 'specs', 'technique', 'caractéristiques', 'bt'],
+            'css'      => ['bt-boat-specs'],
         ];
     }
 
@@ -57,24 +59,25 @@ class BoatSpecs extends AbstractBtWidget {
         // ── Contenu ───────────────────────────────────────────────────────
         $this->start_controls_section('section_content', [
             'label' => __('Contenu', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         $this->register_section_title_controls(['title' => __('Caractéristiques techniques', 'blacktenderscore')]);
 
         $this->add_control('layout', [
             'label'   => __('Disposition', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::SELECT,
+            'type'    => Controls_Manager::CHOOSE,
             'options' => [
-                'grid' => __('Grille', 'blacktenderscore'),
-                'list' => __('Liste', 'blacktenderscore'),
+                'grid' => ['title' => __('Grille', 'blacktenderscore'), 'icon' => 'eicon-gallery-grid'],
+                'list' => ['title' => __('Liste',  'blacktenderscore'), 'icon' => 'eicon-post-list'],
             ],
             'default' => 'grid',
+            'toggle'  => false,
         ]);
 
         $this->add_responsive_control('columns', [
             'label'          => __('Colonnes', 'blacktenderscore'),
-            'type'           => \Elementor\Controls_Manager::NUMBER,
+            'type'           => Controls_Manager::NUMBER,
             'min'            => 1,
             'max'            => 6,
             'default'        => 3,
@@ -86,13 +89,13 @@ class BoatSpecs extends AbstractBtWidget {
 
         $this->add_control('bool_yes_label', [
             'label'   => __('Label "Oui"', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
+            'type'    => Controls_Manager::TEXT,
             'default' => __('Oui', 'blacktenderscore'),
         ]);
 
         $this->add_control('bool_no_label', [
             'label'   => __('Label "Non"', 'blacktenderscore'),
-            'type'    => \Elementor\Controls_Manager::TEXT,
+            'type'    => Controls_Manager::TEXT,
             'default' => __('Non', 'blacktenderscore'),
         ]);
 
@@ -101,34 +104,34 @@ class BoatSpecs extends AbstractBtWidget {
         // ── Section par spec ──────────────────────────────────────────────
         $this->start_controls_section('section_specs', [
             'label' => __('Spécifications à afficher', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+            'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
         foreach ($specs as $key => $def) {
             $this->add_control("show_{$key}", [
                 'label'        => $def['default_label'],
-                'type'         => \Elementor\Controls_Manager::SWITCHER,
+                'type'         => Controls_Manager::SWITCHER,
                 'return_value' => 'yes',
                 'default'      => 'yes',
             ]);
 
             $this->add_control("icon_{$key}", [
                 'label'     => __('Icône (emoji ou texte)', 'blacktenderscore'),
-                'type'      => \Elementor\Controls_Manager::TEXT,
+                'type'      => Controls_Manager::TEXT,
                 'default'   => $def['default_icon'],
                 'condition' => ["show_{$key}" => 'yes'],
             ]);
 
             $this->add_control("label_{$key}", [
                 'label'     => __('Label', 'blacktenderscore'),
-                'type'      => \Elementor\Controls_Manager::TEXT,
+                'type'      => Controls_Manager::TEXT,
                 'default'   => $def['default_label'],
                 'condition' => ["show_{$key}" => 'yes'],
             ]);
 
             $this->add_control("suffix_{$key}", [
                 'label'     => __('Suffixe unité', 'blacktenderscore'),
-                'type'      => \Elementor\Controls_Manager::TEXT,
+                'type'      => Controls_Manager::TEXT,
                 'default'   => $def['suffix'],
                 'condition' => ["show_{$key}" => 'yes'],
             ]);
@@ -144,12 +147,12 @@ class BoatSpecs extends AbstractBtWidget {
 
         $this->start_controls_section('style_items', [
             'label' => __('Style — Éléments', 'blacktenderscore'),
-            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+            'tab'   => Controls_Manager::TAB_STYLE,
         ]);
 
         $this->add_responsive_control('grid_gap', [
             'label'      => __('Espacement', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px', 'em'],
             'range'      => ['px' => ['min' => 0, 'max' => 64]],
             'default'    => ['size' => 16, 'unit' => 'px'],
@@ -161,7 +164,7 @@ class BoatSpecs extends AbstractBtWidget {
 
         $this->add_responsive_control('icon_size', [
             'label'      => __('Taille icône', 'blacktenderscore'),
-            'type'       => \Elementor\Controls_Manager::SLIDER,
+            'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px', 'em'],
             'range'      => ['px' => ['min' => 12, 'max' => 60]],
             'default'    => ['size' => 24, 'unit' => 'px'],
