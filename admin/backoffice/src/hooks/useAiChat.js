@@ -18,10 +18,18 @@ const { ajax_url, nonce } = window.btBackoffice ?? {}
 
 export function useAiChat({ onFinish, onError }) {
   // Refs pour accéder aux valeurs courantes depuis experimental_prepareRequestBody
-  // (les closures captures ne se mettent pas à jour dans le hook useChat)
+  // (les closures ne se mettent pas à jour dans le hook useChat interne)
   const historyRef    = useRef([])
   const providerRef   = useRef('anthropic')
   const dateRangeRef  = useRef({ from: '', to: '' })
+
+  // Forwarding refs — évite les closures stale pour onFinish/onError.
+  // useChat capture ses callbacks à l'init ; ces refs garantissent
+  // qu'on appelle toujours la version la plus récente (ex : conversations changée).
+  const onFinishRef = useRef(onFinish)
+  const onErrorRef  = useRef(onError)
+  onFinishRef.current = onFinish
+  onErrorRef.current  = onError
 
   const { append, messages, isLoading, stop, setMessages } = useChat({
     api: `${ajax_url}?action=bt_ai_chat`,
@@ -47,12 +55,12 @@ export function useAiChat({ onFinish, onError }) {
     onFinish: (message) => {
       // Reset le buffer interne — useConversations est le seul store
       setMessages([])
-      onFinish?.(message.content, providerRef.current)
+      onFinishRef.current?.(message.content, providerRef.current)
     },
 
     onError: (err) => {
       setMessages([])
-      onError?.(err)
+      onErrorRef.current?.(err)
     },
   })
 

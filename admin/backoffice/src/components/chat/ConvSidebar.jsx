@@ -5,7 +5,9 @@ import { Plus, Trash, Sparks, ChatLines, EditPencil } from 'iconoir-react'
 const ConvItem = memo(function ConvItem({ conv, isActive, onSelect, onDelete, onRename }) {
   const [editing, setEditing] = useState(false)
   const [draft,   setDraft]   = useState('')
-  const inputRef = useRef(null)
+  const [confirm, setConfirm] = useState(false)
+  const inputRef  = useRef(null)
+  const timerRef  = useRef(null)
 
   function startEdit(e) {
     e.stopPropagation()
@@ -23,6 +25,20 @@ const ConvItem = memo(function ConvItem({ conv, isActive, onSelect, onDelete, on
     if (e.key === 'Enter')  { e.preventDefault(); commitEdit() }
     if (e.key === 'Escape') { setEditing(false) }
     e.stopPropagation()
+  }
+
+  function requestDelete(e) {
+    e.stopPropagation()
+    clearTimeout(timerRef.current)
+    setConfirm(true)
+    timerRef.current = setTimeout(() => setConfirm(false), 3000)
+  }
+
+  function confirmDelete(e) {
+    e.stopPropagation()
+    clearTimeout(timerRef.current)
+    setConfirm(false)
+    onDelete(conv.id)
   }
 
   return (
@@ -76,13 +92,24 @@ const ConvItem = memo(function ConvItem({ conv, isActive, onSelect, onDelete, on
           >
             <EditPencil width={10} height={10} strokeWidth={1.5} />
           </button>
-          <button
-            onClick={e => { e.stopPropagation(); onDelete(conv.id) }}
-            title="Supprimer"
-            className="p-0.5 rounded hover:text-destructive transition-colors"
-          >
-            <Trash width={11} height={11} strokeWidth={1.5} />
-          </button>
+          {confirm ? (
+            <button
+              onClick={confirmDelete}
+              onBlur={() => { clearTimeout(timerRef.current); setConfirm(false) }}
+              title="Confirmer la suppression"
+              className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-destructive text-white hover:bg-destructive/90 transition-colors leading-none"
+            >
+              Supprimer ?
+            </button>
+          ) : (
+            <button
+              onClick={requestDelete}
+              title="Supprimer"
+              className="p-0.5 rounded hover:text-destructive transition-colors"
+            >
+              <Trash width={11} height={11} strokeWidth={1.5} />
+            </button>
+          )}
         </div>
       )}
     </motion.div>
@@ -109,7 +136,22 @@ const ConvGroup = memo(function ConvGroup({ label, convs, activeId, onSelect, on
 })
 
 export const ConvSidebar = memo(function ConvSidebar({ grouped, activeId, onSelect, onNew, onDelete, onRename, onClear }) {
+  const [confirmClear, setConfirmClear] = useState(false)
+  const clearTimerRef = useRef(null)
   const total = Object.values(grouped).flat().length
+
+  function requestClear() {
+    clearTimeout(clearTimerRef.current)
+    setConfirmClear(true)
+    clearTimerRef.current = setTimeout(() => setConfirmClear(false), 4000)
+  }
+
+  function confirmClearAll() {
+    clearTimeout(clearTimerRef.current)
+    setConfirmClear(false)
+    onClear()
+  }
+
   return (
     <aside className="w-full flex flex-col bg-background overflow-hidden">
       <div className="p-3 border-b">
@@ -141,13 +183,32 @@ export const ConvSidebar = memo(function ConvSidebar({ grouped, activeId, onSele
       </div>
 
       {total > 0 && (
-        <div className="p-3 border-t">
-          <button
-            onClick={onClear}
-            className="text-[11px] text-muted-foreground/60 hover:text-destructive transition-colors"
-          >
-            Effacer l'historique
-          </button>
+        <div className="p-3 border-t flex items-center gap-3">
+          {confirmClear ? (
+            <>
+              <span className="text-[11px] text-muted-foreground/60 leading-none">Tout effacer ?</span>
+              <button
+                onClick={confirmClearAll}
+                onBlur={() => { clearTimeout(clearTimerRef.current); setConfirmClear(false) }}
+                className="text-[11px] font-medium text-destructive hover:text-destructive/80 transition-colors leading-none"
+              >
+                Confirmer
+              </button>
+              <button
+                onClick={() => { clearTimeout(clearTimerRef.current); setConfirmClear(false) }}
+                className="text-[11px] text-muted-foreground/60 hover:text-foreground transition-colors leading-none"
+              >
+                Annuler
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={requestClear}
+              className="text-[11px] text-muted-foreground/60 hover:text-destructive transition-colors"
+            >
+              Effacer l'historique
+            </button>
+          )}
         </div>
       )}
     </aside>
