@@ -77,10 +77,14 @@ export default function AIChat() {
   const convIdRef       = useRef(null)  // capture convId au moment du stream
   const replyToRef      = useRef(null)  // capture replyTo au moment du stream
   const requestedByRef  = useRef(null)  // user_id de l'auteur du message envoyé (pour attribution)
+  const activeConvRef   = useRef(null)  // ref toujours à jour pour send() sans stale closure
 
   const { toasts, push: toast } = useToast()
   const scrollRef = useRef(null)
   const messages  = activeConv?.messages ?? []
+
+  // Garde activeConvRef à jour sans stale closure dans send()
+  useEffect(() => { activeConvRef.current = activeConv }, [activeConv])
 
   // ── Vercel AI SDK stream (remplace le reader loop SSE manuel) ────────────────
   const { stream, stop, isLoading, streamText, showThinking } = useAiChat({
@@ -229,6 +233,14 @@ export default function AIChat() {
     const autoTitle   = messages.length === 0 ? content.slice(0, 50) + (content.length > 50 ? '…' : '') : null
     updateMessages(convId, updatedMsgs, autoTitle)
     setInput(''); setImages([]); setReplyTo(null)
+
+    // Sauvegarde immédiate du message utilisateur en DB (sans attendre la réponse IA).
+    // Indispensable pour que les autres participants le voient dès le prochain poll (3s),
+    // et pour que refreshMessages ne l'efface pas avant que onFinish ne finalise le sync.
+    const convSnap = activeConvRef.current
+    if (convSnap?.db_id) {
+      syncChat({ ...convSnap, messages: updatedMsgs, title: autoTitle ?? convSnap.title }).catch(() => {})
+    }
 
     // ── Intent detection + stats fetch ─────────────────────────────────────
     const intents     = detectDataIntent(content)

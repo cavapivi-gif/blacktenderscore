@@ -1,4 +1,4 @@
-import { useState, memo } from 'react'
+import { useState, memo, useMemo } from 'react'
 import { motion } from 'motion/react'
 import Lottie from 'lottie-react'
 import { Copy, Check, ShareAndroid, Reply } from 'iconoir-react'
@@ -25,16 +25,20 @@ function renderWithMentions(text) {
 }
 
 /** Quote strip shown inside a message bubble when it's a reply. */
-function QuoteStrip({ replyTo }) {
+function QuoteStrip({ replyTo, textColor }) {
   if (!replyTo) return null
   const label = replyTo.role === 'user'
     ? (replyTo.authorName ?? 'Vous')
     : (replyTo.authorName ?? 'IA')
+  // border + texte adaptés à la couleur du fond parent
+  const borderStyle = { borderColor: textColor ? `${textColor}40` : undefined }
+  const dimStyle    = { color: textColor ? `${textColor}99` : undefined }
+  const strongStyle = { color: textColor ?? undefined }
   return (
-    <div className="flex items-start gap-1.5 mb-2 pl-2 border-l-2 border-muted-foreground/30">
+    <div className="flex items-start gap-1.5 mb-2 pl-2 border-l-2" style={borderStyle}>
       <div className="min-w-0">
-        <span className="text-[10px] font-semibold text-muted-foreground">{label}</span>
-        <p className="text-[11px] text-muted-foreground/70 line-clamp-2 leading-snug">
+        <span className="text-[10px] font-semibold" style={strongStyle}>{label}</span>
+        <p className="text-[11px] line-clamp-2 leading-snug" style={dimStyle}>
           {replyTo.content?.slice(0, 120)}{(replyTo.content?.length ?? 0) > 120 ? '…' : ''}
         </p>
       </div>
@@ -66,10 +70,25 @@ export function CopyBtn({ text, onCopy }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// User message
+// Contrast helper — renvoie '#fff' ou '#1a1917' selon la luminance du fond
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function UserMsg({ msg, participants, currentUserId, onReply }) {
+function contrastColor(hex) {
+  if (!hex || hex.length < 7) return '#1a1917'
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  // Perceived luminance (sRGB formula)
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+  return lum > 0.45 ? '#1a1917' : '#ffffff'
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// User message — memoized pour éviter que les animations rejouent sur chaque
+// changement de replyTo dans le parent
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const UserMsg = memo(function UserMsg({ msg, participants, currentUserId, onReply }) {
   // Normalise les IDs en string pour éviter number/string mismatch (PHP ARRAY_A vs JSON)
   const myId    = currentUserId != null ? String(currentUserId) : null
   const msgUid  = msg.user_id   != null ? String(msg.user_id)   : null
@@ -78,6 +97,7 @@ export function UserMsg({ msg, participants, currentUserId, onReply }) {
   const isMe        = !msgUid || msgUid === myId
   const participant = participants?.find(p => String(p.user_id) === (isMe ? myId : msgUid))
   const bubbleColor = participant?.color ?? '#dbd2c0'
+  const textColor   = useMemo(() => contrastColor(bubbleColor), [bubbleColor])
   const authorName  = isMe ? 'Vous' : (participant?.display_name ?? null)
 
   return (
@@ -105,10 +125,10 @@ export function UserMsg({ msg, participants, currentUserId, onReply }) {
           </div>
         )}
         <div
-          className="rounded-2xl rounded-tr-sm px-4 py-3 text-sm leading-relaxed text-foreground"
-          style={{ backgroundColor: bubbleColor }}
+          className="rounded-2xl rounded-tr-sm px-4 py-3 text-sm leading-relaxed"
+          style={{ backgroundColor: bubbleColor, color: textColor }}
         >
-          <QuoteStrip replyTo={msg.replyTo} />
+          <QuoteStrip replyTo={msg.replyTo} textColor={textColor} />
           {renderWithMentions(msg.content)}
         </div>
 
@@ -128,7 +148,7 @@ export function UserMsg({ msg, participants, currentUserId, onReply }) {
       </div>
     </motion.div>
   )
-}
+})
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Assistant message
