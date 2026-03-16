@@ -1017,13 +1017,18 @@ class QuoteForm extends AbstractBtWidget {
      * Utilise exc_loop_tpl au lieu de step_exc_loop_tpl.
      */
     private function render_excursion_cards_standalone(array $s): void {
-        $excursions = get_posts([
-            'post_type'      => 'excursion',
-            'posts_per_page' => 50,
-            'post_status'    => 'publish',
-            'orderby'        => 'title',
-            'order'          => 'ASC',
-        ]);
+        $cache_key  = 'bt_exc_list_50';
+        $excursions = get_transient($cache_key);
+        if ($excursions === false) {
+            $excursions = get_posts([
+                'post_type'      => 'excursion',
+                'posts_per_page' => 50,
+                'post_status'    => 'publish',
+                'orderby'        => 'title',
+                'order'          => 'ASC',
+            ]);
+            set_transient($cache_key, $excursions, 12 * HOUR_IN_SECONDS);
+        }
 
         if (empty($excursions)) {
             echo '<p class="bt-quote__empty">' . esc_html__('Aucune excursion disponible.', 'blacktenderscore') . '</p>';
@@ -1085,7 +1090,10 @@ class QuoteForm extends AbstractBtWidget {
      * Retourne la liste des templates Elementor pour les contrôles SELECT.
      */
     private static function get_elementor_templates_options(): array {
-        $options = ['' => __('— Aucun (fallback auto)', 'blacktenderscore')];
+        static $cache = null;
+        if ($cache !== null) return $cache;
+
+        $options   = ['' => __('— Aucun (fallback auto)', 'blacktenderscore')];
         $templates = get_posts([
             'post_type'      => 'elementor_library',
             'posts_per_page' => 100,
@@ -1096,6 +1104,7 @@ class QuoteForm extends AbstractBtWidget {
         foreach ($templates as $tpl) {
             $options[$tpl->ID] = $tpl->post_title;
         }
-        return $options;
+        $cache = $options;
+        return $cache;
     }
 }

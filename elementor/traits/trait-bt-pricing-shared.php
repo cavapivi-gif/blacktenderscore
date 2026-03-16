@@ -333,13 +333,18 @@ trait BtPricingShared {
      * Utilise un template Loop Elementor si configuré.
      */
     protected function render_excursion_cards(array $s): void {
-        $excursions = get_posts([
-            'post_type'      => 'excursion',
-            'posts_per_page' => 50,
-            'post_status'    => 'publish',
-            'orderby'        => 'title',
-            'order'          => 'ASC',
-        ]);
+        $cache_key  = 'bt_exc_list_50';
+        $excursions = get_transient($cache_key);
+        if ($excursions === false) {
+            $excursions = get_posts([
+                'post_type'      => 'excursion',
+                'posts_per_page' => 50,
+                'post_status'    => 'publish',
+                'orderby'        => 'title',
+                'order'          => 'ASC',
+            ]);
+            set_transient($cache_key, $excursions, 12 * HOUR_IN_SECONDS);
+        }
 
         if (empty($excursions)) {
             echo '<p class="bt-quote__empty">' . esc_html__('Aucune excursion disponible.', 'blacktenderscore') . '</p>';
@@ -474,15 +479,23 @@ trait BtPricingShared {
                 $css_file->enqueue();
             }
 
-            global $post;
-            $original_post = $post;
-            $post = $item;
-            setup_postdata($post);
+            // Cache le rendu Elementor (coûteux) — clé : template + post + statut
+            $cache_key = 'bt_tpl_' . $tpl_id . '_' . $item->ID . '_' . $item->post_modified;
+            $html = wp_cache_get($cache_key, 'bt_loop_items');
 
-            $html = \Elementor\Plugin::instance()->frontend->get_builder_content_for_display($tpl_id);
+            if ($html === false) {
+                global $post;
+                $original_post = $post;
+                $post = $item;
+                setup_postdata($post);
 
-            $post = $original_post;
-            if ($original_post) wp_reset_postdata();
+                $html = \Elementor\Plugin::instance()->frontend->get_builder_content_for_display($tpl_id);
+
+                $post = $original_post;
+                if ($original_post) wp_reset_postdata();
+
+                wp_cache_set($cache_key, $html ?: '', 'bt_loop_items', HOUR_IN_SECONDS);
+            }
 
             return $html ?: '<p>' . esc_html($item->post_title) . '</p>';
         }
