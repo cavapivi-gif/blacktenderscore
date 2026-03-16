@@ -7,6 +7,7 @@ use Elementor\Controls_Manager;
 use Elementor\Group_Control_Border;
 use Elementor\Group_Control_Box_Shadow;
 use Elementor\Group_Control_Css_Filter;
+use Elementor\Group_Control_Typography;
 
 defined('ABSPATH') || exit;
 
@@ -46,6 +47,7 @@ class GoogleMap extends AbstractBtWidget {
         $this->section_map_content();
         $this->section_marker_content();
         $this->section_map_style();
+        $this->section_text_style();
     }
 
     // ─ Content → Carte ────────────────────────────────────────────────────────
@@ -54,6 +56,22 @@ class GoogleMap extends AbstractBtWidget {
         $this->start_controls_section('section_map', [
             'label' => __('Carte', 'blacktenderscore'),
             'tab'   => Controls_Manager::TAB_CONTENT,
+        ]);
+
+        // ── Mode d'affichage ──────────────────────────────────────────────────
+        $this->add_control('display_mode', [
+            'label'   => __('Mode d\'affichage', 'blacktenderscore'),
+            'type'    => Controls_Manager::SELECT,
+            'default' => 'map',
+            'options' => [
+                'map'     => __('🗺  Carte Google Maps', 'blacktenderscore'),
+                'address' => __('📍  Adresse brute (texte)', 'blacktenderscore'),
+                'coords'  => __('🧭  Coordonnées GPS', 'blacktenderscore'),
+            ],
+        ]);
+
+        $this->add_control('divider_mode', [
+            'type' => Controls_Manager::DIVIDER,
         ]);
 
         // ── Champ ACF Google Map — liste déroulante directe ───────────────────
@@ -81,25 +99,39 @@ class GoogleMap extends AbstractBtWidget {
             'description' => __('Texte ("Cannes, France"), coordonnées ("43.551,7.017"), ou utilisez ⚡ → BT: Champ Google Map (ACF) pour lier un champ ACF directement.', 'blacktenderscore'),
         ]);
 
-        // ── Communs ───────────────────────────────────────────────────────────
+        // ── Préfixe (modes Adresse / Coordonnées) ─────────────────────────────
+        $this->add_control('address_prefix', [
+            'label'       => __('Préfixe', 'blacktenderscore'),
+            'type'        => Controls_Manager::TEXT,
+            'default'     => '',
+            'placeholder' => __('ex : Point de départ :', 'blacktenderscore'),
+            'label_block' => true,
+            'dynamic'     => ['active' => true],
+            'condition'   => ['display_mode!' => 'map'],
+            'separator'   => 'before',
+        ]);
+
+        // ── Options carte (masquées en mode texte) ────────────────────────────
         $this->add_control('zoom', [
             'label'     => __('Zoom', 'blacktenderscore'),
             'type'      => Controls_Manager::SLIDER,
             'default'   => ['size' => 14],
             'range'     => ['px' => ['min' => 1, 'max' => 20, 'step' => 1]],
             'separator' => 'before',
+            'condition' => ['display_mode' => 'map'],
         ]);
 
         $this->add_control('map_type', [
-            'label'   => __('Type de carte', 'blacktenderscore'),
-            'type'    => Controls_Manager::SELECT,
-            'default' => 'roadmap',
-            'options' => [
+            'label'     => __('Type de carte', 'blacktenderscore'),
+            'type'      => Controls_Manager::SELECT,
+            'default'   => 'roadmap',
+            'options'   => [
                 'roadmap'   => __('Plan', 'blacktenderscore'),
                 'satellite' => __('Satellite', 'blacktenderscore'),
                 'terrain'   => __('Terrain', 'blacktenderscore'),
                 'hybrid'    => __('Hybride', 'blacktenderscore'),
             ],
+            'condition' => ['display_mode' => 'map'],
         ]);
 
         $this->add_control('ui_gestures', [
@@ -109,6 +141,7 @@ class GoogleMap extends AbstractBtWidget {
             'label_off'    => __('Non (conseillé)', 'blacktenderscore'),
             'return_value' => 'yes',
             'default'      => '',
+            'condition'    => ['display_mode' => 'map'],
         ]);
 
         $this->end_controls_section();
@@ -118,8 +151,9 @@ class GoogleMap extends AbstractBtWidget {
 
     private function section_marker_content(): void {
         $this->start_controls_section('section_marker', [
-            'label' => __('Marqueur', 'blacktenderscore'),
-            'tab'   => Controls_Manager::TAB_CONTENT,
+            'label'     => __('Marqueur', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_CONTENT,
+            'condition' => ['display_mode' => 'map'],
         ]);
 
         $this->add_control('show_marker', [
@@ -170,8 +204,9 @@ class GoogleMap extends AbstractBtWidget {
 
     private function section_map_style(): void {
         $this->start_controls_section('section_style_map', [
-            'label' => __('Carte', 'blacktenderscore'),
-            'tab'   => Controls_Manager::TAB_STYLE,
+            'label'     => __('Carte', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_STYLE,
+            'condition' => ['display_mode' => 'map'],
         ]);
 
         $this->add_responsive_control('height', [
@@ -218,6 +253,7 @@ class GoogleMap extends AbstractBtWidget {
         // ── Résolution de la localisation — priorité : ACF select > adresse manuelle ──
         $lat = null;
         $lng = null;
+        $acf_address_string = ''; // adresse formatée retournée par le champ ACF
 
         // Rétrocompat : ancienne version du widget utilisait source='acf_map' sans acf_map_field
         $acf_field = trim($s['acf_map_field'] ?? '');
@@ -239,6 +275,7 @@ class GoogleMap extends AbstractBtWidget {
                 && $map_data['lat'] !== '' && $map_data['lng'] !== '') {
                 $lat = (float) $map_data['lat'];
                 $lng = (float) $map_data['lng'];
+                $acf_address_string = trim($map_data['address'] ?? '');
             }
         }
 
@@ -259,6 +296,34 @@ class GoogleMap extends AbstractBtWidget {
                     __('Sélectionnez un champ ACF ou saisissez une adresse.', 'blacktenderscore')
                 );
             }
+            return;
+        }
+
+        // ── Modes texte (Adresse brute / Coordonnées GPS) ─────────────────────
+        $display_mode = $s['display_mode'] ?? 'map';
+
+        if ($display_mode !== 'map') {
+            if ($display_mode === 'coords') {
+                $text = $lat !== null
+                    ? number_format($lat, 6) . ', ' . number_format($lng, 6)
+                    : $address;
+            } else { // address
+                $text = $acf_address_string !== '' ? $acf_address_string : $address;
+                if ($text === '' && $lat !== null) {
+                    $text = number_format($lat, 6) . ', ' . number_format($lng, 6);
+                }
+            }
+
+            if ($text === '') {
+                if ($this->is_edit_mode()) {
+                    $this->render_placeholder(__('Aucune adresse disponible.', 'blacktenderscore'));
+                }
+                return;
+            }
+
+            $prefix = trim($s['address_prefix'] ?? '');
+            $output = $prefix !== '' ? $prefix . ' ' . $text : $text;
+            echo '<span class="bt-gmap-text">' . esc_html($output) . '</span>';
             return;
         }
 
@@ -320,6 +385,29 @@ class GoogleMap extends AbstractBtWidget {
             ></div>
         </div>
         <?php
+    }
+
+    // ─ Style → Texte (modes Adresse / Coordonnées) ────────────────────────────
+
+    private function section_text_style(): void {
+        $this->start_controls_section('section_style_text', [
+            'label'     => __('Texte adresse', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_STYLE,
+            'condition' => ['display_mode!' => 'map'],
+        ]);
+
+        $this->add_group_control(Group_Control_Typography::get_type(), [
+            'name'     => 'text_typography',
+            'selector' => '{{WRAPPER}} .bt-gmap-text',
+        ]);
+
+        $this->add_control('text_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-gmap-text' => 'color: {{VALUE}};'],
+        ]);
+
+        $this->end_controls_section();
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
