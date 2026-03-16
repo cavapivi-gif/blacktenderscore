@@ -65,16 +65,24 @@ abstract class Abstract_Price_Tag extends Abstract_BT_Tag {
     }
 
     public function render(): void {
-        $rows = $this->acf('tarification_par_forfait');
+        // Nouveau schéma ACF : repeater principal (ex. tarification_par_forfait)
+        // avec un sous-champ prix détecté automatiquement (même logique que Tag_Exp_Duration).
+        $repeater_name = 'tarification_par_forfait';
+        $rows          = $this->acf($repeater_name);
 
         if (empty($rows)) {
             echo esc_html($this->get_settings('fallback') ?? '');
             return;
         }
 
+        // Essaie de détecter la structure horaires+prix sur ce repeater,
+        // puis récupère la clé de prix. Fallback gracieux sur exp_price.
+        $structure = $this->acf_detect_repeater_departure_structure($repeater_name);
+        $price_key = $structure['price_subfield'] ?? 'exp_price';
+
         $prices = [];
         foreach ((array) $rows as $row) {
-            $p = (float) ($row['exp_price'] ?? 0);
+            $p = (float) ($row[$price_key] ?? 0);
             if ($p > 0) $prices[] = $p;
         }
 

@@ -19,6 +19,7 @@ require_once __DIR__ . '/tags/class-tag-related-count.php';
 require_once __DIR__ . '/tags/class-tag-taxonomy.php';
 require_once __DIR__ . '/tags/class-tag-acf-range.php';
 require_once __DIR__ . '/tags/class-tag-acf-map.php';
+require_once __DIR__ . '/tags/class-tag-post-count.php';
 
 /**
  * Dynamic Tags Manager — BT Regiondo.
@@ -80,6 +81,7 @@ class Dynamic_Tags_Manager {
 
         // Nombre (number category)
         $manager->register(new Tag_Related_Count());
+        $manager->register(new Tag_Post_Count());
     }
 
     // ── Invalidation transients ───────────────────────────────────────────────
