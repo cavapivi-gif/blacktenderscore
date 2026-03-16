@@ -13,9 +13,9 @@ export { FilePreviewCard, PastedContentCard, DragOverlay } from '../../component
 export { useChatFiles } from '../../components/chat/useChatFiles'
 export { ShareModal } from '../../components/chat/ShareModal'
 
-// Page-local utilities
+// Chat utilities (moved to lib/)
 export {
   CHART_REVENUE, CHART_GRID, CHART_AXIS, CHART_CANCEL,
   CHART_BOOK, CHART_PALETTE, SUGGESTIONS,
   parseMessageDate, detectDataIntent, buildDataContext, getSuggestions,
-} from './chatUtils'
+} from '../../lib/chatUtils'
