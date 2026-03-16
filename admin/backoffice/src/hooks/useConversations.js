@@ -154,20 +154,45 @@ export function useConversations() {
   }, [mutate])
 
   /** Rafraîchit les messages d'une conversation depuis l'API (polling).
-   *  Compare updated_at pour détecter tout changement (ajout, suppression, édition). */
+   *
+   *  Stratégie de merge :
+   *  - Si la DB est plus récente, on adopte ses messages.
+   *  - Mais on préserve les messages locaux dont l'id n'est pas encore en DB
+   *    (messages "en vol" envoyés mais pas encore syncés → pas perdus pendant streaming).
+   */
   const refreshMessages = useCallback(async (id) => {
     try {
       const data = await getChat(id)
       mutate(prev => prev.map(c => {
         if (c.id !== id) return c
-        const remoteUpdated = data.updated_at ?? data.updatedAt
-        // Rien de nouveau si même timestamp
-        if (remoteUpdated && c.updatedAt === toIso(remoteUpdated)) return c
+
+        const remoteIso  = data.updated_at ?? data.updatedAt
+        const remoteDate = remoteIso ? new Date(toIso(remoteIso)) : null
+        const localDate  = c.updatedAt  ? new Date(c.updatedAt)   : null
+
+        const dbMsgs = data.messages ?? []
+        const dbIds  = new Set(dbMsgs.map(m => m.id).filter(Boolean))
+
+        // Messages locaux pas encore persistés en DB (en vol / streaming en cours)
+        const inFlight = (c.messages ?? []).filter(m => m.id && !dbIds.has(m.id))
+
+        // Rien de nouveau ET rien en vol → pas de changement
+        if (remoteDate && localDate && remoteDate <= localDate && inFlight.length === 0) return c
+
+        // Merge : messages DB + messages en vol (triés par id chronologique)
+        const merged = inFlight.length === 0
+          ? dbMsgs
+          : [...dbMsgs, ...inFlight].sort((a, b) => (a.id ?? '').localeCompare(b.id ?? ''))
+
         return {
           ...c,
-          messages: data.messages ?? c.messages,
+          messages:     merged,
           participants: data.participants ?? c.participants ?? [],
-          updatedAt: remoteUpdated ? toIso(remoteUpdated) : c.updatedAt,
+          // On ne met à jour updatedAt que si pas de messages en vol
+          // (évite que le prochain poll ne skip à tort)
+          updatedAt: inFlight.length === 0 && remoteIso
+            ? toIso(remoteIso)
+            : c.updatedAt,
         }
       }))
     } catch {}
