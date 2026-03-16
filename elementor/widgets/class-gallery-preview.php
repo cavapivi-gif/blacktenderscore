@@ -214,13 +214,13 @@ class GalleryPreview extends AbstractBtWidget {
             ],
             'default'   => '2fr 1fr 1fr',
             'selectors' => [
-                '{{WRAPPER}} .bt-gprev__grid--3' => 'grid-template-columns: {{VALUE}} !important',
-                '{{WRAPPER}} .bt-gprev__grid--4' => 'grid-template-columns: {{VALUE}} !important',
-                '{{WRAPPER}} .bt-gprev__grid--5' => 'grid-template-columns: {{VALUE}} !important',
-                '{{WRAPPER}} .bt-gprev__grid--6' => 'grid-template-columns: {{VALUE}} !important',
-                '{{WRAPPER}} .bt-gprev__grid--7' => 'grid-template-columns: {{VALUE}} !important',
-                '{{WRAPPER}} .bt-gprev__grid--8' => 'grid-template-columns: {{VALUE}} !important',
-                '{{WRAPPER}} .bt-gprev__grid--9' => 'grid-template-columns: {{VALUE}} !important',
+                '{{WRAPPER}} .bt-gprev__grid--3' => 'grid-template-columns: {{VALUE}}',
+                '{{WRAPPER}} .bt-gprev__grid--4' => 'grid-template-columns: {{VALUE}}',
+                '{{WRAPPER}} .bt-gprev__grid--5' => 'grid-template-columns: {{VALUE}}',
+                '{{WRAPPER}} .bt-gprev__grid--6' => 'grid-template-columns: {{VALUE}}',
+                '{{WRAPPER}} .bt-gprev__grid--7' => 'grid-template-columns: {{VALUE}}',
+                '{{WRAPPER}} .bt-gprev__grid--8' => 'grid-template-columns: {{VALUE}}',
+                '{{WRAPPER}} .bt-gprev__grid--9' => 'grid-template-columns: {{VALUE}}',
             ],
         ]);
 
