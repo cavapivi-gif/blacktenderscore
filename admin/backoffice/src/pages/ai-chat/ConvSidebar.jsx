@@ -1,11 +1,19 @@
-import { useState, useRef, memo } from 'react'
+import { useState, useRef } from 'react'
 import { motion } from 'motion/react'
-import { Plus, Trash, Sparks, ChatLines, EditPencil } from 'iconoir-react'
+import {
+  Plus, Trash, ChatLines, EditPencil, Sparks,
+} from 'iconoir-react'
 
-const ConvItem = memo(function ConvItem({ conv, isActive, onSelect, onDelete, onRename }) {
-  const [editing, setEditing] = useState(false)
-  const [draft,   setDraft]   = useState('')
-  const inputRef = useRef(null)
+// ─────────────────────────────────────────────────────────────────────────────
+// Conversation sidebar — with inline rename
+// ─────────────────────────────────────────────────────────────────────────────
+
+function ConvItem({ conv, isActive, onSelect, onDelete, onRename }) {
+  const [editing, setEditing]     = useState(false)
+  const [draft,   setDraft]       = useState('')
+  const [confirm, setConfirm]     = useState(false)
+  const inputRef  = useRef(null)
+  const timerRef  = useRef(null)
 
   function startEdit(e) {
     e.stopPropagation()
@@ -76,20 +84,36 @@ const ConvItem = memo(function ConvItem({ conv, isActive, onSelect, onDelete, on
           >
             <EditPencil width={10} height={10} strokeWidth={1.5} />
           </button>
-          <button
-            onClick={e => { e.stopPropagation(); onDelete(conv.id) }}
-            title="Supprimer"
-            className="p-0.5 rounded hover:text-destructive transition-colors"
-          >
-            <Trash width={11} height={11} strokeWidth={1.5} />
-          </button>
+          {confirm ? (
+            <button
+              onClick={e => { e.stopPropagation(); clearTimeout(timerRef.current); setConfirm(false); onDelete(conv.id) }}
+              onBlur={() => { clearTimeout(timerRef.current); setConfirm(false) }}
+              title="Confirmer la suppression"
+              className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-destructive text-white hover:bg-destructive/90 transition-colors leading-none"
+            >
+              Supprimer ?
+            </button>
+          ) : (
+            <button
+              onClick={e => {
+                e.stopPropagation()
+                clearTimeout(timerRef.current)
+                setConfirm(true)
+                timerRef.current = setTimeout(() => setConfirm(false), 3000)
+              }}
+              title="Supprimer"
+              className="p-0.5 rounded hover:text-destructive transition-colors"
+            >
+              <Trash width={11} height={11} strokeWidth={1.5} />
+            </button>
+          )}
         </div>
       )}
     </motion.div>
   )
-})
+}
 
-const ConvGroup = memo(function ConvGroup({ label, convs, activeId, onSelect, onDelete, onRename }) {
+function ConvGroup({ label, convs, activeId, onSelect, onDelete, onRename }) {
   if (!convs.length) return null
   return (
     <div className="mb-4">
@@ -106,9 +130,9 @@ const ConvGroup = memo(function ConvGroup({ label, convs, activeId, onSelect, on
       ))}
     </div>
   )
-})
+}
 
-export const ConvSidebar = memo(function ConvSidebar({ grouped, activeId, onSelect, onNew, onDelete, onRename, onClear }) {
+export function ConvSidebar({ grouped, activeId, onSelect, onNew, onDelete, onRename, onClear }) {
   const total = Object.values(grouped).flat().length
   return (
     <aside className="w-full flex flex-col bg-background overflow-hidden">
@@ -152,4 +176,4 @@ export const ConvSidebar = memo(function ConvSidebar({ grouped, activeId, onSele
       )}
     </aside>
   )
-})
+}

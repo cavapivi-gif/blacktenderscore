@@ -106,7 +106,30 @@ export const api = {
   deleteSharedChat:(token)   => apiFetch(`/chats/shared/${token}`, { method: 'DELETE' }),
 }
 
-// streamChat() supprimé — remplacé par useAiChat hook (@ai-sdk/react)
+/**
+ * Streaming SSE chat via wp-ajax.
+ * Returns a ReadableStreamDefaultReader for consuming SSE chunks.
+ * @param {Array}  messages  - [{role, content, images?: [{data, type}]}, ...]
+ * @param {string} from      - date ISO start
+ * @param {string} to        - date ISO end
+ * @param {Object} opts      - { provider?: 'anthropic'|'openai'|'gemini' }
+ */
+export async function streamChat(messages, from, to, opts = {}) {
+  const { ajax_url, nonce } = window.btBackoffice || {}
+  const body = { messages, from, to }
+  if (opts.provider) body.provider = opts.provider
+  const res = await fetch(ajax_url + '?action=bt_ai_chat', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-WP-Nonce': nonce,
+    },
+    body: JSON.stringify(body),
+    signal: opts.signal,
+  })
+  if (!res.ok) throw new Error(`Erreur ${res.status}`)
+  return res.body.getReader()
+}
 
 function toQuery(params) {
   if (!params) return ''

@@ -74,10 +74,10 @@ class Ai {
         // Vider les buffers WP avant d'ouvrir le stream SSE
         while (ob_get_level()) ob_end_clean();
 
-        // Plain text stream — consommé par @ai-sdk/react useChat (streamProtocol: 'text')
-        header('Content-Type: text/plain; charset=utf-8');
+        header('Content-Type: text/event-stream; charset=utf-8');
         header('Cache-Control: no-cache, no-store');
         header('X-Accel-Buffering: no');
+        header('Connection: keep-alive');
         header('X-Content-Type-Options: nosniff');
         header('X-Frame-Options: DENY');
 

@@ -1,4 +1,4 @@
-import { fmtCurrency } from './utils'
+import { fmtCurrency } from '../../lib/utils'
 
 // Chart colors hardcodées (CSS vars ne marchent pas dans SVG)
 export const CHART_REVENUE = '#10b981'

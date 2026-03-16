@@ -3,11 +3,11 @@ import { motion } from 'motion/react'
 import Lottie from 'lottie-react'
 import { Copy, Check, ShareAndroid } from 'iconoir-react'
 import { getProvider } from '../../lib/aiProviders'
-import AiProviderIcon from '../AiProviderIcon'
+import AiProviderIcon from '../../components/AiProviderIcon'
 import { Markdown } from './Markdown'
 import { StatsWidget } from './StatsWidget'
 import { SuggestedReplies } from './SuggestedReplies'
-import { ResponseStream } from '../ui/response-stream'
+import { ResponseStream } from '../../components/ui/response-stream'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Message components

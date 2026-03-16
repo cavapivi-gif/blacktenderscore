@@ -191,7 +191,7 @@ export function ResponseStream({
         <div className="relative">
           {segments.map((seg, idx) => (
             <span
-              key={`${seg.text}-${idx}`}
+              key={seg.index}
               className={cn('rsi-fade-segment', /^\s+$/.test(seg.text) && 'rsi-fade-space')}
               style={{ '--rsi-dur': `${dur}ms`, animationDelay: `${idx * del}ms` }}
               onAnimationEnd={idx === segments.length - 1 ? handleLastEnd : undefined}

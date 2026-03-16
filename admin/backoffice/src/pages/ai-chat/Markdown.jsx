@@ -1,4 +1,6 @@
-import { memo } from 'react'
+// ─────────────────────────────────────────────────────────────────────────────
+// Markdown renderer
+// ─────────────────────────────────────────────────────────────────────────────
 
 function Inline({ t }) {
   if (!t) return null
@@ -20,21 +22,9 @@ function Inline({ t }) {
   return <>{tokens}</>
 }
 
-/**
- * Sanitizes streaming content to handle incomplete Markdown blocks.
- * Closes unclosed code fences and trims dangling syntax.
- */
-function sanitizeStreaming(content) {
-  // Count code fences — if odd, the last block is still open → close it
-  const fences = (content.match(/^```/gm) || []).length
-  if (fences % 2 !== 0) return content + '\n```'
-  return content
-}
-
-export const Markdown = memo(function Markdown({ content, streaming = false }) {
+export function Markdown({ content }) {
   if (!content) return null
-  const safe = streaming ? sanitizeStreaming(content) : content
-  const lines = safe.split('\n')
+  const lines = content.split('\n')
   const blocks = []
   let i = 0
   while (i < lines.length) {
@@ -80,25 +70,22 @@ export const Markdown = memo(function Markdown({ content, streaming = false }) {
     if (para.length) blocks.push({ t: 'p', c: para.join('\n') })
   }
   return (
-    <div className={`space-y-2.5 text-base leading-relaxed text-foreground${streaming ? ' [&_pre:last-child]:border-l-2 [&_pre:last-child]:border-l-primary/30' : ''}`}>
+    <div className="space-y-2.5 text-base leading-relaxed text-foreground">
       {blocks.map((b, idx) => {
-        // Keys include the block type so React unmounts/remounts when the type
-        // changes at the same position (e.g. paragraph → code during streaming).
-        const k = `${b.t}-${idx}`
         if (b.t === 'code') return (
-          <pre key={k} className="bg-neutral-950 text-neutral-100 rounded-xl px-4 py-3 overflow-x-auto text-[13px] leading-relaxed font-mono my-1">
+          <pre key={idx} className="bg-neutral-950 text-neutral-100 rounded-xl px-4 py-3 overflow-x-auto text-[13px] leading-relaxed font-mono my-1">
             <code>{b.c}</code>
           </pre>
         )
         if (b.t === 'h') return (
-          <p key={k} className={`font-semibold mt-3 first:mt-0 ${b.lvl === 1 ? 'text-lg' : 'text-base'}`}>
+          <p key={idx} className={`font-semibold mt-3 first:mt-0 ${b.lvl === 1 ? 'text-lg' : 'text-base'}`}>
             <Inline t={b.c} />
           </p>
         )
         if (b.t === 'ul') return (
-          <ul key={k} className="space-y-1.5">
+          <ul key={idx} className="space-y-1.5">
             {b.items.map((item, j) => (
-              <li key={`li-${j}`} className="flex gap-2">
+              <li key={j} className="flex gap-2">
                 <span className="text-muted-foreground shrink-0 mt-[2px] select-none">—</span>
                 <span><Inline t={item} /></span>
               </li>
@@ -106,9 +93,9 @@ export const Markdown = memo(function Markdown({ content, streaming = false }) {
           </ul>
         )
         if (b.t === 'ol') return (
-          <ol key={k} className="space-y-1.5">
+          <ol key={idx} className="space-y-1.5">
             {b.items.map((item, j) => (
-              <li key={`li-${j}`} className="flex gap-2">
+              <li key={j} className="flex gap-2">
                 <span className="text-muted-foreground shrink-0 font-mono text-[11px] mt-0.5 min-w-[18px] select-none">{j + 1}.</span>
                 <span><Inline t={item} /></span>
               </li>
@@ -123,26 +110,26 @@ export const Markdown = memo(function Markdown({ content, streaming = false }) {
           const border = isDanger ? '#ef4444' : isWarn ? '#f59e0b' : isGood ? '#10b981' : '#6366f1'
           const bg     = isDanger ? '#fef2f2' : isWarn ? '#fffbeb' : isGood ? '#f0fdf4' : '#eef2ff'
           return (
-            <div key={k} className="pl-3 pr-3 py-2.5 rounded-r-lg my-0.5 space-y-0.5" style={{ borderLeft: `3px solid ${border}`, background: bg }}>
-              {b.rows.map((row, j) => <p key={`row-${j}`} className="text-sm leading-relaxed"><Inline t={row} /></p>)}
+            <div key={idx} className="pl-3 pr-3 py-2.5 rounded-r-lg my-0.5 space-y-0.5" style={{ borderLeft: `3px solid ${border}`, background: bg }}>
+              {b.rows.map((row, j) => <p key={j} className="text-sm leading-relaxed"><Inline t={row} /></p>)}
             </div>
           )
         }
         if (b.t === 'table') return (
-          <div key={k} className="overflow-x-auto rounded-lg border border-border my-1">
+          <div key={idx} className="overflow-x-auto rounded-lg border border-border my-1">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-muted/40 border-b border-border">
                   {b.headers.map((h, j) => (
-                    <th key={`th-${j}`} className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">{h}</th>
+                    <th key={j} className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {b.data.map((row, j) => (
-                  <tr key={`tr-${j}`} className="hover:bg-muted/20 transition-colors">
-                    {row.map((cell, ci) => (
-                      <td key={`td-${ci}`} className="px-3 py-2 text-xs"><Inline t={cell} /></td>
+                  <tr key={j} className="hover:bg-muted/20 transition-colors">
+                    {row.map((cell, k) => (
+                      <td key={k} className="px-3 py-2 text-xs"><Inline t={cell} /></td>
                     ))}
                   </tr>
                 ))}
@@ -150,8 +137,8 @@ export const Markdown = memo(function Markdown({ content, streaming = false }) {
             </table>
           </div>
         )
-        return <p key={k}><Inline t={b.c} /></p>
+        return <p key={idx}><Inline t={b.c} /></p>
       })}
     </div>
   )
-})
+}
