@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { Sparks } from 'iconoir-react'
+import '../planner.css'
 
 import EventsCorrelator from '../components/EventsCorrelator'
 import FullCalendar from '@fullcalendar/react'
@@ -11,7 +12,7 @@ import multiMonthPlugin from '@fullcalendar/multimonth'
 import frLocale from '@fullcalendar/core/locales/fr'
 import { LeadTimeChart, WeekdayChart, CancellationChart, TopDays } from '../components/dashboard'
 import { api } from '../lib/api'
-import { today, daysAgo, fmtNum } from '../lib/utils'
+import { today, daysFromNow, fmtNum } from '../lib/utils'
 import { COLORS } from '../lib/constants'
 import { Btn, PageHeader, Notice, Spinner } from '../components/ui'
 import { PeriodPicker, PERIOD_PRESETS_PLANNER } from '../components/PeriodPicker'
@@ -44,9 +45,9 @@ function monthEnd(dateStr) {
 const WDAY_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 const CANCEL_SET = new Set(['canceled', 'cancelled', 'rejected', 'refunded'])
 
-// Initial period: 30 days
-const INIT_FROM = daysAgo(29)
-const INIT_TO   = today()
+// Initial period: today → +3 mois (planner regarde en avant)
+const INIT_FROM = today()
+const INIT_TO   = daysFromNow(90)
 
 export default function Planner() {
   const calRef = useRef(null)

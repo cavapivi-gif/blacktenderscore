@@ -7,6 +7,7 @@ use BlackTenders\Admin\Backoffice\RestApi;
 use BlackTenders\Admin\Backoffice\Sync;
 use BlackTenders\Admin\Backoffice\Ai;
 use BlackTenders\Elementor\ElementorManager;
+use BlackTenders\Core\QuoteHandler;
 
 defined('ABSPATH') || exit;
 
@@ -17,6 +18,8 @@ class Plugin {
         (new RestApi())->init();
         // AJAX SSE pour le chat IA (doit s'enregistrer côté admin-ajax)
         (new Ai())->init();
+        // AJAX devis (formulaire multi-étapes bt-boat-pricing)
+        (new QuoteHandler())->init();
 
         if (is_admin()) {
             (new Backoffice())->init();

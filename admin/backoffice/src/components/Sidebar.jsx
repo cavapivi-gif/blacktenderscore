@@ -13,6 +13,7 @@ import {
   StatsUpSquare,
   Sparks,
   Cpu,
+  Mail,
 } from 'iconoir-react'
 import BtLogo from '../assets/BtLogo'
 
@@ -49,6 +50,7 @@ const nav = [
   { to: '/bookings',  label: 'Réservations',    icon: Book           },
   { to: '/planner',   label: 'Planificateur',   icon: Calendar       },
   { to: '/customers', label: 'Clients',         icon: Group          },
+  { to: '/forms',     label: 'Formulaires',     icon: Mail           },
   { to: '/analytics', label: 'Analytics',       icon: StatsUpSquare  },
   { to: '/reviews',   label: 'Avis',            icon: Star           },
   {

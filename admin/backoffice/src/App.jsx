@@ -34,6 +34,7 @@ const Onboarding = lazy(() => import('./pages/Onboarding'))
 const AIChat     = lazy(() => import('./pages/AIChat'))
 const Translator = lazy(() => import('./pages/Translator'))
 const Corrector  = lazy(() => import('./pages/Corrector'))
+const Forms      = lazy(() => import('./pages/Forms'))
 
 // Valeur injectée par PHP via wp_localize_script — statique au chargement de la page.
 // Après onboardingComplete(), window.location.reload() recharge la page avec onboarding_done = true.
@@ -70,6 +71,7 @@ export default function App() {
         <Route path="/products"          element={<Products />} />
         <Route path="/bookings"          element={<Bookings />} />
         <Route path="/customers"         element={<Customers />} />
+        <Route path="/forms"             element={<Forms />} />
         <Route path="/reviews"           element={<Reviews />} />
         <Route path="/planner"           element={<Planner />} />
         <Route path="/analytics"         element={<Analytics />} />

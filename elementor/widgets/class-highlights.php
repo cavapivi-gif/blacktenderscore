@@ -42,6 +42,13 @@ class Highlights extends AbstractBtWidget {
             'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
+        $this->register_section_title_controls(['title' => __('Points forts', 'blacktenderscore')]);
+        $this->register_collapsible_section_control();
+
+        $this->add_control('separator_data', [
+            'type'      => Controls_Manager::DIVIDER,
+        ]);
+
         $this->add_control('data_source', [
             'label'   => __('Source des données', 'blacktenderscore'),
             'type'    => Controls_Manager::CHOOSE,
@@ -154,16 +161,6 @@ class Highlights extends AbstractBtWidget {
             'title_field' => '{{{ item_title || "Item" }}}',
             'condition'   => ['data_source' => 'static'],
         ]);
-
-        // ── Titre de section + visibilité ─────────────────────────────────
-        $this->add_control('separator_section', [
-            'label'     => __('Titre & Visibilité', 'blacktenderscore'),
-            'type'      => Controls_Manager::HEADING,
-            'separator' => 'before',
-        ]);
-
-        $this->register_section_title_controls(['title' => __('Points forts', 'blacktenderscore')]);
-        $this->register_collapsible_section_control();
 
         $this->add_control('show_icon', [
             'label'        => __('Afficher l\'icône', 'blacktenderscore'),

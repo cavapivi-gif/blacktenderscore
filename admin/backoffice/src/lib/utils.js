@@ -19,6 +19,18 @@ export function daysAgo(n) {
   return d.toISOString().slice(0, 10)
 }
 
+export function daysFromNow(n) {
+  const d = new Date()
+  d.setDate(d.getDate() + n)
+  return d.toISOString().slice(0, 10)
+}
+
+export function monthsFromNow(n) {
+  const d = new Date()
+  d.setMonth(d.getMonth() + n)
+  return d.toISOString().slice(0, 10)
+}
+
 export function monthsAgo(n) {
   const d = new Date()
   d.setMonth(d.getMonth() - n)

@@ -58,12 +58,14 @@ trait BtHeadingControls {
      * @param array|string $spacing_selector Optionnel. Si fourni, l'espacement bas est appliqué à ce(s) sélecteur(s)
      *                                       au lieu du titre (ex: trigger repliable pour garder l'icône en haut).
      *                                       Array de [ selector => 'margin-bottom: {{SIZE}}{{UNIT}}' ] ou string.
+     * @param array        $extra_condition  Conditions supplémentaires fusionnées avec section_title! => ''.
      */
-    protected function register_section_title_style(string $selector, $spacing_selector = null): void {
+    protected function register_section_title_style(string $selector, $spacing_selector = null, array $extra_condition = []): void {
+        $condition = array_merge(['section_title!' => ''], $extra_condition);
         $this->start_controls_section('style_heading', [
             'label'     => __('Style — Titre section', 'blacktenderscore'),
             'tab'       => Controls_Manager::TAB_STYLE,
-            'condition' => ['section_title!' => ''],
+            'condition' => $condition,
         ]);
 
         $this->add_group_control(Group_Control_Typography::get_type(), [

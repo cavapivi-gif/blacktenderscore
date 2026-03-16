@@ -38,8 +38,13 @@ class Backoffice {
 
     public function render(): void {
         if (!is_user_logged_in()) return;
+        // Wrapper isolé : la div interne est le vrai React root.
+        // Le wrapper absorbe les notices WP injectées par d'autres plugins
+        // avant le mount React, évitant le bug removeChild.
         ?>
-        <div id="bt-backoffice-root"></div>
+        <div id="bt-backoffice-wrap">
+            <div id="bt-backoffice-root"></div>
+        </div>
         <?php
     }
 
@@ -86,6 +91,10 @@ class Backoffice {
                 'color'  => '#f0f0ee',
             ],
         ]);
+
+        // Supprime toutes les notices admin pour éviter la pollution du DOM React
+        remove_all_actions('admin_notices');
+        remove_all_actions('all_admin_notices');
 
         // Page en plein écran, fond blanc uniforme
         add_action('admin_head', function () {

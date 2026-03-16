@@ -14,6 +14,7 @@ require_once __DIR__ . '/tags/class-tag-exp-price.php';
 require_once __DIR__ . '/tags/class-tag-exp-duration.php';
 require_once __DIR__ . '/tags/class-tag-exp-departure.php';
 require_once __DIR__ . '/tags/class-tag-boat-specs.php';
+require_once __DIR__ . '/tags/class-tag-boat-price.php';
 require_once __DIR__ . '/tags/class-tag-exp-booking-url.php';
 require_once __DIR__ . '/tags/class-tag-related-count.php';
 require_once __DIR__ . '/tags/class-tag-taxonomy.php';
@@ -62,6 +63,10 @@ class Dynamic_Tags_Manager {
 
         // Durée
         $manager->register(new Tag_Exp_Duration());
+
+        // Prix bateau (min + max)
+        $manager->register(new Tag_Boat_Price_From());
+        $manager->register(new Tag_Boat_Price_To());
 
         // Specs bateau
         $manager->register(new Tag_Boat_Pax());

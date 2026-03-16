@@ -330,6 +330,15 @@ class ElementorManager {
             );
         }
 
+        // Quote form JS (bt-boat-pricing devis multi-étapes)
+        wp_register_script(
+            'bt-boat-pricing-quote',
+            BT_URL . 'elementor/assets/bt-boat-pricing-quote.js',
+            ['bt-elementor'],
+            BT_VERSION,
+            true
+        );
+
         // Leaflet — enregistré seulement (enqueued à la demande dans render_map_leaflet)
         wp_register_style('bt-leaflet-css', BT_URL . 'elementor/assets/leaflet.min.css', [], '1.9.4');
         wp_register_script('bt-leaflet',     BT_URL . 'elementor/assets/leaflet.min.js',  [], '1.9.4', true);

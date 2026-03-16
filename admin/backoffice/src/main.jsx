@@ -5,10 +5,17 @@ import App from './App'
 import './index.css'
 import './ai-gradient.css'
 
-ReactDOM.createRoot(document.getElementById('bt-backoffice-root')).render(
-  <React.StrictMode>
-    <HashRouter>
-      <App />
-    </HashRouter>
-  </React.StrictMode>
-)
+// Nettoie les nodes parasites (notices WP, update-nag, scripts de plugins tiers)
+// injectées dans le React root avant le mount — évite le crash removeChild.
+const root = document.getElementById('bt-backoffice-root')
+if (root) {
+  while (root.firstChild) root.removeChild(root.firstChild)
+
+  ReactDOM.createRoot(root).render(
+    <React.StrictMode>
+      <HashRouter>
+        <App />
+      </HashRouter>
+    </React.StrictMode>
+  )
+}

@@ -15,10 +15,11 @@ require_once __DIR__ . '/trait-rest-settings.php';
 require_once __DIR__ . '/trait-rest-ai.php';
 require_once __DIR__ . '/trait-rest-chat.php';
 require_once __DIR__ . '/trait-rest-translator.php';
+require_once __DIR__ . '/trait-rest-forms.php';
 
 class RestApi {
 
-    use RestApiGoogle, RestApiStats, RestApiSync, RestApiSettings, RestApiAi, RestApiChat, RestApiTranslator;
+    use RestApiGoogle, RestApiStats, RestApiSync, RestApiSettings, RestApiAi, RestApiChat, RestApiTranslator, RestApiForms;
 
     private const NS = 'bt-regiondo/v1';
 
@@ -406,6 +407,25 @@ class RestApi {
         register_rest_route(self::NS, '/settings/role-permissions', [
             ['methods' => 'GET',  'callback' => [$this, 'get_role_permissions'],  'permission_callback' => $auth],
             ['methods' => 'POST', 'callback' => [$this, 'save_role_permissions'], 'permission_callback' => $auth],
+        ]);
+
+        // ── Soumissions de formulaires ───────────────────────────────────────
+        register_rest_route(self::NS, '/forms', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'get_form_submissions'],
+            'permission_callback' => $perm('forms'),
+        ]);
+
+        register_rest_route(self::NS, '/forms/stats', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'get_form_submissions_stats'],
+            'permission_callback' => $perm('forms'),
+        ]);
+
+        register_rest_route(self::NS, '/forms/(?P<id>\d+)', [
+            'methods'             => 'DELETE',
+            'callback'            => [$this, 'delete_form_submission'],
+            'permission_callback' => $auth,
         ]);
     }
 

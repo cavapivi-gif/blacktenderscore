@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { today, daysAgo, monthsAgo } from '../lib/utils'
+import { today, daysAgo, daysFromNow, monthsAgo, monthsFromNow } from '../lib/utils'
 
 /**
  * Shared period picker — presets + custom date range.
@@ -18,11 +18,12 @@ export const PERIOD_PRESETS_DEFAULT = [
 ]
 
 export const PERIOD_PRESETS_PLANNER = [
-  { label: '7j',   from: () => daysAgo(6),    to: today },
-  { label: '30j',  from: () => daysAgo(29),   to: today },
-  { label: '90j',  from: () => daysAgo(89),   to: today },
-  { label: '1 an', from: () => monthsAgo(12), to: today },
-  { label: 'Tout', from: () => '2017-01-01',  to: () => '2030-12-31' },
+  { label: '7j',      from: today,               to: () => daysFromNow(7)    },
+  { label: '30j',     from: today,               to: () => daysFromNow(30)   },
+  { label: '3 mois',  from: today,               to: () => monthsFromNow(3)  },
+  { label: '6 mois',  from: today,               to: () => monthsFromNow(6)  },
+  { label: 'Saison',  from: () => daysAgo(30),   to: () => monthsFromNow(6)  },
+  { label: 'Tout',    from: () => '2017-01-01',  to: () => '2030-12-31'      },
 ]
 
 const pill = active =>
