@@ -142,18 +142,7 @@ opacity: 1;
 display: block;
 }
 
-.bt-pricing__trigger {
-display: inline-flex;
-align-items: center;
-gap: 8px;
-padding: 14px 36px;
-border-width: 0;
-border-style: solid;
-border-radius: 999px;
-cursor: pointer;
-font-family: inherit;
-transition: background-color .2s, transform .15s;
-}
+.bt-pricing__trigger {display: inline-flex;align-items: center;gap: 8px;padding: 14px 36px!important;border-width: 0;border-style: solid;border-radius: 0.5rem !important;cursor: pointer;font-family: inherit;min-width: -webkit-fill-available;background-color: var(--blue-50)!important;color: white!important;transition: background-color .2s, transform .15s;}
 
 .bt-pricing__trigger:hover {
 transform: translateY(-1px);
