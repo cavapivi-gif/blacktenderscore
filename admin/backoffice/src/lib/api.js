@@ -103,10 +103,10 @@ export const api = {
   translate: (body) => api.post('/ai/translate', body),
   correct:   (body) => api.post('/ai/correct', body),
 
-  // Partage de conversations (stocké en WP options, lien admin)
-  shareChat:       (conv)    => api.post('/chats/share', conv),
-  getSharedChat:   (token)   => api.get(`/chats/shared/${token}`),
-  deleteSharedChat:(token)   => apiFetch(`/chats/shared/${token}`, { method: 'DELETE' }),
+  // Profils de mapping CSV
+  importProfiles:       (type) => api.get('/import-profiles' + toQuery({ type })),
+  saveImportProfile:    (body) => api.post('/import-profiles', body),
+  deleteImportProfile:  (id)   => apiFetch(`/import-profiles/${id}`, { method: 'DELETE' }),
 }
 
 // streamChat() supprimé — remplacé par useAiChat hook (@ai-sdk/react)

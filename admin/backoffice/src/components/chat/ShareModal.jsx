@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Copy, Check, Link } from 'iconoir-react'
-import { api } from '../../lib/api'
+import { syncChat } from '../../lib/chatApi'
 import { Dialog } from '../Dialog'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Share Modal — conversation entière ou réponse individuelle
+// Share Modal — partage d'une réponse individuelle via lien admin
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function ShareModal({ mode, conv, msgContent, onClose, onToast }) {
@@ -15,19 +15,16 @@ export function ShareModal({ mode, conv, msgContent, onClose, onToast }) {
   async function generate() {
     setLoading(true)
     try {
-      const payload = mode === 'msg'
-        ? {
-            title:    `Réponse IA — ${conv?.title ?? 'Conversation'}`,
-            provider: conv?.provider ?? 'anthropic',
-            messages: [{ role: 'assistant', content: msgContent, provider: conv?.provider }],
-          }
-        : {
-            title:    conv.title,
-            provider: conv.provider,
-            messages: conv.messages,
-          }
-      const res = await api.shareChat(payload)
-      setShareUrl(res.url)
+      const uuid = `share-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+      await syncChat({
+        id:       uuid,
+        title:    `Réponse IA — ${conv?.title ?? 'Conversation'}`,
+        provider: conv?.provider ?? 'anthropic',
+        messages: [{ role: 'assistant', content: msgContent, provider: conv?.provider }],
+      })
+      const base = window.btBackoffice?.admin_url ?? `${window.location.origin}${window.location.pathname}`
+      const page = new URLSearchParams(window.location.search).get('page') ?? 'blacktenderscore'
+      setShareUrl(`${base}?page=${page}&share=${uuid}#/ai-chat`)
     } catch (e) {
       onToast?.(e.message || 'Erreur lors de la génération du lien', 'error')
       onClose()
@@ -106,7 +103,7 @@ export function ShareModal({ mode, conv, msgContent, onClose, onToast }) {
             }
           </button>
           <p className="text-[11px] text-muted-foreground/60 text-center leading-relaxed">
-            Ce lien est accessible aux administrateurs connectés. Il expire après 30 jours.
+            Ce lien est accessible aux utilisateurs ayant accès au backoffice.
           </p>
         </div>
       )}

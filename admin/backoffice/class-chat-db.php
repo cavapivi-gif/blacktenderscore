@@ -384,6 +384,7 @@ class ChatDb {
         'avis',
         'translations',
         'reservations',
+        'forms',
         'chat_access',
         'chat_create',
         'chat_share',

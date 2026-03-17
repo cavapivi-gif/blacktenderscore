@@ -16,10 +16,11 @@ require_once __DIR__ . '/trait-rest-ai.php';
 require_once __DIR__ . '/trait-rest-chat.php';
 require_once __DIR__ . '/trait-rest-translator.php';
 require_once __DIR__ . '/trait-rest-forms.php';
+require_once __DIR__ . '/trait-rest-import-profiles.php';
 
 class RestApi {
 
-    use RestApiGoogle, RestApiStats, RestApiSync, RestApiSettings, RestApiAi, RestApiChat, RestApiTranslator, RestApiForms;
+    use RestApiGoogle, RestApiStats, RestApiSync, RestApiSettings, RestApiAi, RestApiChat, RestApiTranslator, RestApiForms, RestApiImportProfiles;
 
     private const NS = 'bt-regiondo/v1';
 
@@ -425,6 +426,18 @@ class RestApi {
         register_rest_route(self::NS, '/forms/(?P<id>\d+)', [
             'methods'             => 'DELETE',
             'callback'            => [$this, 'delete_form_submission'],
+            'permission_callback' => $auth,
+        ]);
+
+        // ── Profils de mapping CSV ─────────────────────────────────────────
+        register_rest_route(self::NS, '/import-profiles', [
+            ['methods' => 'GET',  'callback' => [$this, 'list_import_profiles'],  'permission_callback' => $auth],
+            ['methods' => 'POST', 'callback' => [$this, 'save_import_profile'],   'permission_callback' => $auth],
+        ]);
+
+        register_rest_route(self::NS, '/import-profiles/(?P<id>\d+)', [
+            'methods'             => 'DELETE',
+            'callback'            => [$this, 'delete_import_profile'],
             'permission_callback' => $auth,
         ]);
     }
