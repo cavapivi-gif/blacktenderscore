@@ -80,6 +80,11 @@ class Plugin {
             );
         });
 
+        // Invalide la liste excursions mise en cache quand une excursion est modifiée
+        add_action('save_post_excursion', static function(): void {
+            delete_transient('bt_exc_list_50');
+        });
+
         // Cron : intervalle personnalisé + hook de sync
         add_filter('cron_schedules', [$this, 'add_cron_intervals']);
         add_action('bt_auto_sync', [Sync::class, 'cron_run']);

@@ -311,13 +311,14 @@ class RelatedBoats extends AbstractBtWidget {
                 }
             }
 
-            // ACF fields
-            $tagline   = (string) get_field('boat_tagline',     $boat->ID);
-            $pax_max   = (string) get_field('boat_pax_max',     $boat->ID);
-            $pax_comf  = (string) get_field('boat_pax_comfort', $boat->ID);
-            $cabins    = (string) get_field('boat_cabins',      $boat->ID);
-            $enginepow = (string) get_field('boat_enginepower', $boat->ID);
-            $year      = (string) get_field('boat_year',        $boat->ID);
+            // ACF fields — batch load to avoid 6 × get_field() queries per boat
+            $acf       = function_exists('get_fields') ? (get_fields($boat->ID) ?: []) : [];
+            $tagline   = (string) ($acf['boat_tagline']     ?? '');
+            $pax_max   = (string) ($acf['boat_pax_max']     ?? '');
+            $pax_comf  = (string) ($acf['boat_pax_comfort'] ?? '');
+            $cabins    = (string) ($acf['boat_cabins']      ?? '');
+            $enginepow = (string) ($acf['boat_enginepower'] ?? '');
+            $year      = (string) ($acf['boat_year']        ?? '');
 
             echo '<div class="bt-relboats__card">';
 

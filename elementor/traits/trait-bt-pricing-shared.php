@@ -18,6 +18,54 @@ defined('ABSPATH') || exit;
 
 trait BtPricingShared {
 
+    // ── Layout orchestrator ─────────────────────────────────────────────────
+
+    /**
+     * Pattern commun : trigger(optionnel) → wrapper(optionnel) → contenu → quote(optionnel).
+     *
+     * Factorise render_boat_mode() et render_excursion_mode() qui étaient quasi-identiques.
+     *
+     * @param array    $s        Widget settings.
+     * @param int      $post_id  Post ID courant.
+     * @param array    $keys     Mapping des clés settings du trigger :
+     *                             mode, label, label_default, target, target_id,
+     *                             hide_sel, fullwidth, wrap_prefix
+     * @param callable $content  fn(array $s, int $post_id): void — rendu du contenu tarifs.
+     */
+    protected function render_pricing_layout(array $s, int $post_id, array $keys, callable $content): void {
+        $mode = $s[$keys['mode']] ?? 'none';
+
+        if ($mode !== 'none') {
+            $this->render_trigger_open(
+                $s,
+                $mode,
+                $keys['label']         ?? 'trigger_label',
+                $keys['label_default'] ?? 'Voir les tarifs',
+                $keys['target']        ?? 'reveal_target',
+                $keys['target_id']     ?? 'reveal_target_id',
+                $keys['hide_sel']      ?? 'reveal_hide_selector',
+                $keys['fullwidth']     ?? 'trigger_fullwidth',
+                $keys['wrap_prefix']   ?? 'bt-bprice-trigger'
+            );
+        }
+
+        if (($s['show_quote_form'] ?? '') === 'yes') {
+            $this->render_wrapper_open($s);
+        }
+
+        $content($s, $post_id);
+
+        if (($s['show_quote_form'] ?? '') === 'yes') {
+            $this->render_wrapper_between($s);
+            $this->render_embedded_quote_form($s, $post_id);
+            $this->render_wrapper_close();
+        }
+
+        if ($mode !== 'none') {
+            $this->render_trigger_close($mode);
+        }
+    }
+
     // ── Trigger (bouton reveal) ─────────────────────────────────────────────
 
     /**
@@ -285,13 +333,18 @@ trait BtPricingShared {
      * Utilise un template Loop Elementor si configuré.
      */
     protected function render_excursion_cards(array $s): void {
-        $excursions = get_posts([
-            'post_type'      => 'excursion',
-            'posts_per_page' => 50,
-            'post_status'    => 'publish',
-            'orderby'        => 'title',
-            'order'          => 'ASC',
-        ]);
+        $cache_key  = 'bt_exc_list_50';
+        $excursions = get_transient($cache_key);
+        if ($excursions === false) {
+            $excursions = get_posts([
+                'post_type'      => 'excursion',
+                'posts_per_page' => 50,
+                'post_status'    => 'publish',
+                'orderby'        => 'title',
+                'order'          => 'ASC',
+            ]);
+            set_transient($cache_key, $excursions, 12 * HOUR_IN_SECONDS);
+        }
 
         if (empty($excursions)) {
             echo '<p class="bt-quote__empty">' . esc_html__('Aucune excursion disponible.', 'blacktenderscore') . '</p>';
@@ -426,15 +479,23 @@ trait BtPricingShared {
                 $css_file->enqueue();
             }
 
-            global $post;
-            $original_post = $post;
-            $post = $item;
-            setup_postdata($post);
+            // Cache le rendu Elementor (coûteux) — clé : template + post + statut
+            $cache_key = 'bt_tpl_' . $tpl_id . '_' . $item->ID . '_' . $item->post_modified;
+            $html = wp_cache_get($cache_key, 'bt_loop_items');
 
-            $html = \Elementor\Plugin::instance()->frontend->get_builder_content_for_display($tpl_id);
+            if ($html === false) {
+                global $post;
+                $original_post = $post;
+                $post = $item;
+                setup_postdata($post);
 
-            $post = $original_post;
-            if ($original_post) wp_reset_postdata();
+                $html = \Elementor\Plugin::instance()->frontend->get_builder_content_for_display($tpl_id);
+
+                $post = $original_post;
+                if ($original_post) wp_reset_postdata();
+
+                wp_cache_set($cache_key, $html ?: '', 'bt_loop_items', HOUR_IN_SECONDS);
+            }
 
             return $html ?: '<p>' . esc_html($item->post_title) . '</p>';
         }

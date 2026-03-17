@@ -151,11 +151,11 @@
     var tabs = Array.from(tablist.querySelectorAll(':scope > [role="tab"]'));
     if (!tabs.length) return;
 
-    console.log('[BT tabs] init', root.className, '→', tabs.length, 'tabs', tabs.map(function(t){return t.textContent.trim();}));
+    if (window.btDebug) console.log('[BT tabs] init', root.className, '→', tabs.length, 'tabs', tabs.map(function(t){return t.textContent.trim();}));
 
     tabs.forEach(function (tab, idx) {
       tab.addEventListener('click', function () {
-        console.log('[BT tabs] click', tab.textContent.trim(), 'in', root.className);
+        if (window.btDebug) console.log('[BT tabs] click', tab.textContent.trim(), 'in', root.className);
         activateTab(root, tabs, tab);
       });
 
@@ -519,20 +519,26 @@
   function _lbRenderThumbs() {
     var strip = _lb.querySelector('.bt-lb__thumbs');
     strip.innerHTML = '';
+    var frag = document.createDocumentFragment();
     _lbImgs.forEach(function (im, i) {
       var btn = document.createElement('button');
       btn.className = 'bt-lb__thumb';
       btn.setAttribute('aria-label', 'Image ' + (i + 1));
+      btn.setAttribute('data-lb-i', i);
       var timg = document.createElement('img');
       timg.src     = im.thumb || im.src;
       timg.alt     = '';
       timg.loading = 'lazy';
       btn.appendChild(timg);
-      btn.addEventListener('click', function () {
-        _lbIdx = i;
-        _lbSetImg(i, true);
-      });
-      strip.appendChild(btn);
+      frag.appendChild(btn);
+    });
+    strip.appendChild(frag);
+    // Single delegated listener — replaces per-button addEventListener
+    strip.addEventListener('click', function (e) {
+      var btn = e.target.closest('.bt-lb__thumb');
+      if (!btn) return;
+      var i = parseInt(btn.getAttribute('data-lb-i'), 10);
+      if (!isNaN(i)) { _lbIdx = i; _lbSetImg(i, true); }
     });
   }
 

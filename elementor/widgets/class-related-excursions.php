@@ -315,14 +315,16 @@ class RelatedExcursions extends AbstractBtWidget {
             $pid     = get_the_ID();
             $url     = get_permalink();
             $title   = get_the_title();
-            $tagline = (string) get_field('exp_tagline', $pid);
-            $cover   = get_field('exp_cover', $pid);
-            $duration_val = $s['show_duration'] === 'yes' ? (string) get_field($duration_sf, $pid) : '';
+            // ACF fields — batch load to avoid N × get_field() queries per excursion
+            $acf     = function_exists('get_fields') ? (get_fields($pid) ?: []) : [];
+            $tagline = (string) ($acf['exp_tagline'] ?? '');
+            $cover   = $acf['exp_cover'] ?? null;
+            $duration_val = $s['show_duration'] === 'yes' ? (string) ($acf[$duration_sf] ?? '') : '';
 
             // Min price from repeater
             $min_price = null;
             if ($s['show_price'] === 'yes') {
-                $rows = get_field('tarification_par_forfait', $pid);
+                $rows = $acf['tarification_par_forfait'] ?? null;
                 if (!empty($rows)) {
                     foreach ($rows as $row) {
                         $p = (float) ($row['exp_price'] ?? 0);
