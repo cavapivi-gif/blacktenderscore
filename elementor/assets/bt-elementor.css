@@ -1,18 +1,18 @@
-/* ─────────────────────────────────────────────────────────
-   BlackTenders — Elementor Widgets — GLOBAL STYLES ONLY
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   BlackTenders â€” Elementor Widgets â€” GLOBAL STYLES ONLY
    Per-widget styles live in their own bt-{widget}.css files.
-   ───────────────────────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
-/* ── Variables globales ──────────────────────────────────── */
+/* â”€â”€ Variables globales â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 :root {
   --bt-tab-active-color:   #000;     /* couleur onglet actif   (FAQ, Pricing, BoatPricing) */
   --bt-tab-hover-color:    #333;     /* couleur onglet survol  */
   --bt-tab-inactive-color: #666;     /* couleur onglet inactif */
-  --bt-border-light:       #e0e0e0;  /* bordure légère         (tablists, accordéon) */
-  --bt-star-color:         #f4a900;  /* couleur étoiles        (Reviews) */
+  --bt-border-light:       #e0e0e0;  /* bordure lÃ©gÃ¨re         (tablists, accordÃ©on) */
+  --bt-star-color:         #f4a900;  /* couleur Ã©toiles        (Reviews) */
 }
 
-/* ── Placeholder éditeur ─────────────────────────────────── */
+/* â”€â”€ Placeholder Ã©diteur â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .bt-widget-placeholder {
   padding: 16px;
   border: 2px dashed #d0d0d0;
@@ -23,8 +23,8 @@
   border-radius: 4px;
 }
 
-/* ── Séparateur : option « Saut de ligne » (trait register_separator_controls) ───
-   Quand le widget ajoute .bt-sep--line-break sur l'élément, la ligne est masquée,
+/* â”€â”€ SÃ©parateur : option Â« Saut de ligne Â» (trait register_separator_controls) â”€â”€â”€
+   Quand le widget ajoute .bt-sep--line-break sur l'Ã©lÃ©ment, la ligne est masquÃ©e,
    seul l'espacement (margin) reste. */
 .bt-sep--line-break {
   height: 0 !important;
@@ -33,8 +33,8 @@
   border: none !important;
 }
 
-/* ── Bloc repliable (contôle global collapsible_mode) ────────────────────────
-   À partir du titre de section : clic pour ouvrir/fermer, réduit le scroll sur mobile. */
+/* â”€â”€ Bloc repliable (contÃ´le global collapsible_mode) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   Ã€ partir du titre de section : clic pour ouvrir/fermer, rÃ©duit le scroll sur mobile. */
 .bt-collapsible-block__trigger {
   width: 100%;
   display: flex;
@@ -61,7 +61,7 @@
 .bt-collapsible-block__trigger > span:first-child {
   flex: 1 1 auto;
 }
-/* Icône repliable : en haut du titre, pas en absolute (fermé = trait, ouvert = chevron) */
+/* IcÃ´ne repliable : en haut du titre, pas en absolute (fermÃ© = trait, ouvert = chevron) */
 .bt-collapsible-block__icon {
   flex-shrink: 0;
   width: 24px;
@@ -78,7 +78,7 @@
   background-position: center;
   background-size: contain;
 }
-/* Fermé : chevron vers le bas (cliquer pour ouvrir) */
+/* FermÃ© : chevron vers le bas (cliquer pour ouvrir) */
 .bt-collapsible-block__icon--closed {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M16.59%208.59003L12%2013.17L7.41%208.59003L6%2010L12%2016L18%2010L16.59%208.59003Z' fill='currentColor'/%3E%3C/svg%3E");
   display: block;
@@ -134,23 +134,22 @@
   }
 }
 
-/* ── Composant partagé : onglets (FAQ, Pricing, BoatPricing) ─
-   Les règles ci-dessous s'appliquent aux 3 widgets à la fois.
-   Les spécificités propres à chaque widget sont juste en dessous
-   de leur en-tête de section respective.
-   ──────────────────────────────────────────────────────────── */
+/* â”€â”€ Composant partagÃ© : onglets (FAQ, Pricing, BoatPricing) â”€
+   Les rÃ¨gles ci-dessous s'appliquent aux 3 widgets Ã  la fois.
+   Les spÃ©cificitÃ©s propres Ã  chaque widget sont juste en dessous
+   de leur en-tÃªte de section respective.
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
-/* Tablists — display:flex commun (FAQ + Pricing) */
+/* Tablists â€” display:flex commun (FAQ + Pricing) */
 .bt-faq--tabs .bt-faq__tablist,
 .bt-pricing__tablist {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  border-bottom: 2px solid var(--bt-border-light);
   margin-bottom: 0;
 }
 
-/* Bouton onglet — base commune aux 3 widgets */
+/* Bouton onglet â€” base commune aux 3 widgets */
 .bt-faq--tabs .bt-faq__tab,
 .bt-pricing__tab,
 .bt-bprice__tab {
@@ -170,18 +169,18 @@
 .bt-pricing__tab,
 .bt-bprice__tab { white-space: nowrap; }
 
-/* BoatPricing : poids et transition supplémentaire */
+/* BoatPricing : poids et transition supplÃ©mentaire */
 .bt-bprice__tab {
   font-weight: 600;
   transition: color .15s, background-color .15s, border-color .15s;
 }
 
-/* Hover — commun aux 3 widgets */
+/* Hover â€” commun aux 3 widgets */
 .bt-faq--tabs .bt-faq__tab:hover,
 .bt-pricing__tab:hover,
 .bt-bprice__tab:hover { color: var(--bt-tab-hover-color); }
 
-/* Actif — commun aux 3 widgets */
+/* Actif â€” commun aux 3 widgets */
 .bt-faq--tabs .bt-faq__tab--active,
 .bt-pricing__tab--active,
 .bt-bprice__tab--active {

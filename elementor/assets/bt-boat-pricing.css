@@ -1,234 +1,242 @@
-/* ══════════════════════════════════════════════════════════
-   BT — Tarifs Bateau
-   LAYOUT ONLY — visuel piloté par Elementor controls
-   Couleurs / tailles via CSS custom properties (overridables)
-   ══════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   Excursion Pricing â€” Tabs + Buttons + Booking
+   LAYOUT ONLY â€” visuel pilotÃ© par Elementor controls
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
-/* ── Design tokens ──────────────────────────────────────── */
-.bt-bprice {
-  --_card-radius:    var(--bt-bprice-card-radius, 12px);
-  --_card-padding:   var(--bt-bprice-card-padding, 24px);
-  --_cards-gap:      var(--bt-bprice-cards-gap, 16px);
-  --_fuel-yes-bg:    var(--bt-bprice-fuel-yes-bg,    #e6f4ea);
-  --_fuel-yes-color: var(--bt-bprice-fuel-yes-color, #2d7a3a);
-  --_fuel-no-bg:     var(--bt-bprice-fuel-no-bg,     #fef3c7);
-  --_fuel-no-color:  var(--bt-bprice-fuel-no-color,  #92400e);
-  --_border:         var(--bt-border-light, rgba(0,0,0,.1));
-}
-
-/* ── Conteneur principal ────────────────────────────────── */
-.bt-bprice {
+/* â”€â”€ Tab bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.bt-pricing__tablist {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-/* ── Layout Cartes côte à côte ──────────────────────────── */
-.bt-bprice__cards {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--_cards-gap);
-}
-
-.bt-bprice__cards .bt-bprice__card {
-  flex: 1 1 200px;
-}
-
-/* ── Carte individuelle ─────────────────────────────────── */
-.bt-bprice__card {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  border-radius: var(--_card-radius);
-  padding: var(--_card-padding);
-  border-width: 1px;
-  border-style: solid;
-  border-color: var(--_border);
-}
-
-.bt-bprice__card-label {
-  font-weight: 600;
-}
-
-/* ── Bloc montant + durée ───────────────────────────────── */
-.bt-bprice__amount-block {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 6px;
-  line-height: 1;
-}
-
-.bt-bprice__amount {
-  font-size: 1.5em;
-  font-weight: 700;
-}
-
-.bt-bprice__duration {
-  font-size: .875em;
-}
-
-.bt-bprice__per-person {
-  font-size: .8em;
-}
-
-.bt-bprice__note {
-  font-size: .85em;
-  display: block;
-}
-
-.bt-bprice__deposit {
-  font-size: .875em;
-  margin: 0;
-}
-
-/* ── Badges carburant ───────────────────────────────────── */
-.bt-bprice__fuel {
-  display: inline-block;
-  padding: 3px 10px;
-  font-size: .8em;
-  font-weight: 600;
-  border-radius: 999px;
-  margin-top: 4px;
-}
-
-.bt-bprice__fuel--yes {
-  background-color: var(--_fuel-yes-bg);
-  color:            var(--_fuel-yes-color);
-}
-
-.bt-bprice__fuel--no {
-  background-color: var(--_fuel-no-bg);
-  color:            var(--_fuel-no-color);
-}
-
-/* ── Layout Tableau ─────────────────────────────────────── */
-.bt-bprice__table-wrap {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.bt-bprice__table {
   width: 100%;
-  border-collapse: collapse;
-  font-size: .95em;
-}
-
-.bt-bprice__table th,
-.bt-bprice__table td {
-  padding: 10px 14px;
-  text-align: left;
-  border-bottom: 1px solid var(--_border);
-}
-
-.bt-bprice__table thead th {
-  font-weight: 600;
-  font-size: .8em;
-  text-transform: uppercase;
-  letter-spacing: .04em;
-}
-
-/* ── Layout Onglets internes (demi-journée / journée) ────── */
-/* .bt-bprice__tablist et .bt-bprice__tab sont dans bt-elementor.css */
-
-.bt-bprice__tabs {
-  display: flex;
-  flex-direction: column;
-}
-
-.bt-bprice__tablist-wrap {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.bt-bprice__panel {
-  display: none;
-}
-
-.bt-bprice__panel--active {
-  display: block;
-  padding-top: 16px;
-}
-
-/* ── Section zones de navigation ───────────────────────── */
-.bt-bprice__zones {
-  margin-top: 8px;
-}
-
-.bt-bprice__zones-title {
-  font-size: .95em;
-  font-weight: 600;
-  margin: 0 0 8px;
-}
-
-/* ══════════════════════════════════════════════════════════
-   OUTER WRAPPER TABS — Forfaits | Demande de devis
-   Généré par BtPricingShared::render_wrapper_open()
-   ══════════════════════════════════════════════════════════ */
-
-.bt-bprice-wrapper {
-  display: flex;
-  flex-direction: column;
-}
-
-.bt-bprice-wrapper__tablist {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  border-bottom: 2px solid var(--bt-border-light, #e0e0e0);
+  flex-wrap: nowrap; /* important */
   margin-bottom: 0;
 }
 
-/* Styles de base partagés avec .bt-bprice__tab via bt-elementor.css */
-.bt-bprice-wrapper__tab {
-  padding: 10px 20px;
+.bt-pricing__tab {
+  flex: 1; /* clé */
+  text-align: center;
   border: none;
   border-bottom: 2px solid transparent;
   margin-bottom: -2px;
-  background: transparent;
+  background: #0813290d;
   cursor: pointer;
   font: inherit;
   font-weight: 600;
   color: var(--bt-tab-inactive-color, #666);
+  padding: 4px 16px;
+  border-radius: 0.5rem;
   white-space: nowrap;
   transition: color .15s, border-color .15s;
 }
 
-.bt-bprice-wrapper__tab:hover {
-  color: var(--bt-tab-hover-color, #333);
+.bt-pricing__tab:hover {}
+.bt-pricing__tab--active {
+  background-color: var(--blue-50);
+  color: white;
 }
 
-.bt-bprice-wrapper__tab--active {
-  color: var(--bt-tab-active-color, #000);
-  border-bottom-color: var(--bt-tab-active-color, #000);
+.bt-pricing__section-desc {
+margin-top: .5em;
+margin-bottom: 1em;
 }
 
-.bt-bprice-wrapper__panel {
-  display: none;
+/* â”€â”€ Panneaux â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.bt-pricing__panel {
+display: none;
 }
 
-.bt-bprice-wrapper__panel--active {
-  display: block;
-  padding-top: 20px;
+.bt-pricing__panel--active {
+display: block;
+padding-top: 20px;
 }
 
-/* ══════════════════════════════════════════════════════════
-   TRIGGER WRAPPER (mode reveal — bouton bateau)
-   ══════════════════════════════════════════════════════════ */
-
-.bt-bprice-trigger-wrap {
-  display: block;
+/* â”€â”€ Prix â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.bt-pricing__price-block {
+display: flex;
+align-items: baseline;
+flex-wrap: wrap;
+gap: 6px;
+margin-bottom: 8px;
 }
 
-/* ══════════════════════════════════════════════════════════
-   RESPONSIVE
-   ══════════════════════════════════════════════════════════ */
+.bt-pricing__price {
+line-height: 1;
+}
 
+.bt-pricing__per {
+font-size: .875em;
+}
+
+.bt-pricing__note {
+font-size: .85em;
+}
+
+.bt-pricing__discount {
+display: inline-block;
+}
+
+.bt-pricing__deposit {
+font-size: .875em;
+margin: 0;
+}
+
+/* â”€â”€ Booking â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.bt-pricing__booking {
+margin-top: 20px;
+}
+
+/* â”€â”€ Buttons layout (pills) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.bt-pricing--buttons .bt-pricing__btn-title {
+margin: 0 0 16px;
+}
+
+.bt-pricing__slots {
+display: flex;
+flex-wrap: wrap;
+gap: 8px;
+margin-bottom: 16px;
+}
+
+.bt-pricing__slot {
+display: inline-flex;
+align-items: center;
+gap: 6px;
+padding: 10px 20px;
+border-width: 1.5px;
+border-style: solid;
+border-color: var(--bt-border-light, #e0e0e0);
+border-radius: 999px;
+background-color: transparent;
+cursor: pointer;
+font-family: inherit;
+white-space: nowrap;
+transition: background-color .2s, border-color .2s, color .2s;
+}
+
+.bt-pricing__slot:hover {}
+.bt-pricing__slot--active {}
+
+/* In buttons layout, panels are hidden until a slot is clicked */
+.bt-pricing--buttons .bt-pricing__panel {
+display: none;
+}
+
+.bt-pricing--buttons .bt-pricing__panel--active {
+display: block;
+}
+
+/* Booking reveal â€” hidden by default, animated on show */
+.bt-pricing__booking-reveal {
+max-height: 0;
+opacity: 0;
+overflow: hidden;
+transition: max-height .4s ease, opacity .3s ease;
+}
+
+.bt-pricing__booking-reveal--visible {
+max-height: 900px;
+opacity: 1;
+}
+
+/* â”€â”€ Trigger button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.bt-pricing-trigger-wrap {
+display: block;
+}
+
+.bt-pricing__trigger {
+display: inline-flex;
+align-items: center;
+gap: 8px;
+padding: 14px 36px;
+border-width: 0;
+border-style: solid;
+border-radius: 999px;
+cursor: pointer;
+font-family: inherit;
+transition: background-color .2s, transform .15s;
+}
+
+.bt-pricing__trigger:hover {
+transform: translateY(-1px);
+}
+
+.bt-pricing__trigger[aria-expanded="true"] {}
+
+/* â”€â”€ Reveal content (grid animation) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.bt-pricing__reveal-content {
+display: grid;
+grid-template-rows: 0fr;
+overflow: hidden;
+transition: grid-template-rows .45s cubic-bezier(.4, 0, .2, 1);
+margin-top: 0;
+}
+
+.bt-pricing__reveal-content > * {
+min-height: 0;
+overflow: hidden;
+}
+
+.bt-pricing__reveal-content--open {
+grid-template-rows: 1fr;
+margin-top: 16px;
+}
+
+/* â”€â”€ Modal (native <dialog>) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.bt-pricing-modal {
+border-width: 0;
+border-radius: 16px;
+padding: 0;
+max-width: min(640px, 96vw);
+width: 100%;
+max-height: 90vh;
+overflow: hidden;
+box-shadow: 0 24px 60px rgba(0, 0, 0, .18), 0 4px 16px rgba(0, 0, 0, .12);
+}
+
+.bt-pricing-modal::backdrop {
+background-color: rgba(0, 0, 0, .5);
+backdrop-filter: blur(2px);
+}
+
+.bt-pricing-modal__inner {
+position: relative;
+padding: 36px 28px 28px;
+overflow-y: auto;
+max-height: 90vh;
+}
+
+.bt-pricing-modal__close {
+position: absolute;
+top: 12px;
+right: 12px;
+width: 34px;
+height: 34px;
+border-width: 0;
+border-radius: 50%;
+background-color: rgba(0, 0, 0, .07);
+cursor: pointer;
+font-size: 20px;
+line-height: 1;
+display: flex;
+align-items: center;
+justify-content: center;
+transition: background-color .15s;
+color: inherit;
+}
+
+.bt-pricing-modal__close:hover {
+background-color: rgba(0, 0, 0, .14);
+}
+
+/* Mobile : bottom-sheet */
 @media (max-width: 600px) {
-  .bt-bprice__cards {
-    flex-direction: column;
-  }
-  .bt-bprice__cards .bt-bprice__card {
-    flex: none;
-  }
+.bt-pricing-modal {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-width: 100%;
+  border-radius: 20px 20px 0 0;
+  max-height: 85vh;
+  margin: 0;
+}
 }
