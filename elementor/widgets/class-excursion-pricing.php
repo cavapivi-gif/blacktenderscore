@@ -312,88 +312,252 @@ class ExcursionPricing extends AbstractBtWidget {
 
         // ══ STYLE ═══════════════════════════════════════════════════════════════
 
-        // ── Conteneur & boutons ─────────────────────────────────────────
-        $this->start_controls_section('style_exc_btns', [
-            'label' => __('⛵ Excursion — Onglets & boutons', 'blacktenderscore'),
+        // ── Conteneur forfaits ──────────────────────────────────────────
+        $this->start_controls_section('style_exc_container', [
+            'label' => __('⛵ Conteneur forfaits', 'blacktenderscore'),
             'tab'   => Controls_Manager::TAB_STYLE,
         ]);
 
-        $this->add_control('exc_container_heading', ['label' => __('Conteneur forfaits', 'blacktenderscore'), 'type' => Controls_Manager::HEADING]);
-        $this->add_control('exc_container_bg', ['label' => __('Fond', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing' => 'background-color: {{VALUE}}']]);
-        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), ['name' => 'exc_container_border', 'selector' => '{{WRAPPER}} .bt-pricing']);
-        $this->add_responsive_control('exc_container_radius', ['label' => __('Border radius', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px', '%', 'em'], 'selectors' => ['{{WRAPPER}} .bt-pricing' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}']]);
-        $this->add_responsive_control('exc_container_padding', ['label' => __('Padding', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px', 'em'], 'selectors' => ['{{WRAPPER}} .bt-pricing' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}']]);
-        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), ['name' => 'exc_container_shadow', 'selector' => '{{WRAPPER}} .bt-pricing']);
+        $this->add_control('exc_container_bg', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-pricing' => 'background-color: {{VALUE}}'],
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
+            'name'     => 'exc_container_border',
+            'selector' => '{{WRAPPER}} .bt-pricing',
+        ]);
+        $this->add_responsive_control('exc_container_radius', [
+            'label'      => __('Border radius', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', '%', 'em'],
+            'selectors'  => ['{{WRAPPER}} .bt-pricing' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+        $this->add_responsive_control('exc_container_padding', [
+            'label'      => __('Padding', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', 'em'],
+            'selectors'  => ['{{WRAPPER}} .bt-pricing' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), [
+            'name'     => 'exc_container_shadow',
+            'selector' => '{{WRAPPER}} .bt-pricing',
+        ]);
 
-        $this->add_control('exc_price_heading', ['label' => __('Prix', 'blacktenderscore'), 'type' => Controls_Manager::HEADING, 'separator' => 'before']);
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), ['name' => 'exc_price_typography', 'selector' => '{{WRAPPER}} .bt-pricing__price']);
-        $this->add_control('exc_price_color', ['label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__price' => 'color: {{VALUE}}']]);
+        $this->add_control('exc_price_heading', [
+            'label'     => __('Prix', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'separator' => 'before',
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+            'name'     => 'exc_price_typography',
+            'selector' => '{{WRAPPER}} .bt-pricing__price',
+        ]);
+        $this->add_control('exc_price_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-pricing__price' => 'color: {{VALUE}}'],
+        ]);
 
-        $this->add_control('exc_discount_heading', ['label' => __('Badge remise', 'blacktenderscore'), 'type' => Controls_Manager::HEADING, 'separator' => 'before']);
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), ['name' => 'exc_discount_typography', 'selector' => '{{WRAPPER}} .bt-pricing__discount']);
-        $this->add_control('exc_discount_color', ['label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__discount' => 'color: {{VALUE}}']]);
-        $this->add_control('exc_discount_bg', ['label' => __('Fond', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__discount' => 'background-color: {{VALUE}}']]);
+        $this->add_control('exc_per_heading', [
+            'label'     => __('Label "/ pers."', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'separator' => 'before',
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+            'name'     => 'exc_per_typography',
+            'selector' => '{{WRAPPER}} .bt-pricing__per',
+        ]);
+        $this->add_control('exc_per_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-pricing__per' => 'color: {{VALUE}}'],
+        ]);
 
-        $this->add_control('exc_slot_heading', ['label' => __('Boutons pill', 'blacktenderscore'), 'type' => Controls_Manager::HEADING, 'separator' => 'before', 'condition' => ['exc_layout' => 'buttons']]);
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), ['name' => 'exc_slot_typography', 'selector' => '{{WRAPPER}} .bt-pricing__slot', 'condition' => ['exc_layout' => 'buttons']]);
-        $this->start_controls_tabs('exc_slot_state_tabs', ['condition' => ['exc_layout' => 'buttons']]);
-        $this->start_controls_tab('exc_slot_tab_normal', ['label' => __('Normal', 'blacktenderscore')]);
-        $this->add_control('exc_slot_color', ['label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__slot' => 'color: {{VALUE}}']]);
-        $this->add_control('exc_slot_bg', ['label' => __('Fond', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__slot' => 'background-color: {{VALUE}}']]);
-        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), ['name' => 'exc_slot_border', 'selector' => '{{WRAPPER}} .bt-pricing__slot']);
-        $this->end_controls_tab();
-        $this->start_controls_tab('exc_slot_tab_hover', ['label' => __('Survol', 'blacktenderscore')]);
-        $this->add_control('exc_slot_color_hover', ['label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__slot:hover' => 'color: {{VALUE}}']]);
-        $this->add_control('exc_slot_bg_hover', ['label' => __('Fond', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__slot:hover' => 'background-color: {{VALUE}}']]);
-        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), ['name' => 'exc_slot_border_hover', 'selector' => '{{WRAPPER}} .bt-pricing__slot:hover']);
-        $this->end_controls_tab();
-        $this->start_controls_tab('exc_slot_tab_active', ['label' => __('Actif', 'blacktenderscore')]);
-        $this->add_control('exc_slot_color_active', ['label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__slot--active' => 'color: {{VALUE}}']]);
-        $this->add_control('exc_slot_bg_active', ['label' => __('Fond', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__slot--active' => 'background-color: {{VALUE}}']]);
-        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), ['name' => 'exc_slot_border_active', 'selector' => '{{WRAPPER}} .bt-pricing__slot--active']);
-        $this->end_controls_tab();
-        $this->end_controls_tabs();
-        $this->add_responsive_control('exc_slot_padding', ['label' => __('Padding', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px', 'em'], 'selectors' => ['{{WRAPPER}} .bt-pricing__slot' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'], 'condition' => ['exc_layout' => 'buttons']]);
-        $this->add_responsive_control('exc_slot_radius', ['label' => __('Border radius', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px', '%', 'em'], 'selectors' => ['{{WRAPPER}} .bt-pricing__slot' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'], 'condition' => ['exc_layout' => 'buttons']]);
+        $this->add_control('exc_note_heading', [
+            'label'     => __('Note tarifaire', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'separator' => 'before',
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+            'name'     => 'exc_note_typography',
+            'selector' => '{{WRAPPER}} .bt-pricing__note',
+        ]);
+        $this->add_control('exc_note_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-pricing__note' => 'color: {{VALUE}}'],
+        ]);
 
-        $this->add_control('exc_trigger_heading', ['label' => __('Bouton Réserver', 'blacktenderscore'), 'type' => Controls_Manager::HEADING, 'separator' => 'before', 'condition' => ['exc_trigger_mode!' => 'none']]);
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), ['name' => 'exc_trigger_btn_typography', 'selector' => '{{WRAPPER}} .bt-pricing__trigger', 'condition' => ['exc_trigger_mode!' => 'none']]);
-        $this->start_controls_tabs('exc_trigger_btn_state_tabs', ['condition' => ['exc_trigger_mode!' => 'none']]);
-        $this->start_controls_tab('exc_trigger_btn_tab_normal', ['label' => __('Normal', 'blacktenderscore')]);
-        $this->add_control('exc_trigger_btn_color', ['label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__trigger' => 'color: {{VALUE}}']]);
-        $this->add_control('exc_trigger_btn_bg', ['label' => __('Fond', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__trigger' => 'background-color: {{VALUE}}']]);
-        $this->end_controls_tab();
-        $this->start_controls_tab('exc_trigger_btn_tab_hover', ['label' => __('Survol', 'blacktenderscore')]);
-        $this->add_control('exc_trigger_btn_color_hover', ['label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__trigger:hover' => 'color: {{VALUE}}']]);
-        $this->add_control('exc_trigger_btn_bg_hover', ['label' => __('Fond', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__trigger:hover' => 'background-color: {{VALUE}}']]);
-        $this->end_controls_tab();
-        $this->end_controls_tabs();
-        $this->add_responsive_control('exc_trigger_btn_padding', ['label' => __('Padding', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px', 'em'], 'selectors' => ['{{WRAPPER}} .bt-pricing__trigger' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'], 'condition' => ['exc_trigger_mode!' => 'none']]);
-        $this->add_responsive_control('exc_trigger_btn_radius', ['label' => __('Border radius', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px', '%', 'em'], 'selectors' => ['{{WRAPPER}} .bt-pricing__trigger' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'], 'condition' => ['exc_trigger_mode!' => 'none']]);
-        $this->add_responsive_control('exc_trigger_align', ['label' => __('Alignement', 'blacktenderscore'), 'type' => Controls_Manager::CHOOSE, 'options' => ['flex-start' => ['title' => __('Gauche', 'blacktenderscore'), 'icon' => 'eicon-h-align-left'], 'center' => ['title' => __('Centre', 'blacktenderscore'), 'icon' => 'eicon-h-align-center'], 'flex-end' => ['title' => __('Droite', 'blacktenderscore'), 'icon' => 'eicon-h-align-right'], 'stretch' => ['title' => __('Pleine largeur', 'blacktenderscore'), 'icon' => 'eicon-h-align-stretch']], 'default' => 'flex-start', 'selectors' => ['{{WRAPPER}} .bt-pricing-trigger-wrap' => 'display: flex; justify-content: {{VALUE}}', '{{WRAPPER}} .bt-pricing-trigger-wrap .bt-pricing__trigger' => 'align-self: {{VALUE}}'], 'condition' => ['exc_trigger_mode!' => 'none']]);
-        $this->add_responsive_control('exc_trigger_width', ['label' => __('Largeur bouton', 'blacktenderscore'), 'type' => Controls_Manager::SLIDER, 'size_units' => ['px', '%'], 'range' => ['px' => ['min' => 100, 'max' => 800], '%' => ['min' => 10, 'max' => 100]], 'selectors' => ['{{WRAPPER}} .bt-pricing-trigger-wrap .bt-pricing__trigger' => 'width: {{SIZE}}{{UNIT}}'], 'condition' => ['exc_trigger_align!' => 'stretch', 'exc_trigger_mode!' => 'none']]);
+        $this->add_control('exc_deposit_heading', [
+            'label'     => __('Acompte', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'separator' => 'before',
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+            'name'     => 'exc_deposit_typography',
+            'selector' => '{{WRAPPER}} .bt-pricing__deposit',
+        ]);
+        $this->add_control('exc_deposit_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-pricing__deposit' => 'color: {{VALUE}}'],
+        ]);
+
+        $this->add_control('exc_discount_heading', [
+            'label'     => __('Badge remise', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'separator' => 'before',
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+            'name'     => 'exc_discount_typography',
+            'selector' => '{{WRAPPER}} .bt-pricing__discount',
+        ]);
+        $this->add_control('exc_discount_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-pricing__discount' => 'color: {{VALUE}}'],
+        ]);
+        $this->add_control('exc_discount_bg', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-pricing__discount' => 'background-color: {{VALUE}}'],
+        ]);
+        $this->add_responsive_control('exc_discount_padding', [
+            'label'      => __('Padding', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', 'em'],
+            'selectors'  => ['{{WRAPPER}} .bt-pricing__discount' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+        $this->add_responsive_control('exc_discount_radius', [
+            'label'      => __('Border radius', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', 'em'],
+            'selectors'  => ['{{WRAPPER}} .bt-pricing__discount' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
 
         $this->end_controls_section();
 
-        // ── Onglets — UN seul contrôleur pour TOUS les tabs du widget ──
-        $all_tabs     = '{{WRAPPER}} .bt-bprice-wrapper__tab, {{WRAPPER}} .bt-pricing__tab';
-        $all_active   = '{{WRAPPER}} .bt-bprice-wrapper__tab--active, {{WRAPPER}} .bt-pricing__tab--active';
-        $all_tablist  = '{{WRAPPER}} .bt-bprice-wrapper__tablist, {{WRAPPER}} .bt-pricing__tablist';
+        // ── Boutons pill (layout buttons) ───────────────────────────────
+        $this->start_controls_section('style_exc_pills', [
+            'label'     => __('⛵ Boutons pill', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_STYLE,
+            'condition' => ['exc_layout' => 'buttons'],
+        ]);
 
-        $this->register_tabs_nav_style(
-            'all_tabs',
-            '📋 Onglets',
-            $all_tabs,
-            $all_active,
-            $all_tablist,
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+            'name'     => 'exc_slot_typography',
+            'selector' => '{{WRAPPER}} .bt-pricing__slot',
+        ]);
+
+        $this->start_controls_tabs('exc_slot_state_tabs');
+        $this->start_controls_tab('exc_slot_tab_normal', ['label' => __('Normal', 'blacktenderscore')]);
+        $this->add_control('exc_slot_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-pricing__slot' => 'color: {{VALUE}}'],
+        ]);
+        $this->add_control('exc_slot_bg', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-pricing__slot' => 'background-color: {{VALUE}}'],
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
+            'name'     => 'exc_slot_border',
+            'selector' => '{{WRAPPER}} .bt-pricing__slot',
+        ]);
+        $this->end_controls_tab();
+        $this->start_controls_tab('exc_slot_tab_hover', ['label' => __('Survol', 'blacktenderscore')]);
+        $this->add_control('exc_slot_color_hover', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-pricing__slot:hover' => 'color: {{VALUE}}'],
+        ]);
+        $this->add_control('exc_slot_bg_hover', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-pricing__slot:hover' => 'background-color: {{VALUE}}'],
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
+            'name'     => 'exc_slot_border_hover',
+            'selector' => '{{WRAPPER}} .bt-pricing__slot:hover',
+        ]);
+        $this->end_controls_tab();
+        $this->start_controls_tab('exc_slot_tab_active', ['label' => __('Actif', 'blacktenderscore')]);
+        $this->add_control('exc_slot_color_active', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-pricing__slot--active' => 'color: {{VALUE}}'],
+        ]);
+        $this->add_control('exc_slot_bg_active', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-pricing__slot--active' => 'background-color: {{VALUE}}'],
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
+            'name'     => 'exc_slot_border_active',
+            'selector' => '{{WRAPPER}} .bt-pricing__slot--active',
+        ]);
+        $this->end_controls_tab();
+        $this->end_controls_tabs();
+
+        $this->add_responsive_control('exc_slot_padding', [
+            'label'      => __('Padding', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', 'em'],
+            'selectors'  => ['{{WRAPPER}} .bt-pricing__slot' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+        $this->add_responsive_control('exc_slot_radius', [
+            'label'      => __('Border radius', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', '%', 'em'],
+            'selectors'  => ['{{WRAPPER}} .bt-pricing__slot' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+
+        $this->end_controls_section();
+
+        // ── Bouton Réserver (trigger) ───────────────────────────────────
+        $this->register_button_style(
+            'exc_trigger_btn',
+            __('⛵ Bouton Réserver', 'blacktenderscore'),
+            '{{WRAPPER}} .bt-pricing__trigger',
             [],
+            ['exc_trigger_mode!' => 'none']
+        );
+
+        // ── Onglets parent Forfaits / Devis ─────────────────────────────
+        $this->register_tabs_nav_style(
+            'wrapper_tabs',
+            __('📋 Onglets Forfaits / Devis', 'blacktenderscore'),
+            '{{WRAPPER}} .bt-bprice-wrapper__tab',
+            '{{WRAPPER}} .bt-bprice-wrapper__tab--active',
+            '{{WRAPPER}} .bt-bprice-wrapper__tablist',
+            ['show_quote_form' => 'yes'],
             [
-                'with_hover'      => true,
-                'with_radius'     => true,
-                'with_indicator'  => true,
-                'with_justify'    => true,
-                'with_panel'      => true,
-                'panel_sel'       => '{{WRAPPER}} .bt-bprice-wrapper__panel--active, {{WRAPPER}} .bt-pricing__panel--active',
+                'with_hover'     => true,
+                'with_radius'    => true,
+                'with_indicator' => true,
+                'with_justify'   => true,
+                'with_panel'     => true,
+                'panel_sel'      => '{{WRAPPER}} .bt-bprice-wrapper__panel--active',
+            ]
+        );
+
+        // ── Onglets enfants forfaits excursion ──────────────────────────
+        $this->register_tabs_nav_style(
+            'child_tabs',
+            __('📋 Onglets forfaits', 'blacktenderscore'),
+            '{{WRAPPER}} .bt-pricing__tab',
+            '{{WRAPPER}} .bt-pricing__tab--active',
+            '{{WRAPPER}} .bt-pricing__tablist',
+            ['exc_layout' => 'tabs'],
+            [
+                'with_hover'     => true,
+                'with_radius'    => true,
+                'with_indicator' => true,
+                'with_justify'   => true,
+                'with_panel'     => true,
+                'panel_sel'      => '{{WRAPPER}} .bt-pricing__panel--active',
             ]
         );
 

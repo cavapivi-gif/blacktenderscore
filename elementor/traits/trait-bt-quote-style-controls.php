@@ -208,25 +208,36 @@ trait BtQuoteStyleControls {
         ]);
 
         $this->add_control('qt_boat_show_pax', [
-            'label'        => __('Afficher passagers', 'blacktenderscore'),
-            'type'         => Controls_Manager::SWITCHER,
-            'return_value' => 'yes',
-            'default'      => 'yes',
-            'selectors'    => ['{{WRAPPER}} .bt-quote-boat-card__pax' => 'display: {{VALUE === "yes" ? "block" : "none"}}'],
+            'label'   => __('Afficher passagers', 'blacktenderscore'),
+            'type'    => Controls_Manager::SELECT,
+            'options' => [
+                'block' => __('Oui', 'blacktenderscore'),
+                'none'  => __('Non', 'blacktenderscore'),
+            ],
+            'default'   => 'block',
+            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__pax' => 'display: {{VALUE}}'],
         ]);
 
         $this->add_control('qt_boat_show_price', [
-            'label'        => __('Afficher prix / personne', 'blacktenderscore'),
-            'type'         => Controls_Manager::SWITCHER,
-            'return_value' => 'yes',
-            'default'      => 'yes',
+            'label'   => __('Afficher prix / personne', 'blacktenderscore'),
+            'type'    => Controls_Manager::SELECT,
+            'options' => [
+                'flex' => __('Oui', 'blacktenderscore'),
+                'none' => __('Non', 'blacktenderscore'),
+            ],
+            'default'   => 'flex',
+            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__price' => 'display: {{VALUE}}'],
         ]);
 
         $this->add_control('qt_boat_show_fuel', [
-            'label'        => __('Afficher badge carburant', 'blacktenderscore'),
-            'type'         => Controls_Manager::SWITCHER,
-            'return_value' => 'yes',
-            'default'      => 'yes',
+            'label'   => __('Afficher badge carburant', 'blacktenderscore'),
+            'type'    => Controls_Manager::SELECT,
+            'options' => [
+                'inline-block' => __('Oui', 'blacktenderscore'),
+                'none'         => __('Non', 'blacktenderscore'),
+            ],
+            'default'   => 'inline-block',
+            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__fuel-badge' => 'display: {{VALUE}}'],
         ]);
 
         $this->end_controls_section();
