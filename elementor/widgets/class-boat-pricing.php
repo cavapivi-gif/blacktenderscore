@@ -386,21 +386,39 @@ class BoatPricing extends AbstractBtWidget {
 
         $this->end_controls_section();
 
-        // ── Style : onglets (outer wrapper + inner boat tabs) ─────────────────
+        // ── Style : onglets parent Forfaits / Devis ───────────────────────────
         $this->register_tabs_nav_style(
-            'all_tabs',
-            '📋 Onglets',
-            '{{WRAPPER}} .bt-bprice-wrapper__tab, {{WRAPPER}} .bt-bprice__tab',
-            '{{WRAPPER}} .bt-bprice-wrapper__tab--active, {{WRAPPER}} .bt-bprice__tab--active',
-            '{{WRAPPER}} .bt-bprice-wrapper__tablist, {{WRAPPER}} .bt-bprice__tablist',
-            [],
+            'wrapper_tabs',
+            __('📋 Onglets Forfaits / Devis', 'blacktenderscore'),
+            '{{WRAPPER}} .bt-bprice-wrapper__tab',
+            '{{WRAPPER}} .bt-bprice-wrapper__tab--active',
+            '{{WRAPPER}} .bt-bprice-wrapper__tablist',
+            ['show_quote_form' => 'yes'],
             [
                 'with_hover'     => true,
                 'with_radius'    => true,
                 'with_indicator' => true,
                 'with_justify'   => true,
                 'with_panel'     => true,
-                'panel_sel'      => '{{WRAPPER}} .bt-bprice-wrapper__panel--active, {{WRAPPER}} .bt-bprice__panel--active',
+                'panel_sel'      => '{{WRAPPER}} .bt-bprice-wrapper__panel--active',
+            ]
+        );
+
+        // ── Style : onglets enfants (forfaits bateau) ────────────────────────
+        $this->register_tabs_nav_style(
+            'child_tabs',
+            __('📋 Onglets forfaits', 'blacktenderscore'),
+            '{{WRAPPER}} .bt-bprice__tab',
+            '{{WRAPPER}} .bt-bprice__tab--active',
+            '{{WRAPPER}} .bt-bprice__tablist',
+            ['layout' => 'tabs'],
+            [
+                'with_hover'     => true,
+                'with_radius'    => true,
+                'with_indicator' => true,
+                'with_justify'   => true,
+                'with_panel'     => true,
+                'panel_sel'      => '{{WRAPPER}} .bt-bprice__panel--active',
             ]
         );
 
