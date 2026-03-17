@@ -62,13 +62,35 @@ trait RestApiAi {
         $body    = $req->get_json_params();
         $from    = sanitize_text_field($body['from']   ?? date('Y-m-d'));
         $to      = sanitize_text_field($body['to']     ?? date('Y-m-d', strtotime('+3 months')));
+        $force   = !empty($body['force']);
 
-        $provider = get_option('bt_ai_provider', 'anthropic');
-        $ai       = new Ai();
-        $key      = $ai->get_api_key($provider);
+        // ── Cache transient (24h) — évite le timeout Cloudflare 520 ──────────
+        $provider    = get_option('bt_ai_provider', 'anthropic');
+        $cache_key   = 'bt_ai_events_' . md5("{$from}|{$to}|{$provider}");
+        $cache_hours = 24;
+
+        if (!$force) {
+            $cached = get_transient($cache_key);
+            if ($cached) {
+                return rest_ensure_response([
+                    'events'       => $cached['events'],
+                    'count'        => count($cached['events']),
+                    'cached'       => true,
+                    'generated_at' => $cached['generated_at'] ?? null,
+                ]);
+            }
+        }
+
+        $ai  = new Ai();
+        $key = $ai->get_api_key($provider);
 
         if (!$key) {
             return new \WP_REST_Response(['message' => 'Clé API IA manquante.'], 400);
+        }
+
+        // Extend PHP timeout to avoid 520
+        if (!ini_get('safe_mode')) {
+            @set_time_limit(120);
         }
 
         $prompt = "Tu es un expert des événements touristiques de la région PACA (Provence-Alpes-Côte d'Azur, incluant Cannes, Monaco, Nice, Saint-Tropez, Marseille, Antibes, Juan-les-Pins).\n\n"
@@ -77,14 +99,15 @@ trait RestApiAi {
             . "- Inclure UNIQUEMENT les événements à fort impact touristique (500+ visiteurs attendus)\n"
             . "- Événements récurrents annuels: Festival de Cannes, Grand Prix de Monaco, Voiles de Saint-Tropez, Fête nationale Monaco, etc.\n"
             . "- Événements sportifs, culturels, gastronomiques\n"
-            . "- Utilise les vraies dates approximatives pour {$from} → {$to}\n\n"
+            . "- Utilise les vraies dates approximatives pour {$from} → {$to}\n"
+            . "- Maximum 50 événements, concentre-toi sur les plus importants\n\n"
             . "Réponds UNIQUEMENT avec un tableau JSON valide (pas de markdown, pas d'explication):\n"
             . '[ { "name": "Festival de Cannes", "date_start": "YYYY-MM-DD", "date_end": "YYYY-MM-DD", "location": "Cannes" }, ... ]';
 
         $result = match($provider) {
-            'openai' => $ai->call_openai_json($key, $prompt, 2048),
-            'gemini' => $ai->call_gemini_json($key, $prompt, 2048),
-            default  => $ai->call_anthropic_json($key, $prompt, 2048),
+            'openai' => $ai->call_openai_json($key, $prompt, 4096),
+            'gemini' => $ai->call_gemini_json($key, $prompt, 4096),
+            default  => $ai->call_anthropic_json($key, $prompt, 4096),
         };
 
         if (!is_array($result)) {
@@ -107,7 +130,19 @@ trait RestApiAi {
             ];
         }
 
-        return rest_ensure_response(['events' => $events, 'count' => count($events)]);
+        // Cache result
+        $generated_at = current_time('mysql', true);
+        set_transient($cache_key, [
+            'events'       => $events,
+            'generated_at' => $generated_at,
+        ], $cache_hours * HOUR_IN_SECONDS);
+
+        return rest_ensure_response([
+            'events'       => $events,
+            'count'        => count($events),
+            'cached'       => false,
+            'generated_at' => $generated_at,
+        ]);
     }
 
     /**

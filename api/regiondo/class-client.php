@@ -344,15 +344,17 @@ class Client {
         if (!empty($params['product_id'])) {
             $query['product_id'] = $params['product_id'];
         }
-        if (isset($params['offset'])) {
-            $query['offset'] = $params['offset'];
+        if (isset($params['page'])) {
+            $query['page'] = (int) $params['page'];
         }
 
         $url  = self::BASE_URL . 'reviews?' . http_build_query($query);
         $data = $this->request($url);
         return [
-            'data'  => $data['data'] ?? [],
-            'total' => $data['total'] ?? 0,
+            'data'        => $data['data'] ?? [],
+            'total'       => $data['page']['total_items'] ?? 0,
+            'total_pages' => $data['page']['total_pages'] ?? 1,
+            'page'        => $data['page']['current']     ?? 1,
         ];
     }
 

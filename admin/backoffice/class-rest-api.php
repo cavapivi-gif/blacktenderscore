@@ -277,6 +277,18 @@ class RestApi {
             'permission_callback' => $auth,
         ]);
 
+        register_rest_route(self::NS, '/avis/sync', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'sync_avis'],
+            'permission_callback' => $auth,
+        ]);
+
+        register_rest_route(self::NS, '/avis/sync/status', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'get_avis_sync_status'],
+            'permission_callback' => $perm('avis'),
+        ]);
+
         register_rest_route(self::NS, '/avis/by-email', [
             'methods'             => 'GET',
             'callback'            => [$this, 'get_avis_by_email'],
@@ -824,6 +836,28 @@ class RestApi {
         $db   = new ReviewsDb();
         $data = $db->get_by_email($email);
         return rest_ensure_response(['data' => $data]);
+    }
+
+    /** Sync les avis depuis l'API Regiondo vers bt_reviews. */
+    public function sync_avis(): \WP_REST_Response {
+        try {
+            $sync   = new ReviewsSync();
+            $result = $sync->sync_all();
+            return rest_ensure_response($result);
+        } catch (\Throwable $e) {
+            return new \WP_REST_Response(['message' => $e->getMessage()], 500);
+        }
+    }
+
+    /** Retourne le statut de la dernière sync reviews. */
+    public function get_avis_sync_status(): \WP_REST_Response {
+        $status = get_option('bt_reviews_sync_status', null);
+        if (!$status) {
+            $db    = new ReviewsDb();
+            $total = $db->count_all();
+            return rest_ensure_response(['total_in_db' => $total, 'last_sync' => null]);
+        }
+        return rest_ensure_response($status);
     }
 
     // ── Participations ────────────────────────────────────────────────────────

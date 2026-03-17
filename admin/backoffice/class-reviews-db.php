@@ -362,6 +362,12 @@ class ReviewsDb {
         $wpdb->query("TRUNCATE TABLE {$this->table}");
     }
 
+    /** Compte le nombre total d'avis en base. */
+    public function count_all(): int {
+        global $wpdb;
+        return (int) $wpdb->get_var("SELECT COUNT(*) FROM {$this->table}");
+    }
+
     // ─── Helpers ──────────────────────────────────────────────────────────────
 
     /**

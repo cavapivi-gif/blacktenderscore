@@ -35,7 +35,10 @@ export default function useReviews() {
   // ── UI ───────────────────────────────────────────────────────────────────────
   const [showImporter, setShowImporter] = useState(false)
   const [resetting,    setResetting]    = useState(false)
+  const [syncing,      setSyncing]      = useState(false)
+  const [syncResult,   setSyncResult]   = useState(null)
   const [activeTab,    setActiveTab]    = useState('overview')
+  const [resetConfirm, setResetConfirm] = useState(false)
   const perPage = 50
 
   // ── Loaders ──────────────────────────────────────────────────────────────────
@@ -96,7 +99,7 @@ export default function useReviews() {
   }))
 
   const handleReset = async () => {
-    if (!confirm('Supprimer tous les avis importés ? Cette action est irréversible.')) return
+    setResetConfirm(false)
     setResetting(true)
     try {
       await api.resetAvis()
@@ -106,6 +109,21 @@ export default function useReviews() {
       setError(e.message)
     } finally {
       setResetting(false)
+    }
+  }
+
+  const handleSync = async () => {
+    setSyncing(true)
+    setSyncResult(null)
+    setError(null)
+    try {
+      const result = await api.syncAvis()
+      setSyncResult(result)
+      load(); loadStats()
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setSyncing(false)
     }
   }
 
@@ -125,9 +143,10 @@ export default function useReviews() {
     data, total, loading, error, page, q, search, product, ratingFilter, sort, expanded,
     setPage, setQ, setProduct, setRatingFilter, setExpanded, onSort,
     // UI
-    showImporter, setShowImporter, resetting, activeTab, setActiveTab, perPage,
+    showImporter, setShowImporter, resetting, syncing, syncResult,
+    activeTab, setActiveTab, perPage, resetConfirm, setResetConfirm,
     // Actions
-    load, loadStats, handleReset, handleImportDone,
+    load, loadStats, handleReset, handleSync, handleImportDone,
     // Derived
     products,
   }

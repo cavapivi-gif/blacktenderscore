@@ -71,6 +71,8 @@ export const api = {
   avisStats:       (params) => api.get('/avis/stats' + toQuery(params)),
   avisByEmail:     (email)  => api.get('/avis/by-email' + toQuery({ email })),
   importAvisCsv:   (items)  => api.post('/avis/import/csv', { items }),
+  syncAvis:        ()       => api.post('/avis/sync', {}),
+  avisSyncStatus:  ()       => api.get('/avis/sync/status'),
   resetAvis:       ()       => api.post('/avis/reset', {}),
 
   // Snazzy Maps proxy

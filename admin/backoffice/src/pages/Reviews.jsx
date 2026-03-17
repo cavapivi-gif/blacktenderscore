@@ -1,5 +1,5 @@
-import { Download, Trash, RefreshDouble, Star, CandlestickChart, Group } from 'iconoir-react'
-import { PageHeader, Notice, Spinner, Btn } from '../components/ui'
+import { Download, Trash, RefreshDouble, Star, CandlestickChart, Group, CloudSync } from 'iconoir-react'
+import { PageHeader, Notice, Spinner, Btn, DangerModal } from '../components/ui'
 import { PeriodPicker } from '../components/PeriodPicker'
 import ReviewsImporter from '../components/ReviewsImporter'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/Tabs'
@@ -27,9 +27,10 @@ export default function Reviews() {
     data, total, loading, error, page, q, product, ratingFilter, sort, expanded,
     setPage, setQ, setProduct, setRatingFilter, setExpanded, onSort,
     // UI
-    showImporter, setShowImporter, resetting, activeTab, setActiveTab, perPage,
+    showImporter, setShowImporter, resetting, syncing, syncResult,
+    activeTab, setActiveTab, perPage, resetConfirm, setResetConfirm,
     // Actions
-    load, loadStats, handleReset, handleImportDone,
+    load, loadStats, handleReset, handleSync, handleImportDone,
     // Derived
     products,
   } = useReviews()
@@ -45,6 +46,14 @@ export default function Reviews() {
         actions={
           <div className="flex items-center gap-2 flex-wrap">
             <Btn
+              variant="primary"
+              size="sm"
+              onClick={handleSync}
+              loading={syncing}
+            >
+              <CloudSync className="w-4 h-4" /> Sync API
+            </Btn>
+            <Btn
               variant={showImporter ? 'primary' : 'secondary'}
               size="sm"
               onClick={() => setShowImporter(v => !v)}
@@ -57,7 +66,7 @@ export default function Reviews() {
             <Btn variant="ghost" size="sm" onClick={() => { load(); loadStats() }} title="Rafraîchir">
               <RefreshDouble className="w-4 h-4" />
             </Btn>
-            <Btn variant="danger" size="sm" onClick={handleReset} loading={resetting} disabled={!total}>
+            <Btn variant="danger" size="sm" onClick={() => setResetConfirm(true)} loading={resetting} disabled={!total}>
               <Trash className="w-4 h-4" /> Réinitialiser
             </Btn>
             <span className="text-xs text-muted-foreground">{total.toLocaleString('fr-FR')} avis</span>
@@ -78,6 +87,15 @@ export default function Reviews() {
       )}
 
       {error && <div className="mx-6 mt-5"><Notice type="error">{error}</Notice></div>}
+
+      {syncResult && (
+        <div className="mx-6 mt-3">
+          <Notice type="success">
+            Sync terminée — {syncResult.fetched} avis récupérés depuis {syncResult.products_scanned} produits
+            ({syncResult.inserted} ajoutés, {syncResult.updated} mis à jour)
+          </Notice>
+        </div>
+      )}
 
       {/* ── Analytics Section ──────────────────────────────────────────────────── */}
       <div className="mx-6 mt-6">
@@ -190,6 +208,18 @@ export default function Reviews() {
 
       {/* Bottom spacing */}
       <div className="h-10" />
+
+      <DangerModal
+        open={resetConfirm}
+        title="Supprimer tous les avis"
+        onClose={() => setResetConfirm(false)}
+        onConfirm={handleReset}
+        confirmLabel="Supprimer définitivement"
+        loading={resetting}
+      >
+        Tous les avis importés ({total.toLocaleString('fr-FR')} lignes) seront supprimés définitivement.
+        Cette action est irréversible.
+      </DangerModal>
     </div>
   )
 }
