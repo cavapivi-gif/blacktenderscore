@@ -54,6 +54,7 @@ export default function Settings() {
   const [pImportStatus,    setPImportStatus]    = useState(null)
   const [pResetLoading,    setPResetLoading]    = useState(false)
   const [showPResetModal,  setShowPResetModal]  = useState(false)
+  const [showBResetModal,  setShowBResetModal]  = useState(false)
   const savedTimerRef = useRef(null)
 
   // Cleanup saved timer on unmount
@@ -201,7 +202,7 @@ export default function Settings() {
   }
 
   async function handleResetDb() {
-    if (!window.confirm('Vider toute la table bt_bookings ? Cette action est irréversible.')) return
+    setShowBResetModal(false)
     setBResetLoading(true)
     try {
       await api.resetBookingsDb()
@@ -447,6 +448,17 @@ export default function Settings() {
         {saved  && <Notice type="success">Réglages enregistrés.</Notice>}
         {renderSection()}
       </div>
+
+      <DangerModal
+        open={showBResetModal}
+        title="Vider la table bt_bookings"
+        onClose={() => setShowBResetModal(false)}
+        onConfirm={handleResetDb}
+        confirmLabel="Supprimer définitivement"
+        loading={bResetLoading}
+      >
+        Toutes les réservations brutes (bookings) seront supprimées définitivement. Cette action est irréversible.
+      </DangerModal>
 
       <DangerModal
         open={showResetModal}

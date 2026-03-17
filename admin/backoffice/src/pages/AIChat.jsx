@@ -192,15 +192,7 @@ export default function AIChat() {
     }
     if (chatId) { setActiveId(chatId); return }
     if (legacyToken) {
-      setSharedLoading(true)
-      api.getSharedChat(legacyToken)
-        .then(data => {
-          const id = create(data.provider ?? 'anthropic', null)
-          updateMessages(id, data.messages ?? [], data.title ?? 'Conversation partagée')
-          toast('Conversation partagée chargée')
-        })
-        .catch(() => toast('Lien de partage introuvable ou expiré', 'error'))
-        .finally(() => setSharedLoading(false))
+      toast('Ce format de lien de partage n\'est plus supporté. Utilisez un lien ?share=UUID.', 'error')
     }
   }, [])
 

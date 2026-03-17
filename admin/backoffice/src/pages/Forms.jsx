@@ -4,7 +4,7 @@ import { format, formatDistanceToNowStrict } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { api } from '../lib/api'
 import { avatarColor } from '../lib/colors'
-import { PageHeader, Table, Pagination, Notice, Spinner, Badge, Btn } from '../components/ui'
+import { PageHeader, Table, Pagination, Notice, Spinner, Badge, Btn, DangerModal } from '../components/ui'
 
 /** Normalise une date MySQL (espace) ou ISO (T) en objet Date valide. */
 const parseDate = d => {
@@ -103,6 +103,7 @@ export default function Forms() {
   const [expandedId, setExpandedId] = useState(null)
   const [stats, setStats]           = useState(null)
   const [deleting, setDeleting]     = useState(null)
+  const [deleteTarget, setDeleteTarget] = useState(null)
   const perPage = 50
 
   /* ── Chargement des soumissions ─────────────────────────────────────────── */
@@ -129,10 +130,11 @@ export default function Forms() {
   }, [q])
 
   /* ── Suppression d'une soumission ───────────────────────────────────────── */
-  const handleDelete = useCallback((id) => {
-    if (!window.confirm('Supprimer définitivement cette soumission ?')) return
-    setDeleting(id)
-    api.deleteForm(id)
+  const confirmDelete = useCallback(() => {
+    if (!deleteTarget) return
+    setDeleting(deleteTarget)
+    setDeleteTarget(null)
+    api.deleteForm(deleteTarget)
       .then(() => {
         setExpandedId(null)
         load()
@@ -140,7 +142,7 @@ export default function Forms() {
       })
       .catch(e => setError(e.message))
       .finally(() => setDeleting(null))
-  }, [load])
+  }, [deleteTarget, load])
 
   /* ── Colonnes du tableau ────────────────────────────────────────────────── */
   const columns = useMemo(() => [
@@ -277,7 +279,7 @@ export default function Forms() {
                       columns={columns}
                       expanded={expandedId === row.id}
                       onToggle={() => setExpandedId(expandedId === row.id ? null : row.id)}
-                      onDelete={handleDelete}
+                      onDelete={setDeleteTarget}
                       deleting={deleting === row.id}
                     />
                   ))}
@@ -287,6 +289,17 @@ export default function Forms() {
             </>
         }
       </div>
+
+      <DangerModal
+        open={!!deleteTarget}
+        title="Supprimer cette soumission"
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+        confirmLabel="Supprimer définitivement"
+        loading={!!deleting}
+      >
+        Cette soumission sera supprimée définitivement. Cette action est irréversible.
+      </DangerModal>
     </div>
   )
 }
