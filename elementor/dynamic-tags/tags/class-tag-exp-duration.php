@@ -134,6 +134,37 @@ class Tag_Exp_Duration extends Abstract_BT_Tag {
             'type'    => \Elementor\Controls_Manager::TEXT,
             'default' => '',
         ]);
+
+        // ── Durée en navigation ───────────────────────────────────────────
+        $this->add_control('show_duration', [
+            'label'        => __('Afficher le temps', 'blacktenderscore'),
+            'type'         => \Elementor\Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => '',
+            'separator'    => 'before',
+        ]);
+
+        $this->add_control('duration_subfield', [
+            'label'       => __('Sous-champ durée', 'blacktenderscore'),
+            'type'        => \Elementor\Controls_Manager::TEXT,
+            'default'     => 'exc_timeinbot',
+            'description' => __('Nom du sous-champ texte dans le repeater (ex: exc_timeinbot → "1h30").', 'blacktenderscore'),
+            'condition'   => ['show_duration' => 'yes'],
+        ]);
+
+        $this->add_control('duration_label_before', [
+            'label'     => __('Texte avant la durée', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::TEXT,
+            'default'   => __('pour une durée de', 'blacktenderscore'),
+            'condition' => ['show_duration' => 'yes'],
+        ]);
+
+        $this->add_control('duration_label_after', [
+            'label'     => __('Texte après la durée', 'blacktenderscore'),
+            'type'      => \Elementor\Controls_Manager::TEXT,
+            'default'   => '',
+            'condition' => ['show_duration' => 'yes'],
+        ]);
     }
 
     public function render(): void {
@@ -165,10 +196,14 @@ class Tag_Exp_Duration extends Abstract_BT_Tag {
 
         $show_price        = ($this->get_settings('show_price') ?? 'yes') === 'yes';
         $show_pricing_note = ($this->get_settings('show_pricing_note') ?? '') === 'yes';
+        $show_duration     = ($this->get_settings('show_duration') ?? '') === 'yes';
         $sep               = (string) ($this->get_settings('separator') ?: ' ou ');
         $currency          = (string) ($this->get_settings('currency') ?: '€');
         $price_tpl         = (string) ($this->get_settings('price_template') ?: ' à {price}');
         $note_sep          = (string) ($this->get_settings('pricing_note_separator') ?: ' · ');
+        $dur_subfield      = $show_duration ? sanitize_key((string) ($this->get_settings('duration_subfield') ?: 'exc_timeinbot')) : '';
+        $dur_before        = $show_duration ? trim((string) ($this->get_settings('duration_label_before') ?? 'pour une durée de')) : '';
+        $dur_after         = $show_duration ? trim((string) ($this->get_settings('duration_label_after')  ?? '')) : '';
 
         $row_lines = []; // une entrée par row du repeater
         $notes     = [];
@@ -189,7 +224,17 @@ class Tag_Exp_Duration extends Abstract_BT_Tag {
             }
 
             if (!empty($row_parts)) {
-                $row_lines[] = implode($sep, array_unique($row_parts));
+                $line = implode($sep, array_unique($row_parts));
+
+                // Durée en navigation — une seule valeur par row (pas un sub-repeater)
+                if ($show_duration && $dur_subfield !== '') {
+                    $dur_val = trim((string) ($row[$dur_subfield] ?? ''));
+                    if ($dur_val !== '') {
+                        $line .= ' ' . ($dur_before !== '' ? $dur_before . ' ' : '') . $dur_val . ($dur_after !== '' ? ' ' . $dur_after : '');
+                    }
+                }
+
+                $row_lines[] = $line;
             }
 
             /* Note tarifaire : une par row, dédupliquée */

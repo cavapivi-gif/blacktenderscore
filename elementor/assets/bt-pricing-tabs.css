@@ -265,3 +265,32 @@
     margin: 0;
   }
 }
+
+/* ══════════════════════════════════════════════════════════
+   Pricing Body — Visibility toggle
+   ══════════════════════════════════════════════════════════ */
+
+.bt-pricing-body--hidden {
+  display: none;
+}
+
+/* Éditeur : montrer le body masqué avec un indicateur visuel */
+.elementor-editor-active .bt-pricing-body--hidden {
+  display: block;
+  opacity: .45;
+  outline: 2px dashed rgba(0, 0, 0, .15);
+  outline-offset: 4px;
+  position: relative;
+}
+
+.elementor-editor-active .bt-pricing-body--hidden::before {
+  content: 'Masqué — visible au clic du trigger';
+  display: block;
+  text-align: center;
+  font-size: .75em;
+  padding: 4px 12px;
+  color: #666;
+  background: rgba(255, 255, 255, .8);
+  border-radius: 4px;
+  margin-bottom: 8px;
+}

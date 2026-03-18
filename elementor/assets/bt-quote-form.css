@@ -130,6 +130,8 @@
   gap: 12px;
 }
 
+/* Grid / colonnes piloté par Elementor selectors_dictionary */
+
 .bt-quote-exc-card {
   display: flex;
   gap: 0;
@@ -179,9 +181,51 @@
   margin: 0;
 }
 
-.bt-quote-exc-card__pax {
-  font-size: .85em;
-  margin: 0;
+.bt-quote-exc-card__price {
+  margin: 2px 0 0;
+}
+
+.bt-quote-exc-card__price-amount {
+  font-weight: 500;
+  font-size: .82em;
+  opacity: .75;
+}
+
+.bt-quote-exc-card__price-suffix {
+  font-size: .8em;
+  opacity: .7;
+}
+
+.bt-quote-exc-card__discount {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: .7em;
+  font-weight: 700;
+  border-radius: 12px;
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.bt-quote-exc-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-top: 4px;
+  font-size: .8em;
+  opacity: .7;
+}
+
+.bt-quote-exc-card__pax,
+.bt-quote-exc-card__times,
+.bt-quote-exc-card__langs {
+  white-space: nowrap;
+}
+
+.bt-quote-exc-card__departure {
+  display: inline-block;
+  font-size: .75em;
+  margin-top: 2px;
+  opacity: .6;
 }
 
 .bt-quote-exc-card__tags {
@@ -199,6 +243,7 @@
   border-radius: 12px;
   background-color: var(--bt-bg-subtle, rgba(0,0,0,.06));
 }
+
 
 .bt-quote-exc-auto {
   padding: 12px 16px;
@@ -324,11 +369,6 @@
   flex-shrink: 0;
 }
 
-.bt-quote-boat-card__pax {
-  font-size: .8em;
-  margin: 0;
-}
-
 .bt-quote-boat-card__price {
   margin: 4px 0 0;
   display: flex;
@@ -345,32 +385,46 @@
   font-size: .8em;
 }
 
-.bt-quote-boat-card__meta {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 2px;
-}
-
-.bt-quote-boat-card__durations {
-  font-size: .75em;
-}
-
-.bt-quote-boat-card__fuels {
+/* Tags taxonomie (pills inline sous le prix) */
+.bt-quote-boat-card__tags {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
+  margin-top: 6px;
 }
 
-.bt-quote-boat-card__fuel-badge {
+.bt-quote-boat-card__tag {
   display: inline-block;
-  padding: 1px 6px;
   font-size: .7em;
   font-weight: 500;
-  border-radius: 4px;
-  background-color: #e6f4ea;
-  color: #2d7a3a;
+  padding: 2px 7px;
+  border-radius: 20px;
+  background-color: var(--bt-bg-subtle, rgba(0,0,0,.06));
+  color: inherit;
+}
+
+/* Ligne meta : pax · année */
+.bt-quote-boat-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+  font-size: .8em;
+}
+
+.bt-quote-boat-card__pax {
+  opacity: .7;
+}
+
+.bt-quote-boat-card__dot {
+  opacity: .4;
+  font-size: .9em;
+}
+
+.bt-quote-boat-card__year {
+  display: inline-block;
+  font-size: 1em; /* hérité du .meta */
+  opacity: .7;
 }
 
 .bt-quote-boat-card__more {
@@ -485,41 +539,7 @@
    Date Picker (Step 3)
    ══════════════════════════════════════════════════════════ */
 
-.bt-quote-datepicker__labels {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.bt-quote-datepicker__field {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.bt-quote-datepicker__label {
-  font-size: .8em;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: .04em;
-}
-
-.bt-quote-datepicker__input {
-  padding: 8px 12px;
-  border-width: 1.5px;
-  border-style: solid;
-  border-color: var(--_border);
-  border-radius: 8px;
-  font-size: .9em;
-  background-color: transparent;
-  transition: border-color .2s;
-}
-
-.bt-quote-datepicker__input:focus {
-  outline: none;
-  border-color: var(--_accent);
-}
+/* Labels/input texte supprimés — seul le calendrier est visible */
 
 .bt-dp {
   user-select: none;
@@ -878,9 +898,6 @@
     flex: none;
     max-width: 100%;
     aspect-ratio: 16/9;
-  }
-  .bt-quote-datepicker__labels {
-    flex-direction: column;
   }
   .bt-quote-fields__row {
     flex-direction: column;

@@ -147,6 +147,51 @@ class DepartureTimes extends AbstractBtWidget {
 
         $this->end_controls_section();
 
+        // ── Durée en navigation ───────────────────────────────────────────
+        $this->start_controls_section('section_duration', [
+            'label' => __('Durée en navigation', 'blacktenderscore'),
+            'tab'   => Controls_Manager::TAB_CONTENT,
+        ]);
+
+        $this->add_control('show_duration', [
+            'label'        => __('Afficher le temps', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => '',
+        ]);
+
+        $this->add_control('duration_field', [
+            'label'       => __('Champ ACF durée (repeater)', 'blacktenderscore'),
+            'type'        => Controls_Manager::TEXT,
+            'default'     => 'tarification_par_forfait',
+            'description' => __('Repeater ACF contenant le sous-champ durée (ex: tarification_par_forfait). Les lignes sont associées par index aux horaires.', 'blacktenderscore'),
+            'condition'   => ['show_duration' => 'yes'],
+        ]);
+
+        $this->add_control('duration_subfield', [
+            'label'       => __('Sous-champ durée', 'blacktenderscore'),
+            'type'        => Controls_Manager::TEXT,
+            'default'     => 'exc_timeinbot',
+            'description' => __('Nom du sous-champ texte contenant la durée (ex: 1h30).', 'blacktenderscore'),
+            'condition'   => ['show_duration' => 'yes'],
+        ]);
+
+        $this->add_control('duration_label_before', [
+            'label'     => __('Texte avant la durée', 'blacktenderscore'),
+            'type'      => Controls_Manager::TEXT,
+            'default'   => __('pour une durée de', 'blacktenderscore'),
+            'condition' => ['show_duration' => 'yes'],
+        ]);
+
+        $this->add_control('duration_label_after', [
+            'label'     => __('Texte après la durée', 'blacktenderscore'),
+            'type'      => Controls_Manager::TEXT,
+            'default'   => '',
+            'condition' => ['show_duration' => 'yes'],
+        ]);
+
+        $this->end_controls_section();
+
         // ── Point de départ ───────────────────────────────────────────────
         $this->start_controls_section('section_departure_point', [
             'label' => __('Point de départ', 'blacktenderscore'),
@@ -240,6 +285,16 @@ class DepartureTimes extends AbstractBtWidget {
             '{{WRAPPER}} .bt-deptimes__time'
         );
 
+        // Durée : typographie
+        $this->register_typography_section(
+            'duration',
+            'Style — Durée',
+            '{{WRAPPER}} .bt-deptimes__duration',
+            [],
+            [],
+            ['show_duration' => 'yes']
+        );
+
         // Point de départ : typographie + lien Maps
         $this->register_typography_section(
             'point',
@@ -282,15 +337,26 @@ class DepartureTimes extends AbstractBtWidget {
         $field_name    = sanitize_text_field($s['acf_field'] ?: 'exp_departure_times');
         $sf_time       = sanitize_key($s['subfield_time']   ?: 'time');
         $sf_season     = sanitize_key($s['subfield_season'] ?: 'season');
-        $rows          = get_field($field_name, $post_id);
+        $rows_raw      = get_field($field_name, $post_id) ?: [];
 
-        // Filtrer par saison si activé
-        if ($s['filter_season'] === 'yes' && !empty($rows)) {
+        // Filtrer par saison en préservant les index originaux (pour correspondance avec les durées)
+        if ($s['filter_season'] === 'yes') {
             $active = $s['active_season'] ?: 'summer';
-            $rows   = array_filter($rows, function ($r) use ($active, $sf_season) {
+            $rows   = array_filter($rows_raw, function ($r) use ($active, $sf_season) {
                 $season = $r[$sf_season] ?? 'all';
                 return $season === $active || $season === 'all';
             });
+        } else {
+            $rows = $rows_raw;
+        }
+
+        // Pré-charger les durées (repeater indexé pareil que les horaires)
+        $duration_rows = [];
+        $sf_duration   = '';
+        if ($s['show_duration'] === 'yes') {
+            $dur_field     = sanitize_text_field($s['duration_field'] ?: 'tarification_par_forfait');
+            $sf_duration   = sanitize_key($s['duration_subfield'] ?: 'exc_timeinbot');
+            $duration_rows = get_field($dur_field, $post_id) ?: [];
         }
 
         // Récupérer le point de départ
@@ -360,11 +426,17 @@ class DepartureTimes extends AbstractBtWidget {
 
             echo "<ul class=\"{$wrap_cls}\">";
 
-            foreach ($rows as $row) {
+            foreach ($rows as $orig_idx => $row) {
                 $time   = $row[$sf_time]   ?? '';
                 $season = $row[$sf_season] ?? 'all';
 
                 if (!$time) continue;
+
+                // Durée correspondante par index (non-repeater dans la row, une seule valeur)
+                $duration_val = '';
+                if ($s['show_duration'] === 'yes' && isset($duration_rows[$orig_idx][$sf_duration])) {
+                    $duration_val = trim($duration_rows[$orig_idx][$sf_duration]);
+                }
 
                 echo '<li class="bt-deptimes__badge">';
                 echo '<span class="bt-deptimes__time">' . esc_html($time) . '</span>';
@@ -372,6 +444,16 @@ class DepartureTimes extends AbstractBtWidget {
                 if ($s['show_season_badge'] === 'yes' && isset($season_labels[$season])) {
                     echo '<span class="bt-deptimes__season-badge bt-deptimes__season--' . esc_attr($season) . '">';
                     echo esc_html($season_labels[$season]);
+                    echo '</span>';
+                }
+
+                if ($duration_val !== '') {
+                    $lbl_before = $s['duration_label_before'] ?? '';
+                    $lbl_after  = $s['duration_label_after']  ?? '';
+                    echo '<span class="bt-deptimes__duration">';
+                    if ($lbl_before !== '') echo '<span class="bt-deptimes__duration-before">' . esc_html($lbl_before) . ' </span>';
+                    echo '<span class="bt-deptimes__duration-value">' . esc_html($duration_val) . '</span>';
+                    if ($lbl_after  !== '') echo '<span class="bt-deptimes__duration-after"> ' . esc_html($lbl_after) . '</span>';
                     echo '</span>';
                 }
 

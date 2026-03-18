@@ -26,7 +26,7 @@ class ExcursionPricing extends AbstractBtWidget {
     protected static function get_bt_config(): array {
         return [
             'id'       => 'bt-excursion-pricing',
-            'title'    => 'BT — Tarifs Excursion',
+            'title'    => 'BT — Tarifs Excursion (Legacy)',
             'icon'     => 'eicon-price-list',
             'keywords' => ['tarif', 'prix', 'excursion', 'forfait', 'regiondo', 'bt'],
             'css'      => ['bt-boat-pricing', 'bt-pricing-tabs', 'bt-quote-form'],

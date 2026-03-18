@@ -120,6 +120,29 @@ class IncludedExcluded extends AbstractBtWidget {
             'default'      => 'yes',
         ]);
 
+        $this->add_control('show_taxonomy_icons', [
+            'label'        => __('Inclure l\'icône de la taxonomie', 'blacktenderscore'),
+            'description'  => __('Affiche l\'icône du terme (taxomonies_icons) à la place de ✓/✗ si disponible.', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => '',
+            'condition'    => ['show_icons' => 'yes'],
+        ]);
+
+        $this->add_control('fallback_icon_included', [
+            'label'     => __('Icône de remplacement (inclus)', 'blacktenderscore'),
+            'type'      => Controls_Manager::ICONS,
+            'default'   => ['value' => '', 'library' => ''],
+            'condition' => ['show_icons' => 'yes', 'show_taxonomy_icons' => 'yes'],
+        ]);
+
+        $this->add_control('fallback_icon_excluded', [
+            'label'     => __('Icône de remplacement (exclus)', 'blacktenderscore'),
+            'type'      => Controls_Manager::ICONS,
+            'default'   => ['value' => '', 'library' => ''],
+            'condition' => ['show_icons' => 'yes', 'show_taxonomy_icons' => 'yes'],
+        ]);
+
         $this->end_controls_section();
 
         // ── Style ─────────────────────────────────────────────────────────
@@ -194,14 +217,22 @@ class IncludedExcluded extends AbstractBtWidget {
         $this->add_control('included_icon_color', [
             'label'     => __('Couleur icône inclus', 'blacktenderscore'),
             'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-inclexcl__col--included .bt-inclexcl__icon' => 'color: {{VALUE}}'],
+            'selectors' => [
+                '{{WRAPPER}} .bt-inclexcl__col--included .bt-inclexcl__icon'     => 'color: {{VALUE}}',
+                '{{WRAPPER}} .bt-inclexcl__col--included .bt-inclexcl__icon i'   => 'color: {{VALUE}}',
+                '{{WRAPPER}} .bt-inclexcl__col--included .bt-inclexcl__icon svg' => 'fill: {{VALUE}}; color: {{VALUE}}',
+            ],
             'condition' => ['show_icons' => 'yes'],
         ]);
 
         $this->add_control('excluded_icon_color', [
             'label'     => __('Couleur icône exclus', 'blacktenderscore'),
             'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-inclexcl__col--excluded .bt-inclexcl__icon' => 'color: {{VALUE}}'],
+            'selectors' => [
+                '{{WRAPPER}} .bt-inclexcl__col--excluded .bt-inclexcl__icon'     => 'color: {{VALUE}}',
+                '{{WRAPPER}} .bt-inclexcl__col--excluded .bt-inclexcl__icon i'   => 'color: {{VALUE}}',
+                '{{WRAPPER}} .bt-inclexcl__col--excluded .bt-inclexcl__icon svg' => 'fill: {{VALUE}}; color: {{VALUE}}',
+            ],
             'condition' => ['show_icons' => 'yes'],
         ]);
 
@@ -210,7 +241,10 @@ class IncludedExcluded extends AbstractBtWidget {
             'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px', 'em'],
             'default'    => ['size' => 14, 'unit' => 'px'],
-            'selectors'  => ['{{WRAPPER}} .bt-inclexcl__icon' => 'font-size: {{SIZE}}{{UNIT}}'],
+            'selectors'  => [
+                '{{WRAPPER}} .bt-inclexcl__icon'     => 'font-size: {{SIZE}}{{UNIT}}; width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}}',
+                '{{WRAPPER}} .bt-inclexcl__icon img' => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}}; object-fit: contain',
+            ],
             'condition'  => ['show_icons' => 'yes'],
         ]);
 
@@ -245,6 +279,10 @@ class IncludedExcluded extends AbstractBtWidget {
 
         echo '<div class="bt-inclexcl__grid">';
 
+        $use_tax_icons    = ($s['show_icons'] === 'yes' && !empty($s['show_taxonomy_icons']) && $s['show_taxonomy_icons'] === 'yes');
+        $fallback_inc     = $s['fallback_icon_included'] ?? [];
+        $fallback_exc     = $s['fallback_icon_excluded'] ?? [];
+
         // Colonne Inclus
         if ($s['show_included'] === 'yes') {
             $included_field = sanitize_text_field($s['included_field'] ?: 'exp_included');
@@ -258,12 +296,12 @@ class IncludedExcluded extends AbstractBtWidget {
                 echo '<ul class="bt-inclexcl__list">';
 
                 foreach ((array) $included_terms as $term) {
-                    [$term_name, $term_desc] = $this->resolve_term($term);
+                    [$term_name, $term_desc, $term_obj] = $this->resolve_term($term);
                     if (!$term_name) continue;
 
                     echo '<li class="bt-inclexcl__item">';
                     if ($s['show_icons'] === 'yes') {
-                        echo '<span class="bt-inclexcl__icon" aria-hidden="true">' . esc_html($included_icon) . '</span>';
+                        $this->render_item_icon($term_obj, $use_tax_icons, $included_icon, $fallback_inc);
                     }
                     echo '<span class="bt-inclexcl__text">' . esc_html($term_name);
                     if ($s['show_desc'] === 'yes' && $term_desc) {
@@ -295,12 +333,12 @@ class IncludedExcluded extends AbstractBtWidget {
                 echo '<ul class="bt-inclexcl__list">';
 
                 foreach ((array) $excluded_terms as $term) {
-                    [$term_name, $term_desc] = $this->resolve_term($term);
+                    [$term_name, $term_desc, $term_obj] = $this->resolve_term($term);
                     if (!$term_name) continue;
 
                     echo '<li class="bt-inclexcl__item">';
                     if ($s['show_icons'] === 'yes') {
-                        echo '<span class="bt-inclexcl__icon" aria-hidden="true">' . esc_html($excluded_icon) . '</span>';
+                        $this->render_item_icon($term_obj, $use_tax_icons, $excluded_icon, $fallback_exc);
                     }
                     echo '<span class="bt-inclexcl__text">' . esc_html($term_name);
                     if ($s['show_desc'] === 'yes' && $term_desc) {
@@ -329,25 +367,100 @@ class IncludedExcluded extends AbstractBtWidget {
     }
 
     /**
-     * Résout un terme ACF en [name, description].
+     * Affiche l'icône d'un item : icône taxonomie (SVG inline / img) > FA class > fallback Elementor > caractère ✓/✗.
+     */
+    private function render_item_icon(?\WP_Term $term_obj, bool $use_tax_icons, string $char_icon, array $fallback_icon): void {
+        $icon_url = '';
+        $icon_fa  = '';
+
+        // Tenter de récupérer l'icône de la taxonomie
+        if ($use_tax_icons && $term_obj && function_exists('get_field')) {
+            $icon_data = get_field('taxomonies_icons', $term_obj);
+            if (is_array($icon_data))      $icon_url = $icon_data['url'] ?? '';
+            elseif (is_string($icon_data)) $icon_url = $icon_data;
+
+            if (!$icon_url) {
+                $fa_raw = get_field('term_icon_class', $term_obj);
+                if ($fa_raw && is_string($fa_raw)) $icon_fa = trim($fa_raw);
+            }
+        }
+
+        echo '<span class="bt-inclexcl__icon" aria-hidden="true">';
+
+        if ($icon_url) {
+            // SVG → injection inline pour pouvoir piloter fill/color via CSS
+            $ext = strtolower((string) pathinfo(wp_parse_url($icon_url, PHP_URL_PATH) ?: '', PATHINFO_EXTENSION));
+            if ($ext === 'svg') {
+                $svg = $this->fetch_svg_content($icon_url);
+                echo $svg !== '' ? $this->kses_svg($svg) : '<img src="' . esc_url($icon_url) . '" alt="" loading="lazy" />';
+            } else {
+                echo '<img src="' . esc_url($icon_url) . '" alt="" loading="lazy" />';
+            }
+        } elseif ($icon_fa) {
+            echo '<i class="' . esc_attr($icon_fa) . '"></i>';
+        } elseif ($use_tax_icons && !empty($fallback_icon['value'])) {
+            \Elementor\Icons_Manager::render_icon($fallback_icon, ['aria-hidden' => 'true']);
+        } else {
+            echo esc_html($char_icon);
+        }
+
+        echo '</span>';
+    }
+
+    // ── SVG helpers ──────────────────────────────────────────────────────────
+
+    private function fetch_svg_content(string $url): string {
+        $parsed_path = wp_parse_url($url, PHP_URL_PATH) ?: '';
+        $path = ABSPATH . ltrim($parsed_path, '/');
+        if (is_readable($path)) {
+            $c = file_get_contents($path);
+            return is_string($c) ? $c : '';
+        }
+        $r = wp_safe_remote_get($url, ['timeout' => 5]);
+        if (is_wp_error($r) || wp_remote_retrieve_response_code($r) !== 200) {
+            return '';
+        }
+        $body = wp_remote_retrieve_body($r);
+        return is_string($body) ? $body : '';
+    }
+
+    private function kses_svg(string $html): string {
+        $allowed = [
+            'svg'    => ['xmlns' => true, 'viewbox' => true, 'width' => true, 'height' => true, 'fill' => true, 'class' => true, 'aria-hidden' => true],
+            'path'   => ['d' => true, 'fill' => true, 'stroke' => true, 'stroke-width' => true, 'stroke-linecap' => true, 'stroke-linejoin' => true, 'class' => true],
+            'g'      => ['fill' => true, 'stroke' => true, 'class' => true, 'transform' => true],
+            'circle' => ['cx' => true, 'cy' => true, 'r' => true, 'fill' => true, 'stroke' => true, 'class' => true],
+            'rect'   => ['x' => true, 'y' => true, 'width' => true, 'height' => true, 'rx' => true, 'ry' => true, 'fill' => true, 'stroke' => true, 'class' => true],
+            'line'   => ['x1' => true, 'y1' => true, 'x2' => true, 'y2' => true, 'stroke' => true, 'class' => true],
+            'polyline' => ['points' => true, 'fill' => true, 'stroke' => true, 'class' => true],
+            'polygon'  => ['points' => true, 'fill' => true, 'stroke' => true, 'class' => true],
+            'ellipse'  => ['cx' => true, 'cy' => true, 'rx' => true, 'ry' => true, 'fill' => true, 'stroke' => true, 'class' => true],
+            'defs'   => [],
+            'use'    => ['href' => true, 'xlink:href' => true, 'x' => true, 'y' => true, 'width' => true, 'height' => true],
+        ];
+        return wp_kses($html, $allowed);
+    }
+
+    /**
+     * Résout un terme ACF en [name, description, WP_Term|null].
      * Gère : WP_Term, term ID (int/numeric string), array, plain string.
      *
      * @param mixed $term
-     * @return array{0: string, 1: string} [name, description]
+     * @return array{0: string, 1: string, 2: \WP_Term|null} [name, description, term_object]
      */
     private function resolve_term(mixed $term): array {
         // WP_Term object (return format "Term Object")
         if ($term instanceof \WP_Term) {
-            return [$term->name, $term->description];
+            return [$term->name, $term->description, $term];
         }
 
         // Term ID (return format "Term ID") — int or numeric string
         if (is_numeric($term)) {
             $t = get_term((int) $term);
             if ($t && !is_wp_error($t)) {
-                return [$t->name, $t->description];
+                return [$t->name, $t->description, $t];
             }
-            return ['', ''];
+            return ['', '', null];
         }
 
         // Array (repeater sub-row or term-like array)
@@ -356,20 +469,21 @@ class IncludedExcluded extends AbstractBtWidget {
             if (isset($term['term_id'])) {
                 $t = get_term((int) $term['term_id']);
                 if ($t && !is_wp_error($t)) {
-                    return [$t->name, $t->description];
+                    return [$t->name, $t->description, $t];
                 }
             }
             return [
                 $term['name'] ?? $term['label'] ?? '',
                 $term['description'] ?? '',
+                null,
             ];
         }
 
         // Plain string
         if (is_string($term) && $term !== '') {
-            return [$term, ''];
+            return [$term, '', null];
         }
 
-        return ['', ''];
+        return ['', '', null];
     }
 }

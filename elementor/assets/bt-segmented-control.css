@@ -1,0 +1,368 @@
+/* ═══════════════════════════════════════════
+   bt-segmented-control.css
+   Segmented control + forfait cards
+   LAYOUT ONLY — visual styling via Elementor
+   ═══════════════════════════════════════════ */
+
+/* ── Variables (overridables via Elementor) ── */
+:root {
+  --bt-seg-bg: #f3f3f3;
+  --bt-seg-active-bg: #ffffff;
+  --bt-seg-radius: 10px;
+  --bt-seg-padding: 4px;
+  --bt-seg-font-size: 14px;
+  --bt-seg-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --bt-seg-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  --bt-card-radius: 12px;
+  --bt-card-border: #e0e0e0;
+  --bt-card-border-active: #1a73e8;
+  --bt-card-bg: #ffffff;
+  --bt-card-shadow-active: 0 0 0 1px var(--bt-card-border-active);
+  --bt-card-badge-bg: #e8f0fe;
+  --bt-card-badge-color: #1a56c4;
+
+  --bt-label-color: #6b6b6b;
+  --bt-price-color: #1a1a1a;
+  --bt-meta-color: #888888;
+}
+
+/* ── Segmented Control ── */
+.bt-seg {
+  display: flex;
+  position: relative;
+  background: var(--bt-seg-bg);
+  border-radius: var(--bt-seg-radius);
+  padding: var(--bt-seg-padding);
+  gap: 0;
+  margin-bottom: 24px;
+}
+
+.bt-seg__btn {
+  flex: 1;
+  position: relative;
+  z-index: 1;
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 10px 16px;
+  font-size: var(--bt-seg-font-size);
+  font-weight: 500;
+  color: var(--bt-label-color);
+  cursor: pointer;
+  border-radius: calc(var(--bt-seg-radius) - var(--bt-seg-padding));
+  transition: color var(--bt-seg-transition);
+  text-align: center;
+  line-height: 1.4;
+  font-family: inherit;
+}
+
+.bt-seg__btn--active {
+  color: var(--bt-price-color);
+}
+
+/* Indicator = fond blanc qui slide */
+.bt-seg__indicator {
+  position: absolute;
+  top: var(--bt-seg-padding);
+  bottom: var(--bt-seg-padding);
+  left: var(--bt-seg-padding);
+  width: calc(50% - var(--bt-seg-padding));
+  background: var(--bt-seg-active-bg);
+  border-radius: calc(var(--bt-seg-radius) - var(--bt-seg-padding));
+  box-shadow: var(--bt-seg-shadow);
+  transition: transform var(--bt-seg-transition);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Position indicator selon l'onglet actif */
+.bt-seg[data-bt-seg-active="1"] .bt-seg__indicator {
+  transform: translateX(100%);
+}
+
+/* ── Panels ── */
+.bt-seg__panel {
+  display: none;
+}
+.bt-seg__panel--active {
+  display: block;
+}
+
+/* ── Label formule ── */
+.bt-forfaits__label {
+  font-size: 13px;
+  color: var(--bt-label-color);
+  margin: 0 0 12px;
+  font-weight: 400;
+}
+
+/* ── Cards grid ── */
+.bt-forfaits__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+/* ── Forfait Card ── */
+.bt-forfait-card {
+  position: relative;
+  appearance: none;
+  border: 1.5px solid var(--bt-card-border);
+  border-radius: var(--bt-card-radius);
+  background: var(--bt-card-bg);
+  padding: 16px;
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    border-color var(--bt-seg-transition),
+    box-shadow var(--bt-seg-transition);
+}
+
+.bt-forfait-card:hover {
+  border-color: color-mix(in srgb, var(--bt-card-border-active) 50%, transparent);
+}
+
+.bt-forfait-card--active {
+  border-color: var(--bt-card-border-active);
+  box-shadow: var(--bt-card-shadow-active);
+}
+
+/* Badge "Populaire" / "Promo" */
+.bt-forfait-card__badge {
+  position: absolute;
+  top: -9px;
+  left: 12px;
+  background: var(--bt-card-badge-bg);
+  color: var(--bt-card-badge-color);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 4px;
+  line-height: 1.4;
+}
+
+.bt-forfait-card__name {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--bt-label-color);
+  margin-bottom: 4px;
+}
+
+.bt-forfait-card__price {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--bt-price-color);
+  line-height: 1;
+}
+
+/* Bloc prix (prix + devise + /pers. sur la meme ligne) */
+.bt-forfait-card__pricing {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.bt-forfait-card__currency {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--bt-meta-color);
+}
+
+.bt-forfait-card__per {
+  font-size: 12px;
+  color: var(--bt-meta-color);
+  margin-left: 2px;
+}
+
+/* Meta — conteneur vertical, chaque item = une ligne avec icone */
+.bt-forfait-card__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--bt-meta-color);
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.bt-forfait-card__meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Contenu card — wrapper interne pour flex en mode inline */
+.bt-forfait-card__content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── Layout inline (1 colonne, horizontal) ── */
+.bt-forfaits__grid--inline {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bt-forfaits__grid--inline .bt-forfait-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+}
+
+.bt-forfaits__grid--inline .bt-forfait-card__content {
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+}
+
+.bt-forfaits__grid--inline .bt-forfait-card__meta--row {
+  flex-direction: row;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+  gap: 14px;
+}
+
+/* Separateur vertical entre prix et meta en mode inline */
+.bt-forfait-card__separator {
+  display: none;
+}
+
+.bt-forfaits__grid--inline .bt-forfait-card__separator {
+  display: block;
+  width: 1px;
+  height: 32px;
+  background: #f0f0f0;
+  flex-shrink: 0;
+}
+
+/* Radio dot de selection en mode inline */
+.bt-forfait-card__radio {
+  display: none;
+}
+
+.bt-forfaits__grid--inline .bt-forfait-card__radio {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid var(--bt-card-border);
+  flex-shrink: 0;
+  position: relative;
+}
+
+.bt-forfaits__grid--inline .bt-forfait-card--active .bt-forfait-card__radio {
+  border-color: var(--bt-card-border-active);
+}
+
+.bt-forfaits__grid--inline .bt-forfait-card--active .bt-forfait-card__radio::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: var(--bt-card-border-active);
+}
+
+/* Remise : prix barre */
+.bt-forfait-card__original {
+  font-size: 14px;
+  color: var(--bt-meta-color);
+  text-decoration: line-through;
+  margin-right: 4px;
+}
+
+.bt-forfait-card__discount {
+  display: inline-block;
+  background: #fef3cd;
+  color: #856404;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-top: 6px;
+}
+
+/* ── Card avec image (bateaux, excursions listing) ── */
+.bt-forfait-card--has-image {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.bt-forfait-card__image {
+  aspect-ratio: 16 / 9;
+  position: relative;
+  overflow: hidden;
+  background: var(--bt-card-bg);
+}
+
+.bt-forfait-card__image img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.bt-forfait-card--has-image .bt-forfait-card__body {
+  padding: 12px 14px;
+}
+
+.bt-forfait-card__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--bt-price-color);
+  margin: 0 0 2px;
+}
+
+.bt-forfait-card__subtitle {
+  font-size: 11px;
+  color: var(--bt-meta-color);
+  margin: 0 0 8px;
+}
+
+/* Badge sur image = repositionner */
+.bt-forfait-card--has-image .bt-forfait-card__badge {
+  top: 8px;
+  left: 8px;
+}
+
+/* SVG icon dans les meta-items */
+.bt-forfait-card__icon {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+
+/* 1 col horizontal avec image */
+.bt-forfaits__grid[data-bt-cols="1"] .bt-forfait-card--has-image {
+  flex-direction: row;
+}
+
+.bt-forfaits__grid[data-bt-cols="1"] .bt-forfait-card__image {
+  width: 110px;
+  aspect-ratio: auto;
+  flex-shrink: 0;
+}
+
+/* ── Contenu forfait (sous les cards) ── */
+.bt-forfait-content {
+  border-top: 1px solid #eee;
+  padding-top: 20px;
+}

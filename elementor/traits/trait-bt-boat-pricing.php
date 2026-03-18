@@ -25,7 +25,7 @@ trait BtBoatPricing {
     protected function render_pricing_content(array $s, int $post_id): void {
         $currency   = esc_html($s['currency'] ?: '€');
         $price_note = (string) get_field('boat_price_note',      $post_id);
-        $fuel_incl  = (bool)   get_field('boat_fuel_included',   $post_id);
+        $boat_year  = (int)    get_field('boat_year',             $post_id);
         $deposit    = (float) (get_field('boat_deposit',          $post_id) ?? 0);
         $price_half = (float) (get_field('boat_price_half',       $post_id) ?? 0);
         $half_time  =          get_field('boat_half_day_time',    $post_id);
@@ -72,11 +72,11 @@ trait BtBoatPricing {
 
         if (!empty($cards)) {
             if ($layout === 'tabs') {
-                $this->render_boat_tabs($cards, $s, $currency, $price_note, $deposit, $fuel_incl, $pax_max);
+                $this->render_boat_tabs($cards, $s, $currency, $price_note, $deposit, $boat_year, $pax_max);
             } elseif ($layout === 'table') {
-                $this->render_boat_table($cards, $s, $currency, $price_note, $deposit, $fuel_incl, $pax_max);
+                $this->render_boat_table($cards, $s, $currency, $price_note, $deposit, $boat_year, $pax_max);
             } else {
-                $this->render_boat_cards($cards, $s, $currency, $price_note, $deposit, $fuel_incl, $pax_max);
+                $this->render_boat_cards($cards, $s, $currency, $price_note, $deposit, $boat_year, $pax_max);
             }
         }
 
@@ -89,21 +89,103 @@ trait BtBoatPricing {
 
     // ── Layout : Cartes ──────────────────────────────────────────────────────
 
-    protected function render_boat_cards(array $cards, array $s, string $currency, string $note, float $deposit, bool $fuel_incl, int $pax_max): void {
-        echo '<div class="bt-bprice__cards">';
-        foreach ($cards as $card) {
-            echo '<div class="bt-bprice__card">';
-            echo '<span class="bt-bprice__card-label">' . esc_html($card['label']) . '</span>';
-            echo $this->boat_card_body_html($card, $s, $currency, $note, $deposit, $pax_max);
+    /** Icones SVG pour les meta-items. */
+    protected const SVG_USERS = '<svg class="bt-forfait-card__icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
+    protected const SVG_CLOCK = '<svg class="bt-forfait-card__icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>';
+
+    /**
+     * Layout cartes bateau — image cards avec featured image.
+     * Chaque card = un forfait (demi-journee, journee) avec infos du bateau.
+     */
+    protected function render_boat_cards(array $cards, array $s, string $currency, string $note, float $deposit, int $boat_year, int $pax_max): void {
+        $post_id = get_the_ID() ?: 0;
+        $thumb   = get_the_post_thumbnail_url($post_id, 'medium_large');
+        $title   = get_the_title($post_id);
+
+        // Subtitle : modele (taxo boat-model) + annee
+        $model_terms = get_the_terms($post_id, 'boat-model');
+        $model_name  = (!empty($model_terms) && !is_wp_error($model_terms))
+            ? $model_terms[0]->name : '';
+        $subtitle = trim($model_name . ($boat_year ? ' · ' . $boat_year : ''));
+
+        // Pax max (toujours recuperer pour l'affichage meta)
+        $pax_display = (int) get_field('boat_pax_max', $post_id);
+
+        echo '<div class="bt-forfaits__grid">';
+        foreach ($cards as $i => $card) {
+            $has_image = (bool) $thumb;
+            $img_cls   = $has_image ? ' bt-forfait-card--has-image' : '';
+            $active    = $i === 0 ? ' bt-forfait-card--active' : '';
+            $pressed   = $i === 0 ? 'true' : 'false';
+
+            echo '<button class="bt-forfait-card' . $img_cls . $active . '"'
+               . ' data-bt-forfait-index="' . $i . '"'
+               . ' aria-pressed="' . $pressed . '">';
+
+            // Image
+            if ($has_image) {
+                echo '<div class="bt-forfait-card__image">';
+                echo '<img src="' . esc_url($thumb) . '" alt="' . esc_attr($title) . '" loading="lazy">';
+                echo '</div>';
+            }
+
+            echo '<div class="bt-forfait-card__body">';
+
+            // Titre + sous-titre
+            echo '<p class="bt-forfait-card__title">' . esc_html($card['label']) . '</p>';
+            if ($subtitle) {
+                echo '<p class="bt-forfait-card__subtitle">' . esc_html($subtitle) . '</p>';
+            }
+
+            // Prix
+            echo '<div class="bt-forfait-card__pricing">';
+            if ($pax_display > 0) {
+                // Prix par personne
+                $pp_price = (int) ceil($card['price'] / $pax_display);
+                echo '<span class="bt-forfait-card__price">' . esc_html(number_format($pp_price, 0, ',', ' ')) . '</span>';
+            } else {
+                echo '<span class="bt-forfait-card__price">' . esc_html(number_format($card['price'], 0, ',', ' ')) . '</span>';
+            }
+            echo '<span class="bt-forfait-card__currency">' . $currency . '</span>';
+            if ($pax_display > 0) {
+                $pp_lbl = esc_html($s['per_person_label'] ?: __('/ pers.', 'blacktenderscore'));
+                echo '<span class="bt-forfait-card__per">' . $pp_lbl . '</span>';
+            }
             echo '</div>';
+
+            // Meta : pax + duree
+            echo '<div class="bt-forfait-card__meta">';
+            if ($pax_display > 0) {
+                echo '<span class="bt-forfait-card__meta-item">'
+                   . self::SVG_USERS
+                   . esc_html(sprintf(__('%d pers.', 'blacktenderscore'), $pax_display))
+                   . '</span>';
+            }
+            if ($card['duration']) {
+                echo '<span class="bt-forfait-card__meta-item">'
+                   . self::SVG_CLOCK
+                   . esc_html($card['duration'])
+                   . '</span>';
+            }
+            echo '</div>';
+
+            echo '</div>'; // .bt-forfait-card__body
+
+            // Note tarifaire
+            if (($s['show_price_note'] ?? '') === 'yes' && $note && $i === 0) {
+                echo '<span class="bt-forfait-card__meta" style="padding:0 14px 12px">' . esc_html($note) . '</span>';
+            }
+
+            echo '</button>';
         }
-        echo $this->boat_fuel_badge_html($fuel_incl, $s);
-        echo '</div>';
+        echo '</div>'; // .bt-forfaits__grid
+
+        echo $this->boat_deposit_html($deposit, $s, $currency);
     }
 
     // ── Layout : Onglets ─────────────────────────────────────────────────────
 
-    protected function render_boat_tabs(array $cards, array $s, string $currency, string $note, float $deposit, bool $fuel_incl, int $pax_max): void {
+    protected function render_boat_tabs(array $cards, array $s, string $currency, string $note, float $deposit, int $boat_year, int $pax_max): void {
         $uid = 'bt-bprice-' . $this->get_id();
 
         echo '<div class="bt-bprice__tabs" data-bt-tabs data-bt-panel-class="bt-bprice__panel">';
@@ -134,13 +216,13 @@ trait BtBoatPricing {
             echo '</div></div>';
         }
 
-        echo $this->boat_fuel_badge_html($fuel_incl, $s);
+        echo $this->boat_year_badge_html($boat_year, $s);
         echo '</div>'; // .bt-bprice__tabs
     }
 
     // ── Layout : Tableau ─────────────────────────────────────────────────────
 
-    protected function render_boat_table(array $cards, array $s, string $currency, string $note, float $deposit, bool $fuel_incl, int $pax_max): void {
+    protected function render_boat_table(array $cards, array $s, string $currency, string $note, float $deposit, int $boat_year, int $pax_max): void {
         $col_forfait  = $s['table_col_forfait']  ?: __('Forfait',  'blacktenderscore');
         $col_duration = $s['table_col_duration'] ?: __('Durée',    'blacktenderscore');
         $col_price    = $s['table_col_price']    ?: __('Prix',     'blacktenderscore');
@@ -165,7 +247,7 @@ trait BtBoatPricing {
 
         echo '</tbody></table></div>';
         echo $this->boat_deposit_html($deposit, $s, $currency);
-        echo $this->boat_fuel_badge_html($fuel_incl, $s);
+        echo $this->boat_year_badge_html($boat_year, $s);
     }
 
     // ── Layout : Zones de navigation ─────────────────────────────────────────
@@ -218,13 +300,9 @@ trait BtBoatPricing {
         return ' <span class="bt-bprice__per-person">(' . $this->boat_format_price($price / $pax_max, $currency) . ' ' . $lbl . ')</span>';
     }
 
-    protected function boat_fuel_badge_html(bool $fuel_incl, array $s): string {
-        if (($s['show_fuel_badge'] ?? '') !== 'yes') return '';
-        $cls = $fuel_incl ? 'bt-bprice__fuel--yes' : 'bt-bprice__fuel--no';
-        $lbl = $fuel_incl
-            ? esc_html($s['label_fuel_yes'] ?: __('Carburant inclus', 'blacktenderscore'))
-            : esc_html($s['label_fuel_no']  ?: __('Carburant en sus', 'blacktenderscore'));
-        return '<span class="bt-bprice__fuel ' . $cls . '">' . $lbl . '</span>';
+    protected function boat_year_badge_html(int $boat_year, array $s): string {
+        if (($s['show_boat_year'] ?? '') !== 'yes' || !$boat_year) return '';
+        return '<span class="bt-bprice__year">' . esc_html($boat_year) . '</span>';
     }
 
     protected function boat_card_body_html(array $card, array $s, string $currency, string $note, float $deposit, int $pax_max): string {

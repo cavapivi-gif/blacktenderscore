@@ -18,6 +18,7 @@ use BlackTenders\Elementor\Widgets\RepeaterSection;
 use BlackTenders\Elementor\Widgets\Highlights;
 use BlackTenders\Elementor\Widgets\Captain;
 use BlackTenders\Elementor\Widgets\IncludedExcluded;
+use BlackTenders\Elementor\Widgets\TaxonomyIncludes;
 use BlackTenders\Elementor\Widgets\Share;
 use BlackTenders\Elementor\Widgets\GoogleMap;
 use BlackTenders\Elementor\Widgets\TitleIconDesc;
@@ -229,6 +230,7 @@ class ElementorManager {
         $manager->register(new Highlights());
         $manager->register(new Captain());
         $manager->register(new IncludedExcluded());
+        $manager->register(new TaxonomyIncludes());
         $manager->register(new Share());
         $manager->register(new TitleIconDesc());
         $manager->register(new TaxonomyDisplay());
@@ -326,6 +328,7 @@ class ElementorManager {
             'bt-title-icon-desc',
             'bt-taxonomy-display',
             'bt-quote-form',
+            'bt-segmented-control',
         ];
         foreach ($widget_styles as $handle) {
             wp_register_style(
@@ -348,6 +351,15 @@ class ElementorManager {
         wp_register_script(
             'bt-quote-form',
             BT_URL . 'elementor/assets/bt-boat-pricing-quote.js',
+            ['bt-elementor'],
+            BT_VERSION,
+            true
+        );
+
+        // Segmented control JS (forfait cards — bt-pricing-body)
+        wp_register_script(
+            'bt-segmented-control',
+            BT_URL . 'elementor/assets/bt-segmented-control.js',
             ['bt-elementor'],
             BT_VERSION,
             true

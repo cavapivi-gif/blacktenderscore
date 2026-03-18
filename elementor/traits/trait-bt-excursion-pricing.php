@@ -64,122 +64,203 @@ trait BtExcursionPricing {
     }
 
     /**
-     * Layout onglets pour les forfaits excursion.
+     * Layout cartes forfait pour les forfaits excursion.
+     * Remplace l'ancien layout tabs par des forfait cards cote a cote.
      */
     protected function render_exc_tabs_layout(array $s, array $rows, string $uid, string $currency, array $tab_uuids, string $active_uuid, int $post_id, bool $lazy): void {
-        $uuids_attr = '';
-        if (!empty($tab_uuids)) {
-            $uuids_attr = " data-tab-uuids='" . esc_attr(wp_json_encode($tab_uuids)) . "'";
-        }
+        $layout    = ($s['exc_layout'] ?? 'grid') === 'inline' ? 'inline' : 'grid';
+        $is_inline = $layout === 'inline';
 
-        echo "<div class=\"bt-pricing bt-pricing--tabs\" id=\"{$uid}\" data-bt-tabs data-bt-panel-class=\"bt-pricing__panel\"{$uuids_attr}>";
+        echo "<div class=\"bt-pricing bt-pricing--cards\" id=\"{$uid}\">";
 
         $this->render_exc_heading_block($s);
 
-        // Tab bar
-        $discount_key = ($s['exc_discount_subfield'] ?? '') !== '' ? $s['exc_discount_subfield'] : 'is_a_discount';
-        echo '<div class="bt-pricing__tablist" role="tablist">';
+        $discount_key  = ($s['exc_discount_subfield'] ?? '') !== '' ? $s['exc_discount_subfield'] : 'is_a_discount';
+        $show_badges   = ($s['exc_show_badge'] ?? 'yes') === 'yes';
+        $show_discount = ($s['exc_show_discount'] ?? 'yes') === 'yes';
+
+        // Switchers meta (durée par forfait, lieu post-level)
+        $show_duration = ($s['exc_show_duration'] ?? 'yes') === 'yes';
+        $show_landing  = ($s['exc_show_landing'] ?? 'yes') === 'yes';
+        $post_location = $show_landing ? trim((string) get_field('exp_landing_point', $post_id)) : '';
+
+        // Label au-dessus des cards
+        $cards_title = $s['exc_buttons_title'] ?? __('Choisissez votre formule', 'blacktenderscore');
+        if ($cards_title) {
+            echo '<p class="bt-forfaits__label">' . esc_html($cards_title) . '</p>';
+        }
+
+        // Grid ou liste
+        $grid_cls = $is_inline ? 'bt-forfaits__grid bt-forfaits__grid--inline' : 'bt-forfaits__grid';
+        echo '<div class="' . $grid_cls . '">';
+
         foreach ($rows as $i => $row) {
-            $label   = $this->get_exc_tab_label($row, $i, $s, $currency);
-            $discount = $this->get_exc_discount_value($row, $discount_key);
-            $tab_id  = "{$uid}-tab-{$i}";
-            $pan_id  = "{$uid}-panel-{$i}";
-            $active  = $i === 0 ? ' bt-pricing__tab--active' : '';
-            $sel     = $i === 0 ? 'true' : 'false';
-            $tabi    = $i === 0 ? '0' : '-1';
-            echo "<button class=\"bt-pricing__tab{$active}\" id=\"{$tab_id}\" role=\"tab\" aria-selected=\"{$sel}\" aria-controls=\"{$pan_id}\" tabindex=\"{$tabi}\">";
-            echo esc_html($label);
-            if ($discount > 0) {
-                echo ' <span class="bt-pricing__discount">-' . (int) $discount . '%</span>';
+            $price     = $row['exp_price'] ?? '';
+            $discount  = $this->get_exc_discount_value($row, $discount_key);
+            $label     = $this->get_exc_card_name($row, $i);
+            $uuid      = $tab_uuids[$i] ?? '';
+            $active    = $i === 0 ? ' bt-forfait-card--active' : '';
+            $pressed   = $i === 0 ? 'true' : 'false';
+
+            // Durée par forfait (sous-champ repeater), lieu post-level
+            $row_duration = $show_duration ? trim((string) ($row['exc_timeinbot'] ?? '')) : '';
+            $has_meta     = ($row_duration !== '' || $post_location !== '');
+
+            echo '<button class="bt-forfait-card' . $active . '"'
+               . ' data-bt-forfait-index="' . $i . '"'
+               . ' aria-pressed="' . $pressed . '"';
+            if ($uuid) {
+                echo ' data-bt-forfait-uuid="' . esc_attr($uuid) . '"';
             }
+            echo '>';
+
+            // Badge : promo > populaire (conditionné par switcher)
+            if ($show_badges) {
+                $is_popular   = !empty($row['is_popular']);
+                $has_discount = $discount > 0;
+                if ($is_popular || $has_discount) {
+                    $badge_text = $has_discount
+                        ? esc_html($s['exc_discount_badge_label'] ?? __('Promo', 'blacktenderscore'))
+                        : esc_html($s['exc_popular_badge_label'] ?? __('Populaire', 'blacktenderscore'));
+                    echo '<span class="bt-forfait-card__badge">' . $badge_text . '</span>';
+                }
+            }
+
+            // Contenu card — inline = flex row, grid = flex column
+            echo '<div class="bt-forfait-card__content">';
+
+            // Bloc prix
+            if ($price !== '' && ($s['exc_show_price'] ?? 'yes') === 'yes') {
+                $price_val    = (float) $price;
+                $discount_pct = (float) ($row[$discount_key] ?? 0);
+
+                echo '<div class="bt-forfait-card__pricing">';
+
+                // Prix barré (conditionné par switcher)
+                if ($show_discount && $discount_pct > 0) {
+                    $original_price = (int) round($price_val / (1 - $discount_pct / 100));
+                    echo '<span class="bt-forfait-card__original">' . esc_html($original_price) . ' ' . $currency . '</span>';
+                }
+
+                $formatted = number_format($price_val, 0, ',', ' ');
+                echo '<span class="bt-forfait-card__price">' . esc_html($formatted) . '</span>';
+                echo '<span class="bt-forfait-card__currency">' . $currency . '</span>';
+
+                if (($s['exc_show_per_label'] ?? 'yes') === 'yes') {
+                    $per_lbl = esc_html($s['exc_per_label'] ?: __('/ pers.', 'blacktenderscore'));
+                    echo '<span class="bt-forfait-card__per">' . $per_lbl . '</span>';
+                }
+                echo '</div>';
+
+                // Badge discount inline (conditionné par switcher)
+                if ($show_discount && $discount_pct > 0) {
+                    echo '<span class="bt-forfait-card__discount">-' . (int) $discount_pct . '%</span>';
+                }
+            }
+
+            // Séparateur vertical en mode inline (entre prix et meta)
+            if ($is_inline && $has_meta) {
+                echo '<span class="bt-forfait-card__separator" aria-hidden="true"></span>';
+            }
+
+            // Meta (durée par forfait + lieu post-level)
+            if ($has_meta) {
+                echo '<div class="bt-forfait-card__meta' . ($is_inline ? ' bt-forfait-card__meta--row' : '') . '">';
+                if ($row_duration !== '') {
+                    echo '<div class="bt-forfait-card__meta-item">'
+                       . '<svg class="bt-forfait-card__icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>'
+                       . esc_html($row_duration)
+                       . '</div>';
+                }
+                if ($post_location !== '') {
+                    echo '<div class="bt-forfait-card__meta-item">'
+                       . '<svg class="bt-forfait-card__icon" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>'
+                       . esc_html($post_location)
+                       . '</div>';
+                }
+                echo '</div>';
+            }
+
+            echo '</div>'; // .bt-forfait-card__content
+
+            // Radio dot en mode inline
+            if ($is_inline) {
+                echo '<span class="bt-forfait-card__radio" aria-hidden="true"></span>';
+            }
+
             echo '</button>';
         }
-        echo '</div>';
+        echo '</div>'; // .bt-forfaits__grid
 
-        // Panels
+        // Contenu dynamique par forfait (note, acompte, booking)
         foreach ($rows as $i => $row) {
-            $tab_id     = "{$uid}-tab-{$i}";
-            $pan_id     = "{$uid}-panel-{$i}";
-            $active_cls = $i === 0 ? ' bt-pricing__panel--active' : '';
-
-            echo "<div class=\"bt-pricing__panel{$active_cls}\" id=\"{$pan_id}\" role=\"tabpanel\" aria-labelledby=\"{$tab_id}\">";
+            $hidden = $i !== 0 ? ' hidden' : '';
+            echo '<div class="bt-forfait-content" data-bt-forfait-content="' . $i . '"' . $hidden . '>';
             $this->render_exc_price_block($s, $row, $currency);
+
+            // Booking Regiondo par forfait
+            if (($s['exc_show_booking'] ?? '') === 'yes') {
+                $row_uuid = $tab_uuids[$i] ?? $active_uuid;
+                if ($row_uuid) {
+                    if ($lazy) {
+                        $this->render_exc_booking_section_lazy($s, $row_uuid, $post_id);
+                    } else {
+                        echo $this->render_exc_booking_widget($row_uuid, $post_id, $i);
+                    }
+                }
+            }
+
             echo '</div>';
         }
 
-        // Booking Regiondo — shared, outside panels
-        if ($lazy) {
-            $this->render_exc_booking_section_lazy($s, $active_uuid, $post_id);
-        } else {
-            $this->render_exc_booking_section($s, $active_uuid, $post_id);
+        // Booking Regiondo global (quand pas per_tab, un seul widget partage)
+        if (($s['exc_show_booking'] ?? '') === 'yes' && empty($tab_uuids) && $active_uuid) {
+            if ($lazy) {
+                $this->render_exc_booking_section_lazy($s, $active_uuid, $post_id);
+            } else {
+                $this->render_exc_booking_section($s, $active_uuid, $post_id);
+            }
         }
 
         echo '</div>'; // .bt-pricing
     }
 
     /**
+     * Nom du forfait pour la card (sans le prix).
+     */
+    protected function get_exc_card_name(array $row, int $i): string {
+        $term_val = $row['exp_time'] ?? null;
+        $base = '';
+
+        if ($term_val) {
+            if ($term_val instanceof \WP_Term) {
+                $base = $term_val->name;
+            } elseif (is_numeric($term_val)) {
+                $t = get_term((int) $term_val);
+                if ($t && !is_wp_error($t)) $base = $t->name;
+            } elseif (is_array($term_val)) {
+                $first = reset($term_val);
+                if ($first instanceof \WP_Term) {
+                    $base = $first->name;
+                } elseif (is_numeric($first)) {
+                    $t = get_term((int) $first);
+                    if ($t && !is_wp_error($t)) $base = $t->name;
+                }
+            } elseif (is_string($term_val) && $term_val !== '') {
+                $base = $term_val;
+            }
+        }
+
+        return $base;
+    }
+
+    /**
      * Layout boutons pill pour les forfaits excursion.
+     * Redirige desormais vers le meme layout cards que le mode tabs.
      */
     protected function render_exc_buttons_layout(array $s, array $rows, string $uid, string $currency, array $tab_uuids, string $active_uuid, int $post_id, bool $lazy): void {
-        $uuids_json = !empty($tab_uuids) ? wp_json_encode($tab_uuids) : '';
-
-        echo "<div class=\"bt-pricing bt-pricing--buttons\" id=\"{$uid}\" data-bt-pricing-buttons";
-        if ($uuids_json) {
-            echo " data-tab-uuids='" . esc_attr($uuids_json) . "'";
-        }
-        echo '>';
-
-        $this->render_exc_heading_block($s);
-
-        // Title
-        $title = $s['exc_buttons_title'] ?? '';
-        if ($title) {
-            $tag = esc_attr($s['exc_buttons_title_tag'] ?: 'h4');
-            echo "<{$tag} class=\"bt-pricing__btn-title\">" . esc_html($title) . "</{$tag}>";
-        }
-
-        $discount_key = ($s['exc_discount_subfield'] ?? '') !== '' ? $s['exc_discount_subfield'] : 'is_a_discount';
-
-        // Pill buttons
-        echo '<div class="bt-pricing__slots">';
-        foreach ($rows as $i => $row) {
-            $label    = $this->get_exc_tab_label($row, $i, $s, $currency);
-            $discount = $this->get_exc_discount_value($row, $discount_key);
-            $uuid     = $tab_uuids[$i] ?? $active_uuid;
-
-            echo '<button type="button" class="bt-pricing__slot" data-slot-index="' . $i . '" data-uuid="' . esc_attr($uuid) . '">';
-            echo esc_html($label);
-            if ($discount > 0) {
-                echo ' <span class="bt-pricing__discount">-' . (int) $discount . '%</span>';
-            }
-            echo '</button>';
-        }
-        echo '</div>'; // .bt-pricing__slots
-
-        // Price panels — hidden by default
-        foreach ($rows as $i => $row) {
-            $panel_id = "{$uid}-panel-{$i}";
-            echo "<div class=\"bt-pricing__panel\" id=\"{$panel_id}\" data-slot-panel=\"{$i}\">";
-            $this->render_exc_price_block($s, $row, $currency);
-            echo '</div>';
-        }
-
-        // Booking — shared, revealed on slot click
-        if (($s['exc_show_booking'] ?? '') === 'yes') {
-            echo '<div class="bt-pricing__booking-reveal">';
-            if ($active_uuid) {
-                if ($lazy) {
-                    $this->render_exc_booking_section_lazy($s, $active_uuid, $post_id);
-                } else {
-                    echo $this->render_exc_booking_widget($active_uuid, $post_id, 0);
-                }
-            } elseif ($this->is_edit_mode()) {
-                echo '<div class="bt-widget-placeholder">Widget de réservation Regiondo (UUID requis)</div>';
-            }
-            echo '</div>';
-        }
-
-        echo '</div>'; // .bt-pricing
+        // Unifie sur le meme layout cards
+        $this->render_exc_tabs_layout($s, $rows, $uid, $currency, $tab_uuids, $active_uuid, $post_id, $lazy);
     }
 
     // ── Excursion pricing helpers ────────────────────────────────────────────

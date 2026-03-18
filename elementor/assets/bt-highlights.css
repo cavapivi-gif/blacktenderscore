@@ -3,6 +3,9 @@
    ══════════════════════════════════════════════════════════ */
 
 .bt-highlights__section-title { margin: 0 0 1em; }
+/* Dans le trigger repliable, le titre ne doit pas avoir de margin-bottom
+   (l'espacement est géré sur le .bt-collapsible-block parent) */
+.bt-collapsible-block__trigger .bt-highlights__section-title { margin-bottom: 0; }
 
 .bt-highlights__grid {
   display: grid;
@@ -24,7 +27,7 @@
   /* flex-direction override par control icon_position */
 }
 
-/* Icône — peut contenir emoji, texte, fa, ou SVG Elementor */
+/* ── Icône — emoji, fa, SVG Elementor ────────────────────── */
 .bt-highlights__icon {
   flex-shrink: 0;
   font-size: 28px;
@@ -32,11 +35,57 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;      /* clip image si border-radius défini */
 }
 
 .bt-highlights__icon i   { font-size: inherit; color: inherit; }
 .bt-highlights__icon svg { width: 1em; height: 1em; fill: currentColor; }
 
+/* ── Icône — image (ACF Image field ou URL) ──────────────── */
+.bt-highlights__icon--img {
+  /* width contrôlée par le contrôle Elementor (icon_size) */
+  /* height auto pour ne pas déformer l'image */
+}
+
+.bt-highlights__icon--img img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: inherit; /* hérite du border-radius du wrapper */
+}
+
+/* ── Contenu ─────────────────────────────────────────────── */
 .bt-highlights__content { flex: 1; min-width: 0; overflow: hidden; word-break: break-word; }
 .bt-highlights__title   { display: block; font-weight: 600; }
 .bt-highlights__desc    { margin: .25em 0 0; }
+
+
+/* ── Étapes enfant (dot list) ────────────────────────────── */
+.bt-highlights__steps {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bt-highlights__steps li {
+  padding-left: 1.1em;
+  position: relative;
+  line-height: 1.4;
+}
+
+/* Dot bullet */
+.bt-highlights__steps li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: .5em;
+  width: .35em;
+  height: .35em;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: .5;
+}

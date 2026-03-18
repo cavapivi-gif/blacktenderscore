@@ -16,7 +16,8 @@ defined('ABSPATH') || exit;
  *       OU Repeater natif Elementor (mode manuel, dynamic tags supportés).
  *
  * Layouts : grille | liste.
- * Icône : gauche, droite ou au-dessus du texte.
+ * Icône   : emoji, texte, Elementor ICONS, image ACF (array ou URL) ou SVG.
+ * Steps   : liste enfant en dot, depuis un sous-champ textarea ACF (1 ligne = 1 step).
  */
 class Highlights extends AbstractBtWidget {
 
@@ -46,7 +47,7 @@ class Highlights extends AbstractBtWidget {
         $this->register_collapsible_section_control();
 
         $this->add_control('separator_data', [
-            'type'      => Controls_Manager::DIVIDER,
+            'type' => Controls_Manager::DIVIDER,
         ]);
 
         $this->add_control('data_source', [
@@ -79,7 +80,8 @@ class Highlights extends AbstractBtWidget {
         ]);
 
         $this->add_control('sf_icon', [
-            'label'     => __('Sous-champ icône (emoji/texte)', 'blacktenderscore'),
+            'label'     => __('Sous-champ icône', 'blacktenderscore'),
+            'description' => __('Emoji, texte, URL image ou champ ACF Image.', 'blacktenderscore'),
             'type'      => Controls_Manager::TEXT,
             'default'   => 'highlight_icon',
             'dynamic'   => ['active' => true],
@@ -99,6 +101,23 @@ class Highlights extends AbstractBtWidget {
             'type'      => Controls_Manager::TEXT,
             'default'   => 'highlight_desc',
             'dynamic'   => ['active' => true],
+            'condition' => ['data_source' => 'acf'],
+        ]);
+
+        $this->add_control('sf_steps', [
+            'label'       => __('Sous-champ étapes enfant', 'blacktenderscore'),
+            'description' => __('Repeater ACF imbriqué ou Textarea (1 ligne = 1 étape). Laisser vide pour désactiver.', 'blacktenderscore'),
+            'type'        => Controls_Manager::TEXT,
+            'default'     => 'highlight_steps',
+            'dynamic'     => ['active' => true],
+            'condition'   => ['data_source' => 'acf'],
+        ]);
+
+        $this->add_control('sf_step_label', [
+            'label'     => __('Sous-champ label de l\'étape', 'blacktenderscore'),
+            'description' => __('Nom du sous-champ dans le repeater d\'étapes (ex: step_label).', 'blacktenderscore'),
+            'type'      => Controls_Manager::TEXT,
+            'default'   => 'step_label',
             'condition' => ['data_source' => 'acf'],
         ]);
 
@@ -149,6 +168,14 @@ class Highlights extends AbstractBtWidget {
             'dynamic'     => ['active' => true],
         ]);
 
+        $repeater->add_control('item_steps', [
+            'label'       => __('Étapes enfant', 'blacktenderscore'),
+            'description' => __('1 ligne = 1 étape (dot list).', 'blacktenderscore'),
+            'type'        => Controls_Manager::TEXTAREA,
+            'default'     => '',
+            'label_block' => true,
+        ]);
+
         $this->add_control('static_items', [
             'label'       => __('Éléments', 'blacktenderscore'),
             'type'        => Controls_Manager::REPEATER,
@@ -184,6 +211,13 @@ class Highlights extends AbstractBtWidget {
             'default'      => '',
         ]);
 
+        $this->add_control('show_steps', [
+            'label'        => __('Afficher les étapes enfant', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => 'yes',
+        ]);
+
         $this->end_controls_section();
 
         // ── Mise en page ──────────────────────────────────────────────────
@@ -216,9 +250,10 @@ class Highlights extends AbstractBtWidget {
         ]);
 
         $this->add_responsive_control('gap', [
-            'label'      => __('Espacement entre items', 'blacktenderscore'),
+            'label'      => __('Gap entre les cartes', 'blacktenderscore'),
             'type'       => Controls_Manager::SLIDER,
             'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 0, 'max' => 80]],
             'default'    => ['size' => 16, 'unit' => 'px'],
             'selectors'  => [
                 '{{WRAPPER}} .bt-highlights__grid' => 'gap: {{SIZE}}{{UNIT}}',
@@ -226,22 +261,31 @@ class Highlights extends AbstractBtWidget {
             ],
         ]);
 
-        // ── Position & alignement icône ───────────────────────────────────
-        $this->add_control('icon_position', [
-            'label'     => __('Position icône', 'blacktenderscore'),
-            'type'      => Controls_Manager::CHOOSE,
-            'options'   => [
-                'row'         => ['title' => __('Gauche',    'blacktenderscore'), 'icon' => 'eicon-h-align-left'],
-                'row-reverse' => ['title' => __('Droite',    'blacktenderscore'), 'icon' => 'eicon-h-align-right'],
-                'column'      => ['title' => __('Au-dessus', 'blacktenderscore'), 'icon' => 'eicon-v-align-top'],
-            ],
-            'default'   => 'row',
-            'condition' => ['show_icon' => 'yes'],
-            'selectors' => ['{{WRAPPER}} .bt-highlights__item' => 'flex-direction: {{VALUE}}'],
-            'separator' => 'before',
+        $this->add_responsive_control('widget_margin_bottom', [
+            'label'      => __('Espacement bas du widget', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px', 'em', 'rem'],
+            'range'      => ['px' => ['min' => 0, 'max' => 120]],
+            'default'    => ['size' => 0, 'unit' => 'px'],
+            'selectors'  => ['{{WRAPPER}} .bt-highlights' => 'margin-bottom: {{SIZE}}{{UNIT}}'],
         ]);
 
-        // Alignement vertical icône ↕ (mode row / row-reverse uniquement)
+        // ── Position & alignement icône (responsive — mobile passe en colonne) ───
+        $this->add_responsive_control('icon_position', [
+            'label'          => __('Position icône', 'blacktenderscore'),
+            'type'           => Controls_Manager::CHOOSE,
+            'options'        => [
+                'row'         => ['title' => __('Gauche (inline)',  'blacktenderscore'), 'icon' => 'eicon-h-align-left'],
+                'row-reverse' => ['title' => __('Droite (inline)',  'blacktenderscore'), 'icon' => 'eicon-h-align-right'],
+                'column'      => ['title' => __('Au-dessus (bloc)', 'blacktenderscore'), 'icon' => 'eicon-v-align-top'],
+            ],
+            'default'        => 'row',
+            'mobile_default' => 'column',
+            'condition'      => ['show_icon' => 'yes'],
+            'selectors'      => ['{{WRAPPER}} .bt-highlights__item' => 'flex-direction: {{VALUE}}'],
+            'separator'      => 'before',
+        ]);
+
         $this->add_control('icon_valign', [
             'label'     => __('Alignement vertical', 'blacktenderscore'),
             'type'      => Controls_Manager::CHOOSE,
@@ -255,7 +299,6 @@ class Highlights extends AbstractBtWidget {
             'selectors' => ['{{WRAPPER}} .bt-highlights__item' => 'align-items: {{VALUE}}'],
         ]);
 
-        // Alignement horizontal ↔ (mode column uniquement)
         $this->add_control('icon_halign', [
             'label'     => __('Alignement horizontal', 'blacktenderscore'),
             'type'      => Controls_Manager::CHOOSE,
@@ -269,7 +312,6 @@ class Highlights extends AbstractBtWidget {
             'selectors' => ['{{WRAPPER}} .bt-highlights__item' => 'align-items: {{VALUE}}'],
         ]);
 
-        // Alignement texte (mode column, indépendant de l'alignement flex)
         $this->add_control('content_text_align', [
             'label'     => __('Alignement texte', 'blacktenderscore'),
             'type'      => Controls_Manager::CHOOSE,
@@ -282,7 +324,6 @@ class Highlights extends AbstractBtWidget {
             'selectors' => ['{{WRAPPER}} .bt-highlights__content' => 'text-align: {{VALUE}}'],
         ]);
 
-        // Espace icône ↔ texte (gap dans le flex item)
         $this->add_responsive_control('icon_spacing', [
             'label'      => __('Espace icône ↔ texte', 'blacktenderscore'),
             'type'       => Controls_Manager::SLIDER,
@@ -293,7 +334,6 @@ class Highlights extends AbstractBtWidget {
             'selectors'  => ['{{WRAPPER}} .bt-highlights__item' => 'gap: {{SIZE}}{{UNIT}}'],
         ]);
 
-        // Espace titre ↔ description
         $this->add_responsive_control('content_spacing', [
             'label'      => __('Espace titre ↔ description', 'blacktenderscore'),
             'type'       => Controls_Manager::SLIDER,
@@ -304,10 +344,27 @@ class Highlights extends AbstractBtWidget {
             'condition'  => ['show_desc' => 'yes'],
         ]);
 
+        $this->add_responsive_control('steps_spacing', [
+            'label'      => __('Espace avant les étapes', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px', 'em'],
+            'range'      => ['px' => ['min' => 0, 'max' => 40]],
+            'default'    => ['size' => 8, 'unit' => 'px'],
+            'selectors'  => ['{{WRAPPER}} .bt-highlights__steps' => 'margin-top: {{SIZE}}{{UNIT}}'],
+            'condition'  => ['show_steps' => 'yes'],
+        ]);
+
         $this->end_controls_section();
 
         // ── Styles via traits ─────────────────────────────────────────────
-        $this->register_section_title_style('{{WRAPPER}} .bt-highlights__section-title');
+        $this->register_section_title_style(
+            '{{WRAPPER}} .bt-highlights__section-title',
+            [
+                '{{WRAPPER}} .bt-highlights__section-title' => 'margin-bottom: {{SIZE}}{{UNIT}}',
+                '{{WRAPPER}} .bt-collapsible-block .bt-highlights__section-title' => 'margin-bottom: 0',
+                '{{WRAPPER}} .bt-collapsible-block' => 'margin-bottom: {{SIZE}}{{UNIT}}',
+            ]
+        );
 
         $this->register_item_3state_style(
             'item',
@@ -317,7 +374,7 @@ class Highlights extends AbstractBtWidget {
 
         $this->register_icon_style_section(
             'icon',
-            __('Style — Icône', 'blacktenderscore'),
+            __('Style — Icône / Image', 'blacktenderscore'),
             '{{WRAPPER}} .bt-highlights__icon',
             ['size' => 28],
             ['show_icon' => 'yes']
@@ -339,6 +396,15 @@ class Highlights extends AbstractBtWidget {
             [],
             [],
             ['show_desc' => 'yes']
+        );
+
+        $this->register_typography_section(
+            'item_steps',
+            __('Style — Étapes enfant', 'blacktenderscore'),
+            '{{WRAPPER}} .bt-highlights__steps li',
+            [],
+            [],
+            ['show_steps' => 'yes']
         );
     }
 
@@ -367,35 +433,28 @@ class Highlights extends AbstractBtWidget {
         echo "<div class=\"{$wrap_cls}\">";
 
         foreach ($rows as $row) {
-            $icon  = $row['icon'];
-            $title = $row['title'];
-            $desc  = $row['desc'];
-
             echo '<div class="bt-highlights__item">';
 
             if ($s['show_icon'] === 'yes') {
-                $has_icon = (is_array($icon) && !empty($icon['value']))
-                         || (is_string($icon) && $icon !== '');
-
-                if ($has_icon || $icon !== null) {
-                    echo '<span class="bt-highlights__icon" aria-hidden="true">';
-                    if (is_array($icon) && !empty($icon['value'])) {
-                        Icons_Manager::render_icon($icon, ['aria-hidden' => 'true']);
-                    } elseif (is_string($icon) && $icon !== '') {
-                        echo esc_html($icon);
-                    }
-                    echo '</span>';
-                }
+                $this->render_icon_slot($row['icon']);
             }
 
             echo '<div class="bt-highlights__content">';
 
-            if ($s['show_title'] === 'yes' && $title) {
-                echo '<span class="bt-highlights__title">' . esc_html($title) . '</span>';
+            if ($s['show_title'] === 'yes' && $row['title']) {
+                echo '<span class="bt-highlights__title">' . esc_html($row['title']) . '</span>';
             }
 
-            if ($s['show_desc'] === 'yes' && $desc) {
-                echo '<div class="bt-highlights__desc">' . wp_kses_post($desc) . '</div>';
+            if ($s['show_desc'] === 'yes' && $row['desc']) {
+                echo '<div class="bt-highlights__desc">' . wp_kses_post($row['desc']) . '</div>';
+            }
+
+            if ($s['show_steps'] === 'yes' && !empty($row['steps'])) {
+                echo '<ul class="bt-highlights__steps">';
+                foreach ($row['steps'] as $step) {
+                    echo '<li>' . esc_html($step) . '</li>';
+                }
+                echo '</ul>';
             }
 
             echo '</div>'; // .bt-highlights__content
@@ -412,8 +471,48 @@ class Highlights extends AbstractBtWidget {
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     /**
+     * Affiche le slot icône : supporte emoji, Elementor ICONS, image ACF (array ou URL).
+     *
+     * @param mixed $icon  String emoji, array ICONS Elementor, array image ACF, ou URL string.
+     */
+    private function render_icon_slot($icon): void {
+        if ($icon === null) return;
+
+        // ACF Image field — return format "Array" : ['url'=>..., 'alt'=>..., ...]
+        if (is_array($icon) && !empty($icon['url'])) {
+            echo '<span class="bt-highlights__icon bt-highlights__icon--img" aria-hidden="true">';
+            echo '<img src="' . esc_url($icon['url']) . '" alt="' . esc_attr($icon['alt'] ?? '') . '" loading="lazy">';
+            echo '</span>';
+            return;
+        }
+
+        // Elementor ICONS control — ['value'=>'fas fa-check', 'library'=>'fa-solid']
+        if (is_array($icon) && !empty($icon['value'])) {
+            echo '<span class="bt-highlights__icon" aria-hidden="true">';
+            Icons_Manager::render_icon($icon, ['aria-hidden' => 'true']);
+            echo '</span>';
+            return;
+        }
+
+        // String URL (ACF Image return format "URL", ou SVG/img direct)
+        if (is_string($icon) && filter_var($icon, FILTER_VALIDATE_URL)) {
+            echo '<span class="bt-highlights__icon bt-highlights__icon--img" aria-hidden="true">';
+            echo '<img src="' . esc_url($icon) . '" alt="" loading="lazy">';
+            echo '</span>';
+            return;
+        }
+
+        // String courte = emoji ou texte
+        if (is_string($icon) && $icon !== '') {
+            echo '<span class="bt-highlights__icon" aria-hidden="true">' . esc_html($icon) . '</span>';
+        }
+    }
+
+    /**
      * Résout les rows depuis un repeater ACF.
-     * L'icône est une string (emoji/texte ACF) ou un array ICONS (fallback Elementor).
+     *
+     * Icône : string emoji | array image ACF | URL image | fallback Elementor ICONS.
+     * Steps : textarea ACF (1 ligne = 1 step), splitté par \n.
      */
     private function resolve_acf_rows(array $s): ?array {
         if (!$this->acf_required()) return null;
@@ -422,11 +521,14 @@ class Highlights extends AbstractBtWidget {
         $raw = $this->get_acf_rows($field_name, __('Aucun point fort trouvé.', 'blacktenderscore'));
         if (!$raw) return null;
 
-        $max      = max(1, (int) ($s['max_items'] ?: 12));
-        $sf_icon  = sanitize_text_field($s['sf_icon']  ?: 'highlight_icon');
-        $sf_title = sanitize_text_field($s['sf_title'] ?: 'highlight_title');
-        $sf_desc  = sanitize_text_field($s['sf_desc']  ?: 'highlight_desc');
-        // Normalize fallback based on mode
+        $max         = max(1, (int) ($s['max_items'] ?: 12));
+        $sf_icon     = sanitize_text_field($s['sf_icon']       ?: 'highlight_icon');
+        $sf_title    = sanitize_text_field($s['sf_title']      ?: 'highlight_title');
+        $sf_desc     = sanitize_text_field($s['sf_desc']       ?: 'highlight_desc');
+        $sf_steps    = sanitize_text_field($s['sf_steps']      ?? 'highlight_steps');
+        $sf_step_lbl = sanitize_text_field($s['sf_step_label'] ?? 'step_label');
+
+        // Fallback icône si champ vide
         $fallback_mode = $s['icon_fallback_mode'] ?? 'icon';
         if ($fallback_mode === 'none') {
             $fallback = null;
@@ -444,11 +546,39 @@ class Highlights extends AbstractBtWidget {
         $rows = [];
         foreach (array_slice($raw, 0, $max) as $row) {
             $icon_raw = $row[$sf_icon] ?? '';
-            $icon_str = is_string($icon_raw) ? trim($icon_raw) : '';
+
+            // Détermine l'icône : image ACF array > URL string > emoji string > fallback
+            if (is_array($icon_raw) && !empty($icon_raw['url'])) {
+                $icon = $icon_raw; // image ACF (return format Array)
+            } elseif (is_string($icon_raw) && trim($icon_raw) !== '') {
+                $icon = trim($icon_raw); // emoji, texte, ou URL (détecté à l'affichage)
+            } else {
+                $icon = $fallback;
+            }
+
+            // Parse steps : repeater ACF imbriqué (array of arrays) OU textarea (string)
+            $steps = [];
+            if ($sf_steps !== '') {
+                $raw_steps = $row[$sf_steps] ?? '';
+                if (is_array($raw_steps) && !empty($raw_steps)) {
+                    // Nested repeater ACF — chaque sub-row a un sous-champ $sf_step_lbl
+                    foreach ($raw_steps as $sub) {
+                        $lbl = trim($sub[$sf_step_lbl] ?? '');
+                        if ($lbl !== '') $steps[] = $lbl;
+                    }
+                } elseif (is_string($raw_steps) && trim($raw_steps) !== '') {
+                    // Textarea — 1 ligne = 1 step
+                    $steps = array_values(array_filter(
+                        array_map('trim', explode("\n", $raw_steps))
+                    ));
+                }
+            }
+
             $rows[] = [
-                'icon'  => ($icon_str !== '') ? $icon_str : $fallback,
+                'icon'  => $icon,
                 'title' => $row[$sf_title] ?? '',
                 'desc'  => $row[$sf_desc]  ?? '',
+                'steps' => $steps,
             ];
         }
 
@@ -457,7 +587,7 @@ class Highlights extends AbstractBtWidget {
 
     /**
      * Résout les rows depuis le Repeater natif Elementor.
-     * L'icône est toujours un array ICONS.
+     * Icône : array ICONS. Steps : textarea item_steps (1 ligne = 1 step).
      */
     private function resolve_static_rows(array $s): ?array {
         $items = $s['static_items'] ?? [];
@@ -471,10 +601,16 @@ class Highlights extends AbstractBtWidget {
 
         $rows = [];
         foreach ($items as $item) {
+            $raw_steps = trim($item['item_steps'] ?? '');
+            $steps = $raw_steps !== ''
+                ? array_values(array_filter(array_map('trim', explode("\n", $raw_steps))))
+                : [];
+
             $rows[] = [
                 'icon'  => $item['item_icon']  ?? [],
                 'title' => $item['item_title'] ?? '',
                 'desc'  => $item['item_desc']  ?? '',
+                'steps' => $steps,
             ];
         }
 

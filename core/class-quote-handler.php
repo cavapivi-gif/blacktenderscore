@@ -71,7 +71,9 @@ class QuoteHandler {
             wp_send_json_success(['html' => '<p class="bt-quote__empty">' . esc_html__('Aucun bateau disponible.', 'blacktenderscore') . '</p>']);
         }
 
-        $boat_loop_tpl = (int) ($config['boat_loop_tpl'] ?? 0);
+        $boat_loop_tpl      = (int)  ($config['boat_loop_tpl']      ?? 0);
+        $boat_popup_tpl     = (int)  ($config['boat_popup_tpl']     ?? 0);
+        $show_boat_more_btn = (bool) ($config['show_boat_more_btn'] ?? false);
 
         ob_start();
         foreach ($boat_ids as $bid) {
@@ -82,7 +84,7 @@ class QuoteHandler {
             if ($boat_loop_tpl) {
                 echo $this->render_loop_item($boat_loop_tpl, $boat);
             } else {
-                $this->render_default_boat_card($bid, $boat);
+                $this->render_default_boat_card($bid, $boat, $show_boat_more_btn ? $boat_popup_tpl : 0);
             }
             echo '</div>';
         }
@@ -416,12 +418,11 @@ class QuoteHandler {
      * Card bateau par défaut : layout horizontal (30% img | 70% contenu).
      * Enrichie avec pax, prix/pers, carburant.
      */
-    private function render_default_boat_card(int $bid, \WP_Post $boat): void {
+    private function render_default_boat_card(int $bid, \WP_Post $boat, int $popup_tpl = 0): void {
         $thumb      = get_the_post_thumbnail_url($bid, 'medium');
         $pax        = (int) get_field('boat_pax_max', $bid);
         $price_full = (float) get_field('boat_price_full', $bid);
         $price_half = (float) get_field('boat_price_half', $bid);
-        $fuel_incl  = (bool) get_field('boat_fuel_included', $bid);
 
         $type  = '';
         $types = get_the_terms($bid, 'type-de-bateau');
@@ -462,11 +463,20 @@ class QuoteHandler {
                . '</p>';
         }
 
-        if ($fuel_incl) {
-            echo '<span class="bt-quote-boat-card__fuel-badge">' . esc_html__('Carburant inclus', 'blacktenderscore') . '</span>';
+        $boat_year = (int) get_field('boat_year', $bid);
+        if ($boat_year) {
+            echo '<span class="bt-quote-boat-card__year">' . esc_html($boat_year) . '</span>';
         }
 
         echo '</div>';
+
+        if ($popup_tpl) {
+            echo '<button type="button" class="bt-quote-boat-card__more"'
+               . ' data-boat-id="' . esc_attr($bid) . '"'
+               . ' data-popup-tpl="' . esc_attr($popup_tpl) . '">'
+               . esc_html__('Plus d\'infos', 'blacktenderscore')
+               . '</button>';
+        }
     }
 
     /** Flag pour injecter le CSS du template une seule fois dans la réponse AJAX. */

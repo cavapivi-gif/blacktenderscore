@@ -27,7 +27,7 @@ class BoatPricing extends AbstractBtWidget {
     protected static function get_bt_config(): array {
         return [
             'id'       => 'bt-boat-pricing',
-            'title'    => 'BT — Tarifs Bateau',
+            'title'    => 'BT — Tarifs Bateau (Legacy)',
             'icon'     => 'eicon-price-list',
             'keywords' => ['tarif', 'prix', 'bateau', 'demi-journée', 'journée', 'bt'],
             'css'      => ['bt-boat-pricing', 'bt-pricing-tabs', 'bt-quote-form'],
@@ -125,23 +125,12 @@ class BoatPricing extends AbstractBtWidget {
             'condition' => ['show_deposit' => 'yes'],
         ]);
 
-        $this->add_control('show_fuel_badge', [
-            'label'        => __('Badge carburant inclus', 'blacktenderscore'),
+        $this->add_control('show_boat_year', [
+            'label'        => __('Afficher l\'année du bateau', 'blacktenderscore'),
             'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
-        ]);
-        $this->add_control('label_fuel_yes', [
-            'label'     => __('Label carburant inclus', 'blacktenderscore'),
-            'type'      => Controls_Manager::TEXT,
-            'default'   => __('Carburant inclus', 'blacktenderscore'),
-            'condition' => ['show_fuel_badge' => 'yes'],
-        ]);
-        $this->add_control('label_fuel_no', [
-            'label'     => __('Label carburant non inclus', 'blacktenderscore'),
-            'type'      => Controls_Manager::TEXT,
-            'default'   => __('Carburant en sus', 'blacktenderscore'),
-            'condition' => ['show_fuel_badge' => 'yes'],
+            'description'  => __('Valeur dynamique : champ ACF <code>boat_year</code>', 'blacktenderscore'),
         ]);
 
         $this->add_control('show_price_note', [
@@ -360,12 +349,10 @@ class BoatPricing extends AbstractBtWidget {
             'tab'   => Controls_Manager::TAB_STYLE,
         ]);
 
-        $this->add_control('badges_heading', ['label' => __('Badges carburant', 'blacktenderscore'), 'type' => Controls_Manager::HEADING]);
-        $this->add_control('deposit_color',   ['label' => __('Couleur caution',       'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-bprice__deposit'    => 'color: {{VALUE}}'], 'condition' => ['show_deposit'    => 'yes']]);
-        $this->add_control('fuel_yes_bg',     ['label' => __('Fond badge inclus',     'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-bprice__fuel--yes' => 'background-color: {{VALUE}}'], 'condition' => ['show_fuel_badge' => 'yes']]);
-        $this->add_control('fuel_yes_color',  ['label' => __('Texte badge inclus',    'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-bprice__fuel--yes' => 'color: {{VALUE}}'],            'condition' => ['show_fuel_badge' => 'yes']]);
-        $this->add_control('fuel_no_bg',      ['label' => __('Fond badge en sus',     'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-bprice__fuel--no'  => 'background-color: {{VALUE}}'], 'condition' => ['show_fuel_badge' => 'yes']]);
-        $this->add_control('fuel_no_color',   ['label' => __('Texte badge en sus',    'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-bprice__fuel--no'  => 'color: {{VALUE}}'],            'condition' => ['show_fuel_badge' => 'yes']]);
+        $this->add_control('deposit_color', ['label' => __('Couleur caution', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-bprice__deposit' => 'color: {{VALUE}}'], 'condition' => ['show_deposit' => 'yes']]);
+        $this->add_control('year_heading',  ['label' => __('Année du bateau', 'blacktenderscore'), 'type' => Controls_Manager::HEADING, 'separator' => 'before', 'condition' => ['show_boat_year' => 'yes']]);
+        $this->add_control('year_color',    ['label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-bprice__year' => 'color: {{VALUE}}'], 'condition' => ['show_boat_year' => 'yes']]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), ['name' => 'year_typography', 'selector' => '{{WRAPPER}} .bt-bprice__year', 'condition' => ['show_boat_year' => 'yes']]);
 
         $this->add_control('trigger_heading', ['label' => __('Bouton déclencheur', 'blacktenderscore'), 'type' => Controls_Manager::HEADING, 'separator' => 'before', 'condition' => ['trigger_mode!' => 'none']]);
         $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), ['name' => 'trigger_btn_typography', 'selector' => '{{WRAPPER}} .bt-pricing__trigger', 'condition' => ['trigger_mode!' => 'none']]);

@@ -119,6 +119,55 @@ class QuoteForm extends AbstractBtWidget {
             'condition'   => ['step_boat_enable' => 'yes'],
         ]);
 
+        $this->add_control('show_boat_more_btn', [
+            'label'        => __('Bouton "Plus d\'infos"', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => '',
+            'condition'    => ['step_boat_enable' => 'yes'],
+        ]);
+
+        $this->add_control('boat_popup_tpl', [
+            'label'       => __('Template popup (ID)', 'blacktenderscore'),
+            'type'        => Controls_Manager::NUMBER,
+            'default'     => '',
+            'description' => __('ID du template Elementor ouvert en modal (contexte = post du bateau). Ex: 2632', 'blacktenderscore'),
+            'condition'   => ['step_boat_enable' => 'yes', 'show_boat_more_btn' => 'yes'],
+        ]);
+
+        // ── Tags taxonomie (pills inline) ──────────────────────────────────
+        $boat_tags_repeater = new \Elementor\Repeater();
+
+        $boat_tags_repeater->add_control('tag_taxonomy', [
+            'label'   => __('Taxonomie', 'blacktenderscore'),
+            'type'    => Controls_Manager::SELECT,
+            'options' => [
+                'boat_equipment' => __('Équipement', 'blacktenderscore'),
+                'type-de-bateau' => __('Type de bateau', 'blacktenderscore'),
+                'boat_fuel'      => __('Carburant', 'blacktenderscore'),
+                'boat_skipper'   => __('Skipper', 'blacktenderscore'),
+            ],
+            'default' => 'boat_equipment',
+        ]);
+
+        $boat_tags_repeater->add_control('tag_terms', [
+            'label'    => __('Termes à afficher', 'blacktenderscore'),
+            'type'     => Controls_Manager::SELECT2,
+            'multiple' => true,
+            'options'  => self::get_all_boat_term_options(),
+        ]);
+
+        $this->add_control('boat_tags', [
+            'label'         => __('Tags taxonomie — Cards bateau', 'blacktenderscore'),
+            'type'          => Controls_Manager::REPEATER,
+            'fields'        => $boat_tags_repeater->get_controls(),
+            'default'       => [],
+            'title_field'   => '{{{ tag_taxonomy }}}',
+            'description'   => __('Chaque ligne = une taxonomie + les termes à afficher en pill sous le titre.', 'blacktenderscore'),
+            'condition'     => ['step_boat_enable' => 'yes'],
+            'prevent_empty' => false,
+        ]);
+
         $this->end_controls_section();
 
         // ─────────────────────────────────────────────────────────────────────
@@ -379,6 +428,43 @@ class QuoteForm extends AbstractBtWidget {
             'tab'   => Controls_Manager::TAB_STYLE,
         ]);
 
+        $this->add_control('step_bg', [
+            'label'     => __('Fond étape', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-step' => 'background-color: {{VALUE}}'],
+        ]);
+
+        $this->add_control('step_active_bg', [
+            'label'     => __('Fond étape active', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-step--active' => 'background-color: {{VALUE}}'],
+        ]);
+
+        $this->add_control('step_inactive_bg', [
+            'label'     => __('Fond étape inactive', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-step:not(.bt-quote-step--active)' => 'background-color: {{VALUE}}'],
+        ]);
+
+        $this->add_control('step_border_color', [
+            'label'     => __('Bordure étape', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-step' => 'border-color: {{VALUE}}'],
+        ]);
+
+        $this->add_control('step_active_border', [
+            'label'     => __('Bordure étape active', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-step--active' => 'border-color: {{VALUE}}'],
+        ]);
+
+        $this->add_responsive_control('step_radius', [
+            'label'      => __('Border radius', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px'],
+            'selectors'  => ['{{WRAPPER}} .bt-quote-step' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+
         $this->add_responsive_control('steps_gap', [
             'label'      => __('Espacement entre étapes', 'blacktenderscore'),
             'type'       => Controls_Manager::SLIDER,
@@ -530,56 +616,6 @@ class QuoteForm extends AbstractBtWidget {
 
         $this->end_controls_section();
 
-        // ── Devis — Cards durée ──────────────────────────────────────────────
-        $this->start_controls_section('style_quote_duration', [
-            'label' => __('Devis — Cards durée', 'blacktenderscore'),
-            'tab'   => Controls_Manager::TAB_STYLE,
-        ]);
-
-        $this->add_control('dur_card_bg', [
-            'label'     => __('Fond', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-duration-card' => 'background-color: {{VALUE}}'],
-        ]);
-
-        $this->add_group_control(
-            \Elementor\Group_Control_Border::get_type(),
-            ['name' => 'dur_card_border', 'selector' => '{{WRAPPER}} .bt-quote-duration-card']
-        );
-
-        $this->add_responsive_control('dur_card_radius', [
-            'label'      => __('Border radius', 'blacktenderscore'),
-            'type'       => Controls_Manager::DIMENSIONS,
-            'size_units' => ['px', '%', 'em'],
-            'selectors'  => ['{{WRAPPER}} .bt-quote-duration-card' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
-        ]);
-
-        $this->add_control('dur_card_active_heading', [
-            'label'     => __('État actif', 'blacktenderscore'),
-            'type'      => Controls_Manager::HEADING,
-            'separator' => 'before',
-        ]);
-
-        $this->add_control('dur_card_active_bg', [
-            'label'     => __('Fond actif', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-duration-card[aria-selected="true"]' => 'background-color: {{VALUE}}'],
-        ]);
-
-        $this->add_control('dur_card_active_border_color', [
-            'label'     => __('Bordure active', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-duration-card[aria-selected="true"]' => 'border-color: {{VALUE}}'],
-        ]);
-
-        $this->add_control('dur_card_active_color', [
-            'label'     => __('Texte actif', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-duration-card[aria-selected="true"] .bt-quote-duration-card__label' => 'color: {{VALUE}}'],
-        ]);
-
-        $this->end_controls_section();
-
         // ── Devis — Bouton envoi ─────────────────────────────────────────────
         $this->start_controls_section('style_quote_submit_btn', [
             'label' => __('Devis — Bouton envoi', 'blacktenderscore'),
@@ -667,6 +703,20 @@ class QuoteForm extends AbstractBtWidget {
         ]);
 
         $this->end_controls_section();
+
+        // ── Sections de style enrichies du trait ─────────────────────────────
+        // Les sections avec des IDs deja enregistres ci-dessus sont ignorees
+        // par Elementor. Seules les NOUVELLES sections sont ajoutees :
+        //   • 📋 Devis — Choix excursion (cards + grille)
+        //   • 📋 Devis — Cards bateau (complet)
+        //   • 📋 Devis — Duree & dates
+        //   • 📋 Devis — Date souhaitee
+        //   • 📋 Devis — Boutons (Suivant + Envoi)
+        $this->register_quote_style_controls([], [
+            'style_quote_steps',    // déjà défini ci-dessus avec fond/bordure/transition
+            'style_quote_fields',   // déjà défini ci-dessus avec Group_Control_Border
+            'style_quote_messages', // déjà défini ci-dessus avec radius/padding
+        ]);
     }
 
     // ══ Render ════════════════════════════════════════════════════════════════
@@ -699,8 +749,10 @@ class QuoteForm extends AbstractBtWidget {
             'msg_success'   => $s['step_submit_msg_success'] ?: __('Votre demande a bien été envoyée !', 'blacktenderscore'),
             'msg_error'     => $s['step_submit_msg_error']   ?: __('Une erreur est survenue.', 'blacktenderscore'),
             'pricing_mode'  => 'standalone',
-            'boat_loop_tpl' => (int) ($s['boat_loop_tpl'] ?? 0),
-            'exc_loop_tpl'  => (int) ($s['exc_loop_tpl'] ?? 0),
+            'boat_loop_tpl'  => (int) ($s['boat_loop_tpl']  ?? 0),
+            'exc_loop_tpl'   => (int) ($s['exc_loop_tpl']   ?? 0),
+            'boat_popup_tpl'      => (int) ($s['boat_popup_tpl']      ?? 0),
+            'show_boat_more_btn'  => ($s['show_boat_more_btn']  ?? '') === 'yes',
             'recipient'     => $s['step_submit_email'] ?? '',
         ];
 

@@ -637,6 +637,46 @@
     });
   }
 
+  /* ══════════════════════════════════════════════════════════════════════════
+     PRICING BODY TRIGGER — data-bt-pricing-trigger sur n'importe quel élément
+     ══════════════════════════════════════════════════════════════════════════ */
+
+  function initPricingBodyTrigger(el) {
+    el.querySelectorAll('[data-bt-pricing-trigger]:not([data-bt-ptr-init])').forEach(function (trigger) {
+      trigger.setAttribute('data-bt-ptr-init', '1');
+
+      var targetId = trigger.getAttribute('data-bt-pricing-trigger');
+
+      function handleTrigger(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        var body = targetId
+          ? document.getElementById(targetId)
+          : document.querySelector('[data-bt-pricing-body]');
+        if (!body) return;
+
+        var isHidden = body.classList.contains('bt-pricing-body--hidden');
+        body.classList.toggle('bt-pricing-body--hidden');
+        body.setAttribute('aria-hidden', isHidden ? 'false' : 'true');
+        trigger.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+
+        // Masquer le bouton trigger quand le body est ouvert
+        trigger.style.display = isHidden ? 'none' : '';
+
+        if (isHidden) {
+          body.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+
+      // Écouter le clic sur le wrapper ET sur tous les liens/boutons enfants
+      trigger.addEventListener('click', handleTrigger);
+      trigger.querySelectorAll('a, button').forEach(function (child) {
+        child.addEventListener('click', handleTrigger);
+      });
+    });
+  }
+
   function boot(scope) {
     var el = (scope && scope !== document) ? scope : document;
 
@@ -653,6 +693,7 @@
     });
     initPricingButtons(el);
     initPricingTrigger(el);
+    initPricingBodyTrigger(el);
     initGallery(el);
     el.querySelectorAll('[data-bt-share]:not([data-bt-share-init])').forEach(function (btn) {
       btn.setAttribute('data-bt-share-init', '1');

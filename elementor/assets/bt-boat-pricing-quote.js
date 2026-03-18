@@ -293,11 +293,61 @@
           } else if (dur === 'multi') {
             initDatepicker(step, rangePick);
           }
+
+          // Update boat card prices based on selected duration
+          updateBoatCardPrices(dur);
         });
 
         card.addEventListener('keydown', function (e) {
           if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); }
         });
+      });
+    }
+
+    /* ════════════════════════════════════════════════════════════════════════
+       DYNAMIC BOAT CARD PRICE UPDATE
+       ════════════════════════════════════════════════════════════════════════ */
+
+    var durLabelsShort = { half: 'demi-journée', full: 'journée complète', multi: 'plusieurs jours' };
+
+    function updateBoatCardPrices(durationType) {
+      var boatCards = root.querySelectorAll('.bt-quote-boat-card[data-pax-max]');
+      boatCards.forEach(function (card) {
+        var priceHalf = parseFloat(card.getAttribute('data-price-half')) || 0;
+        var priceFull = parseFloat(card.getAttribute('data-price-full')) || 0;
+        var priceMin  = parseFloat(card.getAttribute('data-price-min')) || 0;
+        var paxMax    = parseInt(card.getAttribute('data-pax-max'), 10) || 0;
+
+        var amountEl = card.querySelector('.bt-quote-boat-card__price-amount');
+        var suffixEl = card.querySelector('.bt-quote-boat-card__price-suffix');
+        if (!amountEl || !paxMax) return;
+
+        var basePrice = 0;
+        var label     = '';
+
+        if (durationType === 'half' && priceHalf) {
+          basePrice = priceHalf;
+          label = durLabelsShort.half;
+        } else if (durationType === 'full' && priceFull) {
+          basePrice = priceFull;
+          label = durLabelsShort.full;
+        } else if (durationType === 'multi' && priceFull) {
+          basePrice = priceFull;
+          label = durLabelsShort.multi;
+        } else {
+          // Fallback: repeater min > half > full
+          basePrice = priceMin || priceHalf || priceFull;
+          label = priceMin ? '' : (priceHalf ? durLabelsShort.half : durLabelsShort.full);
+        }
+
+        if (basePrice && paxMax) {
+          var ppPrice = Math.ceil(basePrice / paxMax);
+          amountEl.textContent = 'À partir de ' + ppPrice + ' € / pers.';
+        }
+
+        if (suffixEl) {
+          suffixEl.textContent = label;
+        }
       });
     }
 
@@ -384,6 +434,12 @@
     }
 
     function bindBoatCards(container, step) {
+      // If a duration is already selected, update prices immediately
+      var activeHidden = root.querySelector('[name="duration_type"]');
+      if (activeHidden && activeHidden.value) {
+        updateBoatCardPrices(activeHidden.value);
+      }
+
       var boatCards = container.querySelectorAll('.bt-quote-boat-card');
       boatCards.forEach(function (card) {
         card.addEventListener('click', function (e) {
