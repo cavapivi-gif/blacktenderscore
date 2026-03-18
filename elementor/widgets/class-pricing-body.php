@@ -821,6 +821,76 @@ class PricingBody extends AbstractBtWidget {
             ],
         ]);
 
+        // ── Nom forfait ──
+        $this->add_control('fcard_name_heading', [
+            'label'     => __('Nom forfait', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'separator' => 'before',
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+            'name'     => 'fcard_name_typo',
+            'selector' => '{{WRAPPER}} .bt-forfait-card__name',
+        ]);
+        $this->add_control('fcard_name_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-forfait-card__name' => 'color: {{VALUE}}'],
+        ]);
+
+        // ── Devise + "/ pers." ──
+        $this->add_control('fcard_currency_color', [
+            'label'     => __('Couleur devise + / pers.', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => [
+                '{{WRAPPER}} .bt-forfait-card__currency' => 'color: {{VALUE}}',
+                '{{WRAPPER}} .bt-forfait-card__per'      => 'color: {{VALUE}}',
+            ],
+        ]);
+
+        // ── Prix barré ──
+        $this->add_control('fcard_original_heading', [
+            'label'     => __('Prix barré', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'separator' => 'before',
+        ]);
+        $this->add_control('fcard_original_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-forfait-card__original' => 'color: {{VALUE}}'],
+        ]);
+
+        // ── Badge remise (-X%) ──
+        $this->add_control('fcard_discount_heading', [
+            'label'     => __('Badge remise', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'separator' => 'before',
+        ]);
+        $this->add_control('fcard_discount_bg', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-forfait-card__discount' => 'background-color: {{VALUE}}'],
+        ]);
+        $this->add_control('fcard_discount_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-forfait-card__discount' => 'color: {{VALUE}}'],
+        ]);
+
+        // ── Séparateur (visible en mode inline) ──
+        $this->add_control('fcard_separator_heading', [
+            'label'     => __('Séparateur (mode 1 col)', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'separator' => 'before',
+        ]);
+        $this->add_control('fcard_separator_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => [
+                '{{WRAPPER}} .bt-forfait-card__separator' => 'background-color: {{VALUE}}',
+                '{{WRAPPER}} .bt-forfait-card__meta'      => 'border-top-color: {{VALUE}}',
+            ],
+        ]);
+
         $this->end_controls_section();
 
         // ── Devis — toutes les sections ────────────────────────────────────
