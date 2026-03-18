@@ -170,14 +170,14 @@ trait BtExcursionPricing {
                 if ($duration !== '') {
                     printf(
                         '<span class="bt-forfait-card__meta-item">%s %s</span>',
-                        BT_ICON_CLOCK,
+                        self::BT_ICON_CLOCK,
                         $duration
                     );
                 }
                 if ($landing !== '') {
                     printf(
                         '<span class="bt-forfait-card__meta-item">%s %s</span>',
-                        BT_ICON_PIN,
+                        self::BT_ICON_PIN,
                         $landing
                     );
                 }
