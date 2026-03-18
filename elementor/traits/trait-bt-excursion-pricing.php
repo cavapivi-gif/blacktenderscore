@@ -213,14 +213,12 @@ trait BtExcursionPricing {
                 }
             }
             if ($show_booking) {
-                echo '<div class="bt-pricing__booking">';
                 $tab_uuid = $booking_per_tab
                     ? ($row[$booking_sub] ?? '')
                     : (get_field($booking_field, $post_id) ?: '');
                 if ($tab_uuid) {
-                    $this->render_booking_widget($tab_uuid, $s);
+                    echo $this->render_exc_booking_widget($tab_uuid, $post_id, $i);
                 }
-                echo '</div>';
             }
             echo '</div>';
         }
