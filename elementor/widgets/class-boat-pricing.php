@@ -820,6 +820,29 @@ class BoatPricing extends AbstractBtWidget {
             'selector' => "{$w} .bt-bprice__card",
         ]);
 
+        // ── Label forfait (shared key with table section — conditions are mutually exclusive) ──
+        $this->add_control('tabs_label_sep', ['type' => Controls_Manager::DIVIDER]);
+        $this->add_control('tabs_label_heading', [
+            'label' => __('Label forfait', 'blacktenderscore'),
+            'type'  => Controls_Manager::HEADING,
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+            'name'     => 'card_label_typography',
+            'selector' => "{$w} .bt-bprice__card-label",
+        ]);
+        $this->add_control('card_label_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ["{$w} .bt-bprice__card-label" => 'color: {{VALUE}}'],
+        ]);
+        $this->add_responsive_control('tabs_label_margin_bottom', [
+            'label'      => __('Marge basse', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 0, 'max' => 40]],
+            'selectors'  => ["{$w} .bt-bprice__card-label" => 'margin-bottom: {{SIZE}}{{UNIT}}'],
+        ]);
+
         // ── Prix ──
         $this->add_control('tabs_price_sep', ['type' => Controls_Manager::DIVIDER]);
         $this->add_control('tabs_price_heading', [
