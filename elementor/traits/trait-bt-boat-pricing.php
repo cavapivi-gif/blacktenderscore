@@ -225,7 +225,7 @@ trait BtBoatPricing {
 
             // Note tarifaire
             if (($s['show_price_note'] ?? '') === 'yes' && $note && $i === 0) {
-                echo '<span class="bt-forfait-card__meta" style="padding:0 14px 12px">' . esc_html($note) . '</span>';
+                echo '<p class="bt-forfait-card__note">' . esc_html($note) . '</p>';
             }
 
             echo '</div>'; // .bt-forfait-card

@@ -333,6 +333,16 @@
   font-size: 11px;
   margin: 0 0 8px;
 }
+/* ── NOTE TARIFAIRE ──
+   [CTRL: fcard_note_typo]  → font
+   [CTRL: fcard_note_color] → color
+   ══════════════════════════ */
+.bt-forfait-card__note {
+  font-size: 11px;
+  padding: 0 14px 12px;
+  margin: 0;
+  opacity: .7;
+}
 .bt-forfait-card--has-image .bt-forfait-card__badge {
   top: 8px;
   left: 8px;
