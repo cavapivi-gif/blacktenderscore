@@ -298,80 +298,14 @@ class BoatPricing extends AbstractBtWidget {
         // ══ Style ════════════════════════════════════════════════════════════
 
         $this->register_section_title_style('{{WRAPPER}} .bt-bprice__title');
-
-        // ── Style : conteneur & cartes ───────────────────────────────────────
-        $this->start_controls_section('style_boat_container', [
-            'label' => __('🚤 Bateau — Conteneur', 'blacktenderscore'),
-            'tab'   => Controls_Manager::TAB_STYLE,
-        ]);
-
-        $this->add_control('container_heading_outer', ['label' => __('Conteneur prix', 'blacktenderscore'), 'type' => Controls_Manager::HEADING]);
-        $this->add_control('container_bg',     ['label' => __('Fond', 'blacktenderscore'),          'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-bprice' => 'background-color: {{VALUE}}']]);
-        $this->add_group_control(\Elementor\Group_Control_Border::get_type(),    ['name' => 'container_border',  'selector' => '{{WRAPPER}} .bt-bprice']);
-        $this->add_responsive_control('container_radius',  ['label' => __('Border radius', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px','%','em'], 'selectors' => ['{{WRAPPER}} .bt-bprice' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}']]);
-        $this->add_responsive_control('container_padding', ['label' => __('Padding', 'blacktenderscore'),       'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px','em'],     'selectors' => ['{{WRAPPER}} .bt-bprice' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}']]);
-        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), ['name' => 'container_shadow', 'selector' => '{{WRAPPER}} .bt-bprice']);
-
-        $this->add_responsive_control('cards_gap_extra', ['label' => __('Espacement entre cartes', 'blacktenderscore'), 'type' => Controls_Manager::SLIDER, 'separator' => 'before', 'size_units' => ['px'], 'default' => ['size' => 16, 'unit' => 'px'], 'selectors' => ['{{WRAPPER}} .bt-bprice__cards' => 'gap: {{SIZE}}{{UNIT}}'], 'condition' => ['layout' => 'cards']]);
-
-        $this->add_control('card_heading', ['label' => __('Cartes', 'blacktenderscore'), 'type' => Controls_Manager::HEADING, 'separator' => 'before']);
-        $this->add_control('card_bg',     ['label' => __('Fond carte', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-bprice__card' => 'background-color: {{VALUE}}']]);
-        $this->add_group_control(\Elementor\Group_Control_Border::get_type(),    ['name' => 'card_border',  'selector' => '{{WRAPPER}} .bt-bprice__card']);
-        $this->add_responsive_control('card_radius',  ['label' => __('Border radius', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px','%','em'], 'selectors' => ['{{WRAPPER}} .bt-bprice__card' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}']]);
-        $this->add_responsive_control('card_padding', ['label' => __('Padding', 'blacktenderscore'),       'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px','em'],     'default' => ['top' => 24, 'right' => 24, 'bottom' => 24, 'left' => 24, 'unit' => 'px', 'isLinked' => true], 'selectors' => ['{{WRAPPER}} .bt-bprice__card' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}']]);
-        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), ['name' => 'card_shadow', 'selector' => '{{WRAPPER}} .bt-bprice__card']);
-
-        $this->end_controls_section();
-
-        // ── Style : typographie ──────────────────────────────────────────────
-        $this->start_controls_section('style_boat_typography', [
-            'label' => __('🚤 Bateau — Typographie', 'blacktenderscore'),
-            'tab'   => Controls_Manager::TAB_STYLE,
-        ]);
-
-        $this->add_control('typo_heading_label', ['label' => __('Label forfait', 'blacktenderscore'), 'type' => Controls_Manager::HEADING]);
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), ['name' => 'card_label_typography', 'selector' => '{{WRAPPER}} .bt-bprice__card-label']);
-        $this->add_control('card_label_color', ['label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-bprice__card-label' => 'color: {{VALUE}}']]);
-
-        $this->add_control('typo_heading_price', ['label' => __('Prix', 'blacktenderscore'), 'type' => Controls_Manager::HEADING, 'separator' => 'before']);
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), ['name' => 'price_typography', 'selector' => '{{WRAPPER}} .bt-bprice__amount']);
-        $this->add_control('price_color', ['label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-bprice__amount' => 'color: {{VALUE}}']]);
-
-        $this->add_control('typo_heading_duration', ['label' => __('Durée', 'blacktenderscore'), 'type' => Controls_Manager::HEADING, 'separator' => 'before']);
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), ['name' => 'duration_typography', 'selector' => '{{WRAPPER}} .bt-bprice__duration']);
-        $this->add_control('duration_color', ['label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-bprice__duration' => 'color: {{VALUE}}']]);
-
-        $this->end_controls_section();
-
-        // ── Style : badges & bouton déclencheur ──────────────────────────────
-        $this->start_controls_section('style_boat_badges_btns', [
-            'label' => __('🚤 Bateau — Badges & boutons', 'blacktenderscore'),
-            'tab'   => Controls_Manager::TAB_STYLE,
-        ]);
-
-        $this->add_control('deposit_color', ['label' => __('Couleur caution', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-bprice__deposit' => 'color: {{VALUE}}'], 'condition' => ['show_deposit' => 'yes']]);
-        $this->add_control('year_heading',  ['label' => __('Année du bateau', 'blacktenderscore'), 'type' => Controls_Manager::HEADING, 'separator' => 'before', 'condition' => ['show_boat_year' => 'yes']]);
-        $this->add_control('year_color',    ['label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-bprice__year' => 'color: {{VALUE}}'], 'condition' => ['show_boat_year' => 'yes']]);
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), ['name' => 'year_typography', 'selector' => '{{WRAPPER}} .bt-bprice__year', 'condition' => ['show_boat_year' => 'yes']]);
-
-        $this->add_control('trigger_heading', ['label' => __('Bouton déclencheur', 'blacktenderscore'), 'type' => Controls_Manager::HEADING, 'separator' => 'before', 'condition' => ['trigger_mode!' => 'none']]);
-        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), ['name' => 'trigger_btn_typography', 'selector' => '{{WRAPPER}} .bt-pricing__trigger', 'condition' => ['trigger_mode!' => 'none']]);
-
-        $this->start_controls_tabs('trigger_btn_state_tabs', ['condition' => ['trigger_mode!' => 'none']]);
-        $this->start_controls_tab('trigger_btn_tab_normal', ['label' => __('Normal', 'blacktenderscore')]);
-        $this->add_control('trigger_btn_color', ['label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__trigger'       => 'color: {{VALUE}}']]);
-        $this->add_control('trigger_btn_bg',    ['label' => __('Fond',    'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__trigger'       => 'background-color: {{VALUE}}']]);
-        $this->end_controls_tab();
-        $this->start_controls_tab('trigger_btn_tab_hover',  ['label' => __('Survol',  'blacktenderscore')]);
-        $this->add_control('trigger_btn_color_hover', ['label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__trigger:hover' => 'color: {{VALUE}}']]);
-        $this->add_control('trigger_btn_bg_hover',    ['label' => __('Fond',    'blacktenderscore'), 'type' => Controls_Manager::COLOR, 'selectors' => ['{{WRAPPER}} .bt-pricing__trigger:hover' => 'background-color: {{VALUE}}']]);
-        $this->end_controls_tab();
-        $this->end_controls_tabs();
-
-        $this->add_responsive_control('trigger_btn_padding', ['label' => __('Padding',       'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px','em'], 'selectors' => ['{{WRAPPER}} .bt-pricing__trigger' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'], 'condition' => ['trigger_mode!' => 'none']]);
-        $this->add_responsive_control('trigger_btn_radius',  ['label' => __('Border radius', 'blacktenderscore'), 'type' => Controls_Manager::DIMENSIONS, 'size_units' => ['px','%','em'], 'selectors' => ['{{WRAPPER}} .bt-pricing__trigger' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'], 'condition' => ['trigger_mode!' => 'none']]);
-
-        $this->end_controls_section();
+        $this->register_style_common_controls();
+        $this->register_style_cards_controls();
+        $this->register_style_cards_content_controls();
+        $this->register_style_tabs_nav_controls();
+        $this->register_style_tabs_content_controls();
+        $this->register_style_table_controls();
+        $this->register_style_zones_controls();
+        $this->register_style_trigger_controls();
 
         // ── Style : onglets parent Forfaits / Devis ───────────────────────────
         $this->register_tabs_nav_style(
@@ -391,10 +325,435 @@ class BoatPricing extends AbstractBtWidget {
             ]
         );
 
-        // ── Style : onglets enfants (forfaits bateau) ────────────────────────
+        // ── Style : formulaire de devis ───────────────────────────────────────
+        $this->register_quote_style_controls(['show_quote_form' => 'yes']);
+    }
+
+    // ══ Style Methods ═══════════════════════════════════════════════════════
+
+    /**
+     * 1. Conteneur .bt-bprice, caution, année.
+     *
+     * Migration (v1 → v2) — keys kept as-is :
+     *   container_bg, container_border, container_radius, container_padding, container_shadow
+     *   deposit_color, year_color, year_typography
+     * Removed (HEADING-only, no data) :
+     *   container_heading_outer → supprimé
+     *   year_heading            → supprimé
+     */
+    protected function register_style_common_controls(): void {
+        $this->start_controls_section('style_common', [
+            'label' => __('Conteneur global', 'blacktenderscore'),
+            'tab'   => Controls_Manager::TAB_STYLE,
+        ]);
+
+        // ── Conteneur .bt-bprice ──
+        $this->add_control('container_bg', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-bprice' => 'background-color: {{VALUE}}'],
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
+            'name'     => 'container_border',
+            'selector' => '{{WRAPPER}} .bt-bprice',
+        ]);
+        $this->add_responsive_control('container_radius', [
+            'label'      => __('Border radius', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', '%', 'em'],
+            'selectors'  => ['{{WRAPPER}} .bt-bprice' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+        $this->add_responsive_control('container_padding', [
+            'label'      => __('Padding', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', 'em'],
+            'selectors'  => ['{{WRAPPER}} .bt-bprice' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), [
+            'name'     => 'container_shadow',
+            'selector' => '{{WRAPPER}} .bt-bprice',
+        ]);
+
+        // ── Caution ──
+        $this->add_control('deposit_sep', ['type' => Controls_Manager::DIVIDER]);
+        $this->add_control('deposit_heading', [
+            'label' => __('Caution', 'blacktenderscore'),
+            'type'  => Controls_Manager::HEADING,
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+            'name'      => 'deposit_typography',
+            'selector'  => '{{WRAPPER}} .bt-bprice__deposit',
+            'condition' => ['show_deposit' => 'yes'],
+        ]);
+        $this->add_control('deposit_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-bprice__deposit' => 'color: {{VALUE}}'],
+            'condition' => ['show_deposit' => 'yes'],
+        ]);
+        $this->add_responsive_control('deposit_margin_bottom', [
+            'label'      => __('Marge basse', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 0, 'max' => 60]],
+            'selectors'  => ['{{WRAPPER}} .bt-bprice__deposit' => 'margin-bottom: {{SIZE}}{{UNIT}}'],
+            'condition'  => ['show_deposit' => 'yes'],
+        ]);
+
+        // ── Année ──
+        $this->add_control('year_sep', ['type' => Controls_Manager::DIVIDER]);
+        $this->add_control('year_heading_ctrl', [
+            'label' => __('Année du bateau', 'blacktenderscore'),
+            'type'  => Controls_Manager::HEADING,
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+            'name'      => 'year_typography',
+            'selector'  => '{{WRAPPER}} .bt-bprice__year',
+            'condition' => ['show_boat_year' => 'yes'],
+        ]);
+        $this->add_control('year_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-bprice__year' => 'color: {{VALUE}}'],
+            'condition' => ['show_boat_year' => 'yes'],
+        ]);
+        $this->add_responsive_control('year_margin_bottom', [
+            'label'      => __('Marge basse', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 0, 'max' => 60]],
+            'selectors'  => ['{{WRAPPER}} .bt-bprice__year' => 'margin-bottom: {{SIZE}}{{UNIT}}'],
+            'condition'  => ['show_boat_year' => 'yes'],
+        ]);
+
+        $this->end_controls_section();
+    }
+
+    /**
+     * 2. Grille .bt-forfaits__grid + carte .bt-forfait-card
+     *    Normal / Hover / Active tabs (bg, border-color, text-color, box-shadow).
+     *
+     * Migration (v1 → v2) :
+     *   cards_gap_extra → cards_gap_extra (kept)
+     *   NEW : fcard_* (3-state tabs) — aucun ancien key
+     */
+    protected function register_style_cards_controls(): void {
+        $this->start_controls_section('style_cards', [
+            'label'     => __('Cartes forfait', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_STYLE,
+            'condition' => ['layout' => 'cards'],
+        ]);
+
+        // ── Grille ──
+        $this->add_responsive_control('cards_gap_extra', [
+            'label'      => __('Espacement entre cartes', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'default'    => ['size' => 16, 'unit' => 'px'],
+            'selectors'  => ['{{WRAPPER}} .bt-forfaits__grid' => 'gap: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        $this->add_control('fcard_box_sep', ['type' => Controls_Manager::DIVIDER]);
+
+        // ── 3-state tabs : Normal / Hover / Active ──
+        $card = '{{WRAPPER}} .bt-forfait-card';
+
+        $this->start_controls_tabs('fcard_state_tabs');
+
+        // Normal
+        $this->start_controls_tab('fcard_tab_normal', ['label' => __('Normal', 'blacktenderscore')]);
+        $this->add_control('fcard_bg', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => [$card => 'background-color: {{VALUE}}'],
+        ]);
+        $this->add_control('fcard_color', [
+            'label'     => __('Couleur texte', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => [$card => 'color: {{VALUE}}'],
+        ]);
+        $this->add_control('fcard_border_color', [
+            'label'     => __('Bordure', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => [$card => 'border-color: {{VALUE}}'],
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), [
+            'name'     => 'fcard_shadow',
+            'selector' => $card,
+        ]);
+        $this->end_controls_tab();
+
+        // Hover
+        $this->start_controls_tab('fcard_tab_hover', ['label' => __('Survol', 'blacktenderscore')]);
+        $this->add_control('fcard_bg_hover', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ["{$card}:hover" => 'background-color: {{VALUE}}'],
+        ]);
+        $this->add_control('fcard_color_hover', [
+            'label'     => __('Couleur texte', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ["{$card}:hover" => 'color: {{VALUE}}'],
+        ]);
+        $this->add_control('fcard_border_color_hover', [
+            'label'     => __('Bordure', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ["{$card}:hover" => 'border-color: {{VALUE}}'],
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), [
+            'name'     => 'fcard_shadow_hover',
+            'selector' => "{$card}:hover",
+        ]);
+        $this->end_controls_tab();
+
+        // Active
+        $this->start_controls_tab('fcard_tab_active', ['label' => __('Actif', 'blacktenderscore')]);
+        $this->add_control('fcard_bg_active', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ["{$card}--active" => 'background-color: {{VALUE}}'],
+        ]);
+        $this->add_control('fcard_color_active', [
+            'label'     => __('Couleur texte', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ["{$card}--active" => 'color: {{VALUE}}'],
+        ]);
+        $this->add_control('fcard_border_color_active', [
+            'label'     => __('Bordure', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ["{$card}--active" => 'border-color: {{VALUE}}'],
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), [
+            'name'     => 'fcard_shadow_active',
+            'selector' => "{$card}--active",
+        ]);
+        $this->end_controls_tab();
+
+        $this->end_controls_tabs();
+
+        // ── Card box (hors tabs) ──
+        $this->add_responsive_control('fcard_padding', [
+            'label'      => __('Padding carte', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', 'em'],
+            'separator'  => 'before',
+            'selectors'  => [$card => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+        $this->add_responsive_control('fcard_radius', [
+            'label'      => __('Border radius', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', '%', 'em'],
+            'selectors'  => [$card => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+
+        $this->end_controls_section();
+    }
+
+    /**
+     * 3. Contenu des cartes : image, titre, sous-titre, prix, currency, pp, note, meta.
+     *    Chaque sous-bloc : typo + color + margin_bottom responsive.
+     *
+     * Migration (v1 → v2) — all NEW keys (fcard_title_*, fcard_subtitle_*, etc.)
+     */
+    protected function register_style_cards_content_controls(): void {
+        $this->start_controls_section('style_cards_content', [
+            'label'     => __('Contenu cartes forfait', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_STYLE,
+            'condition' => ['layout' => 'cards'],
+        ]);
+
+        $w = '{{WRAPPER}}';
+
+        // ── Image ──
+        $this->add_control('fcard_image_heading', [
+            'label' => __('Image', 'blacktenderscore'),
+            'type'  => Controls_Manager::HEADING,
+        ]);
+        $this->add_responsive_control('fcard_image_ratio', [
+            'label'   => __('Ratio d\'image', 'blacktenderscore'),
+            'type'    => Controls_Manager::SELECT,
+            'options' => [
+                '16 / 9' => '16:9',
+                '4 / 3'  => '4:3',
+                '3 / 2'  => '3:2',
+                '1 / 1'  => '1:1',
+            ],
+            'default'   => '16 / 9',
+            'selectors' => ["{$w} .bt-forfait-card__image" => 'aspect-ratio: {{VALUE}}'],
+        ]);
+
+        // ── Titre ──
+        $this->add_control('fcard_title_sep', ['type' => Controls_Manager::DIVIDER]);
+        $this->add_control('fcard_title_heading', [
+            'label' => __('Titre', 'blacktenderscore'),
+            'type'  => Controls_Manager::HEADING,
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+            'name'     => 'fcard_title_typography',
+            'selector' => "{$w} .bt-forfait-card__title",
+        ]);
+        $this->add_control('fcard_title_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ["{$w} .bt-forfait-card__title" => 'color: {{VALUE}}'],
+        ]);
+        $this->add_responsive_control('fcard_title_margin_bottom', [
+            'label'      => __('Marge basse', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 0, 'max' => 40]],
+            'selectors'  => ["{$w} .bt-forfait-card__title" => 'margin-bottom: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        // ── Sous-titre ──
+        $this->add_control('fcard_subtitle_sep', ['type' => Controls_Manager::DIVIDER]);
+        $this->add_control('fcard_subtitle_heading', [
+            'label' => __('Sous-titre', 'blacktenderscore'),
+            'type'  => Controls_Manager::HEADING,
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+            'name'     => 'fcard_subtitle_typography',
+            'selector' => "{$w} .bt-forfait-card__subtitle",
+        ]);
+        $this->add_control('fcard_subtitle_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ["{$w} .bt-forfait-card__subtitle" => 'color: {{VALUE}}'],
+        ]);
+        $this->add_responsive_control('fcard_subtitle_margin_bottom', [
+            'label'      => __('Marge basse', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 0, 'max' => 40]],
+            'selectors'  => ["{$w} .bt-forfait-card__subtitle" => 'margin-bottom: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        // ── Prix ──
+        $this->add_control('fcard_price_sep', ['type' => Controls_Manager::DIVIDER]);
+        $this->add_control('fcard_price_heading', [
+            'label' => __('Prix', 'blacktenderscore'),
+            'type'  => Controls_Manager::HEADING,
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+            'name'     => 'fcard_price_typography',
+            'selector' => "{$w} .bt-forfait-card__price",
+        ]);
+        $this->add_control('fcard_price_color', [
+            'label'     => __('Couleur prix', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ["{$w} .bt-forfait-card__price" => 'color: {{VALUE}}'],
+        ]);
+        $this->add_control('fcard_currency_color', [
+            'label'     => __('Couleur devise', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ["{$w} .bt-forfait-card__currency" => 'color: {{VALUE}}'],
+        ]);
+        $this->add_responsive_control('fcard_price_margin_bottom', [
+            'label'      => __('Marge basse', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 0, 'max' => 40]],
+            'selectors'  => ["{$w} .bt-forfait-card__pricing" => 'margin-bottom: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        // ── Prix / personne ──
+        $this->add_control('fcard_pp_sep', ['type' => Controls_Manager::DIVIDER]);
+        $this->add_control('fcard_pp_heading', [
+            'label'     => __('Prix / personne', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'condition' => ['show_per_person' => 'yes'],
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+            'name'      => 'fcard_pp_typography',
+            'selector'  => "{$w} .bt-forfait-card__pp",
+            'condition' => ['show_per_person' => 'yes'],
+        ]);
+        $this->add_control('fcard_pp_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ["{$w} .bt-forfait-card__pp" => 'color: {{VALUE}}; opacity: 1'],
+            'condition' => ['show_per_person' => 'yes'],
+        ]);
+        $this->add_responsive_control('fcard_pp_margin_bottom', [
+            'label'      => __('Marge basse', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 0, 'max' => 40]],
+            'selectors'  => ["{$w} .bt-forfait-card__pp" => 'margin-bottom: {{SIZE}}{{UNIT}}'],
+            'condition'  => ['show_per_person' => 'yes'],
+        ]);
+
+        // ── Note tarifaire ──
+        $this->add_control('fcard_note_sep', ['type' => Controls_Manager::DIVIDER]);
+        $this->add_control('fcard_note_heading', [
+            'label'     => __('Note tarifaire', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'condition' => ['show_price_note' => 'yes'],
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+            'name'      => 'fcard_note_typography',
+            'selector'  => "{$w} .bt-forfait-card__note",
+            'condition' => ['show_price_note' => 'yes'],
+        ]);
+        $this->add_control('fcard_note_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ["{$w} .bt-forfait-card__note" => 'color: {{VALUE}}; opacity: 1'],
+            'condition' => ['show_price_note' => 'yes'],
+        ]);
+        $this->add_responsive_control('fcard_note_margin_bottom', [
+            'label'      => __('Marge basse', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 0, 'max' => 40]],
+            'selectors'  => ["{$w} .bt-forfait-card__note" => 'margin-bottom: {{SIZE}}{{UNIT}}'],
+            'condition'  => ['show_price_note' => 'yes'],
+        ]);
+
+        // ── Meta (pax, durée) ──
+        $this->add_control('fcard_meta_sep', ['type' => Controls_Manager::DIVIDER]);
+        $this->add_control('fcard_meta_heading', [
+            'label' => __('Meta (pax, durée)', 'blacktenderscore'),
+            'type'  => Controls_Manager::HEADING,
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+            'name'     => 'fcard_meta_typography',
+            'selector' => "{$w} .bt-forfait-card__meta-item",
+        ]);
+        $this->add_control('fcard_meta_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => [
+                "{$w} .bt-forfait-card__meta-item" => 'color: {{VALUE}}',
+                "{$w} .bt-forfait-card__icon"      => 'color: {{VALUE}}',
+            ],
+        ]);
+        $this->add_control('fcard_meta_border_color', [
+            'label'     => __('Couleur séparateur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ["{$w} .bt-forfait-card__meta" => 'border-top-color: {{VALUE}}'],
+        ]);
+        $this->add_responsive_control('fcard_meta_margin_bottom', [
+            'label'      => __('Marge basse', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 0, 'max' => 40]],
+            'selectors'  => ["{$w} .bt-forfait-card__meta" => 'margin-bottom: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        $this->end_controls_section();
+    }
+
+    /**
+     * 4. Onglets forfaits .bt-bprice__tab — delegates to register_tabs_nav_style().
+     *
+     * Migration (v1 → v2) :
+     *   child_tabs_* → child_tabs_* (kept, same prefix via SharedControls)
+     */
+    protected function register_style_tabs_nav_controls(): void {
         $this->register_tabs_nav_style(
             'child_tabs',
-            __('📋 Onglets forfaits', 'blacktenderscore'),
+            __('Onglets forfaits', 'blacktenderscore'),
             '{{WRAPPER}} .bt-bprice__tab',
             '{{WRAPPER}} .bt-bprice__tab--active',
             '{{WRAPPER}} .bt-bprice__tablist',
@@ -408,9 +767,408 @@ class BoatPricing extends AbstractBtWidget {
                 'panel_sel'      => '{{WRAPPER}} .bt-bprice__panel--active',
             ]
         );
+    }
 
-        // ── Style : formulaire de devis ───────────────────────────────────────
-        $this->register_quote_style_controls(['show_quote_form' => 'yes']);
+    /**
+     * 5. Panneau carte .bt-bprice__card : box + sous-éléments typo.
+     *
+     * Migration (v1 → v2) :
+     *   card_bg      → card_bg (kept)
+     *   card_border  → card_border (kept)
+     *   card_radius  → card_radius (kept)
+     *   card_padding → card_padding (kept)
+     *   card_shadow  → card_shadow (kept)
+     *   price_typography → price_typography (kept, selector now also covers cards)
+     *   price_color      → price_color (kept)
+     *   duration_typography → duration_typography (kept)
+     *   duration_color      → duration_color (kept)
+     */
+    protected function register_style_tabs_content_controls(): void {
+        $this->start_controls_section('style_tabs_content', [
+            'label'     => __('Panneau onglet — contenu', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_STYLE,
+            'condition' => ['layout' => 'tabs'],
+        ]);
+
+        $w = '{{WRAPPER}}';
+
+        // ── Card box ──
+        $this->add_control('card_bg', [
+            'label'     => __('Fond carte', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ["{$w} .bt-bprice__card" => 'background-color: {{VALUE}}'],
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
+            'name'     => 'card_border',
+            'selector' => "{$w} .bt-bprice__card",
+        ]);
+        $this->add_responsive_control('card_radius', [
+            'label'      => __('Border radius', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', '%', 'em'],
+            'selectors'  => ["{$w} .bt-bprice__card" => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+        $this->add_responsive_control('card_padding', [
+            'label'      => __('Padding', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', 'em'],
+            'default'    => ['top' => 24, 'right' => 24, 'bottom' => 24, 'left' => 24, 'unit' => 'px', 'isLinked' => true],
+            'selectors'  => ["{$w} .bt-bprice__card" => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), [
+            'name'     => 'card_shadow',
+            'selector' => "{$w} .bt-bprice__card",
+        ]);
+
+        // ── Prix ──
+        $this->add_control('tabs_price_sep', ['type' => Controls_Manager::DIVIDER]);
+        $this->add_control('tabs_price_heading', [
+            'label' => __('Prix', 'blacktenderscore'),
+            'type'  => Controls_Manager::HEADING,
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+            'name'     => 'price_typography',
+            'selector' => "{$w} .bt-bprice__amount",
+        ]);
+        $this->add_control('price_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ["{$w} .bt-bprice__amount" => 'color: {{VALUE}}'],
+        ]);
+        $this->add_responsive_control('tabs_price_margin_bottom', [
+            'label'      => __('Marge basse', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 0, 'max' => 40]],
+            'selectors'  => ["{$w} .bt-bprice__amount-block" => 'margin-bottom: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        // ── Durée ──
+        $this->add_control('tabs_duration_sep', ['type' => Controls_Manager::DIVIDER]);
+        $this->add_control('tabs_duration_heading', [
+            'label' => __('Durée', 'blacktenderscore'),
+            'type'  => Controls_Manager::HEADING,
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+            'name'     => 'duration_typography',
+            'selector' => "{$w} .bt-bprice__duration",
+        ]);
+        $this->add_control('duration_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ["{$w} .bt-bprice__duration" => 'color: {{VALUE}}'],
+        ]);
+        $this->add_responsive_control('tabs_duration_margin_bottom', [
+            'label'      => __('Marge basse', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 0, 'max' => 40]],
+            'selectors'  => ["{$w} .bt-bprice__duration" => 'margin-bottom: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        // ── Note (dans tabs) ──
+        $this->add_control('tabs_note_sep', ['type' => Controls_Manager::DIVIDER]);
+        $this->add_control('tabs_note_heading', [
+            'label'     => __('Note', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'condition' => ['show_price_note' => 'yes'],
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+            'name'      => 'tabs_note_typography',
+            'selector'  => "{$w} .bt-bprice__note",
+            'condition' => ['show_price_note' => 'yes'],
+        ]);
+        $this->add_control('tabs_note_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ["{$w} .bt-bprice__note" => 'color: {{VALUE}}'],
+            'condition' => ['show_price_note' => 'yes'],
+        ]);
+        $this->add_responsive_control('tabs_note_margin_bottom', [
+            'label'      => __('Marge basse', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 0, 'max' => 40]],
+            'selectors'  => ["{$w} .bt-bprice__note" => 'margin-bottom: {{SIZE}}{{UNIT}}'],
+            'condition'  => ['show_price_note' => 'yes'],
+        ]);
+
+        // ── Prix / personne (dans tabs) ──
+        $this->add_control('tabs_pp_sep', ['type' => Controls_Manager::DIVIDER]);
+        $this->add_control('tabs_pp_heading', [
+            'label'     => __('Prix / personne', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'condition' => ['show_per_person' => 'yes'],
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+            'name'      => 'tabs_pp_typography',
+            'selector'  => "{$w} .bt-bprice__per-person",
+            'condition' => ['show_per_person' => 'yes'],
+        ]);
+        $this->add_control('tabs_pp_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ["{$w} .bt-bprice__per-person" => 'color: {{VALUE}}'],
+            'condition' => ['show_per_person' => 'yes'],
+        ]);
+        $this->add_responsive_control('tabs_pp_margin_bottom', [
+            'label'      => __('Marge basse', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 0, 'max' => 40]],
+            'selectors'  => ["{$w} .bt-bprice__per-person" => 'margin-bottom: {{SIZE}}{{UNIT}}'],
+            'condition'  => ['show_per_person' => 'yes'],
+        ]);
+
+        $this->end_controls_section();
+    }
+
+    /**
+     * 6. Tableau .bt-bprice__table : en-têtes, label, prix, durée, prix/pers.
+     *
+     * Migration (v1 → v2) :
+     *   card_label_typography → card_label_typography (kept, same key)
+     *   card_label_color      → card_label_color (kept)
+     */
+    protected function register_style_table_controls(): void {
+        $this->start_controls_section('style_table', [
+            'label'     => __('Tableau', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_STYLE,
+            'condition' => ['layout' => 'table'],
+        ]);
+
+        $w = '{{WRAPPER}}';
+
+        // ── Conteneur tableau ──
+        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
+            'name'     => 'table_border',
+            'selector' => "{$w} .bt-bprice__table",
+        ]);
+        $this->add_responsive_control('table_cell_padding', [
+            'label'      => __('Padding cellules', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', 'em'],
+            'selectors'  => ["{$w} .bt-bprice__table th, {$w} .bt-bprice__table td" => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+
+        // ── En-têtes ──
+        $this->add_control('table_thead_sep', ['type' => Controls_Manager::DIVIDER]);
+        $this->add_control('table_thead_heading', [
+            'label' => __('En-têtes', 'blacktenderscore'),
+            'type'  => Controls_Manager::HEADING,
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+            'name'     => 'table_thead_typography',
+            'selector' => "{$w} .bt-bprice__table thead th",
+        ]);
+        $this->add_control('table_thead_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ["{$w} .bt-bprice__table thead th" => 'color: {{VALUE}}'],
+        ]);
+        $this->add_control('table_thead_bg', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ["{$w} .bt-bprice__table thead th" => 'background-color: {{VALUE}}'],
+        ]);
+
+        // ── Label forfait ──
+        $this->add_control('table_label_sep', ['type' => Controls_Manager::DIVIDER]);
+        $this->add_control('table_label_heading', [
+            'label' => __('Label forfait', 'blacktenderscore'),
+            'type'  => Controls_Manager::HEADING,
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+            'name'     => 'card_label_typography',
+            'selector' => "{$w} .bt-bprice__card-label",
+        ]);
+        $this->add_control('card_label_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ["{$w} .bt-bprice__card-label" => 'color: {{VALUE}}'],
+        ]);
+        $this->add_responsive_control('table_label_margin_bottom', [
+            'label'      => __('Marge basse', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 0, 'max' => 40]],
+            'selectors'  => ["{$w} .bt-bprice__card-label" => 'margin-bottom: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        // ── Prix (table) ──
+        $this->add_control('table_price_sep', ['type' => Controls_Manager::DIVIDER]);
+        $this->add_control('table_price_heading', [
+            'label' => __('Prix', 'blacktenderscore'),
+            'type'  => Controls_Manager::HEADING,
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+            'name'     => 'table_price_typography',
+            'selector' => "{$w} .bt-bprice__table .bt-bprice__amount",
+        ]);
+        $this->add_control('table_price_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ["{$w} .bt-bprice__table .bt-bprice__amount" => 'color: {{VALUE}}'],
+        ]);
+
+        // ── Durée (table) ──
+        $this->add_control('table_duration_sep', ['type' => Controls_Manager::DIVIDER]);
+        $this->add_control('table_duration_heading', [
+            'label' => __('Durée', 'blacktenderscore'),
+            'type'  => Controls_Manager::HEADING,
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+            'name'     => 'table_duration_typography',
+            'selector' => "{$w} .bt-bprice__table .bt-bprice__duration",
+        ]);
+        $this->add_control('table_duration_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ["{$w} .bt-bprice__table .bt-bprice__duration" => 'color: {{VALUE}}'],
+        ]);
+
+        // ── Prix / personne (table) ──
+        $this->add_control('table_pp_sep', ['type' => Controls_Manager::DIVIDER]);
+        $this->add_control('table_pp_heading', [
+            'label'     => __('Prix / personne', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'condition' => ['show_per_person' => 'yes'],
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+            'name'      => 'table_pp_typography',
+            'selector'  => "{$w} .bt-bprice__table .bt-bprice__per-person",
+            'condition' => ['show_per_person' => 'yes'],
+        ]);
+        $this->add_control('table_pp_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ["{$w} .bt-bprice__table .bt-bprice__per-person" => 'color: {{VALUE}}'],
+            'condition' => ['show_per_person' => 'yes'],
+        ]);
+
+        $this->end_controls_section();
+    }
+
+    /**
+     * 7. Zones de navigation : titre, cellules.
+     *
+     * Migration (v1 → v2) — all NEW keys (zones_*)
+     */
+    protected function register_style_zones_controls(): void {
+        $this->start_controls_section('style_zones', [
+            'label'     => __('Tarifs par zone', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_STYLE,
+            'condition' => ['layout!' => 'tabs', 'show_zones' => 'yes'],
+        ]);
+
+        $w = '{{WRAPPER}}';
+
+        // ── Titre zones ──
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+            'name'     => 'zones_title_typography',
+            'label'    => __('Titre', 'blacktenderscore'),
+            'selector' => "{$w} .bt-bprice__zones-title",
+        ]);
+        $this->add_control('zones_title_color', [
+            'label'     => __('Couleur titre', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ["{$w} .bt-bprice__zones-title" => 'color: {{VALUE}}'],
+        ]);
+        $this->add_responsive_control('zones_title_margin_bottom', [
+            'label'      => __('Marge basse titre', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 0, 'max' => 40]],
+            'selectors'  => ["{$w} .bt-bprice__zones-title" => 'margin-bottom: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        // ── Cellules zones ──
+        $this->add_control('zones_cells_sep', ['type' => Controls_Manager::DIVIDER]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+            'name'     => 'zones_cell_typography',
+            'label'    => __('Cellules', 'blacktenderscore'),
+            'selector' => "{$w} .bt-bprice__zones .bt-bprice__table td",
+        ]);
+        $this->add_control('zones_cell_color', [
+            'label'     => __('Couleur cellules', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ["{$w} .bt-bprice__zones .bt-bprice__table td" => 'color: {{VALUE}}'],
+        ]);
+
+        $this->end_controls_section();
+    }
+
+    /**
+     * 8. Bouton déclencheur .bt-pricing__trigger.
+     *
+     * Migration (v1 → v2) :
+     *   trigger_btn_typography → trigger_btn_typography (kept)
+     *   trigger_btn_color      → trigger_btn_color (kept)
+     *   trigger_btn_bg         → trigger_btn_bg (kept)
+     *   trigger_btn_color_hover → trigger_btn_color_hover (kept)
+     *   trigger_btn_bg_hover    → trigger_btn_bg_hover (kept)
+     *   trigger_btn_padding     → trigger_btn_padding (kept)
+     *   trigger_btn_radius      → trigger_btn_radius (kept)
+     */
+    protected function register_style_trigger_controls(): void {
+        $this->start_controls_section('style_trigger', [
+            'label'     => __('Bouton déclencheur', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_STYLE,
+            'condition' => ['trigger_mode!' => 'none'],
+        ]);
+
+        $sel = '{{WRAPPER}} .bt-pricing__trigger';
+
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+            'name'     => 'trigger_btn_typography',
+            'selector' => $sel,
+        ]);
+
+        $this->start_controls_tabs('trigger_btn_state_tabs');
+
+        $this->start_controls_tab('trigger_btn_tab_normal', ['label' => __('Normal', 'blacktenderscore')]);
+        $this->add_control('trigger_btn_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => [$sel => 'color: {{VALUE}}'],
+        ]);
+        $this->add_control('trigger_btn_bg', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => [$sel => 'background-color: {{VALUE}}'],
+        ]);
+        $this->end_controls_tab();
+
+        $this->start_controls_tab('trigger_btn_tab_hover', ['label' => __('Survol', 'blacktenderscore')]);
+        $this->add_control('trigger_btn_color_hover', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ["{$sel}:hover" => 'color: {{VALUE}}'],
+        ]);
+        $this->add_control('trigger_btn_bg_hover', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ["{$sel}:hover" => 'background-color: {{VALUE}}'],
+        ]);
+        $this->end_controls_tab();
+
+        $this->end_controls_tabs();
+
+        $this->add_responsive_control('trigger_btn_padding', [
+            'label'      => __('Padding', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', 'em'],
+            'separator'  => 'before',
+            'selectors'  => [$sel => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+        $this->add_responsive_control('trigger_btn_radius', [
+            'label'      => __('Border radius', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', '%', 'em'],
+            'selectors'  => [$sel => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+
+        $this->end_controls_section();
     }
 
     // ══ Render ════════════════════════════════════════════════════════════════
