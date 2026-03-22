@@ -25,7 +25,7 @@
     try { config = JSON.parse(root.getAttribute('data-config') || '{}'); } catch (e) {}
 
     var steps   = Array.from(root.querySelectorAll('.bt-quote-step'));
-    var state   = { excursion_id: 0, excursion_name: '', boat_id: 0, boat_name: '', date_start: '', date_end: '' };
+    var state   = { excursion_id: 0, excursion_name: '', boat_id: 0, boat_name: '', date_start: '', date_end: '', boat_options: {} };
     var pricingMode = config.pricing_mode || 'boat';
 
     // Auto-select excursion if pre-filled (inside root or in parent wrapper)
@@ -82,8 +82,12 @@
     function activateStep(idx) {
       if (idx < 0 || idx >= steps.length) return;
       steps.forEach(function (s, i) {
-        var isActive = (i === idx);
+        var isActive    = (i === idx);
+        var isDone      = (i < idx);
+        var isCollapsed = (i > idx);
         s.classList.toggle('bt-quote-step--active', isActive);
+        s.classList.toggle('bt-quote-step--done', isDone);
+        s.classList.toggle('bt-quote-step--collapsed', isCollapsed);
         s.setAttribute('aria-expanded', isActive ? 'true' : 'false');
         if (isActive) {
           s.setAttribute('aria-current', 'step');
@@ -130,6 +134,9 @@
           if (startInp && !startInp.value) { shakeFeedback(step); return false; }
         }
         return true;
+      }
+      if (type === 'boat-options') {
+        return true; // Toujours valide — "Aucun" est pré-sélectionné sur chaque groupe
       }
       if (type === 'contact') {
         var required = step.querySelectorAll('[required]');
@@ -218,20 +225,80 @@
         var email   = step.querySelector('[name="client_email"]');
         if (summary && email) summary.textContent = email.value;
       }
+      if (type === 'boat-options') {
+        // Lire depuis l'instance BtQuoteSubSteps
+        var substepRoot = step.querySelector('[data-bt-substep]');
+        var instance    = substepRoot && substepRoot._btSubstep;
+        state.boat_options = {};
+        if (instance) {
+          instance.getSelections().forEach(function (sel, key) {
+            var ids   = Array.from(sel).filter(function (id) { return id !== 0; });
+            var names = [];
+            // Récupérer les noms depuis le config stocké sur l'élément
+            var config = [];
+            try { config = JSON.parse(substepRoot.getAttribute('data-config') || '[]'); } catch (e) {}
+            var group = config.find(function (g) { return g.key === key; });
+            if (group) {
+              names = ids.map(function (id) {
+                var item = group.items.find(function (it) { return it.id === id; });
+                return item ? item.name : '';
+              }).filter(Boolean);
+            }
+            state.boat_options[key] = { ids: ids, names: names };
+          });
+        }
+        var summary = step.querySelector('.bt-quote-step__summary');
+        if (summary) {
+          var chosen = Object.values(state.boat_options)
+            .flatMap(function (v) { return v.names; });
+          summary.textContent = chosen.length ? chosen.join(', ') : '—';
+        }
+      }
     }
 
     function onStepEnter(step) {
       if (!step) return;
+      if (window.btActivateLazyMedia) window.btActivateLazyMedia(step);
       var type = step.getAttribute('data-step-type');
       if (type === 'boat') {
-        // In excursion mode, boats may be statically rendered — just bind click
         var container = step.querySelector('[data-bt-quote-boats]');
         if (container && state.excursion_id) {
           loadBoats(step);
         } else {
-          // Static boats (excursion mode) — bind selection
           var staticContainer = step.querySelector('.bt-quote-boat-cards');
-          if (staticContainer) bindBoatCards(staticContainer, step);
+          if (staticContainer) {
+            bindBoatCards(staticContainer, step);
+            // Sync state depuis la card pré-sélectionnée (mode boat)
+            if (!state.boat_id) {
+              var preSelected = staticContainer.querySelector('.bt-quote-boat-card--selected');
+              if (preSelected) {
+                state.boat_id   = parseInt(preSelected.getAttribute('data-boat-id'), 10) || 0;
+                state.boat_name = preSelected.querySelector('.bt-quote-boat-card__title')?.textContent || '';
+              }
+            }
+          }
+        }
+      }
+      if (type === 'boat-options') {
+        var substepEl = step.querySelector('[data-bt-substep]');
+        if (substepEl && window.BtQuoteSubSteps) {
+          // Callback: passe directement à l'étape suivante quand le récap substep est confirmé
+          var substepOnComplete = function () {
+            collectStepData(step);
+            var idx = steps.indexOf(step);
+            activateStep(idx + 1);
+            onStepEnter(steps[idx + 1]);
+          };
+          if (!substepEl.getAttribute('data-bt-substep-init')) {
+            // Première init — passe le callback directement
+            var substepConfig = [];
+            try { substepConfig = JSON.parse(substepEl.getAttribute('data-config') || '[]'); } catch (e) {}
+            substepEl.setAttribute('data-bt-substep-init', '1');
+            substepEl._btSubstep = new window.BtQuoteSubSteps(substepEl, substepConfig, substepOnComplete);
+          } else if (substepEl._btSubstep && substepEl._btSubstep.setOnComplete) {
+            // Auto-init déjà passé avec onComplete=null → injecter le vrai callback
+            substepEl._btSubstep.setOnComplete(substepOnComplete);
+          }
         }
       }
       if (type === 'dates') {
@@ -264,8 +331,12 @@
         var tsHidden  = timeslot.querySelector('[name="timeslot"]');
         tsBtns.forEach(function (btn) {
           btn.addEventListener('click', function () {
-            tsBtns.forEach(function (b) { b.setAttribute('aria-selected', 'false'); });
+            tsBtns.forEach(function (b) {
+              b.setAttribute('aria-selected', 'false');
+              b.classList.remove('bt-quote-timeslot__btn--selected');
+            });
             btn.setAttribute('aria-selected', 'true');
+            btn.classList.add('bt-quote-timeslot__btn--selected');
             if (tsHidden) tsHidden.value = btn.getAttribute('data-timeslot');
           });
         });
@@ -273,8 +344,12 @@
 
       cards.forEach(function (card) {
         card.addEventListener('click', function () {
-          cards.forEach(function (c) { c.setAttribute('aria-selected', 'false'); });
+          cards.forEach(function (c) {
+            c.setAttribute('aria-selected', 'false');
+            c.classList.remove('bt-quote-duration-card--selected');
+          });
           card.setAttribute('aria-selected', 'true');
+          card.classList.add('bt-quote-duration-card--selected');
 
           var dur = card.getAttribute('data-duration');
           if (hiddenInp) hiddenInp.value = dur;
@@ -318,35 +393,30 @@
         var priceMin  = parseFloat(card.getAttribute('data-price-min')) || 0;
         var paxMax    = parseInt(card.getAttribute('data-pax-max'), 10) || 0;
 
-        var amountEl = card.querySelector('.bt-quote-boat-card__price-amount');
-        var suffixEl = card.querySelector('.bt-quote-boat-card__price-suffix');
-        if (!amountEl || !paxMax) return;
+        var priceEl = card.querySelector('.bt-quote-boat-card__price');
+        var ppEl    = card.querySelector('.bt-quote-boat-card__pp');
+        if (!priceEl || !paxMax) return;
 
         var basePrice = 0;
-        var label     = '';
 
         if (durationType === 'half' && priceHalf) {
           basePrice = priceHalf;
-          label = durLabelsShort.half;
-        } else if (durationType === 'full' && priceFull) {
+        } else if ((durationType === 'full' || durationType === 'multi') && priceFull) {
           basePrice = priceFull;
-          label = durLabelsShort.full;
-        } else if (durationType === 'multi' && priceFull) {
-          basePrice = priceFull;
-          label = durLabelsShort.multi;
         } else {
-          // Fallback: repeater min > half > full
           basePrice = priceMin || priceHalf || priceFull;
-          label = priceMin ? '' : (priceHalf ? durLabelsShort.half : durLabelsShort.full);
         }
 
-        if (basePrice && paxMax) {
-          var ppPrice = Math.ceil(basePrice / paxMax);
-          amountEl.textContent = 'À partir de ' + ppPrice + ' € / pers.';
-        }
-
-        if (suffixEl) {
-          suffixEl.textContent = label;
+        if (basePrice) {
+          priceEl.textContent = basePrice.toLocaleString('fr-FR');
+          if (ppEl) {
+            var pp = Math.ceil(basePrice / paxMax);
+            ppEl.textContent = pp + ' € ';
+            var perSpan = document.createElement('span');
+            perSpan.className = 'bt-quote-boat-card__per';
+            perSpan.textContent = '/ pers.';
+            ppEl.appendChild(perSpan);
+          }
         }
       });
     }
@@ -434,24 +504,48 @@
     }
 
     function bindBoatCards(container, step) {
-      // If a duration is already selected, update prices immediately
-      var activeHidden = root.querySelector('[name="duration_type"]');
-      if (activeHidden && activeHidden.value) {
-        updateBoatCardPrices(activeHidden.value);
-      }
-
       var boatCards = container.querySelectorAll('.bt-quote-boat-card');
+
       boatCards.forEach(function (card) {
+        // Sélection de la card entière
         card.addEventListener('click', function (e) {
-          // Don't select if clicking the "more" button
           if (e.target.closest('.bt-quote-boat-card__more')) return;
-          boatCards.forEach(function (c) { c.classList.remove('bt-quote-boat-card--selected'); });
-          card.classList.add('bt-quote-boat-card--selected');
+          if (e.target.closest('.bt-quote-boat-card__forfait')) return; // géré séparément
+          boatCards.forEach(function (c) {
+            c.classList.remove('bt-quote-boat-card--selected', 'bt-forfait-card--active');
+            c.setAttribute('aria-pressed', 'false');
+          });
+          card.classList.add('bt-quote-boat-card--selected', 'bt-forfait-card--active');
+          card.setAttribute('aria-pressed', 'true');
           state.boat_id   = parseInt(card.getAttribute('data-boat-id'), 10) || 0;
           state.boat_name = card.querySelector('.bt-quote-boat-card__title')?.textContent || '';
+          syncActiveForfait(card);
         });
 
-        // "En savoir plus" button
+        // Click sur un forfait pill
+        var forfaits = card.querySelectorAll('.bt-quote-boat-card__forfait');
+        forfaits.forEach(function (pill) {
+          pill.addEventListener('click', function (e) {
+            e.stopPropagation();
+            // Sélectionner la card si pas encore sélectionnée
+            if (!card.classList.contains('bt-quote-boat-card--selected')) {
+              boatCards.forEach(function (c) {
+                c.classList.remove('bt-quote-boat-card--selected', 'bt-forfait-card--active');
+                c.setAttribute('aria-pressed', 'false');
+              });
+              card.classList.add('bt-quote-boat-card--selected', 'bt-forfait-card--active');
+              card.setAttribute('aria-pressed', 'true');
+              state.boat_id   = parseInt(card.getAttribute('data-boat-id'), 10) || 0;
+              state.boat_name = card.querySelector('.bt-quote-boat-card__title')?.textContent || '';
+            }
+            // Activer ce forfait
+            forfaits.forEach(function (p) { p.classList.remove('bt-quote-boat-card__forfait--active'); });
+            pill.classList.add('bt-quote-boat-card__forfait--active');
+            syncActiveForfait(card);
+          });
+        });
+
+        // "Plus d'infos" button
         var moreBtn = card.querySelector('.bt-quote-boat-card__more');
         if (moreBtn) {
           moreBtn.addEventListener('click', function (e) {
@@ -463,6 +557,33 @@
           });
         }
       });
+
+      // Init : sync le pp du bateau pré-sélectionné
+      var preSelected = container.querySelector('.bt-quote-boat-card--selected');
+      if (preSelected) syncActiveForfait(preSelected);
+    }
+
+    /** Met à jour le prix/pers affiché selon le forfait actif de la card. */
+    function syncActiveForfait(card) {
+      var activePill = card.querySelector('.bt-quote-boat-card__forfait--active');
+      var ppEl       = card.querySelector('.bt-quote-boat-card__pp');
+      if (!activePill || !ppEl) return;
+
+      var price  = parseFloat(activePill.getAttribute('data-price')) || 0;
+      var pax    = parseInt(activePill.getAttribute('data-pax'), 10) || parseInt(card.getAttribute('data-pax-max'), 10) || 0;
+      var pp     = (price && pax) ? Math.ceil(price / pax) : 0;
+
+      ppEl.textContent = pp ? pp + ' € ' : '';
+      if (pp) {
+        var perSpan = document.createElement('span');
+        perSpan.className = 'bt-quote-boat-card__per';
+        perSpan.textContent = '/ pers.';
+        ppEl.appendChild(perSpan);
+      }
+
+      // Mémoriser le forfait sélectionné dans le state
+      state.boat_forfait_price = price;
+      state.boat_forfait_label = activePill.querySelector('.bt-quote-boat-card__forfait-label')?.textContent || '';
     }
 
     /* ════════════════════════════════════════════════════════════════════════
@@ -640,17 +761,24 @@
 
       var lines = [];
       if (state.exc_custom) {
-        lines.push('<strong>Excursion :</strong> Expérience sur mesure');
-        if (state.exc_custom_text) lines.push('<strong>Demande :</strong> ' + escHtml(state.exc_custom_text));
+        lines.push({ label: 'Excursion', value: 'Expérience sur mesure' });
+        if (state.exc_custom_text) lines.push({ label: 'Demande', value: state.exc_custom_text });
       } else if (state.excursion_name) {
-        lines.push('<strong>Excursion :</strong> ' + escHtml(state.excursion_name));
+        lines.push({ label: 'Excursion', value: state.excursion_name });
       }
-      if (state.boat_name)      lines.push('<strong>Bateau :</strong> ' + escHtml(state.boat_name));
+      if (state.boat_name) lines.push({ label: 'Bateau', value: state.boat_name });
       if (state.date_start) {
-        var dateLine = '<strong>Dates :</strong> ' + escHtml(state.date_start);
-        if (state.timeslot) dateLine += ' (' + (state.timeslot === 'matin' ? 'Matin' : 'Après-midi') + ')';
-        if (state.date_end) dateLine += ' → ' + escHtml(state.date_end);
-        lines.push(dateLine);
+        var dateVal = state.date_start;
+        if (state.timeslot) dateVal += ' (' + (state.timeslot === 'matin' ? 'Matin' : 'Après-midi') + ')';
+        if (state.date_end) dateVal += ' → ' + state.date_end;
+        lines.push({ label: 'Date', value: dateVal });
+      }
+      // Options bateau (n'affiche que les sélections ≠ "Aucun")
+      if (state.boat_options) {
+        Object.entries(state.boat_options).forEach(function (entry) {
+          var names = entry[1].names || [];
+          if (names.length) lines.push({ label: entry[0], value: names.join(', ') });
+        });
       }
 
       var contactStep = root.querySelector('[data-step-type="contact"]');
@@ -660,12 +788,17 @@
         var em = contactStep.querySelector('[name="client_email"]');
         var ph = contactStep.querySelector('[name="client_phone"]');
         var fullName = (fn ? fn.value + ' ' : '') + (nm ? nm.value : '');
-        if (fullName.trim()) lines.push('<strong>Nom :</strong> ' + escHtml(fullName.trim()));
-        if (em && em.value) lines.push('<strong>E-mail :</strong> ' + escHtml(em.value));
-        if (ph && ph.value) lines.push('<strong>Téléphone :</strong> ' + escHtml(ph.value));
+        if (fullName.trim()) lines.push({ label: 'Nom', value: fullName.trim() });
+        if (em && em.value) lines.push({ label: 'E-mail', value: em.value });
+        if (ph && ph.value) lines.push({ label: 'Téléphone', value: ph.value });
       }
 
-      recapEl.innerHTML = lines.map(function (l) { return '<p class="bt-quote-recap__line">' + l + '</p>'; }).join('');
+      recapEl.innerHTML = lines.map(function (l) {
+        return '<div class="bt-quote-recap__line">'
+          + '<span class="bt-quote-recap__label">' + escHtml(l.label) + '</span>'
+          + '<span class="bt-quote-recap__value">' + escHtml(l.value) + '</span>'
+          + '</div>';
+      }).join('');
     }
 
     // Submit button
@@ -688,6 +821,9 @@
         fd.append('recipient', config.recipient || '');
         fd.append('exc_custom', state.exc_custom ? '1' : '');
         fd.append('exc_custom_text', state.exc_custom_text || '');
+        fd.append('boat_options', JSON.stringify(state.boat_options || {}));
+        fd.append('boat_forfait_label', state.boat_forfait_label || '');
+        fd.append('boat_forfait_price', state.boat_forfait_price || '');
 
         if (contactStep) {
           var fields = contactStep.querySelectorAll('.bt-quote-fields__input');

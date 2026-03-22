@@ -25,6 +25,7 @@ use BlackTenders\Elementor\Widgets\TitleIconDesc;
 use BlackTenders\Elementor\Widgets\TaxonomyDisplay;
 use BlackTenders\Elementor\Widgets\QuoteForm;
 use BlackTenders\Elementor\Widgets\PricingBody;
+use BlackTenders\Elementor\Widgets\VideoPlayer;
 
 defined('ABSPATH') || exit;
 
@@ -53,133 +54,6 @@ class ElementorManager {
         add_action('elementor/editor/after_enqueue_styles',    [$this, 'enqueue_assets']);
         add_action('elementor/editor/after_enqueue_styles',    [$this, 'enqueue_editor_extras']);
 
-        // ── Map Style : injecte la section "Style de carte" dans TOUS les widgets ──
-        // On s'accroche sur _section_responsive, toujours la DERNIÈRE section native
-        // du tab Advanced d'Elementor → notre section s'insère après, tout à la fin.
-        add_action('elementor/element/after_section_end', static function(
-            $element, string $section_id, array $args
-        ): void {
-            // Le hook peut recevoir des Documents Elementor Pro (ex: Single_Page)
-            // qui n'héritent pas de Element_Base → on filtre proprement.
-            if (!($element instanceof \Elementor\Element_Base)) return;
-
-            // _section_responsive est la dernière section du tab Advanced dans tout widget Elementor.
-            // En s'y accrochant, on garantit que notre section arrive en toute fin du panneau Advanced.
-            if ($section_id !== '_section_responsive') return;
-
-            $element->start_controls_section('section_bt_map_style', [
-                'label' => __('Style de carte (BT)', 'blacktenderscore'),
-                'tab'   => \Elementor\Controls_Manager::TAB_ADVANCED,
-            ]);
-
-            $element->add_control('bt_map_style_enabled', [
-                'label'        => __('Appliquer un style', 'blacktenderscore'),
-                'type'         => \Elementor\Controls_Manager::SWITCHER,
-                'label_on'     => __('Oui', 'blacktenderscore'),
-                'label_off'    => __('Non', 'blacktenderscore'),
-                'return_value' => 'yes',
-                'default'      => 'yes',
-                'description'  => __('Active le style global Google Maps sur ce widget. Désactivez pour garder le style par défaut Google.', 'blacktenderscore'),
-            ]);
-
-            $element->add_control('bt_map_style_preset', [
-                'label'     => __('Preset', 'blacktenderscore'),
-                'type'      => \Elementor\Controls_Manager::SELECT,
-                'options'   => AbstractBtWidget::get_bt_map_style_options(),
-                'default'   => '',
-                'condition' => ['bt_map_style_enabled' => 'yes'],
-            ]);
-
-            $element->end_controls_section();
-        }, 99, 3);
-
-        // ── Google Maps iframe → JS API ────────────────────────────────────────────────────
-        // Remplace l'iframe Embed (cross-origin, non stylable) par un <div> initialisé via
-        // la Maps JS API, ce qui permet au monkey-patch de class-plugin.php d'appliquer le style.
-        add_filter('elementor/widget/render_content', static function(string $content, \Elementor\Widget_Base $widget): string {
-            if ($widget->get_name() !== 'google_maps') return $content;
-
-            // Extrait le src de l'iframe (les deux formats : embed/v1/place et maps?q=)
-            if (!preg_match('/src=["\']([^"\']*(?:maps\.google|google\.com\/maps)[^"\']*)["\']/', $content, $m)) {
-                return $content;
-            }
-
-            $src   = html_entity_decode($m[1]);
-            $query = wp_parse_url($src, PHP_URL_QUERY) ?? '';
-            wp_parse_str($query, $params);
-
-            $q    = rawurldecode($params['q'] ?? '');
-            $zoom = (int) ($params['zoom'] ?? $params['z'] ?? 10);
-
-            if ($q === '') return $content;  // impossible de centrer la carte sans adresse
-
-            // Charge la Maps JS API si elle n'est pas encore enqueued
-            // (l'iframe Embed ne la requiert pas, notre remplacement JS si)
-            if (!wp_script_is('google-maps-api', 'enqueued')) {
-                $api_key = get_option('elementor_google_maps_api_key', '');
-                $maps_url = $api_key
-                    ? 'https://maps.googleapis.com/maps/api/js?key=' . rawurlencode($api_key)
-                    : 'https://maps.googleapis.com/maps/api/js';
-                wp_enqueue_script('google-maps-api', $maps_url, [], null, true);
-            }
-
-            // Détermine si q est une paire lat,lng ou une adresse textuelle
-            $is_latlng = (bool) preg_match('/^-?\d+\.?\d*\s*,\s*-?\d+\.?\d*$/', $q);
-            $data_attr = $is_latlng
-                ? 'data-bt-latlng="' . esc_attr($q) . '"'
-                : 'data-bt-address="' . esc_attr($q) . '"';
-
-            // Récupère la hauteur définie dans les settings du widget
-            $settings    = $widget->get_settings_for_display();
-            $height_val  = $settings['height']['size'] ?? 300;
-            $height_unit = $settings['height']['unit'] ?? 'px';
-            $height_css  = esc_attr($height_val . $height_unit);
-
-            $replacement = '<div class="elementor-custom-embed">'
-                         . '<div class="bt-gmaps-js" ' . $data_attr
-                         .  ' data-zoom="' . $zoom . '"'
-                         .  ' style="width:100%;height:' . $height_css . '">'
-                         . '</div></div>';
-
-            // Remplace la première occurrence de l'embed (ungreedy, stop au 1er </div>)
-            return preg_replace(
-                '/<div class="elementor-custom-embed">[\s\S]*?<\/div>/U',
-                $replacement,
-                $content,
-                1
-            );
-        }, 10, 2);
-
-        // ── Map Style : applique data-bt-map-style sur le wrapper du widget avant le rendu ──
-        // Lit les settings BT map style et écrit l'attribut sur le wrapper.
-        // Compatible avec tous les widgets (BT, Elementor natif, PowerPack, etc.)
-        // Le JS global (wp_footer) lit cet attribut via el.closest('[data-bt-map-style]').
-        add_action('elementor/frontend/element/before_render', static function(
-            \Elementor\Element_Base $element
-        ): void {
-            if (!($element instanceof \Elementor\Widget_Base)) return;
-
-            $settings = $element->get_settings();
-            $enabled  = $settings['bt_map_style_enabled'] ?? null;
-
-            // Le contrôle n'existe pas encore sur ce widget (cache vide → sera injecté au prochain rendu)
-            if ($enabled === null) return;
-
-            // Désactivé explicitement → sentinelle 'none' pour bloquer le style global JS
-            if ($enabled !== 'yes') {
-                $element->add_render_attribute('_wrapper', 'data-bt-map-style', 'none');
-                return;
-            }
-
-            // Preset spécifique choisi → mettre le JSON dans l'attribut
-            $preset = $settings['bt_map_style_preset'] ?? '';
-            if ($preset === '') return;  // '' = utiliser le style global (aucun attribut nécessaire)
-
-            $json = AbstractBtWidget::resolve_bt_map_style($preset);
-            if ($json !== null) {
-                $element->add_render_attribute('_wrapper', 'data-bt-map-style', $json);
-            }
-        }, 10);
     }
 
     // ── Invalidation transients ───────────────────────────────────────────────
@@ -239,6 +113,8 @@ class ElementorManager {
         // ── Utilitaires ───────────────────────────────────────────────────────
         $manager->register(new PricingBody());
         $manager->register(new GoogleMap());
+        // ── Vidéo ─────────────────────────────────────────────────────────
+        $manager->register(new VideoPlayer());
     }
 
     public function enqueue_editor_extras(): void {
@@ -329,6 +205,8 @@ class ElementorManager {
             'bt-taxonomy-display',
             'bt-quote-form',
             'bt-segmented-control',
+            'bt-quote-substep',
+            'bt-video-player',
         ];
         foreach ($widget_styles as $handle) {
             wp_register_style(
@@ -339,11 +217,20 @@ class ElementorManager {
             );
         }
 
+        // Sub-steps composant (doit charger avant bt-boat-pricing-quote)
+        wp_register_script(
+            'bt-quote-substep',
+            BT_URL . 'elementor/assets/bt-quote-substep.js',
+            ['bt-elementor'],
+            BT_VERSION,
+            true
+        );
+
         // Quote form JS (devis multi-étapes — shared by bt-quote-form & bt-boat-pricing)
         wp_register_script(
             'bt-boat-pricing-quote',
             BT_URL . 'elementor/assets/bt-boat-pricing-quote.js',
-            ['bt-elementor'],
+            ['bt-elementor', 'bt-quote-substep'],
             BT_VERSION,
             true
         );
@@ -361,6 +248,16 @@ class ElementorManager {
             'bt-segmented-control',
             BT_URL . 'elementor/assets/bt-segmented-control.js',
             ['bt-elementor'],
+            BT_VERSION,
+            true
+        );
+
+        // Plyr video player — CDN + widget JS (enqueued on-demand via get_script_depends)
+        VideoPlayer::register_plyr_assets();
+        wp_register_script(
+            'bt-video-player',
+            BT_URL . 'elementor/assets/bt-video-player.js',
+            ['plyr-js'],
             BT_VERSION,
             true
         );

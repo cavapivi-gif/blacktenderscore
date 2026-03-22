@@ -1,3 +1,11 @@
+/* -- Dynamic Tag : bt-exp-price prefix / suffix --------------------------------- */
+.bt-exp-price__prefix,
+.bt-exp-price__suffix {
+  font-size: 0.55em;
+  font-weight: 400;
+  vertical-align: middle;
+}
+
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    BlackTenders â€” Elementor Widgets â€” GLOBAL STYLES ONLY
    Per-widget styles live in their own bt-{widget}.css files.
@@ -186,4 +194,12 @@
 .bt-bprice__tab--active {
   color: var(--bt-tab-active-color);
   border-bottom-color: var(--bt-tab-active-color);
+}
+
+/* ── Dynamic Tag : bt-exp-price prefix / suffix ─────────────────────────────── */
+.bt-exp-price__prefix,
+.bt-exp-price__suffix {
+  font-size: 0.55em;
+  font-weight: 400;
+  vertical-align: middle;
 }

@@ -59,6 +59,8 @@
 .bt-highlights__content { flex: 1; min-width: 0; overflow: hidden; word-break: break-word; }
 .bt-highlights__title   { display: block; font-weight: 600; }
 .bt-highlights__desc    { margin: .25em 0 0; }
+/* Neutralise les marges que le thème applique aux <p> dans le WYSIWYG ACF */
+.bt-highlights__desc p  { margin: 0; }
 
 
 /* ── Étapes enfant (dot list) ────────────────────────────── */

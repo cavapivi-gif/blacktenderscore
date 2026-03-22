@@ -13,17 +13,13 @@ defined('ABSPATH') || exit;
 /**
  * Widget Elementor — Carte Google Maps (JS API).
  *
- * Utilise la Maps JavaScript API pour permettre l'application du style
- * BT configuré dans Réglages → Map Style.
- *
- * Le champ "Adresse ou coordonnées" accepte :
- *   • Texte libre       "Cannes, France"   → Geocoding API requise
- *   • Coordonnées       "43.551,7.017"     → aucune API supplémentaire
- *   • Dynamic tag ⚡    "BT: Champ Google Map (ACF)" → retourne lat,lng directement
+ * Modes :
+ *   single           — une carte centrée sur un champ ACF ou une adresse
+ *   all_destinations — carte multi-pins de toutes les excursions publiées
  *
  * Prérequis :
  *   - Maps JavaScript API  (obligatoire)
- *   - Geocoding API        (uniquement pour les adresses textuelles)
+ *   - Geocoding API        (uniquement pour les adresses textuelles en mode single)
  */
 class GoogleMap extends AbstractBtWidget {
 
@@ -34,7 +30,7 @@ class GoogleMap extends AbstractBtWidget {
             'id'       => 'bt-google-map',
             'title'    => 'BT — Carte Google Maps',
             'icon'     => 'eicon-google-maps',
-            'keywords' => ['carte', 'map', 'google', 'localisation', 'acf', 'bt'],
+            'keywords' => ['carte', 'map', 'google', 'localisation', 'acf', 'destinations', 'bt'],
             'css'      => ['bt-google-map'],
             'js'       => ['bt-gmaps-init'],
         ];
@@ -44,6 +40,7 @@ class GoogleMap extends AbstractBtWidget {
 
     protected function register_controls(): void {
         $this->section_map_content();
+        $this->section_destinations_content();
         $this->section_marker_content();
         $this->section_map_style();
     }
@@ -56,29 +53,42 @@ class GoogleMap extends AbstractBtWidget {
             'tab'   => Controls_Manager::TAB_CONTENT,
         ]);
 
-        // ── Champ ACF Google Map — liste déroulante directe ───────────────────
+        // ── Mode de la carte ──────────────────────────────────────────────────
+        $this->add_control('map_source', [
+            'label'   => __('Mode', 'blacktenderscore'),
+            'type'    => Controls_Manager::SELECT,
+            'options' => [
+                'single'           => __('Carte unique', 'blacktenderscore'),
+                'all_destinations' => __('Toutes les destinations', 'blacktenderscore'),
+            ],
+            'default'     => 'single',
+            'description' => __('Mode "Toutes les destinations" : pins interactifs sur toutes les excursions publiées.', 'blacktenderscore'),
+        ]);
+
+        // ── Champ ACF Google Map — liste déroulante (mode single) ─────────────
         $this->add_control('acf_map_field', [
             'label'       => __('Champ ACF Google Map', 'blacktenderscore'),
             'type'        => Controls_Manager::SELECT,
             'options'     => ['' => __('— Saisir manuellement ci-dessous —', 'blacktenderscore')]
                            + $this->google_map_field_options(),
             'default'     => '',
-            'description' => __('Sélectionnez un champ ACF de type Google Map. Prioritaire sur le champ texte ci-dessous.', 'blacktenderscore'),
+            'description' => __('Prioritaire sur le champ texte ci-dessous.', 'blacktenderscore'),
+            'condition'   => ['map_source' => 'single'],
         ]);
 
-        // ── Séparateur visuel ─────────────────────────────────────────────────
         $this->add_control('divider_or', [
-            'type'  => Controls_Manager::DIVIDER,
+            'type'      => Controls_Manager::DIVIDER,
+            'condition' => ['map_source' => 'single'],
         ]);
 
-        // ── Adresse manuelle ou dynamic tag ───────────────────────────────────
         $this->add_control('address', [
             'label'       => __('Adresse ou coordonnées', 'blacktenderscore'),
             'type'        => Controls_Manager::TEXT,
             'default'     => '',
             'label_block' => true,
             'dynamic'     => ['active' => true],
-            'description' => __('Texte ("Cannes, France"), coordonnées ("43.551,7.017"), ou utilisez ⚡ → BT: Champ Google Map (ACF) pour lier un champ ACF directement.', 'blacktenderscore'),
+            'description' => __('Texte ("Cannes, France"), coordonnées ("43.551,7.017"), ou ⚡ → BT: Champ Google Map.', 'blacktenderscore'),
+            'condition'   => ['map_source' => 'single'],
         ]);
 
         // ── Communs ───────────────────────────────────────────────────────────
@@ -114,12 +124,73 @@ class GoogleMap extends AbstractBtWidget {
         $this->end_controls_section();
     }
 
-    // ─ Content → Marqueur ─────────────────────────────────────────────────────
+    // ─ Content → Destinations ─────────────────────────────────────────────────
+
+    private function section_destinations_content(): void {
+        $this->start_controls_section('section_destinations', [
+            'label'     => __('Destinations', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_CONTENT,
+            'condition' => ['map_source' => 'all_destinations'],
+        ]);
+
+        $this->add_control('dest_pin_color', [
+            'label'   => __('Couleur des pins', 'blacktenderscore'),
+            'type'    => Controls_Manager::COLOR,
+            'default' => '#0a0a0a',
+        ]);
+
+        $this->add_control('dest_pin_active_color', [
+            'label'   => __('Couleur pin actif', 'blacktenderscore'),
+            'type'    => Controls_Manager::COLOR,
+            'default' => '#1a73e8',
+        ]);
+
+        $this->add_control('dest_fit_bounds', [
+            'label'        => __('Ajuster la vue aux pins', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => 'yes',
+            'description'  => __('La carte s\'ajuste automatiquement pour afficher tous les marqueurs.', 'blacktenderscore'),
+        ]);
+
+        $this->add_control('dest_show_image', [
+            'label'        => __('Image dans l\'infobulle', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => 'yes',
+        ]);
+
+        $this->add_control('dest_cta_label', [
+            'label'   => __('Label bouton CTA', 'blacktenderscore'),
+            'type'    => Controls_Manager::TEXT,
+            'default' => __('Découvrir →', 'blacktenderscore'),
+        ]);
+
+        $this->add_control('dest_coords_field', [
+            'label'       => __('Champ ACF coordonnées (slug)', 'blacktenderscore'),
+            'type'        => Controls_Manager::TEXT,
+            'default'     => 'exp_departure_coords',
+            'separator'   => 'before',
+            'description' => __('Champ ACF de type "Google Map" sur le post excursion.', 'blacktenderscore'),
+        ]);
+
+        $this->add_control('dest_tagline_field', [
+            'label'       => __('Champ ACF accroche (slug)', 'blacktenderscore'),
+            'type'        => Controls_Manager::TEXT,
+            'default'     => 'exp_tagline',
+            'description' => __('Champ ACF texte court affiché sous le titre dans l\'infobulle.', 'blacktenderscore'),
+        ]);
+
+        $this->end_controls_section();
+    }
+
+    // ─ Content → Marqueur (mode single uniquement) ────────────────────────────
 
     private function section_marker_content(): void {
         $this->start_controls_section('section_marker', [
-            'label' => __('Marqueur', 'blacktenderscore'),
-            'tab'   => Controls_Manager::TAB_CONTENT,
+            'label'     => __('Marqueur', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_CONTENT,
+            'condition' => ['map_source' => 'single'],
         ]);
 
         $this->add_control('show_marker', [
@@ -213,16 +284,26 @@ class GoogleMap extends AbstractBtWidget {
     // ── Render ────────────────────────────────────────────────────────────────
 
     protected function render(): void {
-        $s = $this->get_settings_for_display();
+        $s          = $this->get_settings_for_display();
+        $map_source = $s['map_source'] ?? 'single';
 
-        // ── Résolution de la localisation — priorité : ACF select > adresse manuelle ──
+        if ($map_source === 'all_destinations') {
+            $this->render_destinations_map($s);
+            return;
+        }
+
+        $this->render_single_map($s);
+    }
+
+    // ── Mode : carte unique ────────────────────────────────────────────────────
+
+    private function render_single_map(array $s): void {
         $lat = null;
         $lng = null;
 
         // Rétrocompat : ancienne version du widget utilisait source='acf_map' sans acf_map_field
         $acf_field = trim($s['acf_map_field'] ?? '');
         if ($acf_field === '' && ($s['source'] ?? '') === 'acf_map' && function_exists('acf_get_field_groups')) {
-            // Auto-détection du premier champ google_map sur ce post
             foreach (acf_get_field_groups(['post_id' => get_the_ID()]) as $group) {
                 foreach (acf_get_fields($group['key'] ?? '') ?: [] as $field) {
                     if (($field['type'] ?? '') === 'google_map') {
@@ -242,11 +323,9 @@ class GoogleMap extends AbstractBtWidget {
             }
         }
 
-        // Fallback : champ adresse (texte libre ou retour du dynamic tag "lat,lng")
         $address = '';
         if ($lat === null) {
             $address = trim($s['address'] ?? '');
-            // Le dynamic tag Tag_Acf_Map retourne "lat,lng" — détection directe
             if (preg_match('/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/', $address, $m)) {
                 $lat = (float) $m[1];
                 $lng = (float) $m[2];
@@ -262,44 +341,34 @@ class GoogleMap extends AbstractBtWidget {
             return;
         }
 
-        // ── Charge la Maps JS API (une seule fois par page) ───────────────────
-        if (!wp_script_is('google-maps-api', 'enqueued')) {
-            $api_key  = get_option('elementor_google_maps_api_key', '');
-            $maps_url = 'https://maps.googleapis.com/maps/api/js?callback=btGmapsReady&loading=async';
-            if ($api_key) $maps_url .= '&key=' . rawurlencode($api_key);
-            wp_enqueue_script('google-maps-api', $maps_url, [], null, true);
-        }
+        $this->enqueue_maps_api();
 
         $zoom        = (int) ($s['zoom']['size'] ?? 14);
         $map_type    = esc_attr($s['map_type'] ?? 'roadmap');
         $scroll_zoom = ($s['ui_gestures'] ?? '') === 'yes' ? 'yes' : 'no';
         $show_marker = ($s['show_marker'] ?? 'yes') === 'yes';
 
-        // ── Attribut de localisation ──────────────────────────────────────────
         $data_loc = ($lat !== null)
             ? 'data-bt-latlng="' . esc_attr($lat . ',' . $lng) . '"'
             : 'data-bt-address="' . esc_attr($address) . '"';
 
-        // ── Éditeur : iframe Embed pour la preview ────────────────────────────
+        // Éditeur : iframe Embed
         if ($this->is_edit_mode()) {
-            $api_key = get_option('elementor_google_maps_api_key', '');
-            $q       = $lat !== null ? "{$lat},{$lng}" : $address;
+            $api_key   = get_option('elementor_google_maps_api_key', '');
+            $q         = $lat !== null ? "{$lat},{$lng}" : $address;
             $embed_url = $api_key
                 ? 'https://www.google.com/maps/embed/v1/place?key=' . $api_key . '&q=' . rawurlencode($q) . '&zoom=' . $zoom
                 : 'https://maps.google.com/maps?q=' . rawurlencode($q) . '&t=m&z=' . $zoom . '&output=embed&iwloc=near';
             ?>
             <div class="bt-gmap bt-gmap--editor">
-                <iframe class="bt-gmap__canvas"
-                    loading="lazy"
+                <iframe class="bt-gmap__canvas" loading="lazy"
                     src="<?php echo esc_url($embed_url); ?>"
-                    title="<?php echo esc_attr($q); ?>"
-                ></iframe>
+                    title="<?php echo esc_attr($q); ?>"></iframe>
             </div>
             <?php
             return;
         }
 
-        // ── Front-end ─────────────────────────────────────────────────────────
         $marker_attrs = '';
         if ($show_marker) {
             $allowed = ['strong' => [], 'em' => [], 'br' => [], 'a' => ['href' => ['http', 'https', 'mailto'], 'target' => []]];
@@ -322,7 +391,123 @@ class GoogleMap extends AbstractBtWidget {
         <?php
     }
 
+    // ── Mode : toutes les destinations ────────────────────────────────────────
+
+    /**
+     * Charge toutes les excursions publiées, extrait les coordonnées ACF,
+     * l'accroche et l'image et les passe au canvas en JSON pour le JS.
+     */
+    private function render_destinations_map(array $s): void {
+        $coords_field  = trim($s['dest_coords_field']  ?? '') ?: 'exp_departure_coords';
+        $tagline_field = trim($s['dest_tagline_field'] ?? '') ?: 'exp_tagline';
+        $pin_color     = $s['dest_pin_color']       ?? '#0a0a0a';
+        $pin_active    = $s['dest_pin_active_color'] ?? '#1a73e8';
+        $fit_bounds    = ($s['dest_fit_bounds']  ?? 'yes') === 'yes';
+        $show_image    = ($s['dest_show_image']  ?? 'yes') === 'yes';
+        $cta_label     = esc_html($s['dest_cta_label'] ?: __('Découvrir →', 'blacktenderscore'));
+
+        // Requête toutes excursions (cache 6h)
+        $cache_key = 'bt_dest_map_posts';
+        $exc_posts = get_transient($cache_key);
+        if ($exc_posts === false) {
+            $exc_posts = get_posts([
+                'post_type'      => 'excursion',
+                'posts_per_page' => 200,
+                'post_status'    => 'publish',
+                'orderby'        => 'title',
+                'order'          => 'ASC',
+            ]);
+            set_transient($cache_key, $exc_posts, 6 * HOUR_IN_SECONDS);
+        }
+
+        // Construire le tableau de pins
+        $pins = [];
+        foreach ($exc_posts as $exc) {
+            $coords = function_exists('get_field') ? get_field($coords_field, $exc->ID) : null;
+            if (empty($coords['lat']) || empty($coords['lng'])) continue;
+
+            $tagline = function_exists('get_field') ? (string) get_field($tagline_field, $exc->ID) : '';
+            $thumb   = $show_image ? (get_the_post_thumbnail_url($exc->ID, 'medium') ?: '') : '';
+
+            $pins[] = [
+                'lat'     => round((float) $coords['lat'], 6),
+                'lng'     => round((float) $coords['lng'], 6),
+                'title'   => get_the_title($exc->ID),
+                'tagline' => wp_strip_all_tags($tagline),
+                'image'   => $thumb,
+                'url'     => get_permalink($exc->ID),
+            ];
+        }
+
+        if (empty($pins)) {
+            if ($this->is_edit_mode()) {
+                $this->render_placeholder(
+                    __('Aucune excursion avec coordonnées trouvée. Vérifiez le champ ACF "' . esc_html($coords_field) . '".', 'blacktenderscore')
+                );
+            }
+            return;
+        }
+
+        // Éditeur : iframe centrée sur le centroïde + notice
+        if ($this->is_edit_mode()) {
+            $center_lat = array_sum(array_column($pins, 'lat')) / count($pins);
+            $center_lng = array_sum(array_column($pins, 'lng')) / count($pins);
+            $zoom_prev  = (int) ($s['zoom']['size'] ?? 10);
+            $api_key    = get_option('elementor_google_maps_api_key', '');
+            $q          = "{$center_lat},{$center_lng}";
+            $embed_url  = $api_key
+                ? 'https://www.google.com/maps/embed/v1/place?key=' . $api_key . '&q=' . rawurlencode($q) . '&zoom=' . $zoom_prev
+                : 'https://maps.google.com/maps?q=' . rawurlencode($q) . '&t=m&z=' . $zoom_prev . '&output=embed&iwloc=near';
+            $count = count($pins);
+            ?>
+            <div class="bt-gmap bt-gmap--editor" style="position:relative">
+                <iframe class="bt-gmap__canvas" loading="lazy"
+                    src="<?php echo esc_url($embed_url); ?>"
+                    title="Destinations"></iframe>
+                <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.65);color:#fff;font-size:12px;padding:5px 12px;border-radius:20px;pointer-events:none;white-space:nowrap;">
+                    <?php printf(_n('%d destination sera affichée', '%d destinations seront affichées', $count, 'blacktenderscore'), $count); ?>
+                </div>
+            </div>
+            <?php
+            return;
+        }
+
+        // Front-end : canvas avec JSON destinations
+        $this->enqueue_maps_api();
+
+        $zoom        = (int) ($s['zoom']['size'] ?? 10);
+        $map_type    = esc_attr($s['map_type'] ?? 'roadmap');
+        $scroll_zoom = ($s['ui_gestures'] ?? '') === 'yes' ? 'yes' : 'no';
+
+        $opts = [
+            'pinColor'   => $pin_color,
+            'pinActive'  => $pin_active,
+            'fitBounds'  => $fit_bounds,
+            'ctaLabel'   => $cta_label,
+        ];
+        ?>
+        <div class="bt-gmap bt-gmap--destinations">
+            <div class="bt-gmap__canvas bt-gmaps-js"
+                data-bt-destinations="<?php echo esc_attr(wp_json_encode($pins)); ?>"
+                data-bt-dest-opts="<?php echo esc_attr(wp_json_encode($opts)); ?>"
+                data-zoom="<?php echo (int) $zoom; ?>"
+                data-map-type="<?php echo esc_attr($map_type); ?>"
+                data-scroll-zoom="<?php echo esc_attr($scroll_zoom); ?>"
+            ></div>
+        </div>
+        <?php
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /** Enqueue la Maps JavaScript API une seule fois par page. */
+    private function enqueue_maps_api(): void {
+        if (wp_script_is('google-maps-api', 'enqueued')) return;
+        $api_key  = get_option('elementor_google_maps_api_key', '');
+        $maps_url = 'https://maps.googleapis.com/maps/api/js?callback=btGmapsReady&loading=async';
+        if ($api_key) $maps_url .= '&key=' . rawurlencode($api_key);
+        wp_enqueue_script('google-maps-api', $maps_url, [], null, true);
+    }
 
     /**
      * Retourne tous les champs ACF de type `google_map` pour le SELECT.
@@ -330,7 +515,6 @@ class GoogleMap extends AbstractBtWidget {
      */
     private function google_map_field_options(): array {
         if (!function_exists('acf_get_field_groups')) return [];
-
         $opts = [];
         foreach (acf_get_field_groups() as $group) {
             $fields = acf_get_fields($group['key'] ?? '');
@@ -341,7 +525,6 @@ class GoogleMap extends AbstractBtWidget {
                                       . '  (' . $field['name'] . ')';
             }
         }
-
         return $opts;
     }
 }

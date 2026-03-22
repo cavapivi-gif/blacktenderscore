@@ -1061,12 +1061,8 @@ class Itinerary extends AbstractBtWidget {
             return;
         }
 
-        // Résolution du style : preset per-widget → global → aucun
         $maptype    = $s['map_type'] ?? 'roadmap';
-        $preset_key = $s['bt_map_style_preset'] ?? '';
-        $style_json = $preset_key !== ''
-            ? ($this->resolve_bt_map_style($preset_key) ?? get_option('bt_map_style_json', ''))
-            : get_option('bt_map_style_json', '');
+        $style_json = get_option('bt_map_style_json', '');
 
         // Cache : clé basée sur le post + coordonnées + type + style actif
         $cache_key = 'bt_map_' . md5($post_id . serialize($points) . $maptype . $style_json);

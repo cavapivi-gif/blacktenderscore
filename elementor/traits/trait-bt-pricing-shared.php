@@ -175,7 +175,6 @@ trait BtPricingShared {
             'step_submit_email'   => $s['quote_recipient'] ?? get_option('admin_email'),
             'boat_popup_tpl'     => (int) ($s['boat_popup_tpl']     ?? 0),
             'show_boat_more_btn' => ($s['show_boat_more_btn'] ?? '') === 'yes' ? 'yes' : '',
-            'boat_tags'          => $s['boat_tags'] ?? [],
         ];
 
         $this->render_quote_form_html($quote_settings, $post_id);
@@ -208,6 +207,11 @@ trait BtPricingShared {
            . ' data-nonce="' . esc_attr(wp_create_nonce('bt_quote_nonce')) . '"'
            . ' data-config="' . esc_attr(wp_json_encode($config)) . '">';
 
+        // SVG check réutilisable dans les headers d'étapes
+        $check_svg = '<svg class="bt-quote-step__check" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+                   . ' stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                   . '<path d="M20 6L9 17l-5-5"/></svg>';
+
         $step = 0;
 
         // Step 1 -- Destination
@@ -216,8 +220,9 @@ trait BtPricingShared {
         echo '<div class="bt-quote-step__header">';
         echo '<span class="bt-quote-step__number">' . $step . '</span>';
         echo '<span class="bt-quote-step__title">' . esc_html__('Votre excursion', 'blacktenderscore') . '</span>';
-        echo '<span class="bt-quote-step__summary"></span>';
+        echo $check_svg;
         echo '</div>';
+        echo '<div class="bt-quote-step__summary"></div>';
         echo '<div class="bt-quote-step__content">';
 
         if ($is_excursion) {
@@ -237,39 +242,91 @@ trait BtPricingShared {
             $this->render_excursion_cards(['step_exc_loop_tpl' => '']);
         }
 
-        echo '</div>';
         echo '<div class="bt-quote-step__actions"><button type="button" class="bt-quote-step__next" data-step-next>' . esc_html__('Suivant', 'blacktenderscore') . '</button></div>';
-        echo '</div>';
+        echo '</div>'; // .bt-quote-step__content
+        echo '</div>'; // step 1
 
         // Step 2 -- Bateau
         $step++;
-        echo '<div class="bt-quote-step" role="listitem" aria-expanded="false" data-step="' . $step . '" data-step-type="boat">';
+        echo '<div class="bt-quote-step bt-quote-step--collapsed" role="listitem" aria-expanded="false" data-step="' . $step . '" data-step-type="boat">';
         echo '<div class="bt-quote-step__header">';
         echo '<span class="bt-quote-step__number">' . $step . '</span>';
         echo '<span class="bt-quote-step__title">' . esc_html__('Choix du bateau', 'blacktenderscore') . '</span>';
-        echo '<span class="bt-quote-step__summary"></span>';
+        echo $check_svg;
         echo '</div>';
+        echo '<div class="bt-quote-step__summary"></div>';
         echo '<div class="bt-quote-step__content">';
 
         if ($is_boat) {
-            echo '<div class="bt-quote-boat-auto" data-boat-id="' . esc_attr($post_id) . '">';
-            echo '<p class="bt-quote-boat-auto__name">' . esc_html(get_the_title($post_id)) . '</p>';
-            echo '<input type="hidden" name="boat_id" value="' . esc_attr($post_id) . '">';
+            // Div caché pour init JS (state.boat_id / state.boat_name)
+            echo '<div class="bt-quote-boat-auto" data-boat-id="' . esc_attr($post_id) . '" style="display:none">';
+            echo '<span class="bt-quote-boat-auto__name">' . esc_html(get_the_title($post_id)) . '</span>';
             echo '</div>';
+            $this->render_all_boat_cards($qs, $post_id);
         } elseif ($is_excursion) {
             $this->render_linked_boat_cards($qs, $post_id);
         } else {
             echo '<div class="bt-quote-boat-cards" data-bt-quote-boats></div>';
         }
 
-        echo '</div>';
         echo '<div class="bt-quote-step__actions"><button type="button" class="bt-quote-step__next" data-step-next>' . esc_html__('Suivant', 'blacktenderscore') . '</button></div>';
-        echo '</div>';
+        echo '</div>'; // .bt-quote-step__content
+        echo '</div>'; // step 2
 
-        // Step 3 -- Dates
+        // Step 3 -- Options bateau via BtQuoteSubSteps (seulement en mode boat)
+        if ($is_boat) {
+            $step++;
+
+            // Construire le JSON de config pour le composant JS
+            $taxo_defs = [
+                'boat_comfort'        => ['label' => __('Pour votre confort ?', 'blacktenderscore'),   'multi' => true],
+                'activite'            => ['label' => __('Vos activités ?', 'blacktenderscore'),        'multi' => true],
+                'boat_board_services' => ['label' => __('Services à bord ?', 'blacktenderscore'),     'multi' => true],
+                'boat_onboard_food'   => ['label' => __('Restauration à bord ?', 'blacktenderscore'), 'multi' => true],
+            ];
+
+            $substep_config = [];
+            foreach ($taxo_defs as $slug => $def) {
+                $terms = get_terms(['taxonomy' => $slug, 'hide_empty' => false]);
+                if (is_wp_error($terms) || empty($terms)) continue;
+                $substep_config[] = [
+                    'key'   => $slug,
+                    'label' => $def['label'],
+                    'multi' => $def['multi'],
+                    'items' => array_map(fn($t) => ['id' => $t->term_id, 'name' => $t->name], $terms),
+                ];
+            }
+
+            echo '<div class="bt-quote-step bt-quote-step--collapsed" role="listitem" aria-expanded="false" data-step="' . $step . '" data-step-type="boat-options">';
+            echo '<div class="bt-quote-step__header">';
+            echo '<span class="bt-quote-step__number">' . $step . '</span>';
+            echo '<span class="bt-quote-step__title">' . esc_html__('Options', 'blacktenderscore') . '</span>';
+            echo $check_svg;
+            echo '</div>';
+            echo '<div class="bt-quote-step__summary"></div>';
+            echo '<div class="bt-quote-step__content">';
+
+            // Container vide — BtQuoteSubSteps le remplit côté JS
+            echo '<div data-bt-substep data-config="' . esc_attr(wp_json_encode($substep_config)) . '"></div>';
+
+            // Bouton wizard "Suivant" — caché jusqu'à ce que le récap substep soit affiché
+            echo '<div class="bt-quote-step__actions" data-substep-wizard-next style="display:none">';
+            echo '<button type="button" class="bt-quote-step__next" data-step-next>' . esc_html__('Suivant', 'blacktenderscore') . '</button>';
+            echo '</div>';
+
+            echo '</div>'; // .bt-quote-step__content
+            echo '</div>'; // step boat-options
+        }
+
+        // Step 4 (ou 3 en mode excursion) -- Dates
         $step++;
-        echo '<div class="bt-quote-step" role="listitem" aria-expanded="false" data-step="' . $step . '" data-step-type="dates">';
-        echo '<div class="bt-quote-step__header"><span class="bt-quote-step__number">' . $step . '</span><span class="bt-quote-step__title">' . esc_html__('Dates', 'blacktenderscore') . '</span><span class="bt-quote-step__summary"></span></div>';
+        echo '<div class="bt-quote-step bt-quote-step--collapsed" role="listitem" aria-expanded="false" data-step="' . $step . '" data-step-type="dates">';
+        echo '<div class="bt-quote-step__header">';
+        echo '<span class="bt-quote-step__number">' . $step . '</span>';
+        echo '<span class="bt-quote-step__title">' . esc_html__('Dates', 'blacktenderscore') . '</span>';
+        echo $check_svg;
+        echo '</div>';
+        echo '<div class="bt-quote-step__summary"></div>';
         echo '<div class="bt-quote-step__content">';
         echo '<div class="bt-quote-duration-cards" data-bt-duration-select>';
         echo '<div class="bt-quote-duration-card" data-duration="half" tabindex="0" role="option" aria-selected="false"><span class="bt-quote-duration-card__label">' . esc_html__('Demi-journée', 'blacktenderscore') . '</span></div>';
@@ -283,32 +340,43 @@ trait BtPricingShared {
         echo '<div class="bt-quote-datepicker bt-quote-datepicker--range" data-bt-datepicker data-range="1" style="display:none"><input type="hidden" name="date_start"><input type="hidden" name="date_end"><div class="bt-quote-datepicker__calendar"></div></div>';
         echo '<div class="bt-quote-custom-dates" style="display:none"><textarea class="bt-quote-fields__input bt-quote-fields__textarea" name="date_custom" placeholder="' . esc_attr__('Décrivez vos disponibilités...', 'blacktenderscore') . '" rows="3"></textarea></div>';
         echo '<input type="hidden" name="duration_type" value="">';
-        echo '</div>';
         echo '<div class="bt-quote-step__actions"><button type="button" class="bt-quote-step__next" data-step-next>' . esc_html__('Suivant', 'blacktenderscore') . '</button></div>';
-        echo '</div>';
+        echo '</div>'; // .bt-quote-step__content
+        echo '</div>'; // step 3
 
         // Step 4 -- Coordonnees
         $step++;
-        echo '<div class="bt-quote-step" role="listitem" aria-expanded="false" data-step="' . $step . '" data-step-type="contact">';
-        echo '<div class="bt-quote-step__header"><span class="bt-quote-step__number">' . $step . '</span><span class="bt-quote-step__title">' . esc_html__('Vos coordonnées', 'blacktenderscore') . '</span><span class="bt-quote-step__summary"></span></div>';
+        echo '<div class="bt-quote-step bt-quote-step--collapsed" role="listitem" aria-expanded="false" data-step="' . $step . '" data-step-type="contact">';
+        echo '<div class="bt-quote-step__header">';
+        echo '<span class="bt-quote-step__number">' . $step . '</span>';
+        echo '<span class="bt-quote-step__title">' . esc_html__('Vos coordonnées', 'blacktenderscore') . '</span>';
+        echo $check_svg;
+        echo '</div>';
+        echo '<div class="bt-quote-step__summary"></div>';
         echo '<div class="bt-quote-step__content"><div class="bt-quote-fields">';
         echo '<div class="bt-quote-fields__row"><div class="bt-quote-fields__group"><label class="bt-quote-fields__label">' . esc_html__('Prénom', 'blacktenderscore') . '</label><input type="text" class="bt-quote-fields__input" name="client_firstname" placeholder="' . esc_attr__('Votre prénom', 'blacktenderscore') . '" required></div>';
         echo '<div class="bt-quote-fields__group"><label class="bt-quote-fields__label">' . esc_html__('Nom', 'blacktenderscore') . '</label><input type="text" class="bt-quote-fields__input" name="client_name" placeholder="' . esc_attr__('Votre nom', 'blacktenderscore') . '" required></div></div>';
         echo '<div class="bt-quote-fields__group"><label class="bt-quote-fields__label">' . esc_html__('E-mail', 'blacktenderscore') . '</label><input type="email" class="bt-quote-fields__input" name="client_email" placeholder="votre@email.com" required></div>';
         echo '<div class="bt-quote-fields__group"><label class="bt-quote-fields__label">' . esc_html__('Téléphone', 'blacktenderscore') . '</label><input type="tel" class="bt-quote-fields__input" name="client_phone" placeholder="06 12 34 56 78"></div>';
-        echo '</div></div>';
-        echo '<div class="bt-quote-step__actions"><button type="button" class="bt-quote-step__next" data-step-next>' . esc_html__('Suivant', 'blacktenderscore') . '</button></div>';
         echo '</div>';
+        echo '<div class="bt-quote-step__actions"><button type="button" class="bt-quote-step__next" data-step-next>' . esc_html__('Suivant', 'blacktenderscore') . '</button></div>';
+        echo '</div>'; // .bt-quote-step__content
+        echo '</div>'; // step 4
 
         // Step 5 -- Envoi
         $step++;
-        echo '<div class="bt-quote-step" role="listitem" aria-expanded="false" data-step="' . $step . '" data-step-type="submit">';
-        echo '<div class="bt-quote-step__header"><span class="bt-quote-step__number">' . $step . '</span><span class="bt-quote-step__title">' . esc_html__('Confirmation', 'blacktenderscore') . '</span><span class="bt-quote-step__summary"></span></div>';
+        echo '<div class="bt-quote-step bt-quote-step--collapsed" role="listitem" aria-expanded="false" data-step="' . $step . '" data-step-type="submit">';
+        echo '<div class="bt-quote-step__header">';
+        echo '<span class="bt-quote-step__number">' . $step . '</span>';
+        echo '<span class="bt-quote-step__title">' . esc_html__('Confirmation', 'blacktenderscore') . '</span>';
+        echo $check_svg;
+        echo '</div>';
+        echo '<div class="bt-quote-step__summary"></div>';
         echo '<div class="bt-quote-step__content">';
         echo '<div class="bt-quote-recap" data-bt-quote-recap></div>';
         echo '<button type="button" class="bt-quote-submit" data-bt-quote-submit>' . esc_html__('Envoyer ma demande', 'blacktenderscore') . '</button>';
         echo '<div class="bt-quote-message" data-bt-quote-message></div>';
-        echo '</div></div>';
+        echo '</div></div>'; // .bt-quote-step__content + step 5
 
         echo '</div>'; // .bt-quote
 
@@ -394,10 +462,10 @@ trait BtPricingShared {
 
         $show_price = ($s['qt_exc_card_show_price'] ?? 'yes') !== 'no';
 
-        // Image
+        // Image (lazy — activée par JS au reveal)
         if ($thumb) {
             echo '<div class="bt-quote-exc-card__img">'
-               . '<img src="' . esc_url($thumb) . '" alt="' . esc_attr($exc->post_title) . '" loading="lazy">'
+               . '<img data-lazy-src="' . esc_url($thumb) . '" alt="' . esc_attr($exc->post_title) . '" src="data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 1 1\'/%3E" loading="lazy">'
                . '</div>';
         }
 
@@ -421,6 +489,15 @@ trait BtPricingShared {
         // Zone de départ
         if ($departure) {
             echo '<span class="bt-quote-exc-card__departure">' . esc_html($departure) . '</span>';
+        }
+
+        // Skipper (taxo boat_skipper)
+        if (($s['qt_exc_card_show_skipper'] ?? 'yes') !== 'no') {
+            $skipper_terms = get_the_terms($eid, 'boat_skipper');
+            if (!empty($skipper_terms) && !is_wp_error($skipper_terms)) {
+                $names = array_map(fn($t) => $t->name, $skipper_terms);
+                echo '<span class="bt-quote-exc-card__skipper">' . esc_html(implode(', ', $names)) . '</span>';
+            }
         }
 
         echo '</div>';
@@ -451,23 +528,22 @@ trait BtPricingShared {
             if (!$boat || $boat->post_status !== 'publish') continue;
 
             $card_attrs = 'data-boat-id="' . esc_attr($bid) . '"';
-            // Pricing data for JS dynamic calculation
             $card_price_half = (float) get_field('boat_price_half', $bid);
             $card_price_full = (float) get_field('boat_price_full', $bid);
             $card_pax_max    = (int) get_field('boat_pax_max', $bid);
-            // Min price from repeater
-            $card_repeater = get_field('boat_price', $bid) ?: [];
-            $card_min_rep  = 0;
+            $card_repeater   = get_field('boat_price', $bid) ?: [];
+            $card_min_rep    = 0;
             foreach ($card_repeater as $cr) {
                 $cp = (float) ($cr['boat_price_boat'] ?? 0);
                 if ($cp > 0 && ($card_min_rep === 0 || $cp < $card_min_rep)) $card_min_rep = $cp;
             }
             if ($card_price_half) $card_attrs .= ' data-price-half="' . esc_attr($card_price_half) . '"';
             if ($card_price_full) $card_attrs .= ' data-price-full="' . esc_attr($card_price_full) . '"';
-            if ($card_min_rep)    $card_attrs .= ' data-price-min="' . esc_attr($card_min_rep) . '"';
-            if ($card_pax_max)    $card_attrs .= ' data-pax-max="' . esc_attr($card_pax_max) . '"';
+            if ($card_min_rep)    $card_attrs .= ' data-price-min="'  . esc_attr($card_min_rep)    . '"';
+            if ($card_pax_max)    $card_attrs .= ' data-pax-max="'    . esc_attr($card_pax_max)    . '"';
 
-            echo '<div class="bt-quote-boat-card bt-forfait-card bt-forfait-card--has-image" ' . $card_attrs . '>';
+            echo '<div class="bt-quote-boat-card" '
+               . $card_attrs . ' tabindex="0" role="option" aria-pressed="false">';
             if ($tpl_id) {
                 echo $this->render_shared_loop_item($tpl_id, $boat);
             } else {
@@ -479,30 +555,198 @@ trait BtPricingShared {
     }
 
     /**
-     * Card bateau par défaut : image + titre + prix + tags taxonomie + meta (pax · année).
-     * Prix calculé depuis le repeater boat_price (min), fallback sur boat_price_half/full.
+     * Toutes les cards bateau publiées — utilisé en mode devis boat.
+     *
+     * Structure HTML identique à trait-bt-boat-pricing.php : __image + __body.
+     * Grille 2 colonnes (.bt-forfaits__grid), image en haut, corps en dessous.
+     * Le bateau courant ($current_id) est pré-sélectionné (--active).
+     */
+    protected function render_all_boat_cards(array $s, int $current_id = 0): void {
+        $boats = get_posts([
+            'post_type'      => 'boat',
+            'posts_per_page' => 50,
+            'post_status'    => 'publish',
+            'orderby'        => 'title',
+            'order'          => 'ASC',
+        ]);
+
+        if (empty($boats)) {
+            echo '<p class="bt-quote__empty">' . esc_html__('Aucun bateau disponible.', 'blacktenderscore') . '</p>';
+            return;
+        }
+
+        // Bateau courant en premier
+        if ($current_id) {
+            usort($boats, fn($a, $b) => ($a->ID === $current_id ? -1 : ($b->ID === $current_id ? 1 : 0)));
+        }
+
+        echo '<div class="bt-quote-boat-cards">';
+
+        foreach ($boats as $boat) {
+            $bid        = $boat->ID;
+            $is_current = ($bid === $current_id);
+
+            $pax_max  = (int) get_field('boat_pax_max', $bid);
+            $repeater = get_field('boat_price', $bid) ?: [];
+
+            // Construire les forfaits (label durée + prix)
+            $forfaits = [];
+            $min_rep  = 0;
+            foreach ($repeater as $row) {
+                $p = (float) ($row['boat_price_boat'] ?? 0);
+                if (!$p) continue;
+                $dur_id    = (int) ($row['boat_location_duration'] ?? 0);
+                $dur_label = '';
+                if ($dur_id) {
+                    $dur_term = get_term($dur_id);
+                    if ($dur_term && !is_wp_error($dur_term)) $dur_label = $dur_term->name;
+                }
+                $forfaits[] = ['price' => $p, 'label' => $dur_label];
+                if (!$min_rep || $p < $min_rep) $min_rep = $p;
+            }
+            // Fallback si repeater vide
+            if (empty($forfaits)) {
+                $ph = (float) get_field('boat_price_half', $bid);
+                $pf = (float) get_field('boat_price_full', $bid);
+                if ($ph) $forfaits[] = ['price' => $ph, 'label' => __('Demi-journée', 'blacktenderscore')];
+                if ($pf) $forfaits[] = ['price' => $pf, 'label' => __('Journée complète', 'blacktenderscore')];
+                $min_rep = $ph ?: $pf;
+            }
+
+            $first_price = $forfaits[0]['price'] ?? 0;
+            $pp_price    = ($first_price && $pax_max > 0) ? (int) ceil($first_price / $pax_max) : 0;
+
+            // Subtitle : modèle · année
+            $boat_year   = (int) get_field('boat_year', $bid);
+            $model_name  = '';
+            $model_terms = get_the_terms($bid, 'boat-model');
+            if (!empty($model_terms) && !is_wp_error($model_terms)) {
+                $model_name = $model_terms[0]->name;
+            } elseif ($raw_model = get_field('boat_model_name', $bid)) {
+                $model_id = is_array($raw_model) ? (int) reset($raw_model) : (int) $raw_model;
+                $term     = $model_id ? get_term($model_id) : null;
+                if ($term && !is_wp_error($term)) $model_name = $term->name;
+            }
+            $subtitle = trim($model_name . ($boat_year ? ' · ' . $boat_year : ''));
+
+            $has_jockey = (bool) get_field('boat_has_jockey_sits', $bid);
+            $thumb      = get_the_post_thumbnail_url($bid, 'medium');
+
+            $card_cls  = 'bt-quote-boat-card';
+            $card_cls .= $is_current ? ' bt-quote-boat-card--selected bt-forfait-card--active' : '';
+
+            $data = 'data-boat-id="' . esc_attr($bid) . '"';
+            if ($min_rep)  $data .= ' data-price-min="' . esc_attr($min_rep) . '"';
+            if ($pax_max)  $data .= ' data-pax-max="'   . esc_attr($pax_max) . '"';
+
+            $bg_attr = $thumb ? ' data-lazy-bg="' . esc_url($thumb) . '"' : '';
+
+            echo '<div class="' . $card_cls . '" ' . $data
+               . ' tabindex="0" role="option"'
+               . ' aria-pressed="' . ($is_current ? 'true' : 'false') . '">';
+
+            echo '<div class="bt-quote-boat-card__bg"' . $bg_attr . '></div>';
+
+            echo '<div class="bt-quote-boat-card__right">';
+            echo '<div class="bt-quote-boat-card__body">';
+
+            echo '<p class="bt-quote-boat-card__title">' . esc_html($boat->post_title) . '</p>';
+            if ($subtitle) {
+                echo '<p class="bt-quote-boat-card__subtitle">' . esc_html($subtitle) . '</p>';
+            }
+
+            // Pills forfaits (label durée + prix)
+            if (!empty($forfaits)) {
+                echo '<div class="bt-quote-boat-card__forfaits">';
+                foreach ($forfaits as $i => $f) {
+                    $active_cls = ($i === 0) ? ' bt-quote-boat-card__forfait--active' : '';
+                    echo '<button type="button"'
+                       . ' class="bt-quote-boat-card__forfait' . $active_cls . '"'
+                       . ' data-price="' . esc_attr($f['price']) . '"'
+                       . ' data-pax="'  . esc_attr($pax_max)    . '"'
+                       . ' tabindex="-1">';
+                    if ($f['label']) {
+                        echo '<span class="bt-quote-boat-card__forfait-label">' . esc_html($f['label']) . '</span>';
+                    }
+                    echo '<span class="bt-quote-boat-card__forfait-price">'
+                       . esc_html(number_format($f['price'], 0, ',', ' ')) . ' €</span>';
+                    echo '</button>';
+                }
+                echo '</div>'; // .bt-quote-boat-card__forfaits
+
+                // Prix / pers. du forfait actif (mis à jour par JS)
+                if ($pp_price) {
+                    echo '<p class="bt-quote-boat-card__pp">' . esc_html($pp_price) . ' €'
+                       . ' <span class="bt-quote-boat-card__per">/ pers.</span></p>';
+                }
+            }
+
+            // Meta
+            echo '<div class="bt-quote-boat-card__meta">';
+            if ($pax_max) {
+                echo '<span class="bt-quote-boat-card__meta-item">';
+                echo '<svg class="bt-quote-boat-card__icon" viewBox="0 0 24 24">'
+                   . '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>'
+                   . '<circle cx="9" cy="7" r="4"/>'
+                   . '<path d="M23 21v-2a4 4 0 0 0-3-3.87"/>'
+                   . '<path d="M16 3.13a4 4 0 0 1 0 7.75"/>'
+                   . '</svg>';
+                echo esc_html($pax_max) . ' pers.';
+                echo '</span>';
+            }
+            $jockey_label = $has_jockey
+                ? __('Avec siège jockey', 'blacktenderscore')
+                : __('Sans siège jockey', 'blacktenderscore');
+            echo '<span class="bt-quote-boat-card__meta-item bt-quote-boat-card__meta-item--jockey'
+               . ($has_jockey ? ' bt-quote-boat-card__meta-item--yes' : '') . '">'
+               . esc_html($jockey_label) . '</span>';
+            echo '</div>'; // .bt-quote-boat-card__meta
+
+            echo '</div>'; // .bt-quote-boat-card__body
+
+            // Bouton "Plus d'infos" — collé en bas de __right (optionnel)
+            if (($s['show_boat_more_btn'] ?? '') === 'yes') {
+                $popup_tpl = (int) ($s['boat_popup_tpl'] ?? 0);
+                echo '<button type="button" class="bt-quote-boat-card__more"'
+                   . ' data-boat-id="' . esc_attr($bid) . '"'
+                   . ($popup_tpl ? ' data-popup-tpl="' . esc_attr($popup_tpl) . '"' : '')
+                   . '>' . esc_html__('Plus d\'infos', 'blacktenderscore') . '</button>';
+            }
+
+            echo '</div>'; // .bt-quote-boat-card__right
+            echo '</div>'; // .bt-quote-boat-card
+        }
+
+        echo '</div>'; // .bt-quote-boat-cards
+    }
+
+    /**
+     * Card bateau par défaut pour les bateaux liés (mode excursion).
+     * Image + titre + subtitle + prix total + pp + meta capacité.
      *
      * @param int      $bid  ID du post bateau
      * @param \WP_Post $boat Objet post bateau
-     * @param array    $s    Settings Elementor (boat_tags, show_boat_more_btn, boat_popup_tpl, …)
-     */
-    /**
-     * Card bateau par defaut : image + titre + subtitle + prix/pers + meta.
-     * Utilise les classes unifiees .bt-forfait-card (le wrapper ajoute --has-image).
+     * @param array    $s    Settings Elementor
      */
     protected function render_default_boat_card(int $bid, \WP_Post $boat, array $s = []): void {
-        $thumb      = get_the_post_thumbnail_url($bid, 'medium');
-        $pax        = (int) get_field('boat_pax_max', $bid);
-        $boat_year  = (int) get_field('boat_year', $bid);
+        $thumb     = get_the_post_thumbnail_url($bid, 'medium');
+        $pax       = (int) get_field('boat_pax_max', $bid);
+        $boat_year = (int) get_field('boat_year', $bid);
 
-        // Modele du bateau (taxo boat-model)
+        // Subtitle : modèle · année
+        $model_name  = '';
         $model_terms = get_the_terms($bid, 'boat-model');
-        $model_name  = (!empty($model_terms) && !is_wp_error($model_terms))
-            ? $model_terms[0]->name : '';
+        if (!empty($model_terms) && !is_wp_error($model_terms)) {
+            $model_name = $model_terms[0]->name;
+        } elseif ($raw_model = get_field('boat_model_name', $bid)) {
+            $model_id = is_array($raw_model) ? (int) reset($raw_model) : (int) $raw_model;
+            $term     = $model_id ? get_term($model_id) : null;
+            if ($term && !is_wp_error($term)) $model_name = $term->name;
+        }
         $subtitle = trim($model_name . ($boat_year ? ' · ' . $boat_year : ''));
 
-        // Prix : premier row du repeater boat_price, fallback half/full
-        $repeater   = get_field('boat_price', $bid) ?: [];
+        // Prix : premier row repeater, fallback half/full
+        $repeater    = get_field('boat_price', $bid) ?: [];
         $first_price = 0;
         foreach ($repeater as $row) {
             $p = (float) ($row['boat_price_boat'] ?? 0);
@@ -511,123 +755,64 @@ trait BtPricingShared {
         if (!$first_price) {
             $first_price = (float) (get_field('boat_price_half', $bid) ?: get_field('boat_price_full', $bid));
         }
-
         $pp_price = ($first_price && $pax > 0) ? (int) ceil($first_price / $pax) : 0;
 
-        // Image
-        if ($thumb) {
-            echo '<div class="bt-forfait-card__image bt-quote-boat-card__img">';
-            echo '<img src="' . esc_url($thumb) . '" alt="' . esc_attr($boat->post_title) . '" loading="lazy">';
-            echo '</div>';
-        }
+        $has_jockey = (bool) get_field('boat_has_jockey_sits', $bid);
 
-        echo '<div class="bt-forfait-card__body bt-quote-boat-card__body">';
+        $bg_attr = $thumb ? ' data-lazy-bg="' . esc_url($thumb) . '"' : '';
+        echo '<div class="bt-quote-boat-card__bg"' . $bg_attr . '></div>';
 
-        // Titre
-        echo '<p class="bt-forfait-card__title bt-quote-boat-card__title">' . esc_html($boat->post_title) . '</p>';
+        echo '<div class="bt-quote-boat-card__right">';
+        echo '<div class="bt-quote-boat-card__body">';
 
-        // Subtitle (modele · annee)
+        echo '<p class="bt-quote-boat-card__title">' . esc_html($boat->post_title) . '</p>';
+
         if ($subtitle) {
-            echo '<p class="bt-forfait-card__subtitle">' . esc_html($subtitle) . '</p>';
+            echo '<p class="bt-quote-boat-card__subtitle">' . esc_html($subtitle) . '</p>';
         }
 
-        // Prix par personne
-        if ($pp_price) {
-            echo '<div class="bt-forfait-card__pricing bt-quote-boat-card__price">';
-            echo '<span class="bt-forfait-card__price bt-quote-boat-card__price-amount">' . esc_html($pp_price) . '</span>';
-            echo '<span class="bt-forfait-card__currency">€</span>';
-            echo '<span class="bt-forfait-card__per">' . esc_html__('/ pers.', 'blacktenderscore') . '</span>';
+        if ($first_price) {
+            echo '<div class="bt-quote-boat-card__pricing">';
+            echo '<span class="bt-quote-boat-card__price">' . esc_html(number_format($first_price, 0, ',', ' ')) . '</span>';
+            echo '<span class="bt-quote-boat-card__currency">€</span>';
             echo '</div>';
+            if ($pp_price) {
+                echo '<p class="bt-quote-boat-card__pp">' . esc_html($pp_price) . ' €'
+                   . ' <span class="bt-quote-boat-card__per">/ pers.</span></p>';
+            }
         }
 
-        // Tags taxonomie
-        $this->render_boat_tag_pills($bid, $s['boat_tags'] ?? []);
-
-        // Meta : pax · duree
-        echo '<div class="bt-forfait-card__meta bt-quote-boat-card__meta">';
-        if ($pax > 0) {
-            echo '<span class="bt-forfait-card__meta-item">'
-               . '<svg class="bt-forfait-card__icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'
-               . esc_html(sprintf(__('%d pers.', 'blacktenderscore'), $pax))
-               . '</span>';
+        echo '<div class="bt-quote-boat-card__meta">';
+        if ($pax) {
+            echo '<span class="bt-quote-boat-card__meta-item">';
+            echo '<svg class="bt-quote-boat-card__icon" viewBox="0 0 24 24">'
+               . '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>'
+               . '<circle cx="9" cy="7" r="4"/>'
+               . '<path d="M23 21v-2a4 4 0 0 0-3-3.87"/>'
+               . '<path d="M16 3.13a4 4 0 0 1 0 7.75"/>'
+               . '</svg>';
+            echo esc_html($pax) . ' pers.';
+            echo '</span>';
         }
-        echo '</div>';
+        $jockey_label = $has_jockey
+            ? __('Avec siège jockey', 'blacktenderscore')
+            : __('Sans siège jockey', 'blacktenderscore');
+        echo '<span class="bt-quote-boat-card__meta-item bt-quote-boat-card__meta-item--jockey'
+           . ($has_jockey ? ' bt-quote-boat-card__meta-item--yes' : '') . '">'
+           . esc_html($jockey_label) . '</span>';
+        echo '</div>'; // .bt-quote-boat-card__meta
 
-        echo '</div>'; // .bt-forfait-card__body
+        echo '</div>'; // .bt-quote-boat-card__body
 
-        // Bouton "Plus d'infos"
         if (($s['show_boat_more_btn'] ?? '') === 'yes') {
             $popup_tpl = (int) ($s['boat_popup_tpl'] ?? 0);
             echo '<button type="button" class="bt-quote-boat-card__more"'
                . ' data-boat-id="' . esc_attr($bid) . '"'
                . ($popup_tpl ? ' data-popup-tpl="' . esc_attr($popup_tpl) . '"' : '')
-               . '>'
-               . esc_html__('Plus d\'infos', 'blacktenderscore')
-               . '</button>';
-        }
-    }
-
-    /**
-     * Rendu des pills de taxonomie pour une card bateau.
-     *
-     * @param int   $bid          ID du post bateau
-     * @param array $tags_repeater Repeater Elementor (boat_tags) : [{tag_taxonomy, tag_terms[]}, …]
-     */
-    protected function render_boat_tag_pills(int $bid, array $tags_repeater): void {
-        if (empty($tags_repeater)) return;
-
-        $pills = [];
-        foreach ($tags_repeater as $row) {
-            $taxonomy     = $row['tag_taxonomy'] ?? '';
-            $allowed_slugs = is_array($row['tag_terms'] ?? null)
-                ? $row['tag_terms']
-                : array_filter(explode(',', (string) ($row['tag_terms'] ?? '')));
-
-            if (!$taxonomy || empty($allowed_slugs)) continue;
-
-            $terms = get_the_terms($bid, $taxonomy);
-            if (empty($terms) || is_wp_error($terms)) continue;
-
-            foreach ($terms as $term) {
-                if (in_array($term->slug, $allowed_slugs, true)) {
-                    $pills[] = $term->name;
-                }
-            }
+               . '>' . esc_html__('Plus d\'infos', 'blacktenderscore') . '</button>';
         }
 
-        if (empty($pills)) return;
-
-        echo '<div class="bt-quote-boat-card__tags">';
-        foreach ($pills as $pill) {
-            echo '<span class="bt-quote-boat-card__tag">' . esc_html($pill) . '</span>';
-        }
-        echo '</div>';
-    }
-
-    /**
-     * Retourne toutes les options de termes des taxonomies bateau (slug => "Taxo : Nom").
-     * Utilisé pour peupler le SELECT2 du repeater boat_tags.
-     *
-     * @return array<string,string>
-     */
-    protected static function get_all_boat_term_options(): array {
-        $taxonomies = [
-            'boat_equipment'  => __('Équipement', 'blacktenderscore'),
-            'type-de-bateau'  => __('Type', 'blacktenderscore'),
-            'boat_fuel'       => __('Carburant', 'blacktenderscore'),
-            'boat_skipper'    => __('Skipper', 'blacktenderscore'),
-        ];
-
-        $options = [];
-        foreach ($taxonomies as $tax_slug => $tax_label) {
-            $terms = get_terms(['taxonomy' => $tax_slug, 'hide_empty' => false]);
-            if (empty($terms) || is_wp_error($terms)) continue;
-            foreach ($terms as $term) {
-                $options[$term->slug] = $tax_label . ' : ' . $term->name;
-            }
-        }
-
-        return $options;
+        echo '</div>'; // .bt-quote-boat-card__right
     }
 
     // ── Loop template helper ────────────────────────────────────────────────

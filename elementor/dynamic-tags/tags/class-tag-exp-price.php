@@ -103,8 +103,15 @@ abstract class Abstract_Price_Tag extends Abstract_BT_Tag {
             default   => number_format($price, 0, ',', ' '),
         };
 
-        $parts = array_filter([$prefix, $formatted . ' ' . $devise, $suffix]);
-        echo esc_html(implode(' ', $parts));
+        $out = '';
+        if ($prefix !== '') {
+            $out .= '<span class="bt-exp-price__prefix">' . esc_html($prefix) . '</span> ';
+        }
+        $out .= esc_html($formatted . ' ' . $devise);
+        if ($suffix !== '') {
+            $out .= ' <span class="bt-exp-price__suffix">' . esc_html($suffix) . '</span>';
+        }
+        echo $out; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     }
 }
 

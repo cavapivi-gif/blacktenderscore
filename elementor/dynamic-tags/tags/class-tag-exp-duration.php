@@ -4,15 +4,16 @@ namespace BlackTenders\Elementor\DynamicTags;
 defined('ABSPATH') || exit;
 
 /**
- * Dynamic Tag — Horaires de départ (et optionnellement prix).
+ * Dynamic Tag — Horaires de départ, prix et/ou durée.
  *
- * Lit le schéma ACF tout seul : on choisit 1 repeater, le tag détecte s'il contient
- * un sous-repeater (plusieurs départs/horaires) et un champ prix, puis affiche.
+ * Modes d'affichage (display_mode) :
+ *  - schedule  : Horaires & Prix (comportement d'origine)
+ *  - duration  : Durée uniquement — collecte le sous-champ durée de chaque row,
+ *                déduplique et affiche avec le séparateur choisi.
+ *  - both      : Horaires + Durée (horaires avec durée accolée par row)
  *
- * Ex. tarification_par_forfait → détecte exp_departure_time (repeater) + departure_time_child (texte)
- *     et exp_price → "10:00 à 55€ ou 18:00 à 55€".
- *
- * Contrôles : uniquement le repeater (liste ACF) + séparateur, afficher prix, fallback.
+ * Les contrôles prix/note sont cachés en mode "duration",
+ * les contrôles durée sont cachés en mode "schedule".
  */
 class Tag_Exp_Duration extends Abstract_BT_Tag {
 
@@ -24,6 +25,19 @@ class Tag_Exp_Duration extends Abstract_BT_Tag {
 
         $repeater_opts = $this->acf_repeater_field_options();
 
+        // ── Mode d'affichage ─────────────────────────────────────────────
+        $this->add_control('display_mode', [
+            'label'   => __('Mode d\'affichage', 'blacktenderscore'),
+            'type'    => \Elementor\Controls_Manager::SELECT,
+            'options' => [
+                'schedule' => __('Horaires & Prix', 'blacktenderscore'),
+                'duration' => __('Durée uniquement', 'blacktenderscore'),
+                'both'     => __('Horaires + Durée', 'blacktenderscore'),
+            ],
+            'default'     => 'schedule',
+            'description' => __('Choisissez ce que ce tag affiche.', 'blacktenderscore'),
+        ]);
+
         $this->add_control('repeater_field', [
             'label'   => __('Champ repeater', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
@@ -33,7 +47,7 @@ class Tag_Exp_Duration extends Abstract_BT_Tag {
         ]);
 
         $this->add_control('separator', [
-            'label'   => __('Séparateur entre horaires', 'blacktenderscore'),
+            'label'   => __('Séparateur', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::SELECT,
             'options' => [
                 ' · ' => '·  (point médian)',
@@ -46,18 +60,20 @@ class Tag_Exp_Duration extends Abstract_BT_Tag {
             'default' => ' ou ',
         ]);
 
+        // ── Contrôles Prix (cachés en mode "duration") ───────────────────
         $this->add_control('show_price', [
             'label'        => __('Afficher le prix pour chaque horaire', 'blacktenderscore'),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
+            'condition'    => ['display_mode!' => 'duration'],
         ]);
 
         $this->add_control('currency', [
             'label'     => __('Symbole devise', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::TEXT,
             'default'   => '€',
-            'condition' => ['show_price' => 'yes'],
+            'condition' => ['show_price' => 'yes', 'display_mode!' => 'duration'],
         ]);
 
         $this->add_control('price_template', [
@@ -65,7 +81,7 @@ class Tag_Exp_Duration extends Abstract_BT_Tag {
             'type'        => \Elementor\Controls_Manager::TEXT,
             'default'     => ' à {price}',
             'placeholder' => ' à {price}',
-            'condition'   => ['show_price' => 'yes'],
+            'condition'   => ['show_price' => 'yes', 'display_mode!' => 'duration'],
         ]);
 
         $this->add_control('show_pricing_note', [
@@ -74,20 +90,21 @@ class Tag_Exp_Duration extends Abstract_BT_Tag {
             'return_value' => 'yes',
             'default'      => '',
             'description'  => __('Affiche exp_pricing_note de chaque row du repeater.', 'blacktenderscore'),
+            'condition'    => ['display_mode!' => 'duration'],
         ]);
 
         $this->add_control('pricing_note_separator', [
             'label'     => __('Séparateur entre notes', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::TEXT,
             'default'   => ' | ',
-            'condition' => ['show_pricing_note' => 'yes'],
+            'condition' => ['show_pricing_note' => 'yes', 'display_mode!' => 'duration'],
         ]);
 
         $this->add_control('pricing_note_color', [
             'label'     => __('Couleur de la note', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::COLOR,
             'default'   => '',
-            'condition' => ['show_pricing_note' => 'yes'],
+            'condition' => ['show_pricing_note' => 'yes', 'display_mode!' => 'duration'],
         ]);
 
         $this->add_control('pricing_note_size', [
@@ -99,7 +116,7 @@ class Tag_Exp_Duration extends Abstract_BT_Tag {
                 'em'  => ['min' => 0.5, 'max' => 3, 'step' => 0.1],
                 'rem' => ['min' => 0.5, 'max' => 3, 'step' => 0.1],
             ],
-            'condition' => ['show_pricing_note' => 'yes'],
+            'condition' => ['show_pricing_note' => 'yes', 'display_mode!' => 'duration'],
         ]);
 
         $this->add_control('pricing_note_weight', [
@@ -114,7 +131,7 @@ class Tag_Exp_Duration extends Abstract_BT_Tag {
                 '700' => 'Bold (700)',
             ],
             'default'   => '',
-            'condition' => ['show_pricing_note' => 'yes'],
+            'condition' => ['show_pricing_note' => 'yes', 'display_mode!' => 'duration'],
         ]);
 
         $this->add_control('pricing_note_style', [
@@ -126,58 +143,88 @@ class Tag_Exp_Duration extends Abstract_BT_Tag {
                 'italic' => 'Italique',
             ],
             'default'   => 'italic',
-            'condition' => ['show_pricing_note' => 'yes'],
+            'condition' => ['show_pricing_note' => 'yes', 'display_mode!' => 'duration'],
         ]);
 
         $this->add_control('fallback', [
-            'label'   => __('Texte si aucun horaire', 'blacktenderscore'),
+            'label'   => __('Texte si vide', 'blacktenderscore'),
             'type'    => \Elementor\Controls_Manager::TEXT,
             'default' => '',
         ]);
 
-        // ── Durée en navigation ───────────────────────────────────────────
-        $this->add_control('show_duration', [
-            'label'        => __('Afficher le temps', 'blacktenderscore'),
-            'type'         => \Elementor\Controls_Manager::SWITCHER,
-            'return_value' => 'yes',
-            'default'      => '',
-            'separator'    => 'before',
-        ]);
-
+        // ── Contrôles Durée (cachés en mode "schedule") ──────────────────
         $this->add_control('duration_subfield', [
             'label'       => __('Sous-champ durée', 'blacktenderscore'),
             'type'        => \Elementor\Controls_Manager::TEXT,
             'default'     => 'exc_timeinbot',
             'description' => __('Nom du sous-champ texte dans le repeater (ex: exc_timeinbot → "1h30").', 'blacktenderscore'),
-            'condition'   => ['show_duration' => 'yes'],
+            'separator'   => 'before',
+            'condition'   => ['display_mode!' => 'schedule'],
         ]);
 
         $this->add_control('duration_label_before', [
             'label'     => __('Texte avant la durée', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::TEXT,
-            'default'   => __('pour une durée de', 'blacktenderscore'),
-            'condition' => ['show_duration' => 'yes'],
+            'default'   => '',
+            'condition' => ['display_mode!' => 'schedule'],
         ]);
 
         $this->add_control('duration_label_after', [
             'label'     => __('Texte après la durée', 'blacktenderscore'),
             'type'      => \Elementor\Controls_Manager::TEXT,
             'default'   => '',
-            'condition' => ['show_duration' => 'yes'],
+            'condition' => ['display_mode!' => 'schedule'],
         ]);
     }
 
     public function render(): void {
 
-        $post_id = (int) get_the_ID();
+        $post_id       = (int) get_the_ID();
         $repeater_name = trim((string) ($this->get_settings('repeater_field') ?? ''));
+        $display_mode  = (string) ($this->get_settings('display_mode') ?: 'schedule');
+        $fallback      = (string) ($this->get_settings('fallback') ?? '');
+        $sep           = (string) ($this->get_settings('separator') ?: ' ou ');
 
         if ($repeater_name === '') {
-            $fallback = (string) ($this->get_settings('fallback') ?? '');
             if ($fallback !== '') echo esc_html($fallback);
             return;
         }
 
+        $rows = $this->get_repeater_rows($post_id, $repeater_name);
+        if (empty($rows)) {
+            if ($fallback !== '') echo esc_html($fallback);
+            return;
+        }
+
+        // ── Mode "Durée uniquement" ──────────────────────────────────────
+        if ($display_mode === 'duration') {
+            $dur_subfield = sanitize_key((string) ($this->get_settings('duration_subfield') ?: 'exc_timeinbot'));
+            $dur_before   = trim((string) ($this->get_settings('duration_label_before') ?? ''));
+            $dur_after    = trim((string) ($this->get_settings('duration_label_after')  ?? ''));
+
+            $durations = [];
+            foreach ($rows as $row) {
+                $val = trim((string) ($row[$dur_subfield] ?? ''));
+                if ($val !== '') $durations[] = $val;
+            }
+
+            $durations = array_values(array_unique($durations));
+
+            if (empty($durations)) {
+                if ($fallback !== '') echo esc_html($fallback);
+                return;
+            }
+
+            $parts = [];
+            foreach ($durations as $d) {
+                $parts[] = ($dur_before !== '' ? $dur_before . ' ' : '') . $d . ($dur_after !== '' ? ' ' . $dur_after : '');
+            }
+
+            echo esc_html(implode($sep, $parts));
+            return;
+        }
+
+        // ── Modes "Horaires & Prix" et "Horaires + Durée" ────────────────
         $structure = $this->acf_detect_repeater_departure_structure($repeater_name);
         if ($structure === null) {
             $structure = [
@@ -187,25 +234,17 @@ class Tag_Exp_Duration extends Abstract_BT_Tag {
             ];
         }
 
-        $rows = $this->get_repeater_rows($post_id, $repeater_name);
-        if (empty($rows)) {
-            $fallback = (string) ($this->get_settings('fallback') ?? '');
-            if ($fallback !== '') echo esc_html($fallback);
-            return;
-        }
-
         $show_price        = ($this->get_settings('show_price') ?? 'yes') === 'yes';
         $show_pricing_note = ($this->get_settings('show_pricing_note') ?? '') === 'yes';
-        $show_duration     = ($this->get_settings('show_duration') ?? '') === 'yes';
-        $sep               = (string) ($this->get_settings('separator') ?: ' ou ');
+        $show_duration     = ($display_mode === 'both');
         $currency          = (string) ($this->get_settings('currency') ?: '€');
         $price_tpl         = (string) ($this->get_settings('price_template') ?: ' à {price}');
         $note_sep          = (string) ($this->get_settings('pricing_note_separator') ?: ' · ');
         $dur_subfield      = $show_duration ? sanitize_key((string) ($this->get_settings('duration_subfield') ?: 'exc_timeinbot')) : '';
-        $dur_before        = $show_duration ? trim((string) ($this->get_settings('duration_label_before') ?? 'pour une durée de')) : '';
+        $dur_before        = $show_duration ? trim((string) ($this->get_settings('duration_label_before') ?? '')) : '';
         $dur_after         = $show_duration ? trim((string) ($this->get_settings('duration_label_after')  ?? '')) : '';
 
-        $row_lines = []; // une entrée par row du repeater
+        $row_lines = [];
         $notes     = [];
 
         foreach ($rows as $row) {
@@ -216,17 +255,13 @@ class Tag_Exp_Duration extends Abstract_BT_Tag {
             foreach ($times as $time_str) {
                 $time_str = trim($time_str);
                 if ($time_str === '') continue;
-                if ($price !== '') {
-                    $row_parts[] = $time_str . str_replace('{price}', $price, $price_tpl);
-                } else {
-                    $row_parts[] = $time_str;
-                }
+                $row_parts[] = $price !== '' ? $time_str . str_replace('{price}', $price, $price_tpl) : $time_str;
             }
 
             if (!empty($row_parts)) {
                 $line = implode($sep, array_unique($row_parts));
 
-                // Durée en navigation — une seule valeur par row (pas un sub-repeater)
+                // Durée accolée à chaque row (mode "both")
                 if ($show_duration && $dur_subfield !== '') {
                     $dur_val = trim((string) ($row[$dur_subfield] ?? ''));
                     if ($dur_val !== '') {
@@ -237,17 +272,13 @@ class Tag_Exp_Duration extends Abstract_BT_Tag {
                 $row_lines[] = $line;
             }
 
-            /* Note tarifaire : une par row, dédupliquée */
             if ($show_pricing_note) {
                 $note = trim((string) ($row['exp_pricing_note'] ?? ''));
-                if ($note !== '') {
-                    $notes[] = $note;
-                }
+                if ($note !== '') $notes[] = $note;
             }
         }
 
         if (empty($row_lines) && empty($notes)) {
-            $fallback = (string) ($this->get_settings('fallback') ?? '');
             if ($fallback !== '') echo esc_html($fallback);
             return;
         }
@@ -263,7 +294,7 @@ class Tag_Exp_Duration extends Abstract_BT_Tag {
             $unique_notes = array_values(array_unique($notes));
             $notes_str    = implode(esc_html($note_sep), array_map('esc_html', $unique_notes));
 
-            $styles = $this->build_note_inline_styles();
+            $styles     = $this->build_note_inline_styles();
             $style_attr = $styles !== '' ? ' style="' . esc_attr($styles) . '"' : '';
 
             echo '<br><span class="bt-pricing-note"' . $style_attr . '>' . $notes_str . '</span>';

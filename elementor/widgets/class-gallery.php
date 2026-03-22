@@ -491,10 +491,23 @@ class Gallery extends AbstractBtWidget {
                 echo '<span class="bt-gallery__link">';
             }
 
+            // Responsive images: srcset WP + sizes contextuel (basé sur le layout réel).
+            // WP génère un sizes générique "768px" qui ignore la vraie taille affichée.
+            $img_id = (int) ($img['ID'] ?? 0);
+            $srcset = $img_id ? wp_get_attachment_image_srcset($img_id, $thumb_size) : '';
+            $sizes  = $this->compute_sizes($is_main, $layout, $s);
+            $img_w  = (int) ($img['sizes'][$thumb_size . '-width']  ?? ($img['width']  ?? 0));
+            $img_h  = (int) ($img['sizes'][$thumb_size . '-height'] ?? ($img['height'] ?? 0));
+
             echo '<img'
                 . ' src="' . esc_url($thumb_url) . '"'
+                . ($srcset ? ' srcset="' . esc_attr($srcset) . '"' : '')
+                . ($sizes  ? ' sizes="'  . esc_attr($sizes)  . '"' : '')
+                . ($img_w  ? ' width="'  . $img_w . '"' : '')
+                . ($img_h  ? ' height="' . $img_h . '"' : '')
                 . ' alt="' . $alt . '"'
                 . ' loading="' . ($is_main ? 'eager' : 'lazy') . '"'
+                . ($is_main ? ' fetchpriority="high"' : ' decoding="async"')
                 . ' class="bt-gallery__img"'
                 . ' />';
 
@@ -531,6 +544,44 @@ class Gallery extends AbstractBtWidget {
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /**
+     * Calcule l'attribut sizes en fonction du layout réel de la galerie.
+     *
+     * WP génère un sizes générique ("(max-width: 768px) 100vw, 768px") qui ne tient
+     * pas compte de la disposition : les vignettes airbnb (~25vw) téléchargent
+     * inutilement l'image 768px. Cette méthode corrige ça.
+     *
+     * @param bool   $is_main  Vrai pour l'image principale (airbnb).
+     * @param string $layout   'airbnb' | 'grid'.
+     * @param array  $s        Settings Elementor du widget.
+     */
+    private function compute_sizes(bool $is_main, string $layout, array $s): string {
+        if ($layout === 'airbnb') {
+            // Extrait les valeurs fr de la chaîne "2fr 1fr 1fr"
+            preg_match_all('/(\d+)fr/', $s['col_ratio'] ?? '2fr 1fr 1fr', $m);
+            $fractions = array_map('intval', $m[1] ?? [2, 1, 1]);
+            $total     = max(1, array_sum($fractions));
+
+            $pct = $is_main
+                ? (int) round($fractions[0] / $total * 100)                    // ex: 2/4 = 50vw
+                : (int) round(($fractions[1] ?? 1) / $total * 100);            // ex: 1/4 = 25vw
+
+            // Mobile : toute la largeur ; desktop : fraction réelle
+            return "(max-width: 767px) 100vw, {$pct}vw";
+        }
+
+        // Layout grid : on tient compte des colonnes responsive
+        $cols_d = max(1, (int) ($s['columns']        ?? 3));
+        $cols_t = max(1, (int) ($s['columns_tablet']  ?? 2));
+        $cols_m = max(1, (int) ($s['columns_mobile']  ?? 1));
+
+        $pct_d = (int) round(100 / $cols_d);
+        $pct_t = (int) round(100 / $cols_t);
+        $pct_m = (int) round(100 / $cols_m);
+
+        return "(max-width: 480px) {$pct_m}vw, (max-width: 1024px) {$pct_t}vw, {$pct_d}vw";
+    }
 
     private function build_overlay_text(string $mode, string $custom, int $remaining): string {
         return match ($mode) {

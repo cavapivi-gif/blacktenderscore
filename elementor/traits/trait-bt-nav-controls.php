@@ -409,7 +409,8 @@ trait BtNavControls {
         string $label,
         string $selector,
         array  $defaults  = [],
-        array  $condition = []
+        array  $condition = [],
+        array  $options   = []
     ): void {
         $section_args = ['label' => $label, 'tab' => Controls_Manager::TAB_STYLE];
         if (!empty($condition)) {
@@ -475,6 +476,18 @@ trait BtNavControls {
             'size_units' => ['px', '%', 'em'],
             'selectors'  => [$selector => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
         ]);
+
+        if (!empty($options['with_gap'])) {
+            $this->add_responsive_control("{$prefix}_gap", [
+                'label'      => __('Gap interne (icône / texte)', 'blacktenderscore'),
+                'type'       => Controls_Manager::SLIDER,
+                'size_units' => ['px', 'em'],
+                'range'      => ['px' => ['min' => 0, 'max' => 60]],
+                'default'    => ['size' => $defaults['gap'] ?? 6, 'unit' => 'px'],
+                'selectors'  => [$selector => 'gap: {{SIZE}}{{UNIT}}'],
+                'separator'  => 'before',
+            ]);
+        }
 
         $this->end_controls_section();
     }

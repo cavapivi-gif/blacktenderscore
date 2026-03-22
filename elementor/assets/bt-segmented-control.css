@@ -27,7 +27,7 @@
 .bt-seg {
   display: flex;
   position: relative;
-  /* background: [CTRL: seg_track_bg] */
+  /* background-color: [CTRL: seg_track_bg] */
   border-radius: var(--bt-seg-radius);
   padding: var(--bt-seg-padding);
   margin-bottom: 24px;
@@ -57,7 +57,7 @@
   bottom: var(--bt-seg-padding);
   left: var(--bt-seg-padding);
   width: calc(50% - var(--bt-seg-padding));
-  /* background: [CTRL: seg_active_bg] via --bt-seg-active-bg */
+  /* background-color: [CTRL: seg_active_bg] → injecté par Elementor sur .bt-seg__indicator */
   border-radius: calc(var(--bt-seg-radius) - var(--bt-seg-padding));
   box-shadow: var(--bt-seg-shadow);
   transition: transform var(--bt-seg-transition);
@@ -80,7 +80,6 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
-  margin-bottom: 20px;
 }
 /* ══════════════════════════════════════════
    FORFAIT CARD
@@ -168,6 +167,17 @@
 .bt-forfait-card__per {
   font-size: 12px;
   margin-left: 2px;
+}
+/* ── PRIX PAR PERSONNE (secondaire, sous le prix total bateau) ── */
+.bt-forfait-card__pp {
+  font-size: 13px;
+  opacity: .65;
+  margin: 2px 0 0;
+  line-height: 1.2;
+}
+.bt-forfait-card__pp .bt-forfait-card__per {
+  font-size: 12px;
+  margin-left: 1px;
 }
 /* ── PRIX BARRÉ ──
    [CTRL: fcard_original_color] → color
@@ -290,6 +300,12 @@
   padding: 0;
   overflow: hidden;
 }
+/* __body : alias sémantique de __content utilisé par trait-bt-boat-pricing */
+.bt-forfait-card--has-image .bt-forfait-card__body {
+  padding: 12px 14px;
+  flex: 1;
+  min-width: 0;
+}
 .bt-forfait-card__image {
   aspect-ratio: 16 / 9;
   position: relative;
@@ -326,9 +342,10 @@
   align-items: stretch;
 }
 .bt-forfaits__grid--inline .bt-forfait-card__image {
-  width: 110px;
+  width: var(--bt-fcard-img-width, 110px); /* [CTRL: fcard_img_width] */
   aspect-ratio: auto;
   flex-shrink: 0;
+  align-self: stretch; /* force fill vertical quelle que soit la hauteur */
 }
 .bt-forfaits__grid--inline .bt-forfait-card--has-image .bt-forfait-card__content {
   flex: 1;
@@ -340,6 +357,4 @@
 /* ══════════════════════════════════════════
    CONTENU SOUS LES CARDS
    ══════════════════════════════════════════ */
-.bt-forfait-content {
-  padding-top: 20px;
-}
+.bt-forfait-content {}

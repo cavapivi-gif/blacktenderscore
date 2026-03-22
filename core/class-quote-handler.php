@@ -172,6 +172,10 @@ class QuoteHandler {
         $phone           = sanitize_text_field($_POST['client_phone'] ?? '');
         $exc_custom      = !empty($_POST['exc_custom']);
         $exc_custom_text = sanitize_textarea_field($_POST['exc_custom_text'] ?? '');
+        $boat_options    = json_decode(wp_unslash($_POST['boat_options'] ?? '{}'), true);
+        if (!is_array($boat_options)) $boat_options = [];
+        $boat_forfait_label = sanitize_text_field($_POST['boat_forfait_label'] ?? '');
+        $boat_forfait_price = sanitize_text_field($_POST['boat_forfait_price'] ?? '');
 
         // Acquisition data
         $utm_source   = sanitize_text_field($_POST['utm_source'] ?? '');
@@ -189,6 +193,82 @@ class QuoteHandler {
         $boat_title = $boat_id ? get_the_title($boat_id) : '—';
         $full_name  = trim("{$firstname} {$name}");
 
+        // ── Collect rich data from ACF for email ──────────────────────────────
+        $exc_details  = [];
+        $boat_details = [];
+
+        if ($excursion_id && function_exists('get_fields')) {
+            $exc_acf = get_fields($excursion_id) ?: [];
+
+            if (!empty($exc_acf['exp_tagline']))        $exc_details[] = "Description : " . $exc_acf['exp_tagline'];
+            if (!empty($exc_acf['exp_duration']))        $exc_details[] = "Durée : " . $exc_acf['exp_duration'];
+            if (!empty($exc_acf['exp_departure_zone']))  $exc_details[] = "Départ : " . $exc_acf['exp_departure_zone'];
+            if (!empty($exc_acf['exp_pax_min']) || !empty($exc_acf['exp_pax_max'])) {
+                $pax_str = '';
+                if (!empty($exc_acf['exp_pax_min'])) $pax_str .= $exc_acf['exp_pax_min'];
+                if (!empty($exc_acf['exp_pax_max'])) $pax_str .= ($pax_str ? ' – ' : '') . $exc_acf['exp_pax_max'];
+                $exc_details[] = "Passagers : " . $pax_str;
+            }
+
+            // Departure point taxonomy
+            $dep_terms = $exc_acf['exp_departure_point'] ?? null;
+            if (!empty($dep_terms)) {
+                $exc_details[] = "Point de départ : " . $this->format_term_list($dep_terms);
+            }
+
+            // Langues
+            if (!empty($exc_acf['exp_languages'])) {
+                $exc_details[] = "Langues : " . $this->format_term_list($exc_acf['exp_languages']);
+            }
+
+            // Included / excluded taxonomies
+            foreach ([
+                'exp_included'    => 'Inclus',
+                'exp_to_excluded' => 'Non inclus',
+                'exp_to_bring'    => 'À apporter',
+            ] as $field => $label) {
+                $terms = $exc_acf[$field] ?? null;
+                if (!empty($terms)) {
+                    $exc_details[] = "{$label} : " . $this->format_term_list($terms);
+                }
+            }
+
+            // Skipper info from post terms
+            $skipper_terms = get_the_terms($excursion_id, 'skipper');
+            if (!empty($skipper_terms) && !is_wp_error($skipper_terms)) {
+                $exc_details[] = "Skipper : " . implode(', ', wp_list_pluck($skipper_terms, 'name'));
+            }
+        }
+
+        if ($boat_id && function_exists('get_fields')) {
+            $boat_acf = get_fields($boat_id) ?: [];
+
+            // Type de bateau (taxonomy)
+            $types = get_the_terms($boat_id, 'type-de-bateau');
+            if (!empty($types) && !is_wp_error($types)) {
+                $boat_details[] = "Type : " . implode(', ', wp_list_pluck($types, 'name'));
+            }
+
+            if (!empty($boat_acf['boat_tagline']))     $boat_details[] = "Description : " . $boat_acf['boat_tagline'];
+            if (!empty($boat_acf['boat_pax_max']))      $boat_details[] = "Passagers max : " . $boat_acf['boat_pax_max'];
+            if (!empty($boat_acf['boat_pax_comfort']))   $boat_details[] = "Passagers confort : " . $boat_acf['boat_pax_comfort'];
+            if (!empty($boat_acf['boat_cabins']))        $boat_details[] = "Cabines : " . $boat_acf['boat_cabins'];
+            if (!empty($boat_acf['boat_enginepower']))   $boat_details[] = "Motorisation : " . $boat_acf['boat_enginepower'] . " CV";
+            if (!empty($boat_acf['boat_year']))          $boat_details[] = "Année : " . $boat_acf['boat_year'];
+
+            // Boat taxonomies
+            foreach ([
+                'boat_equipment_included' => 'Équipements inclus',
+                'boat_services_included'  => 'Services inclus',
+                'boat_option_on_demand'   => 'Options sur demande',
+            ] as $field => $label) {
+                $terms = $boat_acf[$field] ?? null;
+                if (!empty($terms)) {
+                    $boat_details[] = "{$label} : " . $this->format_term_list($terms);
+                }
+            }
+        }
+
         // ── Save to DB first (before email attempt) ──────────────────────────
         $db = new \BlackTenders\Admin\Backoffice\FormSubmissionsDb();
         $submission_id = $db->insert([
@@ -204,6 +284,9 @@ class QuoteHandler {
             'duration_type'    => $duration_type,
             'date_start'       => $date_start,
             'date_end'         => $date_end,
+            'timeslot'         => $timeslot,
+            'boat_forfait'     => trim($boat_forfait_label . ($boat_forfait_price ? " — {$boat_forfait_price} €" : '')),
+            'boat_options'     => !empty($boat_options) ? wp_json_encode($boat_options) : null,
             'message'          => $exc_custom_text,
             'utm_source'       => $utm_source,
             'utm_medium'       => $utm_medium,
@@ -238,6 +321,30 @@ class QuoteHandler {
         }
         $page_line = $page_url ? "Page : {$page_url}" : '';
 
+        // Options bateau (confort, activités, services, restauration)
+        $options_lines = '';
+        if (!empty($boat_options)) {
+            $option_labels = [
+                'boat_comfort'        => 'Confort',
+                'activite'            => 'Activités',
+                'boat_board_services' => 'Services à bord',
+                'boat_onboard_food'   => 'Restauration à bord',
+            ];
+            foreach ($boat_options as $key => $opt) {
+                $names = $opt['names'] ?? [];
+                if (!empty($names)) {
+                    $label = $option_labels[$key] ?? $key;
+                    $options_lines .= "{$label} : " . implode(', ', array_map('sanitize_text_field', $names)) . "\n";
+                }
+            }
+        }
+
+        // Forfait sélectionné
+        $forfait_line = '';
+        if ($boat_forfait_label || $boat_forfait_price) {
+            $forfait_line = "Forfait choisi : " . ($boat_forfait_label ?: '—') . ($boat_forfait_price ? " — {$boat_forfait_price} €" : '') . "\n";
+        }
+
         $body = "Nouvelle demande de devis\n"
             . "══════════════════════════════════════\n\n"
             . "Client : {$full_name}\n"
@@ -247,9 +354,13 @@ class QuoteHandler {
             . "Excursion : {$exc_title}\n"
             . ($exc_custom_text ? "Demande sur mesure : {$exc_custom_text}\n" : '')
             . "Bateau : {$boat_title}\n"
+            . $forfait_line
             . "Formule : {$dur_label}\n"
-            . "Dates : " . ($date_start ?: '—') . ($timeslot ? " ({$timeslot})" : '') . ($date_end ? " → {$date_end}" : '') . "\n\n"
-            . "── Parcours client ──────────────────\n"
+            . "Dates : " . ($date_start ?: '—') . ($timeslot ? " ({$timeslot})" : '') . ($date_end ? " → {$date_end}" : '') . "\n"
+            . (!empty($exc_details) ? "\n── Détails excursion ────────────────\n" . implode("\n", $exc_details) . "\n" : '')
+            . (!empty($boat_details) ? "\n── Détails bateau ──────────────────\n" . implode("\n", $boat_details) . "\n" : '')
+            . ($options_lines ? "\n── Options sélectionnées ────────────\n" . $options_lines : '')
+            . "\n── Parcours client ──────────────────\n"
             . ($source_line ? "{$source_line}\n" : '')
             . ($page_line ? "{$page_line}\n" : '')
             . "IP : " . ($_SERVER['REMOTE_ADDR'] ?? '—') . "\n"
@@ -521,5 +632,26 @@ class QuoteHandler {
      */
     private function sanitize_field_name(string $name): string {
         return preg_replace('/[^a-zA-Z0-9_]/', '', $name);
+    }
+
+    /**
+     * Formate une liste de termes ACF (WP_Term[], int[], ou mixte) en string lisible.
+     */
+    private function format_term_list($terms): string {
+        if (empty($terms)) return '';
+        if (!is_array($terms)) $terms = [$terms];
+
+        $names = [];
+        foreach ($terms as $t) {
+            if ($t instanceof \WP_Term) {
+                $names[] = $t->name;
+            } elseif (is_numeric($t)) {
+                $term = get_term((int) $t);
+                if ($term && !is_wp_error($term)) $names[] = $term->name;
+            } elseif (is_string($t) && $t !== '') {
+                $names[] = $t;
+            }
+        }
+        return implode(', ', $names);
     }
 }

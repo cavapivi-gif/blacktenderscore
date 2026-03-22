@@ -1,0 +1,230 @@
+/* ══════════════════════════════════════════════════════════════
+   BT Quote — Sub-steps (progressive disclosure intra-step)
+   Animations CSS, zéro display:none pendant la transition.
+   Les groupes inactifs restent dans le DOM : pointer-events:none.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Container racine ── */
+.bt-quote-substep {
+  position: relative;
+}
+
+/* ── Barre de progression ── */
+.bt-quote-substep__progress {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+.bt-quote-substep__prog-seg {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: currentColor;
+  opacity: .18;
+  transition: opacity .25s ease;
+}
+.bt-quote-substep__prog-seg--done   { opacity: 1; }
+.bt-quote-substep__prog-seg--active { opacity: .6; }
+
+/* ── En-tête (compteur + libellé) ── */
+.bt-quote-substep__header {
+  margin-bottom: 14px;
+}
+.bt-quote-substep__counter {
+  display: block;
+  font-size: .72em;
+  opacity: .5;
+  margin-bottom: 3px;
+  letter-spacing: .03em;
+}
+.bt-quote-substep__label {
+  margin: 0;
+  font-size: 1em;
+  font-weight: 600;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   GROUPES — CSS grid 1 colonne pour superposition.
+   Tous les groupes occupent la même cellule ; seul le visible
+   a opacity:1 + pointer-events:auto.
+   ══════════════════════════════════════════════════════════════ */
+.bt-quote-substep__groups {
+  display: grid;
+  /* min-height mis à jour par JS pour éviter l'effondrement quand
+     le groupe actif est plus petit que ses voisins */
+}
+.bt-quote-substep__group {
+  grid-column: 1;
+  grid-row: 1;
+  will-change: transform, opacity;
+  transition: transform 350ms ease, opacity 350ms ease;
+  /* position par défaut : in-flow (contribue à la hauteur de la grille) */
+}
+.bt-quote-substep__group[aria-hidden="true"] {
+  pointer-events: none;
+  /* transform + opacity injectés par JS */
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CHIPS (sélection des termes)
+   Reprend les variables de couleur du reste du widget.
+   ══════════════════════════════════════════════════════════════ */
+.bt-quote-substep__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 4px;
+}
+.bt-quote-substep__chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 16px;
+  border-radius: 24px;
+  border: 1.5px solid currentColor;
+  font-size: .85em;
+  cursor: pointer;
+  user-select: none;
+  opacity: .55;
+  transition: opacity .18s, background-color .18s, color .18s;
+  /* [CTRL: Elementor border-color + bg via widget] */
+}
+.bt-quote-substep__chip:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.bt-quote-substep__chip--selected {
+  opacity: 1;
+  /* bg + color : [CTRL: qt_chip_selected_bg] + [CTRL: qt_chip_selected_color] via {{WRAPPER}} */
+}
+
+/* ══════════════════════════════════════════════════════════════
+   NAVIGATION intra-substep
+   Trois rôles distincts → trois styles complets.
+
+   [A] __btn-back   "← Retour"  → ghost / secondaire
+   [B] __btn-next   "Passer →"  → plein / primaire
+       (label change en "Valider →" au dernier groupe)
+   [C] .bt-quote-step__next hors substep → style wizard (bt-quote-form.css)
+   ══════════════════════════════════════════════════════════════ */
+.bt-quote-substep__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* ── [A] Retour — ghost, bordure, texte secondaire ── */
+.bt-quote-substep__btn-back {
+  padding: 8px 18px;
+  border: 1.5px solid currentColor;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  opacity: .65;
+  transition: opacity .15s, transform .1s;
+  line-height: 1.4;
+}
+.bt-quote-substep__btn-back:hover  { opacity: 1; }
+.bt-quote-substep__btn-back:active { transform: scale(.97); }
+/* Caché sur index 0 — visibility pour garder la place dans le flex */
+.bt-quote-substep__btn-back[hidden] {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* ── [B] Passer / Valider — plein, couleur héritée ── */
+.bt-quote-substep__btn-next {
+  padding: 9px 22px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  /* bg + color : hérités du parent → Elementor les surcharge via {{WRAPPER}} */
+  background: currentColor;
+  color: #fff; /* fallback ; Elementor override possible */
+  transition: filter .15s, transform .1s;
+  line-height: 1.4;
+  margin-left: auto; /* colle à droite même si Retour est hidden */
+}
+.bt-quote-substep__btn-next:hover  { filter: brightness(1.1); }
+.bt-quote-substep__btn-next:active { transform: scale(.97); }
+
+/* ══════════════════════════════════════════════════════════════
+   RÉCAP FINAL
+   ══════════════════════════════════════════════════════════════ */
+.bt-quote-substep__recap {
+  animation: btSubRecapIn .3s ease both;
+}
+@keyframes btSubRecapIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.bt-quote-substep__recap-group {
+  margin-bottom: 10px;
+}
+.bt-quote-substep__recap-group-label {
+  display: block;
+  font-size: .7em;
+  font-weight: 700;
+  opacity: .5;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.bt-quote-substep__recap-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.bt-quote-substep__recap-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: .82em;
+  border: 1px solid currentColor;
+  opacity: .8;
+}
+.bt-quote-substep__recap-tag--none {
+  opacity: .4;
+}
+.bt-quote-substep__recap-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.bt-quote-substep__btn-modify {
+  padding: 0;
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: .85em;
+  cursor: pointer;
+  text-decoration: underline;
+  opacity: .7;
+}
+.bt-quote-substep__btn-modify:hover { opacity: 1; }
+
+.bt-quote-substep__btn-confirm {
+  padding: 9px 22px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  background: currentColor;
+  color: #fff;
+  line-height: 1.4;
+  transition: filter .15s, transform .1s;
+}
+.bt-quote-substep__btn-confirm:hover  { filter: brightness(1.1); }
+.bt-quote-substep__btn-confirm:active { transform: scale(.97); }

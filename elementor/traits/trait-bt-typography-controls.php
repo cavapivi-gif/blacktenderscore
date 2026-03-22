@@ -22,6 +22,7 @@ trait BtTypographyControls {
      *   {prefix}_color        COLOR
      *   {prefix}_hover_color  COLOR :hover  (si $options['with_hover'])
      *   {prefix}_align        CHOOSE left/center/right (si $options['with_align'])
+     *   {prefix}_width        SLIDER px/%/vh responsive → width (si $options['with_width'])
      *   {prefix}_spacing      SLIDER margin-bottom (si $options['with_spacing'])
      *
      * @param string $prefix    Préfixe IDs
@@ -77,6 +78,20 @@ trait BtTypographyControls {
                     'right'  => ['title' => __('Droite',  'blacktenderscore'), 'icon' => 'eicon-text-align-right'],
                 ],
                 'selectors' => [$selector => 'text-align: {{VALUE}}'],
+            ]);
+        }
+
+        if (!empty($options['with_width'])) {
+            $this->add_responsive_control("{$prefix}_width", [
+                'label'      => __('Largeur', 'blacktenderscore'),
+                'type'       => Controls_Manager::SLIDER,
+                'size_units' => ['px', '%', 'vh'],
+                'range'      => [
+                    'px' => ['min' => 0, 'max' => 1200],
+                    '%'  => ['min' => 0, 'max' => 100],
+                    'vh' => ['min' => 0, 'max' => 100],
+                ],
+                'selectors'  => [$selector => 'width: {{SIZE}}{{UNIT}}'],
             ]);
         }
 

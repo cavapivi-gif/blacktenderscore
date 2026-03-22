@@ -360,9 +360,13 @@ class Highlights extends AbstractBtWidget {
         $this->register_section_title_style(
             '{{WRAPPER}} .bt-highlights__section-title',
             [
+                // Cas non repliable : margin-bottom directement sur le titre
                 '{{WRAPPER}} .bt-highlights__section-title' => 'margin-bottom: {{SIZE}}{{UNIT}}',
+                // Cas repliable : le titre dans le trigger reste collé à l'icône,
+                // l'espacement est appliqué en haut de la grille/liste (contenu)
                 '{{WRAPPER}} .bt-collapsible-block .bt-highlights__section-title' => 'margin-bottom: 0',
-                '{{WRAPPER}} .bt-collapsible-block' => 'margin-bottom: {{SIZE}}{{UNIT}}',
+                '{{WRAPPER}} .bt-collapsible-block .bt-highlights__grid' => 'margin-top: {{SIZE}}{{UNIT}}',
+                '{{WRAPPER}} .bt-collapsible-block .bt-highlights__list' => 'margin-top: {{SIZE}}{{UNIT}}',
             ]
         );
 
@@ -384,7 +388,7 @@ class Highlights extends AbstractBtWidget {
             'item_title',
             __('Style — Titre item', 'blacktenderscore'),
             '{{WRAPPER}} .bt-highlights__title',
-            [],
+            ['with_align' => true, 'with_width' => true],
             [],
             ['show_title' => 'yes']
         );
@@ -478,15 +482,21 @@ class Highlights extends AbstractBtWidget {
     private function render_icon_slot($icon): void {
         if ($icon === null) return;
 
-        // ACF Image field — return format "Array" : ['url'=>..., 'alt'=>..., ...]
+        // ACF Image field — return format "Array" : ['url'=>..., 'alt'=>..., 'width'=>..., 'height'=>...]
         if (is_array($icon) && !empty($icon['url'])) {
+            $w   = (int) ($icon['width']  ?? 0);
+            $h   = (int) ($icon['height'] ?? 0);
             echo '<span class="bt-highlights__icon bt-highlights__icon--img" aria-hidden="true">';
-            echo '<img src="' . esc_url($icon['url']) . '" alt="' . esc_attr($icon['alt'] ?? '') . '" loading="lazy">';
+            echo '<img src="' . esc_url($icon['url']) . '"'
+                . ' alt="' . esc_attr($icon['alt'] ?? '') . '"'
+                . ($w ? ' width="' . $w . '"'  : '')
+                . ($h ? ' height="' . $h . '"' : '')
+                . ' loading="lazy" decoding="async">';
             echo '</span>';
             return;
         }
 
-        // Elementor ICONS control — ['value'=>'fas fa-check', 'library'=>'fa-solid']
+        // Elementor ICONS control — ['value'=>'fas fa-check', 'library'=>'fa-solid'] (font icon, pas d'img)
         if (is_array($icon) && !empty($icon['value'])) {
             echo '<span class="bt-highlights__icon" aria-hidden="true">';
             Icons_Manager::render_icon($icon, ['aria-hidden' => 'true']);
@@ -497,7 +507,7 @@ class Highlights extends AbstractBtWidget {
         // String URL (ACF Image return format "URL", ou SVG/img direct)
         if (is_string($icon) && filter_var($icon, FILTER_VALIDATE_URL)) {
             echo '<span class="bt-highlights__icon bt-highlights__icon--img" aria-hidden="true">';
-            echo '<img src="' . esc_url($icon) . '" alt="" loading="lazy">';
+            echo '<img src="' . esc_url($icon) . '" alt="" loading="lazy" decoding="async">';
             echo '</span>';
             return;
         }

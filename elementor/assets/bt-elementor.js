@@ -279,6 +279,25 @@
   }
 
   /**
+   * Active les images/backgrounds différés dans un conteneur.
+   * - data-lazy-src  → src  (img)
+   * - data-lazy-bg   → background-image (div)
+   * Idempotent : supprime l'attribut data-lazy-* après activation.
+   */
+  function btActivateLazyMedia(root) {
+    if (!root) return;
+    root.querySelectorAll('[data-lazy-src]').forEach(function (img) {
+      img.src = img.getAttribute('data-lazy-src');
+      img.removeAttribute('data-lazy-src');
+    });
+    root.querySelectorAll('[data-lazy-bg]').forEach(function (el) {
+      el.style.backgroundImage = 'url(' + el.getAttribute('data-lazy-bg') + ')';
+      el.removeAttribute('data-lazy-bg');
+    });
+  }
+  window.btActivateLazyMedia = btActivateLazyMedia;
+
+  /**
    * Gère les wrappers [data-bt-trigger="reveal|modal"].
    * - reveal : ouvre un panneau sous le bouton (grid animation)
    * - modal  : ouvre un <dialog> natif
@@ -299,19 +318,38 @@
         if (!content) return;
 
         var hideSel = wrap.getAttribute('data-bt-reveal-hide') || '';
+        var hideClasses = wrap.getAttribute('data-bt-reveal-hide-classes') || '';
         var mobileBreakpoint = 727;
 
         function toggleHiddenEl(show) {
-          if (!hideSel) return;
-          var el = document.querySelector(hideSel);
-          if (!el) return;
-          var isMobile = (window.innerWidth || document.documentElement.clientWidth) <= mobileBreakpoint;
-          if (!show && isMobile) {
-            el.style.visibility = 'hidden';
-            el.style.pointerEvents = 'none';
+          if (hideSel) {
+            var el = document.querySelector(hideSel);
+            if (el) {
+              var isMobile = (window.innerWidth || document.documentElement.clientWidth) <= mobileBreakpoint;
+              if (!show && isMobile) {
+                el.style.visibility = 'hidden';
+                el.style.pointerEvents = 'none';
+              } else {
+                el.style.visibility = '';
+                el.style.pointerEvents = '';
+              }
+            }
+          }
+          // Hide trigger button + custom selectors
+          if (!show) {
+            btn.style.display = 'none';
           } else {
-            el.style.visibility = '';
-            el.style.pointerEvents = '';
+            btn.style.display = '';
+          }
+          if (hideClasses) {
+            hideClasses.split(',').forEach(function (sel) {
+              sel = sel.trim();
+              if (!sel) return;
+              var els = document.querySelectorAll(sel);
+              els.forEach(function (el) {
+                el.style.display = show ? '' : 'none';
+              });
+            });
           }
         }
 
@@ -343,6 +381,7 @@
           btn.setAttribute('aria-expanded', 'true');
           toggleHiddenEl(false);
           injectBookingLazy(content);
+          btActivateLazyMedia(content);
           if (andScroll) {
             setTimeout(function () {
               var scrollEl = content.parentNode;
@@ -378,6 +417,7 @@
 
         function openModal() {
           injectBookingLazy(dialog);
+          btActivateLazyMedia(dialog);
           dialog.showModal();
         }
 
@@ -664,7 +704,19 @@
         // Masquer le bouton trigger quand le body est ouvert
         trigger.style.display = isHidden ? 'none' : '';
 
+        // Masquer les divs [data-bt-pricing-div] sur mobile quand le body s'ouvre
+        if (window.innerWidth < 768) {
+          document.querySelectorAll('[data-bt-pricing-div]').forEach(function (div) {
+            var divTarget = div.getAttribute('data-bt-pricing-div');
+            // Cibler si : pas de valeur (global), ou valeur correspond au targetId du trigger
+            if (!divTarget || divTarget === targetId || (!targetId && !divTarget)) {
+              div.classList.toggle('bt-pricing-div--hidden', isHidden);
+            }
+          });
+        }
+
         if (isHidden) {
+          btActivateLazyMedia(body);
           body.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       }

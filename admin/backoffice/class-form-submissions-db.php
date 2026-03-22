@@ -16,11 +16,18 @@ class FormSubmissionsDb {
         global $wpdb;
         $this->table = $wpdb->prefix . 'bt_form_submissions';
 
-        // Lazy ensure — cree la table au premier usage si absente.
+        // Lazy ensure — cree la table au premier usage si absente ou mise à jour.
         if (!self::$table_checked) {
             self::$table_checked = true;
-            if ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $this->table)) !== $this->table) {
+            $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $this->table)) === $this->table;
+            if (!$exists) {
                 $this->ensure_tables();
+            } else {
+                // Ajouter les colonnes manquantes (idempotent)
+                $cols = $wpdb->get_col("DESCRIBE {$this->table}", 0);
+                if (!in_array('boat_options', $cols, true)) {
+                    $this->ensure_tables();
+                }
             }
         }
     }
@@ -47,6 +54,9 @@ class FormSubmissionsDb {
             duration_type  varchar(50)  NOT NULL DEFAULT '',
             date_start     varchar(50)  NOT NULL DEFAULT '',
             date_end       varchar(50)  NOT NULL DEFAULT '',
+            timeslot       varchar(50)  NOT NULL DEFAULT '',
+            boat_forfait   varchar(255) NOT NULL DEFAULT '',
+            boat_options   text         DEFAULT NULL,
             message        text         DEFAULT NULL,
             email_sent     tinyint(1)   NOT NULL DEFAULT 0,
             email_error    text         DEFAULT NULL,
@@ -88,6 +98,9 @@ class FormSubmissionsDb {
             'duration_type'    => sanitize_text_field($data['duration_type'] ?? ''),
             'date_start'       => sanitize_text_field($data['date_start'] ?? ''),
             'date_end'         => sanitize_text_field($data['date_end'] ?? ''),
+            'timeslot'         => sanitize_text_field($data['timeslot'] ?? ''),
+            'boat_forfait'     => sanitize_text_field($data['boat_forfait'] ?? ''),
+            'boat_options'     => isset($data['boat_options']) ? sanitize_textarea_field($data['boat_options']) : null,
             'message'          => isset($data['message']) ? sanitize_textarea_field($data['message']) : null,
             'email_sent'       => !empty($data['email_sent']) ? 1 : 0,
             'email_error'      => isset($data['email_error']) ? sanitize_textarea_field($data['email_error']) : null,

@@ -101,8 +101,8 @@ trait BtExcursionPricing {
         if ($is_inline) $grid_cls .= ' bt-forfaits__grid--inline';
         printf('<div class="%s">', esc_attr($grid_cls));
         foreach ($rows as $i => $row) {
-            $price        = $row['prix'] ?? '';
-            $name         = $row['nom_forfait'] ?? '';
+            $price        = $row['exp_price'] ?? '';
+            $name         = $this->get_exc_card_name($row, $i);
             $discount_pct = (float)($row[$discount_field] ?? 0);
             $has_discount = $discount_pct > 0;
             $is_popular   = !empty($row['is_popular']);

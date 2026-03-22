@@ -72,12 +72,40 @@ class RelatedBoats extends AbstractBtWidget {
             'default' => 'medium',
         ]);
 
+        $this->add_control('card_direction', [
+            'label'   => __('Direction carte', 'blacktenderscore'),
+            'type'    => Controls_Manager::CHOOSE,
+            'options' => [
+                'vertical'   => ['title' => __('Verticale', 'blacktenderscore'), 'icon' => 'eicon-arrow-down'],
+                'horizontal' => ['title' => __('Horizontale', 'blacktenderscore'), 'icon' => 'eicon-arrow-right'],
+            ],
+            'default' => 'vertical',
+            'toggle'  => false,
+        ]);
+
         $this->add_responsive_control('image_ratio', [
-            'label'      => __('Ratio image (%)', 'blacktenderscore'),
+            'label'     => __('Ratio image', 'blacktenderscore'),
+            'type'      => Controls_Manager::SELECT,
+            'options'   => [
+                'auto'  => __('Auto (ratio naturel)', 'blacktenderscore'),
+                '16/9'  => '16:9',
+                '3/2'   => '3:2',
+                '4/3'   => '4:3',
+                '1'     => '1:1',
+                '3/4'   => '3:4 (portrait)',
+            ],
+            'default'   => 'auto',
+            'selectors' => ['{{WRAPPER}} .bt-relboats__card--vertical .bt-relboats__img-wrap' => 'aspect-ratio: {{VALUE}}'],
+            'condition' => ['card_direction' => 'vertical'],
+        ]);
+
+        $this->add_responsive_control('image_width', [
+            'label'      => __('Largeur image (%)', 'blacktenderscore'),
             'type'       => Controls_Manager::SLIDER,
-            'range'      => ['px' => ['min' => 30, 'max' => 120]],
-            'default'    => ['size' => 60],
-            'selectors'  => ['{{WRAPPER}} .bt-relboats__img-wrap' => 'padding-bottom: {{SIZE}}%'],
+            'range'      => ['px' => ['min' => 15, 'max' => 60]],
+            'default'    => ['size' => 30],
+            'selectors'  => ['{{WRAPPER}} .bt-relboats__card--horizontal .bt-relboats__img-wrap' => 'width: {{SIZE}}%; min-width: {{SIZE}}%'],
+            'condition'  => ['card_direction' => 'horizontal'],
         ]);
 
         $this->add_control('show_image', [
@@ -320,7 +348,8 @@ class RelatedBoats extends AbstractBtWidget {
             $enginepow = (string) ($acf['boat_enginepower'] ?? '');
             $year      = (string) ($acf['boat_year']        ?? '');
 
-            echo '<div class="bt-relboats__card">';
+            $dir = esc_attr($s['card_direction'] ?: 'vertical');
+            echo '<div class="bt-relboats__card bt-relboats__card--' . $dir . '">';
 
             // Image
             if ($s['show_image'] === 'yes' && $img_url) {

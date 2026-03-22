@@ -27,23 +27,84 @@ trait BtBoatPricing {
         $price_note = (string) get_field('boat_price_note',      $post_id);
         $boat_year  = (int)    get_field('boat_year',             $post_id);
         $deposit    = (float) (get_field('boat_deposit',          $post_id) ?? 0);
-        $price_half = (float) (get_field('boat_price_half',       $post_id) ?? 0);
-        $half_time  =          get_field('boat_half_day_time',    $post_id);
-        $price_full = (float) (get_field('boat_price_full',       $post_id) ?? 0);
-        $full_time  =          get_field('boat_full_day_time',    $post_id);
         $zones      =          get_field('boat_custom_price_by_departure', $post_id);
 
         $pax_max = ($s['show_per_person'] ?? '') === 'yes'
             ? (int) get_field('boat_pax_max', $post_id)
             : 0;
 
-        $has_content = (($s['show_half'] ?? '') === 'yes' && $price_half)
-                    || (($s['show_full'] ?? '') === 'yes' && $price_full)
-                    || (($s['show_zones'] ?? '') === 'yes' && !empty($zones));
+        // ── Construire les cards depuis le repeater boat_price ou les champs plats ──
+        $cards    = [];
+        $repeater = get_field('boat_price', $post_id) ?: [];
+
+        if (!empty($repeater)) {
+            // Repeater ACF : chaque ligne = un forfait
+            foreach ($repeater as $row) {
+                $price = (float) ($row['boat_price_boat'] ?? 0);
+                if (!$price) continue;
+
+                // Label = nom du term exp_duration (ex: "Demi-journée", "Journée complète")
+                $dur_raw = $row['boat_location_duration'] ?? null;
+                $label   = '';
+                if ($dur_raw) {
+                    $term = is_numeric($dur_raw) ? get_term((int) $dur_raw) : $dur_raw;
+                    if ($term && !is_wp_error($term)) {
+                        $label = $term->name;
+                    }
+                }
+                if (!$label) $label = __('Forfait', 'blacktenderscore');
+
+                // Note/acompte : utiliser la valeur de la ligne si renseignée, sinon champ global.
+                // NOTE: on N'utilise PAS ?: pour le deposit car deposit=0 signifie "pas de caution"
+                // (l'opérateur ?: traite 0 comme falsy et ferait remonter le champ global boat_deposit).
+                $row_note    = (string) ($row['boat_price_note'] ?? '') ?: $price_note;
+                $raw_dep     = $row['boat_deposit'] ?? null;
+                $row_deposit = ($raw_dep !== null && $raw_dep !== '') ? (float) $raw_dep : $deposit;
+
+                $cards[] = [
+                    'label'    => $label,
+                    'price'    => $price,
+                    'duration' => '', // le label de durée est déjà dans 'label'
+                    '_deposit' => $row_deposit,
+                    '_note'    => $row_note,
+                ];
+            }
+            // Deposit / note globaux = premier row (fallback sur champs plats)
+            if (!empty($cards)) {
+                $deposit    = $cards[0]['_deposit'] ?: $deposit;
+                $price_note = $cards[0]['_note']    ?: $price_note;
+            }
+        } else {
+            // Fallback : champs plats boat_price_half / boat_price_full
+            if (($s['show_half'] ?? '') === 'yes') {
+                $price_half = (float) (get_field('boat_price_half', $post_id) ?? 0);
+                $half_time  = get_field('boat_half_day_time', $post_id);
+                if ($price_half) {
+                    $cards[] = [
+                        'label'    => $s['label_half'] ?: __('Demi-journée', 'blacktenderscore'),
+                        'price'    => $price_half,
+                        'duration' => $half_time ? "{$half_time} h" : '',
+                    ];
+                }
+            }
+            if (($s['show_full'] ?? '') === 'yes') {
+                $price_full = (float) (get_field('boat_price_full', $post_id) ?? 0);
+                $full_time  = get_field('boat_full_day_time', $post_id);
+                if ($price_full) {
+                    $cards[] = [
+                        'label'    => $s['label_full'] ?: __('Journée complète', 'blacktenderscore'),
+                        'price'    => $price_full,
+                        'duration' => $full_time ? "{$full_time} h" : '',
+                    ];
+                }
+            }
+        }
+
+        $has_content = !empty($cards) || (($s['show_zones'] ?? '') === 'yes' && !empty($zones));
 
         if (!$has_content) {
             if ($this->is_edit_mode()) {
-                $this->render_placeholder(__('Aucun tarif bateau trouvé. Vérifiez les champs ACF (boat_price_half, boat_price_full).', 'blacktenderscore'));
+                $this->render_placeholder(__('Aucun tarif bateau trouvé. Vérifiez les champs ACF (boat_price — repeater, ou boat_price_half / boat_price_full).', 'blacktenderscore'));
             }
             return;
         }
@@ -53,22 +114,6 @@ trait BtBoatPricing {
         $this->render_section_title($s, 'bt-bprice__title');
 
         $layout = $s['layout'] ?: 'cards';
-
-        $cards = [];
-        if (($s['show_half'] ?? '') === 'yes' && $price_half) {
-            $cards[] = [
-                'label'    => $s['label_half'] ?: __('Demi-journée', 'blacktenderscore'),
-                'price'    => $price_half,
-                'duration' => $half_time ? "{$half_time} h" : '',
-            ];
-        }
-        if (($s['show_full'] ?? '') === 'yes' && $price_full) {
-            $cards[] = [
-                'label'    => $s['label_full'] ?: __('Journée complète', 'blacktenderscore'),
-                'price'    => $price_full,
-                'duration' => $full_time ? "{$full_time} h" : '',
-            ];
-        }
 
         if (!empty($cards)) {
             if ($layout === 'tabs') {
@@ -85,6 +130,8 @@ trait BtBoatPricing {
         }
 
         echo '</div>'; // .bt-bprice
+        // Le bouton "Demander un devis" et le formulaire sont gérés par
+        // class-pricing-body.php via le mécanisme data-bt-trigger="reveal".
     }
 
     // ── Layout : Cartes ──────────────────────────────────────────────────────
@@ -102,11 +149,19 @@ trait BtBoatPricing {
         $thumb   = get_the_post_thumbnail_url($post_id, 'medium_large');
         $title   = get_the_title($post_id);
 
-        // Subtitle : modele (taxo boat-model) + annee
+        // Subtitle : modele + annee.
+        // Priorité : taxo boat-model assignée au post → champ ACF boat_model_name (taxonomy field, retourne array d'IDs)
         $model_terms = get_the_terms($post_id, 'boat-model');
-        $model_name  = (!empty($model_terms) && !is_wp_error($model_terms))
-            ? $model_terms[0]->name : '';
-        $subtitle = trim($model_name . ($boat_year ? ' · ' . $boat_year : ''));
+        if (!empty($model_terms) && !is_wp_error($model_terms)) {
+            $model_name = $model_terms[0]->name;
+        } else {
+            $model_ids  = get_field('boat_model_name', $post_id) ?: [];
+            $model_id   = is_array($model_ids) ? ($model_ids[0] ?? null) : $model_ids;
+            $model_term = $model_id ? get_term((int) $model_id) : null;
+            $model_name = ($model_term && !is_wp_error($model_term)) ? $model_term->name : '';
+        }
+        $show_year = ($s['show_boat_year'] ?? '') === 'yes';
+        $subtitle = trim($model_name . ($boat_year && $show_year ? ($model_name ? ' · ' : '') . $boat_year : ''));
 
         // Pax max (toujours recuperer pour l'affichage meta)
         $pax_display = (int) get_field('boat_pax_max', $post_id);
@@ -115,12 +170,9 @@ trait BtBoatPricing {
         foreach ($cards as $i => $card) {
             $has_image = (bool) $thumb;
             $img_cls   = $has_image ? ' bt-forfait-card--has-image' : '';
-            $active    = $i === 0 ? ' bt-forfait-card--active' : '';
-            $pressed   = $i === 0 ? 'true' : 'false';
 
-            echo '<button class="bt-forfait-card' . $img_cls . $active . '"'
-               . ' data-bt-forfait-index="' . $i . '"'
-               . ' aria-pressed="' . $pressed . '">';
+            // Div (pas button) : les cards bateau sont un affichage de prix, pas un sélecteur interactif
+            echo '<div class="bt-forfait-card' . $img_cls . '">';
 
             // Image
             if ($has_image) {
@@ -137,21 +189,21 @@ trait BtBoatPricing {
                 echo '<p class="bt-forfait-card__subtitle">' . esc_html($subtitle) . '</p>';
             }
 
-            // Prix
+            // Prix — toujours afficher le prix TOTAL du bateau en principal
             echo '<div class="bt-forfait-card__pricing">';
-            if ($pax_display > 0) {
-                // Prix par personne
-                $pp_price = (int) ceil($card['price'] / $pax_display);
-                echo '<span class="bt-forfait-card__price">' . esc_html(number_format($pp_price, 0, ',', ' ')) . '</span>';
-            } else {
-                echo '<span class="bt-forfait-card__price">' . esc_html(number_format($card['price'], 0, ',', ' ')) . '</span>';
-            }
+            echo '<span class="bt-forfait-card__price">' . esc_html(number_format($card['price'], 0, ',', ' ')) . '</span>';
             echo '<span class="bt-forfait-card__currency">' . $currency . '</span>';
-            if ($pax_display > 0) {
-                $pp_lbl = esc_html($s['per_person_label'] ?: __('/ pers.', 'blacktenderscore'));
-                echo '<span class="bt-forfait-card__per">' . $pp_lbl . '</span>';
-            }
             echo '</div>';
+
+            // Prix par personne — secondaire (si activé + pax renseigné)
+            if (($s['show_per_person'] ?? '') === 'yes' && $pax_display > 0) {
+                $pp_price = (int) ceil($card['price'] / $pax_display);
+                $pp_lbl   = esc_html($s['per_person_label'] ?: __('/ pers.', 'blacktenderscore'));
+                echo '<p class="bt-forfait-card__pp">'
+                   . esc_html(number_format($pp_price, 0, ',', ' ')) . ' ' . $currency
+                   . ' <span class="bt-forfait-card__per">' . $pp_lbl . '</span>'
+                   . '</p>';
+            }
 
             // Meta : pax + duree
             echo '<div class="bt-forfait-card__meta">';
@@ -176,7 +228,7 @@ trait BtBoatPricing {
                 echo '<span class="bt-forfait-card__meta" style="padding:0 14px 12px">' . esc_html($note) . '</span>';
             }
 
-            echo '</button>';
+            echo '</div>'; // .bt-forfait-card
         }
         echo '</div>'; // .bt-forfaits__grid
 

@@ -186,6 +186,14 @@
   justify-content: center;
 }
 
+.bt-bprice__devis-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+}
+
 /* ── Reveal content (grid animation) ──────────────────── */
 .bt-pricing__reveal-content {
   display: grid;
@@ -293,4 +301,21 @@
   background: rgba(255, 255, 255, .8);
   border-radius: 4px;
   margin-bottom: 8px;
+}
+
+/* ══════════════════════════════════════════════════════════
+   Pricing Div — Masqué sur mobile au déclenchement du trigger
+   Utilisation : data-bt-pricing-div (optionnel: ="targetId")
+   ══════════════════════════════════════════════════════════ */
+
+@media (max-width: 767px) {
+  [data-bt-pricing-div].bt-pricing-div--hidden {
+    display: none;
+  }
+}
+
+/* Éditeur : indicateur visuel même en mode édition */
+.elementor-editor-active [data-bt-pricing-div] {
+  outline: 2px dashed rgba(255, 165, 0, .4);
+  outline-offset: 4px;
 }

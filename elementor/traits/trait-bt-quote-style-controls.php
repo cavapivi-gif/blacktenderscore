@@ -26,7 +26,7 @@ trait BtQuoteStyleControls {
         // ── Étapes — Général ─────────────────────────────────────────
         if (!in_array('style_quote_steps', $skip, true)):
         $this->start_controls_section('style_quote_steps', [
-            'label'     => __('Devis — Étapes', 'blacktenderscore'),
+            'label'     => __('Wizard — Navigation & étapes', 'blacktenderscore'),
             'tab'       => Controls_Manager::TAB_STYLE,
             'condition' => $condition,
         ]);
@@ -75,6 +75,21 @@ trait BtQuoteStyleControls {
             'selectors'  => ['{{WRAPPER}} .bt-quote-step__content' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
         ]);
 
+        $this->add_responsive_control('qt_step_header_padding', [
+            'label'      => __('Padding header étape', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', 'em'],
+            'selectors'  => ['{{WRAPPER}} .bt-quote-step__header' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+        $this->add_responsive_control('qt_step_actions_padding', [
+            'label'      => __('Padding actions étape', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', 'em'],
+            'selectors'  => [
+                '{{WRAPPER}} .bt-quote-step__actions' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}',
+            ],
+        ]);
+
         $this->add_responsive_control('qt_step_gap', [
             'label'      => __('Espacement étapes', 'blacktenderscore'),
             'type'       => Controls_Manager::SLIDER,
@@ -85,12 +100,12 @@ trait BtQuoteStyleControls {
         ]);
 
         $this->add_control('qt_step_inactive_opacity', [
-            'label'      => __('Opacité étape inactive', 'blacktenderscore'),
+            'label'      => __('Opacité étape future (collapsed)', 'blacktenderscore'),
             'type'       => Controls_Manager::SLIDER,
             'size_units' => [''],
             'range'      => ['' => ['min' => 0.1, 'max' => 1, 'step' => 0.05]],
-            'default'    => ['size' => 0.75],
-            'selectors'  => ['{{WRAPPER}} .bt-quote-step:not(.bt-quote-step--active)' => 'opacity: {{SIZE}}'],
+            'default'    => ['size' => 0.6],
+            'selectors'  => ['{{WRAPPER}} .bt-quote-step--collapsed:not(.bt-quote-step--active):not(.bt-quote-step--done)' => 'opacity: {{SIZE}}'],
         ]);
 
         $this->add_control('qt_step_number_heading', [
@@ -129,12 +144,55 @@ trait BtQuoteStyleControls {
             'selectors' => ['{{WRAPPER}} .bt-quote-step__title' => 'color: {{VALUE}}'],
         ]);
 
+        $this->add_control('qt_step_title_collapsed_color', [
+            'label'     => __('Couleur titre collapsed', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-step--collapsed .bt-quote-step__title' => 'color: {{VALUE}}'],
+        ]);
+
+        $this->add_control('qt_step_number_active_heading', [
+            'label'     => __('Numéro — actif / complété', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'separator' => 'before',
+        ]);
+
+        $this->add_control('qt_step_number_active_bg', [
+            'label'     => __('Fond numéro actif/done', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => [
+                '{{WRAPPER}} .bt-quote-step--active .bt-quote-step__number' => 'background-color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-step--done .bt-quote-step__number'   => 'background-color: {{VALUE}}',
+            ],
+        ]);
+
+        $this->add_control('qt_step_number_active_color', [
+            'label'     => __('Couleur numéro actif/done', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => [
+                '{{WRAPPER}} .bt-quote-step--active .bt-quote-step__number' => 'color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-step--done .bt-quote-step__number'   => 'color: {{VALUE}}',
+            ],
+        ]);
+
+        $this->add_control('qt_step_check_color', [
+            'label'       => __('Couleur coche (done)', 'blacktenderscore'),
+            'type'        => Controls_Manager::COLOR,
+            'description' => __('SVG stroke — hérité par currentColor', 'blacktenderscore'),
+            'selectors'   => ['{{WRAPPER}} .bt-quote-step__check' => 'color: {{VALUE}}'],
+        ]);
+
+        $this->add_control('qt_step_summary_color', [
+            'label'     => __('Couleur résumé (sous header)', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-step__summary' => 'color: {{VALUE}}'],
+        ]);
+
         $this->end_controls_section();
         endif; // skip style_quote_steps
 
         // ── Step 1 — Excursion (choix + cards) ──────────────────────
         $this->start_controls_section('style_quote_exc', [
-            'label'     => __('Devis — Choix excursion', 'blacktenderscore'),
+            'label'     => __('Cards excursion', 'blacktenderscore'),
             'tab'       => Controls_Manager::TAB_STYLE,
             'condition' => $condition,
         ]);
@@ -164,13 +222,19 @@ trait BtQuoteStyleControls {
         $this->add_control('qt_exc_choice_active_bg', [
             'label'     => __('Fond sélectionné', 'blacktenderscore'),
             'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-exc-choice__btn[aria-selected="true"]' => 'background-color: {{VALUE}}; border-color: {{VALUE}}'],
+            'selectors' => [
+                '{{WRAPPER}} .bt-quote-exc-choice__btn[aria-selected="true"]'   => 'background-color: {{VALUE}}; border-color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-exc-choice__btn--selected'               => 'background-color: {{VALUE}}; border-color: {{VALUE}}',
+            ],
         ]);
 
         $this->add_control('qt_exc_choice_active_color', [
             'label'     => __('Texte sélectionné', 'blacktenderscore'),
             'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-exc-choice__btn[aria-selected="true"]' => 'color: {{VALUE}}'],
+            'selectors' => [
+                '{{WRAPPER}} .bt-quote-exc-choice__btn[aria-selected="true"]' => 'color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-exc-choice__btn--selected'             => 'color: {{VALUE}}',
+            ],
         ]);
 
         $this->add_responsive_control('qt_exc_choice_radius', [
@@ -242,34 +306,70 @@ trait BtQuoteStyleControls {
         ]);
 
         $this->add_responsive_control('qt_exc_card_img_ratio', [
-            'label'      => __('Ratio image', 'blacktenderscore'),
+            'label'     => __('Ratio image', 'blacktenderscore'),
+            'type'      => Controls_Manager::SELECT,
+            'options'   => [
+                'auto' => __('Auto (ratio naturel)', 'blacktenderscore'),
+                '16/9' => '16:9',
+                '3/2'  => '3:2',
+                '4/3'  => '4:3',
+                '1'    => '1:1',
+                '3/4'  => '3:4 (portrait)',
+            ],
+            'default'   => 'auto',
+            'selectors' => [
+                '{{WRAPPER}} .bt-quote-exc-card__img'     => 'flex: none; max-width: 100%',
+                '{{WRAPPER}} .bt-quote-exc-card__img img' => 'position: static; width: 100%; height: auto; aspect-ratio: {{VALUE}}; object-fit: cover',
+            ],
+            'condition' => ['qt_exc_card_direction' => 'column'],
+        ]);
+
+        $this->add_responsive_control('qt_exc_card_img_min_h', [
+            'label'      => __('Hauteur min image', 'blacktenderscore'),
             'type'       => Controls_Manager::SLIDER,
-            'size_units' => [''],
-            'range'      => ['' => ['min' => 0.3, 'max' => 2.5, 'step' => 0.05]],
-            'default'    => ['size' => 1.78],
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 0, 'max' => 500]],
             'selectors'  => [
-                '{{WRAPPER}} .bt-quote-exc-card__img' => 'aspect-ratio: {{SIZE}}; flex: none; max-width: 100%',
+                '{{WRAPPER}} .bt-quote-exc-card__img img' => 'min-height: {{SIZE}}{{UNIT}}; object-fit: cover',
             ],
             'condition'  => ['qt_exc_card_direction' => 'column'],
         ]);
 
+        $this->start_controls_tabs('tabs_exc_card_colors');
+
+        $this->start_controls_tab('tab_exc_card_normal', ['label' => __('Normal', 'blacktenderscore')]);
+
         $this->add_control('qt_exc_card_bg', [
-            'label'     => __('Fond card', 'blacktenderscore'),
+            'label'     => __('Fond', 'blacktenderscore'),
             'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-quote-exc-card' => 'background-color: {{VALUE}}'],
         ]);
 
         $this->add_control('qt_exc_card_border', [
-            'label'     => __('Bordure card', 'blacktenderscore'),
+            'label'     => __('Bordure', 'blacktenderscore'),
             'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-quote-exc-card' => 'border-color: {{VALUE}}'],
         ]);
 
+        $this->end_controls_tab();
+
+        $this->start_controls_tab('tab_exc_card_hover', ['label' => __('Hover', 'blacktenderscore')]);
+
         $this->add_control('qt_exc_card_hover_border', [
-            'label'     => __('Bordure hover', 'blacktenderscore'),
+            'label'     => __('Bordure', 'blacktenderscore'),
             'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-quote-exc-card:hover' => 'border-color: {{VALUE}}; box-shadow: 0 0 0 1px {{VALUE}}'],
         ]);
+
+        $this->add_control('qt_exc_card_hover_bg', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-exc-card:hover' => 'background-color: {{VALUE}}'],
+        ]);
+
+        $this->end_controls_tab();
+
+        $this->end_controls_tabs();
 
         $this->add_control('qt_exc_card_selected_border', [
             'label'     => __('Bordure sélectionné', 'blacktenderscore'),
@@ -332,6 +432,15 @@ trait BtQuoteStyleControls {
             'selectors_dictionary' => ['yes' => 'inline-block', 'no' => 'none'],
         ]);
 
+        $this->add_control('qt_exc_card_show_skipper', [
+            'label'   => __('Afficher skipper (taxo boat_skipper)', 'blacktenderscore'),
+            'type'    => Controls_Manager::SELECT,
+            'options' => ['yes' => __('Oui', 'blacktenderscore'), 'no' => __('Non', 'blacktenderscore')],
+            'default' => 'yes',
+            'selectors' => ['{{WRAPPER}} .bt-quote-exc-card__skipper' => 'display: {{VALUE}}'],
+            'selectors_dictionary' => ['yes' => 'inline-block', 'no' => 'none'],
+        ]);
+
         $this->add_group_control(Group_Control_Typography::get_type(), [
             'name'     => 'qt_exc_card_title_typo',
             'label'    => __('Typo titre', 'blacktenderscore'),
@@ -368,308 +477,263 @@ trait BtQuoteStyleControls {
             'selectors' => ['{{WRAPPER}} .bt-quote-exc-card__tag' => 'color: {{VALUE}}'],
         ]);
 
+        $this->add_control('qt_exc_card_discount_heading', [
+            'label'     => __('Badge remise', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'separator' => 'before',
+        ]);
+        $this->add_control('qt_exc_card_discount_bg', [
+            'label'     => __('Fond badge remise', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-exc-card__discount' => 'background-color: {{VALUE}}'],
+        ]);
+        $this->add_control('qt_exc_card_discount_color', [
+            'label'     => __('Texte badge remise', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-exc-card__discount' => 'color: {{VALUE}}'],
+        ]);
+
         $this->end_controls_section();
 
         // ── Step 2 — Cards bateau ────────────────────────────────────
         $this->start_controls_section('style_quote_boat', [
-            'label'     => __('Devis — Cards bateau', 'blacktenderscore'),
+            'label'     => __('Cards bateau — Layout & style', 'blacktenderscore'),
             'tab'       => Controls_Manager::TAB_STYLE,
             'condition' => $condition,
         ]);
 
-        $this->add_control('qt_boat_card_border', [
-            'label'     => __('Bordure card', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card' => 'border-color: {{VALUE}}'],
+        // ── Grille de sélection ───────────────────────────────────────
+        $this->add_control('qt_boat_cards_grid_heading', [
+            'label' => __('Grille de sélection', 'blacktenderscore'),
+            'type'  => Controls_Manager::HEADING,
         ]);
 
-        $this->add_control('qt_boat_card_bg', [
-            'label'     => __('Fond card', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card' => 'background-color: {{VALUE}}'],
+        $this->add_responsive_control('qt_boat_cards_cols', [
+            'label'          => __('Colonnes', 'blacktenderscore'),
+            'type'           => Controls_Manager::SELECT,
+            'options'        => ['1' => '1', '2' => '2', '3' => '3'],
+            'default'        => '1',
+            'tablet_default' => '1',
+            'mobile_default' => '1',
+            'selectors'      => ['{{WRAPPER}} .bt-quote-boat-cards' => 'grid-template-columns: repeat({{VALUE}}, 1fr)'],
         ]);
 
-        $this->add_control('qt_boat_card_hover_border', [
-            'label'     => __('Bordure hover', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card:hover' => 'border-color: {{VALUE}}; box-shadow: 0 0 0 1px {{VALUE}}'],
+        $this->add_responsive_control('qt_boat_cards_gap', [
+            'label'      => __('Espacement cards', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 0, 'max' => 40]],
+            'selectors'  => ['{{WRAPPER}} .bt-quote-boat-cards' => 'gap: {{SIZE}}{{UNIT}}'],
         ]);
 
-        $this->add_control('qt_boat_card_hover_bg', [
-            'label'     => __('Fond hover', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card:hover' => 'background-color: {{VALUE}}'],
+        // ── Direction de la card ──────────────────────────────────────
+        $this->add_control('qt_boat_card_dir_heading', [
+            'label'     => __('Disposition de la card', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'separator' => 'before',
         ]);
 
-        $this->add_control('qt_boat_card_selected', [
-            'label'     => __('Bordure sélectionné', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card--selected' => 'border-color: {{VALUE}}; box-shadow: 0 0 0 1px {{VALUE}}'],
+        $this->add_responsive_control('qt_boat_card_direction', [
+            'label'   => __('Direction', 'blacktenderscore'),
+            'type'    => Controls_Manager::CHOOSE,
+            'options' => [
+                'row'    => ['title' => __('Horizontal (image gauche)', 'blacktenderscore'), 'icon' => 'eicon-h-align-left'],
+                'column' => ['title' => __('Vertical (image en haut)',  'blacktenderscore'), 'icon' => 'eicon-v-align-top'],
+            ],
+            'default'   => 'row',
+            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card' => 'flex-direction: {{VALUE}}'],
         ]);
 
-        $this->add_control('qt_boat_card_selected_bg', [
-            'label'     => __('Fond sélectionné', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card--selected' => 'background-color: {{VALUE}}'],
+        $this->add_responsive_control('qt_boat_card_img_ratio', [
+            'label'   => __('Ratio image', 'blacktenderscore'),
+            'type'    => Controls_Manager::SELECT,
+            'options' => [
+                'auto' => __('Auto (ratio naturel)', 'blacktenderscore'),
+                '16/9' => '16:9',
+                '3/2'  => '3:2',
+                '4/3'  => '4:3',
+                '1'    => '1:1',
+                '3/4'  => '3:4 (portrait)',
+            ],
+            'default'   => 'auto',
+            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__bg' => 'aspect-ratio: {{VALUE}}'],
+            'condition' => ['qt_boat_card_direction' => 'column'],
         ]);
 
+        $this->add_responsive_control('qt_boat_card_img_min_h', [
+            'label'      => __('Hauteur min image', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 0, 'max' => 500]],
+            'selectors'  => [
+                '{{WRAPPER}} .bt-quote-boat-card__bg' => 'min-height: {{SIZE}}{{UNIT}}',
+            ],
+            'condition'  => ['qt_boat_card_direction' => 'column'],
+        ]);
+
+        // ── Card container ────────────────────────────────────────────
         $this->add_responsive_control('qt_boat_card_radius', [
             'label'      => __('Border radius', 'blacktenderscore'),
             'type'       => Controls_Manager::DIMENSIONS,
-            'size_units' => ['px'],
+            'size_units' => ['px', '%'],
             'selectors'  => ['{{WRAPPER}} .bt-quote-boat-card' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
         ]);
 
-        // ── Contenu card bateau — Toggles ──
-
-        $this->add_control('qt_boat_card_show_price', [
-            'label'   => __('Afficher le prix', 'blacktenderscore'),
-            'type'    => Controls_Manager::SELECT,
-            'options' => ['yes' => __('Oui', 'blacktenderscore'), 'no' => __('Non', 'blacktenderscore')],
-            'default' => 'yes',
-            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__price' => 'display: {{VALUE}}'],
-            'selectors_dictionary' => ['yes' => 'flex', 'no' => 'none'],
+        $this->add_responsive_control('qt_boat_card_padding', [
+            'label'      => __('Padding', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', 'em'],
+            'selectors'  => ['{{WRAPPER}} .bt-quote-boat-card' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
         ]);
 
-        $this->add_control('qt_boat_card_show_year', [
-            'label'                => __('Afficher l\'année du bateau', 'blacktenderscore'),
-            'type'                 => Controls_Manager::SELECT,
-            'options'              => ['yes' => __('Oui', 'blacktenderscore'), 'no' => __('Non', 'blacktenderscore')],
-            'default'              => 'yes',
-            'selectors'            => ['{{WRAPPER}} .bt-quote-boat-card__year' => 'display: {{VALUE}}'],
-            'selectors_dictionary' => ['yes' => 'inline-block', 'no' => 'none'],
+        $this->start_controls_tabs('tabs_boat_card_colors');
+
+        $this->start_controls_tab('tab_boat_card_normal', ['label' => __('Normal', 'blacktenderscore')]);
+        $this->add_control('qt_boat_card_bg', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card' => 'background-color: {{VALUE}}'],
+        ]);
+        $this->add_control('qt_boat_card_border', [
+            'label'     => __('Bordure', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card' => 'border-color: {{VALUE}}'],
+        ]);
+        $this->end_controls_tab();
+
+        $this->start_controls_tab('tab_boat_card_hover', ['label' => __('Hover', 'blacktenderscore')]);
+        $this->add_control('qt_boat_card_hover_bg', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card:hover' => 'background-color: {{VALUE}}'],
+        ]);
+        $this->add_control('qt_boat_card_hover_border', [
+            'label'     => __('Bordure', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card:hover' => 'border-color: {{VALUE}}; box-shadow: 0 0 0 1px {{VALUE}}'],
+        ]);
+        $this->end_controls_tab();
+
+        $this->start_controls_tab('tab_boat_card_selected', ['label' => __('Sélectionné', 'blacktenderscore')]);
+        $this->add_control('qt_boat_card_selected_bg', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card--selected' => 'background-color: {{VALUE}}'],
+        ]);
+        $this->add_control('qt_boat_card_selected', [
+            'label'     => __('Bordure', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card--selected' => 'border-color: {{VALUE}}; box-shadow: 0 0 0 1px {{VALUE}}'],
+        ]);
+        $this->end_controls_tab();
+
+        $this->end_controls_tabs();
+
+        // ── Image de fond ─────────────────────────────────────────────
+        $this->add_control('qt_boat_img_heading', [
+            'label'     => __('Image de fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'separator' => 'before',
         ]);
 
-        // ── Contenu card bateau — Titre ──
+        $this->add_responsive_control('qt_boat_img_width', [
+            'label'      => __('Largeur image', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['%', 'px'],
+            'range'      => ['%' => ['min' => 10, 'max' => 100], 'px' => ['min' => 50, 'max' => 600]],
+            'selectors'  => ['{{WRAPPER}} .bt-quote-boat-card__bg' => 'width: {{SIZE}}{{UNIT}}'],
+        ]);
 
+        // ── Titre ─────────────────────────────────────────────────────
         $this->add_control('qt_boat_title_heading', [
-            'label'     => __('Titre bateau', 'blacktenderscore'),
+            'label'     => __('Titre', 'blacktenderscore'),
             'type'      => Controls_Manager::HEADING,
             'separator' => 'before',
         ]);
 
         $this->add_group_control(Group_Control_Typography::get_type(), [
             'name'     => 'qt_boat_title_typo',
-            'label'    => __('Typo titre', 'blacktenderscore'),
             'selector' => '{{WRAPPER}} .bt-quote-boat-card__title',
         ]);
 
         $this->add_control('qt_boat_title_color', [
-            'label'     => __('Couleur titre', 'blacktenderscore'),
+            'label'     => __('Couleur', 'blacktenderscore'),
             'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__title' => 'color: {{VALUE}}'],
         ]);
 
-        // ── Contenu card bateau — Passagers ──
-
-        $this->add_control('qt_boat_pax_heading', [
-            'label'     => __('Passagers', 'blacktenderscore'),
+        // ── Sous-titre ────────────────────────────────────────────────
+        $this->add_control('qt_boat_subtitle_heading', [
+            'label'     => __('Sous-titre', 'blacktenderscore'),
             'type'      => Controls_Manager::HEADING,
             'separator' => 'before',
         ]);
 
         $this->add_group_control(Group_Control_Typography::get_type(), [
-            'name'     => 'qt_boat_pax_typo',
-            'label'    => __('Typo passagers', 'blacktenderscore'),
-            'selector' => '{{WRAPPER}} .bt-quote-boat-card__pax',
+            'name'     => 'qt_boat_subtitle_typo',
+            'selector' => '{{WRAPPER}} .bt-quote-boat-card__subtitle',
         ]);
 
-        $this->add_control('qt_boat_pax_color', [
-            'label'     => __('Couleur passagers', 'blacktenderscore'),
+        $this->add_control('qt_boat_subtitle_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
             'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__pax' => 'color: {{VALUE}}'],
+            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__subtitle' => 'color: {{VALUE}}'],
         ]);
 
-        $this->add_control('qt_boat_show_pax', [
-            'label'   => __('Afficher passagers', 'blacktenderscore'),
-            'type'    => Controls_Manager::SELECT,
-            'options' => [
-                'block' => __('Oui', 'blacktenderscore'),
-                'none'  => __('Non', 'blacktenderscore'),
-            ],
-            'default'   => 'block',
-            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__pax' => 'display: {{VALUE}}'],
-        ]);
-
-        // ── Contenu card bateau — Prix ──
-
+        // ── Prix (fallback sans forfaits) ─────────────────────────────
         $this->add_control('qt_boat_price_heading', [
-            'label'     => __('Prix', 'blacktenderscore'),
+            'label'     => __('Prix (fallback sans forfaits)', 'blacktenderscore'),
             'type'      => Controls_Manager::HEADING,
             'separator' => 'before',
         ]);
 
         $this->add_group_control(Group_Control_Typography::get_type(), [
             'name'     => 'qt_boat_price_amount_typo',
-            'label'    => __('Typo montant prix', 'blacktenderscore'),
-            'selector' => '{{WRAPPER}} .bt-quote-boat-card__price-amount',
+            'selector' => '{{WRAPPER}} .bt-quote-boat-card__price, {{WRAPPER}} .bt-quote-boat-card__pp',
         ]);
 
         $this->add_control('qt_boat_price_amount_color', [
-            'label'     => __('Couleur montant prix', 'blacktenderscore'),
+            'label'     => __('Couleur', 'blacktenderscore'),
             'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__price-amount' => 'color: {{VALUE}}'],
-        ]);
-
-        $this->add_group_control(Group_Control_Typography::get_type(), [
-            'name'     => 'qt_boat_price_suffix_typo',
-            'label'    => __('Typo suffixe prix', 'blacktenderscore'),
-            'selector' => '{{WRAPPER}} .bt-quote-boat-card__price-suffix',
-        ]);
-
-        $this->add_control('qt_boat_price_suffix_color', [
-            'label'     => __('Couleur suffixe prix', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__price-suffix' => 'color: {{VALUE}}'],
-        ]);
-
-        $this->add_control('qt_boat_show_price', [
-            'label'   => __('Afficher prix', 'blacktenderscore'),
-            'type'    => Controls_Manager::SELECT,
-            'options' => [
-                'flex' => __('Oui', 'blacktenderscore'),
-                'none' => __('Non', 'blacktenderscore'),
+            'selectors' => [
+                '{{WRAPPER}} .bt-quote-boat-card__price' => 'color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-boat-card__pp'    => 'color: {{VALUE}}',
             ],
-            'default'   => 'flex',
-            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__price' => 'display: {{VALUE}}'],
         ]);
 
-        // ── Contenu card bateau — Type badge ──
-
-        $this->add_control('qt_boat_type_heading', [
-            'label'     => __('Badge type', 'blacktenderscore'),
+        // ── Méta (passagers, équipement…) ─────────────────────────────
+        $this->add_control('qt_boat_meta_heading', [
+            'label'     => __('Méta (passagers, équipement…)', 'blacktenderscore'),
             'type'      => Controls_Manager::HEADING,
             'separator' => 'before',
-        ]);
-
-        $this->add_control('qt_boat_type_bg', [
-            'label'     => __('Fond badge type', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__type' => 'background-color: {{VALUE}}'],
-        ]);
-
-        $this->add_control('qt_boat_type_color', [
-            'label'     => __('Couleur badge type', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__type' => 'color: {{VALUE}}'],
-        ]);
-
-        // ── Contenu card bateau — Année (badge) ──
-
-        $this->add_control('qt_boat_year_heading', [
-            'label'     => __('Année du bateau (badge)', 'blacktenderscore'),
-            'type'      => Controls_Manager::HEADING,
-            'separator' => 'before',
-        ]);
-
-        $this->add_control('qt_boat_year_color', [
-            'label'     => __('Couleur texte', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__year' => 'color: {{VALUE}}'],
-        ]);
-
-        $this->add_control('qt_boat_year_bg', [
-            'label'     => __('Fond', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__year' => 'background-color: {{VALUE}}'],
-        ]);
-
-        $this->add_responsive_control('qt_boat_year_radius', [
-            'label'      => __('Border radius', 'blacktenderscore'),
-            'type'       => Controls_Manager::DIMENSIONS,
-            'size_units' => ['px', 'em', '%'],
-            'selectors'  => ['{{WRAPPER}} .bt-quote-boat-card__year' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
-        ]);
-
-        $this->add_responsive_control('qt_boat_year_padding', [
-            'label'      => __('Padding', 'blacktenderscore'),
-            'type'       => Controls_Manager::DIMENSIONS,
-            'size_units' => ['px', 'em'],
-            'selectors'  => ['{{WRAPPER}} .bt-quote-boat-card__year' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
         ]);
 
         $this->add_group_control(Group_Control_Typography::get_type(), [
-            'name'     => 'qt_boat_year_typo',
-            'selector' => '{{WRAPPER}} .bt-quote-boat-card__year',
+            'name'     => 'qt_boat_meta_typo',
+            'selector' => '{{WRAPPER}} .bt-quote-boat-card__meta',
         ]);
 
-        // ── Contenu card bateau — Tags taxonomie ──
-
-        $this->add_control('qt_boat_tags_heading', [
-            'label'     => __('Tags taxonomie (pills)', 'blacktenderscore'),
-            'type'      => Controls_Manager::HEADING,
-            'separator' => 'before',
-        ]);
-
-        $this->add_control('qt_boat_tag_color', [
-            'label'     => __('Couleur texte', 'blacktenderscore'),
+        $this->add_control('qt_boat_meta_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
             'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__tag' => 'color: {{VALUE}}'],
+            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__meta' => 'color: {{VALUE}}'],
         ]);
 
-        $this->add_control('qt_boat_tag_bg', [
-            'label'     => __('Fond', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__tag' => 'background-color: {{VALUE}}'],
-        ]);
-
-        $this->add_responsive_control('qt_boat_tag_radius', [
-            'label'      => __('Border radius', 'blacktenderscore'),
-            'type'       => Controls_Manager::DIMENSIONS,
-            'size_units' => ['px', 'em', '%'],
-            'selectors'  => ['{{WRAPPER}} .bt-quote-boat-card__tag' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
-        ]);
-
-        $this->add_group_control(Group_Control_Typography::get_type(), [
-            'name'     => 'qt_boat_tag_typo',
-            'selector' => '{{WRAPPER}} .bt-quote-boat-card__tag',
-        ]);
-
-        // ── Contenu card bateau — Bouton "Plus d'infos" ──
-
-        $this->add_control('qt_boat_more_heading', [
-            'label'     => __('Bouton "Plus d\'infos"', 'blacktenderscore'),
-            'type'      => Controls_Manager::HEADING,
-            'separator' => 'before',
-        ]);
-
-        $this->add_control('qt_boat_more_color', [
-            'label'     => __('Couleur texte', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__more' => 'color: {{VALUE}}'],
-        ]);
-
-        $this->add_control('qt_boat_more_hover_bg', [
-            'label'     => __('Fond hover', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__more:hover' => 'background-color: {{VALUE}}'],
+        $this->add_control('qt_boat_meta_opacity', [
+            'label'      => __('Opacité', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 0, 'max' => 1, 'step' => 0.05]],
+            'selectors'  => ['{{WRAPPER}} .bt-quote-boat-card__meta' => 'opacity: {{SIZE}}'],
         ]);
 
         $this->end_controls_section();
 
         // ── Step 3 — Durée & dates ──────────────────────────────────
         $this->start_controls_section('style_quote_dates', [
-            'label'     => __('Devis — Durée & dates', 'blacktenderscore'),
+            'label'     => __('Étape — Durée & dates', 'blacktenderscore'),
             'tab'       => Controls_Manager::TAB_STYLE,
             'condition' => $condition,
-        ]);
-
-        $this->add_control('qt_dur_bg', [
-            'label'     => __('Fond cards durée', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-duration-card, {{WRAPPER}} .bt-quote-timeslot__btn' => 'background-color: {{VALUE}}'],
-        ]);
-
-        $this->add_control('qt_dur_border', [
-            'label'     => __('Bordure cards durée', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-duration-card, {{WRAPPER}} .bt-quote-timeslot__btn' => 'border-color: {{VALUE}}'],
-        ]);
-
-        $this->add_control('qt_dur_color', [
-            'label'     => __('Couleur texte', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-duration-card, {{WRAPPER}} .bt-quote-timeslot__btn' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_group_control(Group_Control_Typography::get_type(), [
@@ -678,14 +742,34 @@ trait BtQuoteStyleControls {
             'selector' => '{{WRAPPER}} .bt-quote-duration-card__label, {{WRAPPER}} .bt-quote-timeslot__btn',
         ]);
 
-        $this->add_control('qt_dur_hover_heading', [
-            'label'     => __('Hover', 'blacktenderscore'),
-            'type'      => Controls_Manager::HEADING,
-            'separator' => 'before',
+        $this->start_controls_tabs('tabs_dur_colors');
+
+        $this->start_controls_tab('tab_dur_normal', ['label' => __('Normal', 'blacktenderscore')]);
+
+        $this->add_control('qt_dur_bg', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-duration-card, {{WRAPPER}} .bt-quote-timeslot__btn' => 'background-color: {{VALUE}}'],
         ]);
 
+        $this->add_control('qt_dur_border', [
+            'label'     => __('Bordure', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-duration-card, {{WRAPPER}} .bt-quote-timeslot__btn' => 'border-color: {{VALUE}}'],
+        ]);
+
+        $this->add_control('qt_dur_color', [
+            'label'     => __('Texte', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-duration-card, {{WRAPPER}} .bt-quote-timeslot__btn' => 'color: {{VALUE}}'],
+        ]);
+
+        $this->end_controls_tab();
+
+        $this->start_controls_tab('tab_dur_hover', ['label' => __('Hover', 'blacktenderscore')]);
+
         $this->add_control('qt_dur_hover_bg', [
-            'label'     => __('Fond hover', 'blacktenderscore'),
+            'label'     => __('Fond', 'blacktenderscore'),
             'type'      => Controls_Manager::COLOR,
             'selectors' => [
                 '{{WRAPPER}} .bt-quote-duration-card:hover' => 'background-color: {{VALUE}}',
@@ -694,7 +778,7 @@ trait BtQuoteStyleControls {
         ]);
 
         $this->add_control('qt_dur_hover_border', [
-            'label'     => __('Bordure hover', 'blacktenderscore'),
+            'label'     => __('Bordure', 'blacktenderscore'),
             'type'      => Controls_Manager::COLOR,
             'selectors' => [
                 '{{WRAPPER}} .bt-quote-duration-card:hover' => 'border-color: {{VALUE}}',
@@ -703,13 +787,17 @@ trait BtQuoteStyleControls {
         ]);
 
         $this->add_control('qt_dur_hover_color', [
-            'label'     => __('Texte hover', 'blacktenderscore'),
+            'label'     => __('Texte', 'blacktenderscore'),
             'type'      => Controls_Manager::COLOR,
             'selectors' => [
                 '{{WRAPPER}} .bt-quote-duration-card:hover' => 'color: {{VALUE}}',
                 '{{WRAPPER}} .bt-quote-timeslot__btn:hover' => 'color: {{VALUE}}',
             ],
         ]);
+
+        $this->end_controls_tab();
+
+        $this->end_controls_tabs();
 
         $this->add_control('qt_dur_active_heading', [
             'label'     => __('Sélectionné / Actif', 'blacktenderscore'),
@@ -721,8 +809,10 @@ trait BtQuoteStyleControls {
             'label'     => __('Fond sélectionné', 'blacktenderscore'),
             'type'      => Controls_Manager::COLOR,
             'selectors' => [
-                '{{WRAPPER}} .bt-quote-duration-card[aria-selected="true"]' => 'background-color: {{VALUE}}; border-color: {{VALUE}}',
-                '{{WRAPPER}} .bt-quote-timeslot__btn[aria-selected="true"]' => 'background-color: {{VALUE}}; border-color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-duration-card[aria-selected="true"]'   => 'background-color: {{VALUE}}; border-color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-duration-card--selected'               => 'background-color: {{VALUE}}; border-color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-timeslot__btn[aria-selected="true"]'   => 'background-color: {{VALUE}}; border-color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-timeslot__btn--selected'               => 'background-color: {{VALUE}}; border-color: {{VALUE}}',
             ],
         ]);
 
@@ -731,7 +821,9 @@ trait BtQuoteStyleControls {
             'type'      => Controls_Manager::COLOR,
             'selectors' => [
                 '{{WRAPPER}} .bt-quote-duration-card[aria-selected="true"]' => 'color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-duration-card--selected'             => 'color: {{VALUE}}',
                 '{{WRAPPER}} .bt-quote-timeslot__btn[aria-selected="true"]' => 'color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-timeslot__btn--selected'             => 'color: {{VALUE}}',
             ],
         ]);
 
@@ -763,106 +855,16 @@ trait BtQuoteStyleControls {
 
         $this->end_controls_section();
 
-        // ── Date souhaitée — Labels & Inputs ──────────────────────────
+        // ── Date souhaitée — Calendrier ──────────────────────────────
         $this->start_controls_section('style_quote_date_wished', [
-            'label'     => __('Devis — Date souhaitée', 'blacktenderscore'),
+            'label'     => __('Étape — Date souhaitée', 'blacktenderscore'),
             'tab'       => Controls_Manager::TAB_STYLE,
             'condition' => $condition,
         ]);
 
-        $this->add_control('qt_date_label_heading', [
-            'label' => __('Labels (Date début / fin)', 'blacktenderscore'),
-            'type'  => Controls_Manager::HEADING,
-        ]);
-
-        $this->add_group_control(Group_Control_Typography::get_type(), [
-            'name'     => 'qt_date_label_typo',
-            'label'    => __('Typographie label', 'blacktenderscore'),
-            'selector' => '{{WRAPPER}} .bt-quote-datepicker__label',
-        ]);
-
-        $this->add_control('qt_date_label_color', [
-            'label'     => __('Couleur label', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-datepicker__label' => 'color: {{VALUE}}'],
-        ]);
-
-        $this->add_control('qt_date_input_heading', [
-            'label'     => __('Champs date', 'blacktenderscore'),
-            'type'      => Controls_Manager::HEADING,
-            'separator' => 'before',
-        ]);
-
-        $this->add_group_control(Group_Control_Typography::get_type(), [
-            'name'     => 'qt_date_input_typo',
-            'label'    => __('Typographie champ', 'blacktenderscore'),
-            'selector' => '{{WRAPPER}} .bt-quote-datepicker__input',
-        ]);
-
-        $this->add_control('qt_date_input_color', [
-            'label'     => __('Couleur texte', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-datepicker__input' => 'color: {{VALUE}}'],
-        ]);
-
-        $this->add_control('qt_date_input_bg', [
-            'label'     => __('Fond champ', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-datepicker__input' => 'background-color: {{VALUE}}'],
-        ]);
-
-        $this->add_control('qt_date_input_border', [
-            'label'     => __('Bordure champ', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-datepicker__input' => 'border-color: {{VALUE}}'],
-        ]);
-
-        $this->add_control('qt_date_input_focus', [
-            'label'     => __('Bordure focus', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-datepicker__input:focus' => 'border-color: {{VALUE}}; box-shadow: 0 0 0 2px color-mix(in srgb, {{VALUE}} 20%, transparent)'],
-        ]);
-
-        $this->add_responsive_control('qt_date_input_radius', [
-            'label'      => __('Border radius', 'blacktenderscore'),
-            'type'       => Controls_Manager::DIMENSIONS,
-            'size_units' => ['px'],
-            'selectors'  => ['{{WRAPPER}} .bt-quote-datepicker__input' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
-        ]);
-
-        $this->add_responsive_control('qt_date_input_padding', [
-            'label'      => __('Padding champ', 'blacktenderscore'),
-            'type'       => Controls_Manager::DIMENSIONS,
-            'size_units' => ['px', 'em'],
-            'selectors'  => ['{{WRAPPER}} .bt-quote-datepicker__input' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
-        ]);
-
-        $this->add_control('qt_dp_month_heading', [
-            'label'     => __('Navigation calendrier', 'blacktenderscore'),
-            'type'      => Controls_Manager::HEADING,
-            'separator' => 'before',
-        ]);
-
-        $this->add_group_control(Group_Control_Typography::get_type(), [
-            'name'     => 'qt_dp_month_typo',
-            'label'    => __('Typo mois / année', 'blacktenderscore'),
-            'selector' => '{{WRAPPER}} .bt-dp__month-label',
-        ]);
-
-        $this->add_control('qt_dp_month_color', [
-            'label'     => __('Couleur mois / année', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-dp__month-label' => 'color: {{VALUE}}'],
-        ]);
-
-        $this->add_control('qt_dp_cell_heading', [
-            'label'     => __('Cellules jour', 'blacktenderscore'),
-            'type'      => Controls_Manager::HEADING,
-            'separator' => 'before',
-        ]);
-
+        // Calendrier — couleurs
         $this->add_control('qt_dp_cell_color', [
-            'label'     => __('Couleur texte jour', 'blacktenderscore'),
+            'label'     => __('Texte jours', 'blacktenderscore'),
             'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-dp__cell' => 'color: {{VALUE}}'],
         ]);
@@ -879,51 +881,138 @@ trait BtQuoteStyleControls {
             'selectors' => ['{{WRAPPER}} .bt-dp__cell--start, {{WRAPPER}} .bt-dp__cell--end' => 'color: {{VALUE}}'],
         ]);
 
+        $this->add_control('qt_dp_range_bg', [
+            'label'       => __('Fond entre les dates (range)', 'blacktenderscore'),
+            'type'        => Controls_Manager::COLOR,
+            'description' => __('Couleur de fond pour les jours entre la date de début et la date de fin.', 'blacktenderscore'),
+            'selectors'   => [
+                '{{WRAPPER}} .bt-dp__cell--range' => 'background-color: {{VALUE}}',
+                '{{WRAPPER}} .bt-dp__cell--start' => 'background: linear-gradient(90deg, transparent 0%, {{VALUE}} 100%)',
+                '{{WRAPPER}} .bt-dp__cell--end'   => 'background: linear-gradient(90deg, {{VALUE}} 0%, transparent 100%)',
+            ],
+        ]);
+
+        $this->add_control('qt_dp_month_color', [
+            'label'     => __('Couleur mois / année', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-dp__month-label' => 'color: {{VALUE}}'],
+        ]);
+
         $this->end_controls_section();
 
         // ── État sélectionné — unifié [aria-selected="true"] ────────
         $this->start_controls_section('style_quote_selected', [
-            'label'     => __('Devis — État sélectionné', 'blacktenderscore'),
+            'label'     => __('Étape — Élément sélectionné', 'blacktenderscore'),
             'tab'       => Controls_Manager::TAB_STYLE,
             'condition' => $condition,
         ]);
 
+        $this->start_controls_tabs('tabs_sel_states');
+
+        $this->start_controls_tab('tab_sel_selected', ['label' => __('Sélectionné', 'blacktenderscore')]);
+
         $this->add_control('qt_sel_bg', [
-            'label'     => __('Fond sélectionné', 'blacktenderscore'),
+            'label'     => __('Fond', 'blacktenderscore'),
             'type'      => Controls_Manager::COLOR,
             'selectors' => [
-                '{{WRAPPER}} .bt-quote-exc-card[aria-selected="true"]'      => 'background-color: {{VALUE}}',
-                '{{WRAPPER}} .bt-quote-boat-card--selected'                 => 'background-color: {{VALUE}}',
-                '{{WRAPPER}} .bt-quote-duration-card[aria-selected="true"]' => 'background-color: {{VALUE}}',
-                '{{WRAPPER}} .bt-quote-timeslot__btn[aria-selected="true"]' => 'background-color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-exc-card[aria-selected="true"]'        => 'background-color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-boat-card--selected'                   => 'background-color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-duration-card[aria-selected="true"]'   => 'background-color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-duration-card--selected'               => 'background-color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-timeslot__btn[aria-selected="true"]'   => 'background-color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-timeslot__btn--selected'               => 'background-color: {{VALUE}}',
                 '{{WRAPPER}} .bt-quote-exc-choice__btn[aria-selected="true"]' => 'background-color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-exc-choice__btn--selected'             => 'background-color: {{VALUE}}',
             ],
         ]);
 
         $this->add_control('qt_sel_border', [
-            'label'     => __('Bordure sélectionné', 'blacktenderscore'),
+            'label'     => __('Bordure', 'blacktenderscore'),
             'type'      => Controls_Manager::COLOR,
             'selectors' => [
-                '{{WRAPPER}} .bt-quote-exc-card[aria-selected="true"]'      => 'border-color: {{VALUE}}; box-shadow: 0 0 0 1px {{VALUE}}',
-                '{{WRAPPER}} .bt-quote-boat-card--selected'                 => 'border-color: {{VALUE}}; box-shadow: 0 0 0 1px {{VALUE}}',
-                '{{WRAPPER}} .bt-quote-duration-card[aria-selected="true"]' => 'border-color: {{VALUE}}',
-                '{{WRAPPER}} .bt-quote-timeslot__btn[aria-selected="true"]' => 'border-color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-exc-card[aria-selected="true"]'        => 'border-color: {{VALUE}}; box-shadow: 0 0 0 1px {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-boat-card--selected'                   => 'border-color: {{VALUE}}; box-shadow: 0 0 0 1px {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-duration-card[aria-selected="true"]'   => 'border-color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-duration-card--selected'               => 'border-color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-timeslot__btn[aria-selected="true"]'   => 'border-color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-timeslot__btn--selected'               => 'border-color: {{VALUE}}',
                 '{{WRAPPER}} .bt-quote-exc-choice__btn[aria-selected="true"]' => 'border-color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-exc-choice__btn--selected'             => 'border-color: {{VALUE}}',
             ],
         ]);
 
         $this->add_control('qt_sel_color', [
-            'label'     => __('Texte sélectionné', 'blacktenderscore'),
+            'label'     => __('Texte', 'blacktenderscore'),
             'type'      => Controls_Manager::COLOR,
             'selectors' => [
-                '{{WRAPPER}} .bt-quote-exc-card[aria-selected="true"]'      => 'color: {{VALUE}}',
-                '{{WRAPPER}} .bt-quote-boat-card--selected'                 => 'color: {{VALUE}}',
-                '{{WRAPPER}} .bt-quote-duration-card[aria-selected="true"]' => 'color: {{VALUE}}',
-                '{{WRAPPER}} .bt-quote-timeslot__btn[aria-selected="true"]' => 'color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-exc-card[aria-selected="true"]'        => 'color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-boat-card--selected'                   => 'color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-duration-card[aria-selected="true"]'   => 'color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-duration-card--selected'               => 'color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-timeslot__btn[aria-selected="true"]'   => 'color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-timeslot__btn--selected'               => 'color: {{VALUE}}',
                 '{{WRAPPER}} .bt-quote-exc-choice__btn[aria-selected="true"]' => 'color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-exc-choice__btn--selected'             => 'color: {{VALUE}}',
             ],
         ]);
 
+        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), [
+            'name'     => 'qt_sel_shadow',
+            'label'    => __('Box-shadow', 'blacktenderscore'),
+            'selector' => '{{WRAPPER}} [aria-selected="true"], {{WRAPPER}} .bt-quote-boat-card--selected',
+        ]);
+
+        $this->end_controls_tab();
+
+        $this->start_controls_tab('tab_sel_hover', ['label' => __('Survol', 'blacktenderscore')]);
+
+        $this->add_control('qt_hover_bg', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => [
+                '{{WRAPPER}} .bt-quote-exc-card:hover'        => 'background-color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-boat-card:hover'       => 'background-color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-duration-card:hover'   => 'background-color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-timeslot__btn:hover'   => 'background-color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-exc-choice__btn:hover' => 'background-color: {{VALUE}}',
+            ],
+        ]);
+
+        $this->add_control('qt_hover_border', [
+            'label'     => __('Bordure', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => [
+                '{{WRAPPER}} .bt-quote-exc-card:hover'        => 'border-color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-boat-card:hover'       => 'border-color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-duration-card:hover'   => 'border-color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-timeslot__btn:hover'   => 'border-color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-exc-choice__btn:hover' => 'border-color: {{VALUE}}',
+            ],
+        ]);
+
+        $this->add_control('qt_hover_color', [
+            'label'     => __('Texte', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => [
+                '{{WRAPPER}} .bt-quote-exc-card:hover'        => 'color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-boat-card:hover'       => 'color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-duration-card:hover'   => 'color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-timeslot__btn:hover'   => 'color: {{VALUE}}',
+                '{{WRAPPER}} .bt-quote-exc-choice__btn:hover' => 'color: {{VALUE}}',
+            ],
+        ]);
+
+        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), [
+            'name'     => 'qt_hover_shadow',
+            'label'    => __('Box-shadow', 'blacktenderscore'),
+            'selector' => '{{WRAPPER}} .bt-quote-exc-card:hover, {{WRAPPER}} .bt-quote-boat-card:hover, {{WRAPPER}} .bt-quote-duration-card:hover, {{WRAPPER}} .bt-quote-timeslot__btn:hover, {{WRAPPER}} .bt-quote-exc-choice__btn:hover',
+        ]);
+
+        $this->end_controls_tab();
+
+        $this->end_controls_tabs();
+
+        // Radius / padding / typo sélectionné — hors tabs (pas de variante hover)
         $this->add_responsive_control('qt_sel_radius', [
             'label'      => __('Border radius sélectionné', 'blacktenderscore'),
             'type'       => Controls_Manager::DIMENSIONS,
@@ -954,66 +1043,12 @@ trait BtQuoteStyleControls {
             'selector' => '{{WRAPPER}} .bt-quote-duration-card[aria-selected="true"] .bt-quote-duration-card__label, {{WRAPPER}} .bt-quote-timeslot__btn[aria-selected="true"], {{WRAPPER}} .bt-quote-exc-choice__btn[aria-selected="true"]',
         ]);
 
-        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), [
-            'name'     => 'qt_sel_shadow',
-            'label'    => __('Box-shadow sélectionné', 'blacktenderscore'),
-            'selector' => '{{WRAPPER}} [aria-selected="true"], {{WRAPPER}} .bt-quote-boat-card--selected',
-        ]);
-
-        $this->add_control('qt_hover_heading', [
-            'label'     => __('État survol', 'blacktenderscore'),
-            'type'      => Controls_Manager::HEADING,
-            'separator' => 'before',
-        ]);
-
-        $this->add_control('qt_hover_bg', [
-            'label'     => __('Fond survol', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => [
-                '{{WRAPPER}} .bt-quote-exc-card:hover'      => 'background-color: {{VALUE}}',
-                '{{WRAPPER}} .bt-quote-boat-card:hover'     => 'background-color: {{VALUE}}',
-                '{{WRAPPER}} .bt-quote-duration-card:hover' => 'background-color: {{VALUE}}',
-                '{{WRAPPER}} .bt-quote-timeslot__btn:hover' => 'background-color: {{VALUE}}',
-                '{{WRAPPER}} .bt-quote-exc-choice__btn:hover' => 'background-color: {{VALUE}}',
-            ],
-        ]);
-
-        $this->add_control('qt_hover_border', [
-            'label'     => __('Bordure survol', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => [
-                '{{WRAPPER}} .bt-quote-exc-card:hover'      => 'border-color: {{VALUE}}',
-                '{{WRAPPER}} .bt-quote-boat-card:hover'     => 'border-color: {{VALUE}}',
-                '{{WRAPPER}} .bt-quote-duration-card:hover' => 'border-color: {{VALUE}}',
-                '{{WRAPPER}} .bt-quote-timeslot__btn:hover' => 'border-color: {{VALUE}}',
-                '{{WRAPPER}} .bt-quote-exc-choice__btn:hover' => 'border-color: {{VALUE}}',
-            ],
-        ]);
-
-        $this->add_control('qt_hover_color', [
-            'label'     => __('Texte survol', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => [
-                '{{WRAPPER}} .bt-quote-exc-card:hover'      => 'color: {{VALUE}}',
-                '{{WRAPPER}} .bt-quote-boat-card:hover'     => 'color: {{VALUE}}',
-                '{{WRAPPER}} .bt-quote-duration-card:hover' => 'color: {{VALUE}}',
-                '{{WRAPPER}} .bt-quote-timeslot__btn:hover' => 'color: {{VALUE}}',
-                '{{WRAPPER}} .bt-quote-exc-choice__btn:hover' => 'color: {{VALUE}}',
-            ],
-        ]);
-
-        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), [
-            'name'     => 'qt_hover_shadow',
-            'label'    => __('Box-shadow survol', 'blacktenderscore'),
-            'selector' => '{{WRAPPER}} .bt-quote-exc-card:hover, {{WRAPPER}} .bt-quote-boat-card:hover, {{WRAPPER}} .bt-quote-duration-card:hover, {{WRAPPER}} .bt-quote-timeslot__btn:hover, {{WRAPPER}} .bt-quote-exc-choice__btn:hover',
-        ]);
-
         $this->end_controls_section();
 
         // ── Step 4 — Champs coordonnées ─────────────────────────────
         if (!in_array('style_quote_fields', $skip, true)):
         $this->start_controls_section('style_quote_fields', [
-            'label'     => __('Devis — Champs', 'blacktenderscore'),
+            'label'     => __('Formulaire — Champs', 'blacktenderscore'),
             'tab'       => Controls_Manager::TAB_STYLE,
             'condition' => $condition,
         ]);
@@ -1021,7 +1056,7 @@ trait BtQuoteStyleControls {
         $this->add_control('qt_field_label_color', [
             'label'     => __('Couleur labels', 'blacktenderscore'),
             'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-fields__label, {{WRAPPER}} .bt-quote-datepicker__label' => 'color: {{VALUE}}'],
+            'selectors' => ['{{WRAPPER}} .bt-quote-fields__label' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_group_control(Group_Control_Typography::get_type(), [
@@ -1033,20 +1068,20 @@ trait BtQuoteStyleControls {
         $this->add_control('qt_field_bg', [
             'label'     => __('Fond champs', 'blacktenderscore'),
             'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-fields__input, {{WRAPPER}} .bt-quote-datepicker__input' => 'background-color: {{VALUE}}'],
+            'selectors' => ['{{WRAPPER}} .bt-quote-fields__input' => 'background-color: {{VALUE}}'],
         ]);
 
         $this->add_control('qt_field_border', [
             'label'     => __('Bordure champs', 'blacktenderscore'),
             'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-fields__input, {{WRAPPER}} .bt-quote-datepicker__input' => 'border-color: {{VALUE}}'],
+            'selectors' => ['{{WRAPPER}} .bt-quote-fields__input' => 'border-color: {{VALUE}}'],
         ]);
 
         $this->add_control('qt_field_focus', [
             'label'     => __('Bordure focus', 'blacktenderscore'),
             'type'      => Controls_Manager::COLOR,
             'selectors' => [
-                '{{WRAPPER}} .bt-quote-fields__input:focus, {{WRAPPER}} .bt-quote-datepicker__input:focus' => 'border-color: {{VALUE}}; box-shadow: 0 0 0 2px color-mix(in srgb, {{VALUE}} 20%, transparent)',
+                '{{WRAPPER}} .bt-quote-fields__input:focus' => 'border-color: {{VALUE}}; box-shadow: 0 0 0 2px color-mix(in srgb, {{VALUE}} 20%, transparent)',
             ],
         ]);
 
@@ -1054,14 +1089,14 @@ trait BtQuoteStyleControls {
             'label'      => __('Border radius', 'blacktenderscore'),
             'type'       => Controls_Manager::DIMENSIONS,
             'size_units' => ['px'],
-            'selectors'  => ['{{WRAPPER}} .bt-quote-fields__input, {{WRAPPER}} .bt-quote-datepicker__input' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+            'selectors'  => ['{{WRAPPER}} .bt-quote-fields__input' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
         ]);
 
         $this->add_responsive_control('qt_field_padding', [
             'label'      => __('Padding champs', 'blacktenderscore'),
             'type'       => Controls_Manager::DIMENSIONS,
             'size_units' => ['px', 'em'],
-            'selectors'  => ['{{WRAPPER}} .bt-quote-fields__input, {{WRAPPER}} .bt-quote-datepicker__input' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+            'selectors'  => ['{{WRAPPER}} .bt-quote-fields__input' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
         ]);
 
         $this->end_controls_section();
@@ -1069,7 +1104,7 @@ trait BtQuoteStyleControls {
 
         // ── Boutons (Suivant + Envoi) ────────────────────────────────
         $this->start_controls_section('style_quote_buttons', [
-            'label'     => __('Devis — Boutons', 'blacktenderscore'),
+            'label'     => __('Formulaire — Boutons & submit', 'blacktenderscore'),
             'tab'       => Controls_Manager::TAB_STYLE,
             'condition' => $condition,
         ]);
@@ -1082,18 +1117,6 @@ trait BtQuoteStyleControls {
         $this->add_group_control(Group_Control_Typography::get_type(), [
             'name'     => 'qt_btn_next_typo',
             'selector' => '{{WRAPPER}} .bt-quote-step__next',
-        ]);
-
-        $this->add_control('qt_btn_next_bg', [
-            'label'     => __('Fond', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-step__next' => 'background-color: {{VALUE}}'],
-        ]);
-
-        $this->add_control('qt_btn_next_color', [
-            'label'     => __('Couleur texte', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-step__next' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_responsive_control('qt_btn_next_padding', [
@@ -1110,6 +1133,48 @@ trait BtQuoteStyleControls {
             'selectors'  => ['{{WRAPPER}} .bt-quote-step__next' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
         ]);
 
+        $this->start_controls_tabs('tabs_btn_next_colors');
+
+        $this->start_controls_tab('tab_btn_next_normal', ['label' => __('Normal', 'blacktenderscore')]);
+
+        $this->add_control('qt_btn_next_bg', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-step__next' => 'background-color: {{VALUE}}'],
+        ]);
+
+        $this->add_control('qt_btn_next_color', [
+            'label'     => __('Texte', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-step__next' => 'color: {{VALUE}}'],
+        ]);
+
+        $this->add_control('qt_btn_next_border_color', [
+            'label'     => __('Bordure', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-step__next' => 'border-color: {{VALUE}}'],
+        ]);
+
+        $this->end_controls_tab();
+
+        $this->start_controls_tab('tab_btn_next_hover', ['label' => __('Hover', 'blacktenderscore')]);
+
+        $this->add_control('qt_btn_next_hover_bg', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-step__next:hover' => 'background-color: {{VALUE}}'],
+        ]);
+
+        $this->add_control('qt_btn_next_hover_color', [
+            'label'     => __('Texte', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-step__next:hover' => 'color: {{VALUE}}'],
+        ]);
+
+        $this->end_controls_tab();
+
+        $this->end_controls_tabs();
+
         $this->add_control('qt_btn_submit_heading', [
             'label'     => __('Bouton "Envoyer"', 'blacktenderscore'),
             'type'      => Controls_Manager::HEADING,
@@ -1119,18 +1184,6 @@ trait BtQuoteStyleControls {
         $this->add_group_control(Group_Control_Typography::get_type(), [
             'name'     => 'qt_btn_submit_typo',
             'selector' => '{{WRAPPER}} .bt-quote-submit',
-        ]);
-
-        $this->add_control('qt_btn_submit_bg', [
-            'label'     => __('Fond', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-submit' => 'background-color: {{VALUE}}'],
-        ]);
-
-        $this->add_control('qt_btn_submit_color', [
-            'label'     => __('Couleur texte', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-quote-submit' => 'color: {{VALUE}}'],
         ]);
 
         $this->add_responsive_control('qt_btn_submit_padding', [
@@ -1147,12 +1200,326 @@ trait BtQuoteStyleControls {
             'selectors'  => ['{{WRAPPER}} .bt-quote-submit' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
         ]);
 
+        $this->start_controls_tabs('tabs_btn_submit_colors');
+
+        $this->start_controls_tab('tab_btn_submit_normal', ['label' => __('Normal', 'blacktenderscore')]);
+
+        $this->add_control('qt_btn_submit_bg', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-submit' => 'background-color: {{VALUE}}'],
+        ]);
+
+        $this->add_control('qt_btn_submit_color', [
+            'label'     => __('Texte', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-submit' => 'color: {{VALUE}}'],
+        ]);
+
+        $this->end_controls_tab();
+
+        $this->start_controls_tab('tab_btn_submit_hover', ['label' => __('Hover', 'blacktenderscore')]);
+
+        $this->add_control('qt_btn_submit_hover_bg', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-submit:hover' => 'background-color: {{VALUE}}'],
+        ]);
+
+        $this->add_control('qt_btn_submit_hover_color', [
+            'label'     => __('Texte', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-submit:hover' => 'color: {{VALUE}}'],
+        ]);
+
+        $this->end_controls_tab();
+
+        $this->end_controls_tabs();
+
+        $this->end_controls_section();
+
+        // ── Forfaits bateau (pills) ───────────────────────────────────
+        $this->start_controls_section('style_quote_boat_forfaits', [
+            'label'     => __('Cards bateau — Forfaits & pills', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_STYLE,
+            'condition' => $condition,
+        ]);
+
+        // ── Grille ────────────────────────────────────────────────────
+        $this->add_control('qt_boat_forfaits_grid_heading', [
+            'label' => __('Grille de forfaits', 'blacktenderscore'),
+            'type'  => Controls_Manager::HEADING,
+        ]);
+
+        $this->add_responsive_control('qt_boat_forfaits_cols', [
+            'label'          => __('Colonnes', 'blacktenderscore'),
+            'type'           => Controls_Manager::SELECT,
+            'options'        => ['1' => '1', '2' => '2', '3' => '3'],
+            'default'        => '2',
+            'tablet_default' => '2',
+            'mobile_default' => '1',
+            'selectors'      => ['{{WRAPPER}} .bt-quote-boat-card__forfaits' => 'grid-template-columns: repeat({{VALUE}}, 1fr)'],
+        ]);
+
+        $this->add_responsive_control('qt_boat_forfaits_gap', [
+            'label'      => __('Espacement entre pills', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 0, 'max' => 32]],
+            'selectors'  => ['{{WRAPPER}} .bt-quote-boat-card__forfaits' => 'gap: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        // ── Pill ──────────────────────────────────────────────────────
+        $this->add_control('qt_boat_forfait_pill_heading', [
+            'label'     => __('Pill forfait', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'separator' => 'before',
+        ]);
+
+        $this->add_responsive_control('qt_boat_forfait_align', [
+            'label'                => __('Alignement contenu', 'blacktenderscore'),
+            'type'                 => Controls_Manager::CHOOSE,
+            'options'              => [
+                'left'   => ['title' => __('Gauche', 'blacktenderscore'),  'icon' => 'eicon-text-align-left'],
+                'center' => ['title' => __('Centre', 'blacktenderscore'),  'icon' => 'eicon-text-align-center'],
+                'right'  => ['title' => __('Droite', 'blacktenderscore'),  'icon' => 'eicon-text-align-right'],
+            ],
+            'default'              => 'left',
+            'selectors_dictionary' => ['left' => 'start', 'center' => 'center', 'right' => 'end'],
+            'selectors'            => ['{{WRAPPER}} .bt-quote-boat-card__forfait' => 'align-items: {{VALUE}}; text-align: {{VALUE}}'],
+        ]);
+
+        $this->add_responsive_control('qt_boat_forfait_padding', [
+            'label'      => __('Padding', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', 'em'],
+            'selectors'  => ['{{WRAPPER}} .bt-quote-boat-card__forfait' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+
+        $this->add_responsive_control('qt_boat_forfait_radius', [
+            'label'      => __('Border radius', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px'],
+            'selectors'  => ['{{WRAPPER}} .bt-quote-boat-card__forfait' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+
+        $this->start_controls_tabs('tabs_boat_forfait');
+
+        $this->start_controls_tab('tab_boat_forfait_normal', ['label' => __('Normal', 'blacktenderscore')]);
+        $this->add_control('qt_boat_forfait_bg', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__forfait' => 'background-color: {{VALUE}}'],
+        ]);
+        $this->add_control('qt_boat_forfait_color', [
+            'label'     => __('Texte', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__forfait' => 'color: {{VALUE}}'],
+        ]);
+        $this->add_control('qt_boat_forfait_border_color', [
+            'label'     => __('Bordure', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__forfait' => 'border-color: {{VALUE}}'],
+        ]);
+        $this->end_controls_tab();
+
+        $this->start_controls_tab('tab_boat_forfait_hover', ['label' => __('Hover', 'blacktenderscore')]);
+        $this->add_control('qt_boat_forfait_hover_bg', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__forfait:hover' => 'background-color: {{VALUE}}'],
+        ]);
+        $this->add_control('qt_boat_forfait_hover_color', [
+            'label'     => __('Texte', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__forfait:hover' => 'color: {{VALUE}}'],
+        ]);
+        $this->add_control('qt_boat_forfait_hover_border', [
+            'label'     => __('Bordure', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__forfait:hover' => 'border-color: {{VALUE}}'],
+        ]);
+        $this->end_controls_tab();
+
+        $this->start_controls_tab('tab_boat_forfait_active', ['label' => __('Actif', 'blacktenderscore')]);
+        $this->add_control('qt_boat_forfait_active_bg', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__forfait--active' => 'background-color: {{VALUE}}'],
+        ]);
+        $this->add_control('qt_boat_forfait_active_color', [
+            'label'     => __('Texte', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__forfait--active' => 'color: {{VALUE}}'],
+        ]);
+        $this->add_control('qt_boat_forfait_active_border', [
+            'label'     => __('Bordure', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__forfait--active' => 'border-color: {{VALUE}}'],
+        ]);
+        $this->end_controls_tab();
+
+        $this->end_controls_tabs();
+
+        // ── Prix ──────────────────────────────────────────────────────
+        $this->add_control('qt_boat_forfait_price_heading', [
+            'label'     => __('Prix', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'separator' => 'before',
+        ]);
+
+        $this->add_group_control(Group_Control_Typography::get_type(), [
+            'name'     => 'qt_boat_forfait_price_typo',
+            'selector' => '{{WRAPPER}} .bt-quote-boat-card__forfait-price',
+        ]);
+
+        $this->add_control('qt_boat_forfait_price_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__forfait-price' => 'color: {{VALUE}}'],
+        ]);
+
+        // ── Label durée ───────────────────────────────────────────────
+        $this->add_control('qt_boat_forfait_label_heading', [
+            'label'     => __('Label durée', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'separator' => 'before',
+        ]);
+
+        $this->add_group_control(Group_Control_Typography::get_type(), [
+            'name'     => 'qt_boat_forfait_label_typo',
+            'selector' => '{{WRAPPER}} .bt-quote-boat-card__forfait-label',
+        ]);
+
+        $this->add_control('qt_boat_forfait_label_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__forfait-label' => 'color: {{VALUE}}'],
+        ]);
+
+        $this->add_control('qt_boat_forfait_label_opacity', [
+            'label'      => __('Opacité', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 0, 'max' => 1, 'step' => 0.05]],
+            'selectors'  => ['{{WRAPPER}} .bt-quote-boat-card__forfait-label' => 'opacity: {{SIZE}}'],
+        ]);
+
+        // ── Bouton "Plus d'infos" ──────────────────────────────────────
+        $this->add_control('qt_boat_more_gap', [
+            'label'      => __('Espace avant le bouton', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 0, 'max' => 60]],
+            'default'    => ['size' => 8, 'unit' => 'px'],
+            'separator'  => 'before',
+            'selectors'  => ['{{WRAPPER}} .bt-quote-boat-card__more' => 'margin-top: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        $this->add_control('qt_boat_more_heading', [
+            'label'     => __('Bouton "Plus d\'infos"', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'separator' => 'before',
+        ]);
+
+        $this->add_group_control(Group_Control_Typography::get_type(), [
+            'name'     => 'qt_boat_more_typo',
+            'selector' => '{{WRAPPER}} .bt-quote-boat-card__more',
+        ]);
+
+        $this->start_controls_tabs('tabs_boat_more');
+
+        $this->start_controls_tab('tab_boat_more_normal', ['label' => __('Normal', 'blacktenderscore')]);
+        $this->add_control('qt_boat_more_bg', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__more' => 'background-color: {{VALUE}}'],
+        ]);
+        $this->add_control('qt_boat_more_color', [
+            'label'     => __('Texte', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__more' => 'color: {{VALUE}}'],
+        ]);
+        $this->add_control('qt_boat_more_border_color', [
+            'label'     => __('Bordure', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__more' => 'border-top-color: {{VALUE}}'],
+        ]);
+        $this->end_controls_tab();
+
+        $this->start_controls_tab('tab_boat_more_hover', ['label' => __('Hover', 'blacktenderscore')]);
+        $this->add_control('qt_boat_more_hover_bg', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__more:hover' => 'background-color: {{VALUE}}'],
+        ]);
+        $this->add_control('qt_boat_more_hover_color', [
+            'label'     => __('Texte', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-quote-boat-card__more:hover' => 'color: {{VALUE}}'],
+        ]);
+        $this->end_controls_tab();
+
+        $this->end_controls_tabs();
+
+        $this->end_controls_section();
+
+        // ── Options / Chips (substep) ─────────────────────────────────
+        $this->start_controls_section('style_quote_chips', [
+            'label'     => __('Étape options — Chips', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_STYLE,
+            'condition' => $condition,
+        ]);
+
+        $this->add_control('qt_chip_heading_default', [
+            'label' => __('Chip — Normal', 'blacktenderscore'),
+            'type'  => Controls_Manager::HEADING,
+        ]);
+
+        $this->add_control('qt_chip_border_color', [
+            'label'     => __('Couleur bordure', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => [
+                '{{WRAPPER}} .bt-quote-substep__chip' => 'border-color: {{VALUE}}',
+            ],
+        ]);
+
+        $this->add_control('qt_chip_color', [
+            'label'     => __('Texte', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => [
+                '{{WRAPPER}} .bt-quote-substep__chip' => 'color: {{VALUE}}',
+            ],
+        ]);
+
+        $this->add_control('qt_chip_heading_selected', [
+            'label'     => __('Chip — Sélectionné', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'separator' => 'before',
+        ]);
+
+        $this->add_control('qt_chip_selected_bg', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => [
+                '{{WRAPPER}} .bt-quote-substep__chip--selected' => 'background-color: {{VALUE}}',
+            ],
+        ]);
+
+        $this->add_control('qt_chip_selected_color', [
+            'label'     => __('Texte', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => [
+                '{{WRAPPER}} .bt-quote-substep__chip--selected' => 'color: {{VALUE}}',
+            ],
+        ]);
+
         $this->end_controls_section();
 
         // ── Messages résultat ────────────────────────────────────────
         if (!in_array('style_quote_messages', $skip, true)):
         $this->start_controls_section('style_quote_messages', [
-            'label'     => __('Devis — Messages', 'blacktenderscore'),
+            'label'     => __('Messages & alertes', 'blacktenderscore'),
             'tab'       => Controls_Manager::TAB_STYLE,
             'condition' => $condition,
         ]);

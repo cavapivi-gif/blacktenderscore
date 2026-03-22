@@ -4,4 +4,81 @@
 
 .bt-taxdisp { display: block; }
 .bt-taxdisp__section-title { margin: 0 0 8px; }
+.bt-taxdisp__section-desc { margin: 0 0 12px; }
 .bt-taxdisp__text { margin: 0; }
+
+/* ── Layouts ────────────────────────────────────────────── */
+
+.bt-taxdisp__text--list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.bt-taxdisp__text--grid {
+    display: grid;
+    gap: 12px;
+    /* grid-template-columns et gap gérés par les contrôles Elementor */
+}
+
+/* ── Items ──────────────────────────────────────────────── */
+
+/* Item inline (default) */
+.bt-taxdisp__item {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 6px;
+}
+
+/* Item en liste ou grille → block-level, taille contenu (pas étirement cellule) */
+.bt-taxdisp__text--list .bt-taxdisp__item {
+    display: flex;
+    align-items: flex-start;
+    align-self: flex-start; /* ne remplit pas toute la largeur du flex-column */
+}
+
+.bt-taxdisp__text--grid .bt-taxdisp__item {
+    display: flex;
+    align-items: flex-start;
+}
+
+/* Corps : label et description empilés verticalement */
+.bt-taxdisp__body {
+    display: inline-flex;
+    flex-direction: column;
+}
+
+.bt-taxdisp__text--list .bt-taxdisp__body,
+.bt-taxdisp__text--grid .bt-taxdisp__body {
+    display: flex;
+    width: fit-content; /* fond/bordure collés au contenu, pas à la cellule */
+}
+
+/* ── Séparateur inline ──────────────────────────────────── */
+
+.bt-taxdisp__sep { display: inline; }
+
+/* ── Description ────────────────────────────────────────── */
+
+.bt-taxdisp__desc {
+    display: block;
+    margin-top: 2px;
+}
+
+/* ── Icône ──────────────────────────────────────────────── */
+
+.bt-taxdisp__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.bt-taxdisp__text--list .bt-taxdisp__icon,
+.bt-taxdisp__text--grid .bt-taxdisp__icon {
+    display: flex;
+}
+
+.bt-taxdisp__icon svg,
+.bt-taxdisp__icon img { display: block; }

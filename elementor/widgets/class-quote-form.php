@@ -135,39 +135,6 @@ class QuoteForm extends AbstractBtWidget {
             'condition'   => ['step_boat_enable' => 'yes', 'show_boat_more_btn' => 'yes'],
         ]);
 
-        // ── Tags taxonomie (pills inline) ──────────────────────────────────
-        $boat_tags_repeater = new \Elementor\Repeater();
-
-        $boat_tags_repeater->add_control('tag_taxonomy', [
-            'label'   => __('Taxonomie', 'blacktenderscore'),
-            'type'    => Controls_Manager::SELECT,
-            'options' => [
-                'boat_equipment' => __('Équipement', 'blacktenderscore'),
-                'type-de-bateau' => __('Type de bateau', 'blacktenderscore'),
-                'boat_fuel'      => __('Carburant', 'blacktenderscore'),
-                'boat_skipper'   => __('Skipper', 'blacktenderscore'),
-            ],
-            'default' => 'boat_equipment',
-        ]);
-
-        $boat_tags_repeater->add_control('tag_terms', [
-            'label'    => __('Termes à afficher', 'blacktenderscore'),
-            'type'     => Controls_Manager::SELECT2,
-            'multiple' => true,
-            'options'  => self::get_all_boat_term_options(),
-        ]);
-
-        $this->add_control('boat_tags', [
-            'label'         => __('Tags taxonomie — Cards bateau', 'blacktenderscore'),
-            'type'          => Controls_Manager::REPEATER,
-            'fields'        => $boat_tags_repeater->get_controls(),
-            'default'       => [],
-            'title_field'   => '{{{ tag_taxonomy }}}',
-            'description'   => __('Chaque ligne = une taxonomie + les termes à afficher en pill sous le titre.', 'blacktenderscore'),
-            'condition'     => ['step_boat_enable' => 'yes'],
-            'prevent_empty' => false,
-        ]);
-
         $this->end_controls_section();
 
         // ─────────────────────────────────────────────────────────────────────

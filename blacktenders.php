@@ -3,7 +3,7 @@
  * Plugin Name: BlackTenders Core
  * Plugin URI:  https://studiojae.fr
  * Description: CPT Excursion & Bateau — widgets Elementor, API Regiondo, backoffice
- * Version:     1.0.1
+ * Version:     1.0.5
  * Author:      StudioJae
  * Text Domain: blacktenderscore
  *
@@ -12,7 +12,7 @@
 
 defined('ABSPATH') || exit;
 
-define('BT_VERSION',  '1.0.1');
+define('BT_VERSION',  '1.0.5');
 define('BT_DIR',      plugin_dir_path(__FILE__));
 define('BT_URL',      plugin_dir_url(__FILE__));
 

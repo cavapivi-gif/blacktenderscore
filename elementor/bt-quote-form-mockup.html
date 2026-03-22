@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BT Quote Form — Mockup Redesign</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; padding: 40px 16px; color: #1a1a1a; }
+.wrapper { max-width: 460px; margin: 0 auto; }
+.section-label { font-size: 13px; color: #888; margin: 32px 0 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+.section-label:first-child { margin-top: 0; }
+
+/* ═══════════════════════════════════════════
+   QUOTE FORM
+   ═══════════════════════════════════════════ */
+
+.bt-quote {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Step ── */
+
+.bt-quote-step {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: opacity .3s, border-color .3s;
+}
+
+.bt-quote-step--collapsed {
+  opacity: .6;
+}
+
+.bt-quote-step--active {
+  border: 2px solid #1a73e8;
+  opacity: 1;
+}
+
+.bt-quote-step--done {
+  opacity: 1;
+}
+
+/* ── Step header ── */
+
+.bt-quote-step__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  cursor: pointer;
+}
+
+.bt-quote-step__number {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #f0f0f0;
+  color: #888;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.bt-quote-step--active .bt-quote-step__number,
+.bt-quote-step--done .bt-quote-step__number {
+  background: #e8f0fe;
+  color: #1a56c4;
+}
+
+.bt-quote-step__title {
+  font-size: 14px;
+  font-weight: 600;
+  flex: 1;
+  color: #1a1a1a;
+}
+
+.bt-quote-step--collapsed .bt-quote-step__title {
+  color: #888;
+}
+
+.bt-quote-step__check {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* ── Step summary (visible when collapsed + done) ── */
+
+.bt-quote-step__summary {
+  font-size: 12px;
+  color: #888;
+  padding: 0 18px 12px 54px;
+}
+
+/* ── Step content ── */
+
+.bt-quote-step__content {
+  padding: 0 18px 18px;
+}
+
+/* ── Step actions ── */
+
+.bt-quote-step__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.bt-quote-step__next {
+  background: #1a1a1a;
+  color: #fff;
+  padding: 9px 22px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background .15s;
+}
+
+.bt-quote-step__next:hover {
+  background: #333;
+}
+
+/* ═══════════════════════════════════════════
+   STEP 1 — EXCURSION
+   ═══════════════════════════════════════════ */
+
+.bt-quote-exc-auto {
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+
+.bt-quote-exc-auto__name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.bt-quote-exc-choice {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.bt-quote-exc-choice__btn {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  background: transparent;
+  color: #888;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color .2s, background .2s, color .2s;
+}
+
+.bt-quote-exc-choice__btn:hover {
+  border-color: #bbb;
+}
+
+.bt-quote-exc-choice__btn--selected {
+  border: 2px solid #1a73e8;
+  background: #e8f0fe;
+  color: #1a56c4;
+}
+
+/* ═══════════════════════════════════════════
+   STEP 2 — BOAT CARDS
+   ═══════════════════════════════════════════ */
+
+.bt-quote-boat-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bt-quote-boat-card {
+  border: 1.5px solid #e0e0e0;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: stretch;
+  cursor: pointer;
+  transition: border-color .2s, box-shadow .2s;
+  background: #fff;
+  position: relative;
+}
+
+.bt-quote-boat-card:hover {
+  border-color: #a0c4f1;
+}
+
+.bt-quote-boat-card--selected {
+  border: 2px solid #1a73e8;
+  box-shadow: 0 0 0 1px #1a73e8;
+}
+
+.bt-quote-boat-card__badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: #e8f0fe;
+  color: #1a56c4;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  z-index: 1;
+}
+
+.bt-quote-boat-card__img {
+  width: 100px;
+  min-height: 90px;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.bt-quote-boat-card__img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.bt-quote-boat-card__body {
+  padding: 10px 14px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.bt-quote-boat-card__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.bt-quote-boat-card__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 1px;
+}
+
+.bt-quote-boat-card__subtitle {
+  font-size: 11px;
+  color: #888;
+  margin: 0 0 5px;
+}
+
+.bt-quote-boat-card__pricing {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+}
+
+.bt-quote-boat-card__price {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+  line-height: 1;
+}
+
+.bt-quote-boat-card__unit {
+  font-size: 11px;
+  color: #888;
+}
+
+.bt-quote-boat-card__radio {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid #e0e0e0;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color .2s;
+}
+
+.bt-quote-boat-card--selected .bt-quote-boat-card__radio {
+  border: 2px solid #1a73e8;
+}
+
+.bt-quote-boat-card--selected .bt-quote-boat-card__radio::after {
+  content: '';
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #1a73e8;
+}
+
+.bt-quote-boat-card__more {
+  display: block;
+  width: 100%;
+  padding: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  border: none;
+  border-top: 1px solid #f0f0f0;
+  background: transparent;
+  color: #1a73e8;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.bt-quote-boat-card__more:hover {
+  background: #f8f8f8;
+}
+
+/* ═══════════════════════════════════════════
+   STEP 3 — DURATION + TIMESLOT + CALENDAR
+   ═══════════════════════════════════════════ */
+
+.bt-quote-duration-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.bt-quote-duration-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  background: transparent;
+  color: #888;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color .2s, background .2s, color .2s;
+}
+
+.bt-quote-duration-card:hover {
+  border-color: #bbb;
+}
+
+.bt-quote-duration-card--selected {
+  border: 2px solid #1a73e8;
+  background: #e8f0fe;
+  color: #1a56c4;
+}
+
+.bt-quote-timeslot__options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.bt-quote-timeslot__btn {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  background: transparent;
+  color: #888;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color .2s, background .2s, color .2s;
+}
+
+.bt-quote-timeslot__btn:hover {
+  border-color: #bbb;
+}
+
+.bt-quote-timeslot__btn--selected {
+  border: 2px solid #1a73e8;
+  background: #e8f0fe;
+  color: #1a56c4;
+}
+
+/* ── Calendar ── */
+
+.bt-dp {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.bt-dp__nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.bt-dp__month-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.bt-dp__prev,
+.bt-dp__next {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #888;
+  transition: background .15s;
+}
+
+.bt-dp__prev:hover,
+.bt-dp__next:hover {
+  background: #f5f5f5;
+}
+
+.bt-dp__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  text-align: center;
+}
+
+.bt-dp__day-header {
+  font-size: 11px;
+  font-weight: 600;
+  color: #888;
+  padding: 4px 0;
+  text-transform: uppercase;
+}
+
+.bt-dp__cell {
+  font-size: 12px;
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #1a1a1a;
+  transition: background .15s;
+}
+
+.bt-dp__cell:hover {
+  background: #f5f5f5;
+}
+
+.bt-dp__cell--disabled {
+  color: #ccc;
+  cursor: default;
+}
+
+.bt-dp__cell--disabled:hover {
+  background: transparent;
+}
+
+.bt-dp__cell--today {
+  font-weight: 700;
+}
+
+.bt-dp__cell--selected {
+  background: #e8f0fe;
+  color: #1a56c4;
+  font-weight: 600;
+}
+
+/* ═══════════════════════════════════════════
+   STEP 4 — CONTACT FIELDS
+   ═══════════════════════════════════════════ */
+
+.bt-quote-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bt-quote-fields__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.bt-quote-fields__group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bt-quote-fields__label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: #888;
+}
+
+.bt-quote-fields__input {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #1a1a1a;
+  background: transparent;
+  transition: border-color .2s, box-shadow .2s;
+  outline: none;
+}
+
+.bt-quote-fields__input::placeholder {
+  color: #bbb;
+}
+
+.bt-quote-fields__input:focus {
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 2px rgba(26,115,232,.15);
+}
+
+/* ═══════════════════════════════════════════
+   STEP 5 — RECAP + SUBMIT
+   ═══════════════════════════════════════════ */
+
+.bt-quote-recap {
+  margin-bottom: 14px;
+}
+
+.bt-quote-recap__line {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 13px;
+}
+
+.bt-quote-recap__label {
+  color: #888;
+}
+
+.bt-quote-recap__value {
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+.bt-quote-submit {
+  background: #1a1a1a;
+  color: #fff;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  width: 100%;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background .15s;
+}
+
+.bt-quote-submit:hover {
+  background: #333;
+}
+
+.bt-quote-message {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.bt-quote-message--success {
+  background: #e8f5e9;
+  color: #2d5a27;
+}
+
+.bt-quote-message--error {
+  background: #fce8e8;
+  color: #791f1f;
+}
+
+/* ═══════════════════════════════════════════
+   SVG ICONS
+   ═══════════════════════════════════════════ */
+
+.icon-boat {
+  width: 32px;
+  height: 32px;
+  fill: none;
+  stroke: #ccc;
+  stroke-width: 1.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+
+<!-- ═══════════════════════════════════════════════════
+     STEP 1 — EXCURSION (done, collapsed)
+     ═══════════════════════════════════════════════════ -->
+
+<div class="section-label">Step 1 + 2 ouverts</div>
+
+<div class="bt-quote">
+
+  <div class="bt-quote-step bt-quote-step--done">
+    <div class="bt-quote-step__header">
+      <span class="bt-quote-step__number">1</span>
+      <span class="bt-quote-step__title">Votre excursion</span>
+      <svg class="bt-quote-step__check" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+    </div>
+    <div class="bt-quote-step__content">
+      <div class="bt-quote-exc-auto">
+        <p class="bt-quote-exc-auto__name">Balade aux Calanques de l'Estérel</p>
+      </div>
+      <div class="bt-quote-exc-choice">
+        <button class="bt-quote-exc-choice__btn bt-quote-exc-choice__btn--selected">Cette excursion</button>
+        <button class="bt-quote-exc-choice__btn">Sur mesure</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       STEP 2 — BOAT (active)
+       ═══════════════════════════════════════════════════ -->
+
+  <div class="bt-quote-step bt-quote-step--active">
+    <div class="bt-quote-step__header">
+      <span class="bt-quote-step__number">2</span>
+      <span class="bt-quote-step__title">Choix du bateau</span>
+    </div>
+    <div class="bt-quote-step__content">
+
+      <div class="bt-quote-boat-cards">
+
+        <!-- Boat 1 — selected -->
+        <div class="bt-quote-boat-card bt-quote-boat-card--selected">
+          <span class="bt-quote-boat-card__badge">Populaire</span>
+          <div class="bt-quote-boat-card__img">
+            <svg class="icon-boat" viewBox="0 0 24 24"><path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76"/><path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6"/><path d="M12 1v4"/></svg>
+          </div>
+          <div class="bt-quote-boat-card__body">
+            <div class="bt-quote-boat-card__info">
+              <p class="bt-quote-boat-card__title">Black Tender 7.5</p>
+              <p class="bt-quote-boat-card__subtitle">Capelli Tempest 775 · 2023</p>
+              <div class="bt-quote-boat-card__pricing">
+                <span class="bt-quote-boat-card__price">69</span>
+                <span class="bt-quote-boat-card__unit">€ / pers.</span>
+              </div>
+            </div>
+            <div class="bt-quote-boat-card__radio"></div>
+          </div>
+          <button class="bt-quote-boat-card__more">Plus d'infos</button>
+        </div>
+
+        <!-- Boat 2 -->
+        <div class="bt-quote-boat-card">
+          <div class="bt-quote-boat-card__img">
+            <svg class="icon-boat" viewBox="0 0 24 24"><path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76"/><path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6"/><path d="M12 1v4"/></svg>
+          </div>
+          <div class="bt-quote-boat-card__body">
+            <div class="bt-quote-boat-card__info">
+              <p class="bt-quote-boat-card__title">Black Shade 40</p>
+              <p class="bt-quote-boat-card__subtitle">Axopar 40 · 2023</p>
+              <div class="bt-quote-boat-card__pricing">
+                <span class="bt-quote-boat-card__price">85</span>
+                <span class="bt-quote-boat-card__unit">€ / pers.</span>
+              </div>
+            </div>
+            <div class="bt-quote-boat-card__radio"></div>
+          </div>
+          <button class="bt-quote-boat-card__more">Plus d'infos</button>
+        </div>
+
+      </div>
+
+      <div class="bt-quote-step__actions">
+        <button class="bt-quote-step__next">Suivant</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       STEP 3 — DATES (collapsed)
+       ═══════════════════════════════════════════════════ -->
+
+  <div class="bt-quote-step bt-quote-step--collapsed">
+    <div class="bt-quote-step__header">
+      <span class="bt-quote-step__number">3</span>
+      <span class="bt-quote-step__title">Dates</span>
+    </div>
+  </div>
+
+  <!-- STEP 4 (collapsed) -->
+  <div class="bt-quote-step bt-quote-step--collapsed">
+    <div class="bt-quote-step__header">
+      <span class="bt-quote-step__number">4</span>
+      <span class="bt-quote-step__title">Vos coordonnées</span>
+    </div>
+  </div>
+
+  <!-- STEP 5 (collapsed) -->
+  <div class="bt-quote-step bt-quote-step--collapsed">
+    <div class="bt-quote-step__header">
+      <span class="bt-quote-step__number">5</span>
+      <span class="bt-quote-step__title">Confirmation</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     STEP 3 — DATES (ouvert, avec calendrier)
+     ═══════════════════════════════════════════════════ -->
+
+<div class="section-label">Step 3 — dates ouvert</div>
+
+<div class="bt-quote">
+
+  <div class="bt-quote-step bt-quote-step--active">
+    <div class="bt-quote-step__header">
+      <span class="bt-quote-step__number">3</span>
+      <span class="bt-quote-step__title">Dates</span>
+    </div>
+    <div class="bt-quote-step__content">
+
+      <div class="bt-quote-duration-cards">
+        <div class="bt-quote-duration-card bt-quote-duration-card--selected">Demi-journée</div>
+        <div class="bt-quote-duration-card">Journée</div>
+        <div class="bt-quote-duration-card">Plusieurs jours</div>
+        <div class="bt-quote-duration-card">Sur mesure</div>
+      </div>
+
+      <div class="bt-quote-timeslot__options">
+        <button class="bt-quote-timeslot__btn bt-quote-timeslot__btn--selected">Matin</button>
+        <button class="bt-quote-timeslot__btn">Après-midi</button>
+      </div>
+
+      <div class="bt-dp">
+        <div class="bt-dp__nav">
+          <button class="bt-dp__prev">&#8249;</button>
+          <span class="bt-dp__month-label">Juillet 2026</span>
+          <button class="bt-dp__next">&#8250;</button>
+        </div>
+        <div class="bt-dp__grid">
+          <span class="bt-dp__day-header">Lu</span>
+          <span class="bt-dp__day-header">Ma</span>
+          <span class="bt-dp__day-header">Me</span>
+          <span class="bt-dp__day-header">Je</span>
+          <span class="bt-dp__day-header">Ve</span>
+          <span class="bt-dp__day-header">Sa</span>
+          <span class="bt-dp__day-header">Di</span>
+          <span class="bt-dp__cell bt-dp__cell--disabled">29</span>
+          <span class="bt-dp__cell bt-dp__cell--disabled">30</span>
+          <span class="bt-dp__cell">1</span>
+          <span class="bt-dp__cell">2</span>
+          <span class="bt-dp__cell">3</span>
+          <span class="bt-dp__cell">4</span>
+          <span class="bt-dp__cell">5</span>
+          <span class="bt-dp__cell">6</span>
+          <span class="bt-dp__cell">7</span>
+          <span class="bt-dp__cell">8</span>
+          <span class="bt-dp__cell">9</span>
+          <span class="bt-dp__cell">10</span>
+          <span class="bt-dp__cell">11</span>
+          <span class="bt-dp__cell bt-dp__cell--selected">12</span>
+          <span class="bt-dp__cell">13</span>
+          <span class="bt-dp__cell">14</span>
+          <span class="bt-dp__cell">15</span>
+          <span class="bt-dp__cell">16</span>
+          <span class="bt-dp__cell">17</span>
+          <span class="bt-dp__cell">18</span>
+          <span class="bt-dp__cell">19</span>
+          <span class="bt-dp__cell">20</span>
+          <span class="bt-dp__cell">21</span>
+          <span class="bt-dp__cell">22</span>
+          <span class="bt-dp__cell">23</span>
+          <span class="bt-dp__cell">24</span>
+          <span class="bt-dp__cell">25</span>
+          <span class="bt-dp__cell">26</span>
+          <span class="bt-dp__cell">27</span>
+          <span class="bt-dp__cell">28</span>
+          <span class="bt-dp__cell">29</span>
+          <span class="bt-dp__cell">30</span>
+          <span class="bt-dp__cell">31</span>
+        </div>
+      </div>
+
+      <div class="bt-quote-step__actions">
+        <button class="bt-quote-step__next">Suivant</button>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     STEP 4 — CONTACT (ouvert)
+     ═══════════════════════════════════════════════════ -->
+
+<div class="section-label">Step 4 — coordonnées</div>
+
+<div class="bt-quote">
+
+  <div class="bt-quote-step bt-quote-step--active">
+    <div class="bt-quote-step__header">
+      <span class="bt-quote-step__number">4</span>
+      <span class="bt-quote-step__title">Vos coordonnées</span>
+    </div>
+    <div class="bt-quote-step__content">
+
+      <div class="bt-quote-fields">
+        <div class="bt-quote-fields__row">
+          <div class="bt-quote-fields__group">
+            <label class="bt-quote-fields__label">Prénom</label>
+            <input class="bt-quote-fields__input" type="text" value="Jean">
+          </div>
+          <div class="bt-quote-fields__group">
+            <label class="bt-quote-fields__label">Nom</label>
+            <input class="bt-quote-fields__input" type="text" value="Dupont">
+          </div>
+        </div>
+        <div class="bt-quote-fields__group">
+          <label class="bt-quote-fields__label">E-mail</label>
+          <input class="bt-quote-fields__input" type="email" value="jean.dupont@email.com">
+        </div>
+        <div class="bt-quote-fields__group">
+          <label class="bt-quote-fields__label">Téléphone</label>
+          <input class="bt-quote-fields__input" type="tel" placeholder="06 12 34 56 78">
+        </div>
+      </div>
+
+      <div class="bt-quote-step__actions">
+        <button class="bt-quote-step__next">Suivant</button>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     STEP 5 — CONFIRMATION (ouvert)
+     ═══════════════════════════════════════════════════ -->
+
+<div class="section-label">Step 5 — confirmation</div>
+
+<div class="bt-quote">
+
+  <div class="bt-quote-step bt-quote-step--active">
+    <div class="bt-quote-step__header">
+      <span class="bt-quote-step__number">5</span>
+      <span class="bt-quote-step__title">Confirmation</span>
+    </div>
+    <div class="bt-quote-step__content">
+
+      <div class="bt-quote-recap">
+        <div class="bt-quote-recap__line">
+          <span class="bt-quote-recap__label">Excursion</span>
+          <span class="bt-quote-recap__value">Calanques de l'Estérel</span>
+        </div>
+        <div class="bt-quote-recap__line">
+          <span class="bt-quote-recap__label">Bateau</span>
+          <span class="bt-quote-recap__value">Black Tender 7.5</span>
+        </div>
+        <div class="bt-quote-recap__line">
+          <span class="bt-quote-recap__label">Date</span>
+          <span class="bt-quote-recap__value">12/07/2026 — Matin</span>
+        </div>
+        <div class="bt-quote-recap__line">
+          <span class="bt-quote-recap__label">Contact</span>
+          <span class="bt-quote-recap__value">jean.dupont@email.com</span>
+        </div>
+      </div>
+
+      <button class="bt-quote-submit">Envoyer ma demande</button>
+
+    </div>
+  </div>
+
+</div>
+
+</div>
+
+</body>
+</html>

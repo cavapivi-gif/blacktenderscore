@@ -1,105 +1,127 @@
-/* ══════════════════════════════════════════════════════════
-   QUOTE FORM — Design tokens (defaults overridable by Elementor)
+/* bt-quote-form.css — structural only, zéro couleur hardcodée.
+   Toutes les couleurs sont injectées par Elementor via {{WRAPPER}} selectors.
    ══════════════════════════════════════════════════════════ */
 
-.bt-quote {
-  --_accent: var(--bt-quote-accent, #eff6ff);
-  --_accent-text: var(--bt-quote-accent-text, #1e3a5f);
-  --_accent-10: color-mix(in srgb, var(--_accent) 10%, transparent);
-  --_accent-20: color-mix(in srgb, var(--_accent) 20%, transparent);
-  --_border: var(--bt-border-light, rgba(0,0,0,.1));
-}
-
-/* ══════════════════════════════════════════════════════════
-   Steps
-   ══════════════════════════════════════════════════════════ */
+/* ── Wrapper ── */
 
 .bt-quote {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
+
+/* ══════════════════════════════════════════
+   STEPS
+   ══════════════════════════════════════════ */
 
 .bt-quote-step {
   border-width: 1px;
   border-style: solid;
-  border-color: var(--_border);
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  transition: opacity .3s ease;
+  transition: opacity .3s, border-color .3s;
 }
 
-.bt-quote-step:not(.bt-quote-step--active) {
-  opacity: .75;
+/* Étape future — réduite */
+.bt-quote-step--collapsed {
+  opacity: .6;
 }
+
+/* Étape active — bordure plus épaisse, opacité forcée (spécificité 0-2-0 pour battre Elementor) */
+.bt-quote-step.bt-quote-step--active {
+  border-width: 2px;
+  opacity: 1;
+}
+
+/* Étape complétée — pleine opacité (même spécificité) */
+.bt-quote-step.bt-quote-step--done {
+  opacity: 1;
+}
+
+/* ── Header ── */
 
 .bt-quote-step__header {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
+  display: flex;
   align-items: center;
-  gap: 8px 12px;
-  padding: 16px 20px;
+  gap: 10px;
+  padding: 14px 18px;
   cursor: pointer;
   user-select: none;
 }
 
 .bt-quote-step__number {
-  display: inline-flex;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  font-size: .8em;
-  font-weight: 700;
-  grid-row: 1;
+  flex-shrink: 0;
 }
 
 .bt-quote-step__title {
-  grid-row: 1;
+  font-size: 14px;
+  font-weight: 600;
+  flex: 1;
 }
+
+/* SVG check — caché par défaut, visible sur --done */
+.bt-quote-step__check {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  display: none;
+  stroke: currentColor;
+  fill: none;
+}
+
+.bt-quote-step--done .bt-quote-step__check {
+  display: block;
+}
+
+/* ── Summary (en dessous du header, hors flow header) ── */
 
 .bt-quote-step__summary {
-  grid-column: 2 / -1;
-  grid-row: 2;
-  font-size: .8em;
-  line-height: 1.3;
-}
-
-.bt-quote-step--active .bt-quote-step__summary {
+  font-size: 12px;
+  padding: 0 18px 12px 54px; /* 54px = 26px numéro + 10px gap + 18px left-padding */
   display: none;
 }
 
-.bt-quote-step__summary:empty {
-  display: none;
+.bt-quote-step--done .bt-quote-step__summary:not(:empty) {
+  display: block;
 }
+
+/* ── Content ── */
 
 .bt-quote-step__content {
   display: none;
-  padding: 0 20px 16px;
+  padding: 0 18px 18px;
 }
 
 .bt-quote-step--active .bt-quote-step__content {
   display: block;
 }
 
-.bt-quote-step__actions {
-  display: none;
-  padding: 0 20px 16px;
-}
+/* ── Actions (à l'intérieur de __content) ── */
 
-.bt-quote-step--active .bt-quote-step__actions {
+.bt-quote-step__actions {
   display: flex;
   justify-content: flex-end;
+  margin-top: 12px;
 }
 
 .bt-quote-step__next {
-  padding: 8px 24px;
+  padding: 9px 22px;
   border-width: 0;
   border-style: solid;
-  border-radius: 6px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color .2s, transform .1s;
+  font-family: inherit;
+  transition: filter .15s, transform .1s;
 }
 
 .bt-quote-step__next:hover {
@@ -110,19 +132,63 @@
   transform: scale(.97);
 }
 
+/* Shake feedback */
 .bt-quote-step--shake {
   animation: btQuoteShake .4s ease;
 }
 
 @keyframes btQuoteShake {
   0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-6px); }
-  75% { transform: translateX(6px); }
+  25%       { transform: translateX(-6px); }
+  75%       { transform: translateX(6px); }
 }
 
-/* ══════════════════════════════════════════════════════════
-   Excursion Cards (Step 1)
-   ══════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+   STEP 1 — EXCURSION
+   ══════════════════════════════════════════ */
+
+.bt-quote-exc-auto {
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+
+.bt-quote-exc-auto__name {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.bt-quote-exc-choice {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.bt-quote-exc-choice__btn {
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color .2s, background-color .2s, color .2s;
+}
+
+.bt-quote-exc-choice__btn--selected,
+.bt-quote-exc-choice__btn[aria-selected="true"] {
+  border-width: 2px;
+}
+
+.bt-quote-exc-custom {
+  margin-top: 12px;
+}
+
+/* Excursion cards */
 
 .bt-quote-exc-cards {
   display: flex;
@@ -130,33 +196,22 @@
   gap: 12px;
 }
 
-/* Grid / colonnes piloté par Elementor selectors_dictionary */
-
 .bt-quote-exc-card {
   display: flex;
+  align-items: stretch;
   gap: 0;
-  border-width: 2px;
-  border-style: solid;
-  border-color: var(--_border);
   border-radius: 8px;
   overflow: hidden;
   cursor: pointer;
   transition: border-color .2s, box-shadow .2s;
 }
 
-.bt-quote-exc-card:hover {
-  border-color: var(--_accent);
-}
-
-.bt-quote-exc-card[aria-selected="true"] {
-  border-color: var(--_accent);
-  box-shadow: 0 0 0 1px var(--_accent);
-}
-
 .bt-quote-exc-card__img {
   flex: 0 0 30%;
   max-width: 30%;
   position: relative;
+  min-height: 80px;
+  align-self: stretch;
 }
 
 .bt-quote-exc-card__img img {
@@ -169,14 +224,14 @@
 
 .bt-quote-exc-card__body {
   flex: 1;
-  padding: 16px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .bt-quote-exc-card__title {
-  font-size: 1em;
+  font-size: 13px;
   font-weight: 600;
   margin: 0;
 }
@@ -188,13 +243,19 @@
 .bt-quote-exc-card__price-amount {
   font-weight: 500;
   font-size: .82em;
-  opacity: .75;
 }
 
 .bt-quote-exc-card__price-suffix {
   font-size: .8em;
-  opacity: .7;
 }
+
+.bt-quote-exc-card__departure,
+.bt-quote-exc-card__skipper {
+  display: inline-block;
+  font-size: .75em;
+  margin-top: 2px;
+}
+.bt-quote-exc-card__skipper { margin-left: 6px; opacity: .75; }
 
 .bt-quote-exc-card__discount {
   display: inline-block;
@@ -202,30 +263,6 @@
   font-size: .7em;
   font-weight: 700;
   border-radius: 12px;
-  background-color: #fef3c7;
-  color: #92400e;
-}
-
-.bt-quote-exc-card__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 12px;
-  margin-top: 4px;
-  font-size: .8em;
-  opacity: .7;
-}
-
-.bt-quote-exc-card__pax,
-.bt-quote-exc-card__times,
-.bt-quote-exc-card__langs {
-  white-space: nowrap;
-}
-
-.bt-quote-exc-card__departure {
-  display: inline-block;
-  font-size: .75em;
-  margin-top: 2px;
-  opacity: .6;
 }
 
 .bt-quote-exc-card__tags {
@@ -241,217 +278,217 @@
   font-size: .75em;
   font-weight: 600;
   border-radius: 12px;
-  background-color: var(--bt-bg-subtle, rgba(0,0,0,.06));
 }
 
-
-.bt-quote-exc-auto {
-  padding: 12px 16px;
-  background-color: var(--bt-bg-subtle, rgba(0,0,0,.03));
-  border-radius: 6px;
-  margin-bottom: 12px;
-}
-
-.bt-quote-exc-auto__name {
-  font-weight: 600;
-  margin: 0;
-}
-
-.bt-quote-exc-choice {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.bt-quote-exc-choice__btn {
-  padding: 14px 12px;
-  border-width: 1.5px;
-  border-style: solid;
-  border-color: transparent;
-  border-radius: 10px;
-  background-color: transparent;
-  cursor: pointer;
-  font-family: inherit;
-  text-align: center;
-  transition: border-color .2s, box-shadow .2s, background-color .2s, color .2s;
-}
-
-.bt-quote-exc-choice__btn:hover {}
-
-.bt-quote-exc-choice__btn--selected,
-.bt-quote-exc-choice__btn[aria-selected="true"] {}
-
-.bt-quote-exc-custom {
-  margin-top: 12px;
-}
+/* ══════════════════════════════════════════
+   STEP 2 — BOAT CARDS
+   ══════════════════════════════════════════ */
 
 .bt-quote-boat-auto {
-  padding: 12px 16px;
-  background-color: var(--bt-bg-subtle, rgba(0,0,0,.03));
-  border-radius: 6px;
+  padding: 12px 14px;
+  border-radius: 8px;
 }
 
 .bt-quote-boat-auto__name {
   font-weight: 600;
   margin: 0;
+  font-size: 13px;
 }
 
-/* ══════════════════════════════════════════════════════════
-   Boat Cards (Step 2)
-   ══════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+   BOAT CARDS dans le devis
+   Layout : liste verticale, chaque card = image bg 30% + contenu 70%
+   ══════════════════════════════════════════ */
 
 .bt-quote-boat-cards {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: 1fr; /* défaut 1 col — surchargé par qt_boat_cards_cols */
+  gap: 10px;                  /* défaut — surchargé par qt_boat_cards_gap */
   min-height: 60px;
 }
 
+/* Card : flex horizontal, bordurée, arrondie, cliquable */
 .bt-quote-boat-card {
   display: flex;
-  gap: 0;
-  border-width: 2px;
-  border-style: solid;
-  border-color: var(--_border);
+  flex-direction: row;
+  align-items: stretch;
+  border: 1.5px solid rgba(0,0,0,.15);
   border-radius: 10px;
   overflow: hidden;
   cursor: pointer;
   transition: border-color .2s, box-shadow .2s;
+  min-height: 110px;
+  /* [CTRL: Elementor border-color via {{WRAPPER}} .bt-quote-boat-card] */
 }
 
-.bt-quote-boat-card:hover {
-  border-color: var(--_accent);
+/* Image en background — taille pilotée par qt_boat_img_width + qt_boat_card_img_ratio */
+.bt-quote-boat-card__bg {
+  flex: 0 0 30%;            /* défaut horizontal — surchargé par qt_boat_img_width */
+  min-height: 0;            /* permet à aspect-ratio de s'appliquer en mode vertical */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
-.bt-quote-boat-card--selected {}
-
-.bt-quote-boat-card__img {
-  flex: 0 0 30%;
-  max-width: 30%;
-  position: relative;
-}
-
-.bt-quote-boat-card__img img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.bt-quote-boat-card__body {
+/*
+  Colonne droite (70%) — wrapper flex column pour body + bouton more.
+  Le body prend tout l'espace, le more reste collé en bas.
+*/
+.bt-quote-boat-card__right {
   flex: 1;
-  padding: 14px 16px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  min-width: 0;
+  overflow: hidden;
 }
 
-.bt-quote-boat-card__header {
+/* Corps : contenu principal */
+.bt-quote-boat-card__body {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  flex-direction: column;
+  justify-content: center;
+  padding: 12px 14px;
+  min-width: 0;
 }
 
+/* Sélection active */
+.bt-quote-boat-card--selected,
+.bt-quote-boat-card.bt-forfait-card--active {
+  border-width: 2px;
+}
+
+/* Typographie */
 .bt-quote-boat-card__title {
-  margin: 0;
-  line-height: 1.3;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 2px;
+}
+.bt-quote-boat-card__subtitle {
+  font-size: 11px;
+  opacity: .65;
+  margin: 0 0 8px;
 }
 
-.bt-quote-boat-card__type {
-  font-size: .7em;
-  font-weight: 500;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background-color: var(--bt-bg-subtle, rgba(0,0,0,.05));
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.bt-quote-boat-card__price {
-  margin: 4px 0 0;
+/* Pricing */
+.bt-quote-boat-card__pricing {
   display: flex;
   align-items: baseline;
-  gap: 4px;
-}
-
-.bt-quote-boat-card__price-amount {
-  font-weight: 700;
-  font-size: 1.1em;
-}
-
-.bt-quote-boat-card__price-suffix {
-  font-size: .8em;
-}
-
-/* Tags taxonomie (pills inline sous le prix) */
-.bt-quote-boat-card__tags {
-  display: flex;
+  gap: 3px;
   flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 6px;
+}
+.bt-quote-boat-card__price {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1;
+}
+.bt-quote-boat-card__currency {
+  font-size: 13px;
+}
+.bt-quote-boat-card__pp {
+  font-size: 12px;
+  opacity: .65;
+  margin: 2px 0 6px;
+}
+.bt-quote-boat-card__per {
+  font-size: 11px;
 }
 
-.bt-quote-boat-card__tag {
-  display: inline-block;
-  font-size: .7em;
-  font-weight: 500;
-  padding: 2px 7px;
-  border-radius: 20px;
-  background-color: var(--bt-bg-subtle, rgba(0,0,0,.06));
-  color: inherit;
+/* Forfaits pills (durée + prix) — colonnes gérées par qt_boat_forfaits_cols */
+.bt-quote-boat-card__forfaits {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* défaut 2 cols — surchargé par Elementor responsive */
+  gap: 6px;                               /* défaut — surchargé par qt_boat_forfaits_gap */
+  margin: 6px 0 4px;
+}
+.bt-quote-boat-card__forfait {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* défaut — surchargé via qt_boat_forfait_align */
+  gap: 1px;
+  padding: 5px 10px;
+  border: 1px solid rgba(0,0,0,.15);
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;        /* défaut — surchargé via qt_boat_forfait_align */
+  transition: background-color .15s, border-color .15s, color .15s;
+  /* [CTRL: qt_boat_forfait_*] via {{WRAPPER}} */
+}
+.bt-quote-boat-card__forfait-label {
+  display: block;
+  width: 100%;
+  font-size: 9px;       /* défaut — surchargé par qt_boat_forfait_label_typo */
+  opacity: .6;          /* défaut — surchargé par qt_boat_forfait_label_opacity */
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  /* text-align hérité du parent via qt_boat_forfait_align */
+}
+.bt-quote-boat-card__forfait-price {
+  font-size: 13px;      /* défaut — surchargé par qt_boat_forfait_price_typo */
+  font-weight: 600;
+  line-height: 1.2;
+}
+/* [CTRL: qt_boat_forfait_active_bg + qt_boat_forfait_active_color] */
+.bt-quote-boat-card__forfait--active {
+  /* styles injectés par {{WRAPPER}} Elementor */
 }
 
-/* Ligne meta : pax · année */
+/* Meta : pers. + jockey */
 .bt-quote-boat-card__meta {
   display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   align-items: center;
-  gap: 5px;
-  margin-top: 6px;
-  font-size: .8em;
 }
-
-.bt-quote-boat-card__pax {
+.bt-quote-boat-card__meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
   opacity: .7;
 }
-
-.bt-quote-boat-card__dot {
-  opacity: .4;
-  font-size: .9em;
+.bt-quote-boat-card__icon {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+/* Jockey : "Avec" légèrement mis en avant */
+.bt-quote-boat-card__meta-item--jockey {
+  font-style: italic;
+}
+.bt-quote-boat-card__meta-item--yes {
+  opacity: 1;
+  font-weight: 500;
+  font-style: normal;
 }
 
-.bt-quote-boat-card__year {
-  display: inline-block;
-  font-size: 1em; /* hérité du .meta */
-  opacity: .7;
-}
-
+/* Bouton "Plus d'infos" (optionnel) */
 .bt-quote-boat-card__more {
-  align-self: stretch;
-  padding: 8px 12px;
-  font-size: .8em;
+  display: block;
+  width: 100%;
+  padding: 6px;
+  font-size: 11px;
   font-weight: 600;
-  border-width: 0;
-  border-top-width: 1px;
-  border-style: solid;
-  border-color: var(--_border);
-  border-radius: 0;
-  background-color: transparent;
-  cursor: pointer;
-  transition: background-color .15s;
-  margin: 4px -12px -12px;
   text-align: center;
-  color: var(--bt-primary, #0073aa);
+  border: none;
+  border-top: 1px solid;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  margin-top: 8px; /* défaut — surchargé par Elementor: qt_boat_more_gap */
+  transition: background-color .15s;
 }
 
-.bt-quote-boat-card__more:hover {
-  background-color: var(--bt-bg-subtle, rgba(0,0,0,.03));
-}
-
-/* ══════════════════════════════════════════════════════════
-   Duration Cards (Step 3)
-   ══════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+   STEP 3 — DURÉE + TIMESLOT
+   ══════════════════════════════════════════ */
 
 .bt-quote-duration-cards {
   display: grid;
@@ -464,26 +501,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 14px 12px;
-  border-width: 1.5px;
+  padding: 10px;
+  border-width: 1px;
   border-style: solid;
-  border-color: var(--_border);
-  border-radius: 10px;
-  background-color: transparent;
+  border-radius: 8px;
+  background: transparent;
   cursor: pointer;
   text-align: center;
-  transition: border-color .2s, box-shadow .2s, background-color .2s, color .2s;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  transition: border-color .2s, background-color .2s, color .2s;
   user-select: none;
 }
 
-.bt-quote-duration-card:hover {
-  background-color: var(--_accent-10);
-}
-
+.bt-quote-duration-card--selected,
 .bt-quote-duration-card[aria-selected="true"] {
-  background-color: var(--_accent);
-  border-color: var(--_accent);
-  color: var(--_accent-text);
+  border-width: 2px;
 }
 
 .bt-quote-duration-card__label {
@@ -496,9 +530,7 @@
   min-height: 60px;
 }
 
-/* ══════════════════════════════════════════════════════════
-   Timeslot — Matin / Après-midi
-   ══════════════════════════════════════════════════════════ */
+/* Timeslot */
 
 .bt-quote-timeslot {
   margin-top: 12px;
@@ -508,40 +540,37 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
+  margin-bottom: 16px;
 }
 
 .bt-quote-timeslot__btn {
-  padding: 10px 12px;
-  border-width: 1.5px;
+  padding: 10px;
+  border-width: 1px;
   border-style: solid;
-  border-color: var(--_border);
   border-radius: 8px;
-  background-color: transparent;
+  background: transparent;
   cursor: pointer;
   font-family: inherit;
-  font-size: .9em;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 500;
   text-align: center;
   transition: border-color .2s, background-color .2s, color .2s;
 }
 
-.bt-quote-timeslot__btn:hover {
-  background-color: var(--_accent-10);
-}
-
+.bt-quote-timeslot__btn--selected,
 .bt-quote-timeslot__btn[aria-selected="true"] {
-  background-color: var(--_accent);
-  border-color: var(--_accent);
-  color: var(--_accent-text);
+  border-width: 2px;
 }
 
-/* ══════════════════════════════════════════════════════════
-   Date Picker (Step 3)
-   ══════════════════════════════════════════════════════════ */
-
-/* Labels/input texte supprimés — seul le calendrier est visible */
+/* ══════════════════════════════════════════
+   DATE PICKER
+   ══════════════════════════════════════════ */
 
 .bt-dp {
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 8px;
+  padding: 14px;
   user-select: none;
 }
 
@@ -553,30 +582,24 @@
 }
 
 .bt-dp__month-label {
+  font-size: 13px;
   font-weight: 600;
-  font-size: .95em;
 }
 
 .bt-dp__prev,
 .bt-dp__next {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-width: 1px;
   border-style: solid;
-  border-color: var(--_border);
   border-radius: 6px;
-  background-color: transparent;
-  font-size: 1.2em;
+  background: transparent;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  font-size: 16px;
   transition: background-color .15s;
-}
-
-.bt-dp__prev:hover,
-.bt-dp__next:hover {
-  background-color: var(--bt-bg-subtle, rgba(0,0,0,.04));
 }
 
 .bt-dp__grid {
@@ -587,7 +610,7 @@
 
 .bt-dp__day-header {
   text-align: center;
-  font-size: .75em;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   padding: 4px 0;
@@ -595,15 +618,11 @@
 
 .bt-dp__cell {
   text-align: center;
-  padding: 8px 4px;
+  padding: 6px;
   border-radius: 6px;
-  font-size: .85em;
+  font-size: 12px;
   cursor: pointer;
   transition: background-color .15s, color .15s;
-}
-
-.bt-dp__cell:hover:not(.bt-dp__cell--disabled):not(.bt-dp__cell--empty) {
-  background-color: var(--bt-bg-subtle, rgba(0,0,0,.06));
 }
 
 .bt-dp__cell--empty {
@@ -621,14 +640,9 @@
 
 .bt-dp__cell--start,
 .bt-dp__cell--end {
-  background-color: var(--_accent);
-  color: var(--_accent-text);
   font-weight: 700;
-}
-
-.bt-dp__cell--range {
-  background-color: var(--_accent-10);
-  border-radius: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .bt-dp__cell--start {
@@ -639,23 +653,25 @@
   border-radius: 0 6px 6px 0;
 }
 
-/* ══════════════════════════════════════════════════════════
-   Contact Fields (Step 4)
-   ══════════════════════════════════════════════════════════ */
+.bt-dp__cell--range {
+  border-radius: 0;
+  background-color: color-mix(in srgb, currentColor 8%, transparent);
+}
+
+/* ══════════════════════════════════════════
+   CHAMPS CONTACT (STEP 4)
+   ══════════════════════════════════════════ */
 
 .bt-quote-fields {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .bt-quote-fields__row {
-  display: flex;
-  gap: 16px;
-}
-
-.bt-quote-fields__row > .bt-quote-fields__group {
-  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
 .bt-quote-fields__group {
@@ -665,61 +681,66 @@
 }
 
 .bt-quote-fields__label {
-  font-size: .8em;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: .04em;
 }
 
 .bt-quote-fields__input {
-  padding: 10px 14px;
-  border-width: 1.5px;
+  padding: 9px 12px;
+  border-width: 1px;
   border-style: solid;
-  border-color: var(--_border);
   border-radius: 8px;
-  font-size: .9em;
-  background-color: transparent;
+  font-size: 13px;
+  font-family: inherit;
+  background: transparent;
   transition: border-color .2s, box-shadow .2s;
-}
-
-.bt-quote-fields__input:focus {
   outline: none;
-  border-color: var(--_accent);
-  box-shadow: 0 0 0 2px var(--_accent-20);
 }
 
 .bt-quote-fields__input--error {
-  border-color: #d32f2f;
-  box-shadow: 0 0 0 2px rgba(211, 47, 47, .15);
+  border-width: 2px;
 }
 
-/* ══════════════════════════════════════════════════════════
-   Submit & Messages (Step 5)
-   ══════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+   RECAP + SUBMIT (STEP 5)
+   ══════════════════════════════════════════ */
 
 .bt-quote-recap {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .bt-quote-recap__line {
-  font-size: .9em;
-  margin: 0 0 4px;
-  padding: 6px 0;
-  border-bottom: 1px solid var(--_border);
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  font-size: 13px;
+}
+
+.bt-quote-recap__label {}
+
+.bt-quote-recap__value {
+  font-weight: 600;
 }
 
 .bt-quote-submit {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 14px 32px;
+  padding: 12px;
   border-width: 0;
   border-style: solid;
   border-radius: 8px;
   cursor: pointer;
-  transition: background-color .2s, transform .1s;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
   width: 100%;
+  transition: filter .15s, transform .1s;
 }
 
 .bt-quote-submit:hover {
@@ -741,8 +762,7 @@
   height: 16px;
   border-width: 2px;
   border-style: solid;
-  border-color: rgba(255,255,255,.4);
-  border-top-color: #fff;
+  border-top-color: transparent;
   border-radius: 50%;
   animation: btQuoteSpin .6s linear infinite;
 }
@@ -751,11 +771,13 @@
   to { transform: rotate(360deg); }
 }
 
+/* Messages */
+
 .bt-quote-message {
   margin-top: 12px;
-  padding: 12px 16px;
-  border-radius: 6px;
-  font-size: .9em;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 13px;
   font-weight: 500;
 }
 
@@ -763,12 +785,9 @@
   display: none;
 }
 
-.bt-quote-message--success {}
-.bt-quote-message--error {}
-
-/* ══════════════════════════════════════════════════════════
-   Popup (Dialog)
-   ══════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+   POPUP (DIALOG)
+   ══════════════════════════════════════════ */
 
 .bt-quote-popup {
   border-width: 0;
@@ -792,18 +811,18 @@
   width: 32px;
   height: 32px;
   border-width: 0;
-  background-color: var(--bt-bg-subtle, rgba(0,0,0,.06));
   border-radius: 50%;
   font-size: 1.2em;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background-color .15s;
+  background: transparent;
+  transition: opacity .15s;
 }
 
 .bt-quote-popup__close:hover {
-  background-color: rgba(0,0,0,.12);
+  opacity: .7;
 }
 
 .bt-quote-popup__title {
@@ -826,7 +845,8 @@
 .bt-quote-popup__table td {
   padding: 10px 14px;
   text-align: left;
-  border-bottom: 1px solid rgba(0,0,0,.08);
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
 }
 
 .bt-quote-popup__table thead th {
@@ -842,12 +862,11 @@
   font-size: .8em;
   font-weight: 600;
   border-radius: 12px;
-  background-color: var(--bt-bg-subtle, rgba(0,0,0,.06));
 }
 
-/* ══════════════════════════════════════════════════════════
-   Loading / Empty / Error
-   ══════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+   LOADING / EMPTY / ERROR
+   ══════════════════════════════════════════ */
 
 .bt-quote__loading {
   display: flex;
@@ -861,8 +880,7 @@
   height: 24px;
   border-width: 3px;
   border-style: solid;
-  border-color: var(--_border);
-  border-top-color: var(--bt-primary, #0073aa);
+  border-top-color: transparent;
   border-radius: 50%;
   animation: btQuoteSpin .7s linear infinite;
 }
@@ -874,33 +892,48 @@
   font-size: .9em;
 }
 
-.bt-quote__error {
-  color: #c62828;
-}
-
 .bt-quote-loop-fallback {
   text-align: center;
   padding: 24px 16px;
   font-size: .9em;
 }
 
-/* ══════════════════════════════════════════════════════════
-   Responsive
-   ══════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+   OPTIONS BATEAU — Step boat-options
+   ══════════════════════════════════════════ */
+.bt-quote-taxo-group {
+  margin-bottom: 16px;
+}
+.bt-quote-taxo-group__label {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════════ */
 
 @media (max-width: 600px) {
-  .bt-quote-exc-card,
-  .bt-quote-boat-card {
+  .bt-quote-exc-card {
     flex-direction: column;
   }
-  .bt-quote-exc-card__img,
-  .bt-quote-boat-card__img {
+  .bt-quote-exc-card__img {
     flex: none;
     max-width: 100%;
-    aspect-ratio: 16/9;
+    aspect-ratio: 16 / 9;
   }
+  .bt-quote-exc-card__img img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  /* bt-quote-boat-card__img supprimé — géré par bt-forfait-card__image */
   .bt-quote-fields__row {
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
   .bt-quote-popup {
     width: 95vw;

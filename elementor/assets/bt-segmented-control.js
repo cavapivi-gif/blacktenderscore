@@ -40,6 +40,9 @@
           var isTarget = p.dataset.btSegPanel === target;
           p.classList.toggle(ACTIVE_PANEL, isTarget);
           p.hidden = !isTarget;
+          if (isTarget && window.btActivateLazyMedia) {
+            window.btActivateLazyMedia(p);
+          }
         });
       });
     });
