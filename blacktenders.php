@@ -3,7 +3,7 @@
  * Plugin Name: BlackTenders Core
  * Plugin URI:  https://studiojae.fr
  * Description: CPT Excursion & Bateau — widgets Elementor, API Regiondo, backoffice
- * Version:     1.0.5
+ * Version:     1.0.7
  * Author:      StudioJae
  * Text Domain: blacktenderscore
  *
@@ -12,7 +12,7 @@
 
 defined('ABSPATH') || exit;
 
-define('BT_VERSION',  '1.0.5');
+define('BT_VERSION',  '1.0.7');
 define('BT_DIR',      plugin_dir_path(__FILE__));
 define('BT_URL',      plugin_dir_url(__FILE__));
 
@@ -23,6 +23,16 @@ if (file_exists(BT_DIR . 'vendor/autoload.php')) {
 
 require_once BT_DIR . 'core/class-loader.php';
 require_once BT_DIR . 'core/class-plugin.php';
+
+// Création des tables lors de l'activation du plugin
+register_activation_hook(__FILE__, function(): void {
+    // Tables existantes (pattern idempotent via ensure_table)
+    (new BlackTenders\Admin\Backoffice\ReservationDb())->ensure_table();
+    // Table GYG bookings (CREATE TABLE IF NOT EXISTS — idempotente)
+    BlackTenders\Admin\Backoffice\GygDb::create_table();
+    // Table GYG logs (CREATE TABLE IF NOT EXISTS — idempotente)
+    BlackTenders\Admin\Backoffice\GygLogsDb::create_table();
+});
 
 // Clean up cron jobs on plugin deactivation
 register_deactivation_hook(__FILE__, function(): void {
