@@ -404,10 +404,42 @@ class Gallery extends AbstractBtWidget {
         $this->end_controls_section();
 
         // ── Style — Popup Grille (Template 2) ─────────────────────────────
+        /*
+         * Les selectors ciblent #bt-lb (singleton global hors widget)
+         * sans {{WRAPPER}} : Elementor génère le CSS inline brut sur la page.
+         * Les breakpoints responsive Elementor enveloppent automatiquement en @media.
+         */
         $this->start_controls_section('style_popup_grid', [
             'label'     => __('Style — Popup Grille (Template 2)', 'blacktenderscore'),
             'tab'       => Controls_Manager::TAB_STYLE,
             'condition' => ['enable_lightbox' => 'yes'],
+        ]);
+
+        $this->add_responsive_control('popup_img_height', [
+            'label'          => __('Hauteur des images', 'blacktenderscore'),
+            'description'    => __('Même hauteur pour toutes les images (grandes et petites). Les grandes span sur 2 colonnes.', 'blacktenderscore'),
+            'type'           => Controls_Manager::SLIDER,
+            'size_units'     => ['px', 'vh'],
+            'range'          => [
+                'px' => ['min' => 100, 'max' => 800, 'step' => 10],
+                'vh' => ['min' => 10,  'max' => 80,  'step' => 1],
+            ],
+            'default'        => ['size' => 500, 'unit' => 'px'],
+            'tablet_default' => ['size' => 300, 'unit' => 'px'],
+            'mobile_default' => ['size' => 200, 'unit' => 'px'],
+            'selectors'      => ['#bt-lb .bt-lb__grid-item' => 'height: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        $this->add_responsive_control('popup_grid_padding', [
+            'label'          => __('Marges latérales', 'blacktenderscore'),
+            'description'    => __('Espace de chaque côté de la grille (comme le Template 1).', 'blacktenderscore'),
+            'type'           => Controls_Manager::SLIDER,
+            'size_units'     => ['px', '%'],
+            'range'          => ['px' => ['min' => 0, 'max' => 200, 'step' => 4]],
+            'default'        => ['size' => 72,  'unit' => 'px'],
+            'tablet_default' => ['size' => 40,  'unit' => 'px'],
+            'mobile_default' => ['size' => 12,  'unit' => 'px'],
+            'selectors'      => ['#bt-lb .bt-lb__grid' => 'padding-left: {{SIZE}}{{UNIT}}; padding-right: {{SIZE}}{{UNIT}}'],
         ]);
 
         $this->add_control('popup_grid_gap', [
@@ -416,7 +448,9 @@ class Gallery extends AbstractBtWidget {
             'size_units' => ['px'],
             'range'      => ['px' => ['min' => 0, 'max' => 20, 'step' => 1]],
             'default'    => ['size' => 3, 'unit' => 'px'],
-            // Pas de selector CSS : appliqué via data-bt-lb-gap lu par le JS
+            'separator'  => 'before',
+            // Appliqué via data-bt-lb-gap lu par le JS (gap ne peut pas
+            // être ciblé directement sur #bt-lb sans conflit avec display:none)
         ]);
 
         $this->end_controls_section();

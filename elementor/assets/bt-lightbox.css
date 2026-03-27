@@ -238,16 +238,21 @@
    ════════════════════════════════════════════════════════════════════════════ */
 
 .bt-lb__grid {
-  display: none;          /* caché par défaut (template 1 actif) */
+  display: none;
   grid-template-columns: 1fr 1fr;
   gap: 3px;               /* overridé par JS depuis data-bt-lb-gap */
   overflow-y: auto;
   overflow-x: hidden;
-  /* flex: 1 + min-height: 0 → prend toute la hauteur dans le flex parent */
   flex: 1;
   min-height: 0;
-  padding: 52px 0 0;      /* espace pour close + toggle bar */
+  /*
+   * padding-top : espace pour close + toggle bar
+   * padding-left/right : marges latérales → overridées par control popup_grid_padding
+   * (selector : #bt-lb .bt-lb__grid → padding-left/right)
+   */
+  padding: 52px 72px 24px;
   align-content: start;
+  box-sizing: border-box;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
 }
@@ -255,23 +260,26 @@
 .bt-lb__grid::-webkit-scrollbar       { width: 4px; }
 .bt-lb__grid::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.25); border-radius: 2px; }
 
-/* Item individuel */
+/*
+ * Item : hauteur uniforme pour toutes les images (grande + petites).
+ * → toutes les images ont la même hauteur, grandes = pleine largeur (span 2).
+ *
+ * Hauteur pilotée par le control Elementor popup_img_height :
+ *   selector : #bt-lb .bt-lb__grid-item → height: Xpx
+ * Défaut CSS : 500px via custom property (fallback si widget non configuré).
+ */
 .bt-lb__grid-item {
   position: relative;
   overflow: hidden;
-  aspect-ratio: 4 / 3;   /* ratio par défaut */
+  height: var(--bt-lb-img-h, 500px);
   cursor: pointer;
   background: #111;
   display: block;
 }
 
-/*
- * Règle 5n+1 : 1re, 6e, 11e, 16e… image → grande (span 2 cols, 16:9)
- * Ces items deviennent la "vedette" de chaque groupe de 5.
- */
+/* 1re, 6e, 11e… image → pleine largeur, même hauteur */
 .bt-lb__grid-item:nth-child(5n+1) {
   grid-column: span 2;
-  aspect-ratio: 16 / 9;
 }
 
 .bt-lb__grid-item img {
@@ -287,7 +295,6 @@
 
 .bt-lb__grid-item:hover img { transform: scale(1.04); }
 
-/* Focus visible pour accessibilité clavier */
 .bt-lb__grid-item:focus-visible {
   outline: 2px solid rgba(255, 255, 255, 0.7);
   outline-offset: -2px;
@@ -301,7 +308,10 @@
 .bt-lb--tpl2 .bt-lb__counter { display: none; }
 .bt-lb--tpl2 .bt-lb__grid    { display: grid; }
 
-/* Mobile — Template 2 */
+/* Mobile — padding réduit (overridable via control tablet_default/mobile_default) */
+@media (max-width: 1024px) {
+  .bt-lb__grid { padding-left: 40px; padding-right: 40px; }
+}
 @media (max-width: 600px) {
-  .bt-lb__grid { padding-top: 48px; }
+  .bt-lb__grid { padding-top: 48px; padding-left: 12px; padding-right: 12px; }
 }
