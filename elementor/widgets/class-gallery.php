@@ -114,6 +114,35 @@ class Gallery extends AbstractBtWidget {
 
         $this->end_controls_section();
 
+        // ── Popup — Visionneuse (templates) ───────────────────────────────
+        $this->start_controls_section('section_popup', [
+            'label'     => __('Popup — Visionneuse', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_CONTENT,
+            'condition' => ['enable_lightbox' => 'yes'],
+        ]);
+
+        $this->add_control('popup_default_tpl', [
+            'label'       => __('Template par défaut', 'blacktenderscore'),
+            'description' => __('Template 1 : diaporama 1 par 1. Template 2 : grille CSS (5n+1).', 'blacktenderscore'),
+            'type'        => Controls_Manager::CHOOSE,
+            'options'     => [
+                '1' => ['title' => __('Template 1 — Diaporama', 'blacktenderscore'), 'icon' => 'eicon-slideshow'],
+                '2' => ['title' => __('Template 2 — Grille',    'blacktenderscore'), 'icon' => 'eicon-gallery-grid'],
+            ],
+            'default'     => '1',
+            'toggle'      => false,
+        ]);
+
+        $this->add_control('popup_show_toggle', [
+            'label'        => __('Bouton toggle Template 1 ⟺ 2', 'blacktenderscore'),
+            'description'  => __('Affiche un bouton dans la visionneuse pour passer d\'un template à l\'autre.', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => 'yes',
+        ]);
+
+        $this->end_controls_section();
+
         // ── Grille libre [condition: grid] ─────────────────────────────────
         $this->start_controls_section('section_grid_layout', [
             'label'     => __('Mise en page — Grille', 'blacktenderscore'),
@@ -374,6 +403,24 @@ class Gallery extends AbstractBtWidget {
 
         $this->end_controls_section();
 
+        // ── Style — Popup Grille (Template 2) ─────────────────────────────
+        $this->start_controls_section('style_popup_grid', [
+            'label'     => __('Style — Popup Grille (Template 2)', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_STYLE,
+            'condition' => ['enable_lightbox' => 'yes'],
+        ]);
+
+        $this->add_control('popup_grid_gap', [
+            'label'      => __('Gap entre images', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 0, 'max' => 20, 'step' => 1]],
+            'default'    => ['size' => 3, 'unit' => 'px'],
+            // Pas de selector CSS : appliqué via data-bt-lb-gap lu par le JS
+        ]);
+
+        $this->end_controls_section();
+
         // ── Style — Légende ────────────────────────────────────────────────
         $this->register_typography_section(
             'caption',
@@ -454,8 +501,17 @@ class Gallery extends AbstractBtWidget {
             }
         }
 
+        // Popup config — template par défaut, toggle, gap grille
+        $popup_tpl    = (int) ($s['popup_default_tpl'] ?? 1);
+        $popup_toggle = ($s['popup_show_toggle'] ?? 'yes') === 'yes';
+        $popup_gap    = (float) ($s['popup_grid_gap']['size'] ?? 3);
+
         $data_attr = $lightbox
-            ? ' data-bt-gallery="' . esc_attr($group_id) . '" data-bt-gallery-images="' . esc_attr(wp_json_encode($lb_data)) . '"'
+            ? ' data-bt-gallery="'        . esc_attr($group_id) . '"'
+              . ' data-bt-gallery-images="' . esc_attr(wp_json_encode($lb_data)) . '"'
+              . ' data-bt-lb-tpl="'         . (int) $popup_tpl . '"'
+              . ($popup_toggle ? ' data-bt-lb-toggle="yes"' : '')
+              . ' data-bt-lb-gap="'         . esc_attr((string) $popup_gap) . '"'
             : '';
 
         echo '<div class="' . esc_attr($wrap_cls) . '"' . $data_attr . '>';

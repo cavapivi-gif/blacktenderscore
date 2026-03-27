@@ -319,7 +319,19 @@
 
         var hideSel = wrap.getAttribute('data-bt-reveal-hide') || '';
         var hideClasses = wrap.getAttribute('data-bt-reveal-hide-classes') || '';
+        var showClasses = wrap.getAttribute('data-bt-reveal-show-classes') || '';
         var mobileBreakpoint = 727;
+
+        // Masquer les éléments "show" par défaut (ils n'apparaissent qu'au clic)
+        if (showClasses) {
+          showClasses.split(',').forEach(function (sel) {
+            sel = sel.trim();
+            if (!sel) return;
+            document.querySelectorAll(sel).forEach(function (el) {
+              el.style.display = 'none';
+            });
+          });
+        }
 
         function toggleHiddenEl(show) {
           if (hideSel) {
@@ -345,9 +357,18 @@
             hideClasses.split(',').forEach(function (sel) {
               sel = sel.trim();
               if (!sel) return;
-              var els = document.querySelectorAll(sel);
-              els.forEach(function (el) {
+              document.querySelectorAll(sel).forEach(function (el) {
                 el.style.display = show ? '' : 'none';
+              });
+            });
+          }
+          if (showClasses) {
+            showClasses.split(',').forEach(function (sel) {
+              sel = sel.trim();
+              if (!sel) return;
+              document.querySelectorAll(sel).forEach(function (el) {
+                // Inverse : quand on ferme (show=true) → masquer, quand on ouvre (show=false) → afficher
+                el.style.display = show ? 'none' : '';
               });
             });
           }
@@ -382,6 +403,11 @@
           toggleHiddenEl(false);
           injectBookingLazy(content);
           btActivateLazyMedia(content);
+          // Unload forfait cards from DOM if option is set
+          if (wrap.hasAttribute('data-bt-hide-cards')) {
+            var cards = wrap.parentNode && wrap.parentNode.querySelector('.bt-bprice');
+            if (cards) cards.remove();
+          }
           if (andScroll) {
             setTimeout(function () {
               var scrollEl = content.parentNode;
@@ -449,15 +475,42 @@
    * Visionneuse custom : modal plein écran + strip de miniatures en bas.
    * Un seul DOM #bt-lb créé au premier usage (singleton).
    *
+   * Deux templates :
+   *   Template 1 — Slideshow : image unique + prev/next + strip thumbnails
+   *   Template 2 — Grille CSS : 2 cols, nth-child(5n+1) span 2 (16:9), autres 4:3
+   *                             Clic sur une image → bascule en template 1
+   *
    * Déclencheurs :
    *   [data-bt-gallery-images] — wrapper gallery avec JSON des images
    *   [data-bt-lb-index]       — lien vers une image (index dans le tableau)
    *   [data-bt-lb-open]        — bouton "Voir toutes les photos" (ouvre à 0)
+   *
+   * Config (data attrs sur le wrapper gallery) :
+   *   data-bt-lb-tpl="1|2"   — template par défaut (défaut: 1)
+   *   data-bt-lb-toggle="yes" — afficher le bouton toggle (défaut: caché)
+   *   data-bt-lb-gap="3"      — gap en px pour la grille template 2 (défaut: 3)
    */
 
-  var _lb      = null;  // nœud DOM modal
-  var _lbImgs  = [];    // tableau { src, thumb, alt, caption }
-  var _lbIdx   = 0;     // index courant
+  var _lb          = null;  // nœud DOM modal (singleton)
+  var _lbImgs      = [];    // tableau { src, thumb, alt, caption }
+  var _lbIdx       = 0;     // index courant (template 1)
+  var _lbTpl       = 1;     // template actif : 1 ou 2
+  var _lbHasToggle = false; // bouton toggle visible
+
+  /* SVG icons pour le toggle bar */
+  var _lbSvgSlide =
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<rect x="2" y="5" width="20" height="14" rx="2"/>' +
+      '<path d="M10 9l6 3-6 3V9z"/>' +
+    '</svg>';
+
+  var _lbSvgGrid =
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<rect x="3" y="3" width="7" height="7" rx="1"/>' +
+      '<rect x="14" y="3" width="7" height="7" rx="1"/>' +
+      '<rect x="3" y="14" width="7" height="7" rx="1"/>' +
+      '<rect x="14" y="14" width="7" height="7" rx="1"/>' +
+    '</svg>';
 
   function _lbCreate() {
     if (document.getElementById('bt-lb')) {
@@ -472,13 +525,25 @@
     d.setAttribute('aria-label', 'Visionneuse photos');
     d.innerHTML =
       '<button class="bt-lb__close" aria-label="Fermer">&times;</button>' +
+      /* Toggle bar Template 1 / 2 — visible uniquement si .bt-lb--has-toggle */
+      '<div class="bt-lb__tpl-bar" role="group" aria-label="Mode d\'affichage">' +
+        '<button class="bt-lb__tpl-btn bt-lb__tpl-btn--active" data-tpl="1" aria-label="Diaporama" aria-pressed="true">' +
+          _lbSvgSlide +
+        '</button>' +
+        '<button class="bt-lb__tpl-btn" data-tpl="2" aria-label="Grille" aria-pressed="false">' +
+          _lbSvgGrid +
+        '</button>' +
+      '</div>' +
       '<div class="bt-lb__counter"></div>' +
       '<button class="bt-lb__prev" aria-label="Image précédente">&#8249;</button>' +
       '<button class="bt-lb__next" aria-label="Image suivante">&#8250;</button>' +
+      /* Template 1 — zone image principale */
       '<div class="bt-lb__stage">' +
         '<img class="bt-lb__img" src="" alt="" />' +
         '<p class="bt-lb__caption"></p>' +
       '</div>' +
+      /* Template 2 — grille CSS */
+      '<div class="bt-lb__grid" role="list"></div>' +
       '<div class="bt-lb__thumbs"></div>';
     document.body.appendChild(d);
     _lb = d;
@@ -487,32 +552,67 @@
     _lb.querySelector('.bt-lb__prev').addEventListener('click', function () { _lbGo(-1); });
     _lb.querySelector('.bt-lb__next').addEventListener('click', function () { _lbGo(1); });
 
-    // Click sur le fond → ferme
-    _lb.addEventListener('click', function (e) { if (e.target === _lb) _lbClose(); });
-
-    // Keyboard
-    document.addEventListener('keydown', function (e) {
-      if (!_lb || !_lb.classList.contains('bt-lb--open')) return;
-      if (e.key === 'Escape')      _lbClose();
-      if (e.key === 'ArrowLeft')   _lbGo(-1);
-      if (e.key === 'ArrowRight')  _lbGo(1);
+    /* Toggle bar — délégation de clic unique */
+    _lb.querySelector('.bt-lb__tpl-bar').addEventListener('click', function (e) {
+      var btn = e.target.closest('.bt-lb__tpl-btn');
+      if (!btn) return;
+      var tpl = parseInt(btn.getAttribute('data-tpl'), 10);
+      if (tpl && tpl !== _lbTpl) _lbSetTemplate(tpl, true);
     });
 
-    // Touch swipe
+    /* Click sur le fond → ferme */
+    _lb.addEventListener('click', function (e) { if (e.target === _lb) _lbClose(); });
+
+    /* Keyboard */
+    document.addEventListener('keydown', function (e) {
+      if (!_lb || !_lb.classList.contains('bt-lb--open')) return;
+      if (e.key === 'Escape') _lbClose();
+      /* Flèches : navigation uniquement en template 1 */
+      if (_lbTpl === 1) {
+        if (e.key === 'ArrowLeft')  _lbGo(-1);
+        if (e.key === 'ArrowRight') _lbGo(1);
+      }
+    });
+
+    /* Touch swipe — template 1 uniquement */
     var _tx = 0;
     _lb.addEventListener('touchstart', function (e) { _tx = e.touches[0].clientX; }, { passive: true });
     _lb.addEventListener('touchend',   function (e) {
+      if (_lbTpl !== 1) return;
       var dx = e.changedTouches[0].clientX - _tx;
       if (Math.abs(dx) > 40) _lbGo(dx < 0 ? 1 : -1);
     }, { passive: true });
   }
 
-  function _lbOpen(images, idx) {
+  /**
+   * Ouvre la visionneuse.
+   *
+   * @param {Array}  images   Tableau { src, thumb, alt, caption }
+   * @param {number} idx      Index de l'image à afficher (template 1)
+   * @param {Object} opts     Options : tpl (1|2), showToggle (bool), gap (px)
+   */
+  function _lbOpen(images, idx, opts) {
+    opts = opts || {};
     _lbCreate();
     _lbImgs = images;
     _lbIdx  = idx;
+
+    /* Réinitialise la grille pour le nouveau jeu d'images */
+    var grid = _lb.querySelector('.bt-lb__grid');
+    if (grid) grid.removeAttribute('data-lb-rendered');
+
     _lbRenderThumbs();
-    _lbSetImg(idx, false);
+
+    /* Toggle bar — ajoute/retire la classe selon la config du widget */
+    _lbHasToggle = opts.showToggle === true;
+    _lb.classList.toggle('bt-lb--has-toggle', _lbHasToggle);
+
+    /* Gap grille template 2 (appliqué dans _lbRenderGrid via inline style) */
+    _lb._btGap = (opts.gap !== undefined && !isNaN(opts.gap)) ? parseFloat(opts.gap) : 3;
+
+    /* Applique le template initial */
+    _lbSetTemplate(opts.tpl === 2 ? 2 : 1, false);
+
     _lb.classList.add('bt-lb--open');
     _lb.removeAttribute('aria-hidden');
     document.body.style.overflow = 'hidden';
@@ -549,11 +649,96 @@
       imgEl.alt = cur.alt || '';
     }
 
-    capEl.textContent  = cur.caption || '';
+    capEl.textContent   = cur.caption || '';
     capEl.style.display = cur.caption ? '' : 'none';
     if (cntEl) cntEl.textContent = (idx + 1) + ' / ' + _lbImgs.length;
 
     _lbSyncThumb(idx);
+  }
+
+  /**
+   * Bascule entre template 1 (slideshow) et template 2 (grille).
+   *
+   * @param {number}  tpl   1 ou 2
+   * @param {boolean} fade  Animer la transition image (template 1)
+   */
+  function _lbSetTemplate(tpl, fade) {
+    _lbTpl = tpl;
+    _lb.classList.toggle('bt-lb--tpl2', tpl === 2);
+
+    /* Sync aria-pressed + classe active sur les boutons toggle */
+    _lb.querySelectorAll('.bt-lb__tpl-btn').forEach(function (btn) {
+      var isActive = parseInt(btn.getAttribute('data-tpl'), 10) === tpl;
+      btn.classList.toggle('bt-lb__tpl-btn--active', isActive);
+      btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    });
+
+    if (tpl === 2) {
+      _lbRenderGrid();
+    } else {
+      /* Template 1 : affiche l'image courante */
+      _lbSetImg(_lbIdx, !!fade);
+      _lbSyncThumb(_lbIdx);
+    }
+  }
+
+  /**
+   * Construit la grille Template 2.
+   * Idempotent : marqueur data-lb-rendered empêche la reconstruction.
+   */
+  function _lbRenderGrid() {
+    var grid = _lb.querySelector('.bt-lb__grid');
+    if (!grid) return;
+    if (grid.getAttribute('data-lb-rendered') === 'true') return;
+
+    /* Gap configurable depuis le widget */
+    var gap = (_lb._btGap !== undefined) ? _lb._btGap : 3;
+    grid.style.gap = gap + 'px';
+
+    var frag = document.createDocumentFragment();
+    _lbImgs.forEach(function (im, i) {
+      var item = document.createElement('div');
+      item.className = 'bt-lb__grid-item';
+      item.setAttribute('role', 'listitem');
+      item.setAttribute('tabindex', '0');
+      item.setAttribute('aria-label', 'Photo ' + (i + 1) + ' sur ' + _lbImgs.length);
+      item.setAttribute('data-lb-grid-i', i);
+
+      var img = document.createElement('img');
+      img.src     = im.thumb || im.src;
+      img.alt     = im.alt || '';
+      img.loading = i < 10 ? 'eager' : 'lazy';
+      item.appendChild(img);
+      frag.appendChild(item);
+    });
+
+    grid.innerHTML = '';
+    grid.appendChild(frag);
+    grid.setAttribute('data-lb-rendered', 'true');
+
+    /* Délégation de clic unique : click → bascule en template 1 à cet index */
+    grid.addEventListener('click', function (e) {
+      var item = e.target.closest('.bt-lb__grid-item');
+      if (!item) return;
+      var i = parseInt(item.getAttribute('data-lb-grid-i'), 10);
+      if (!isNaN(i)) {
+        _lbIdx = i;
+        _lbSetTemplate(1, false);
+      }
+    });
+
+    /* Support clavier sur les items de la grille (Enter / Space) */
+    grid.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      var item = e.target.closest('.bt-lb__grid-item');
+      if (!item) return;
+      e.preventDefault();
+      var i = parseInt(item.getAttribute('data-lb-grid-i'), 10);
+      if (!isNaN(i)) {
+        _lbIdx = i;
+        _lbSetTemplate(1, false);
+      }
+    });
   }
 
   function _lbRenderThumbs() {
@@ -573,7 +758,7 @@
       frag.appendChild(btn);
     });
     strip.appendChild(frag);
-    // Single delegated listener — replaces per-button addEventListener
+    /* Délégation de clic unique */
     strip.addEventListener('click', function (e) {
       var btn = e.target.closest('.bt-lb__thumb');
       if (!btn) return;
@@ -591,7 +776,22 @@
     if (active) active.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
   }
 
+  /* ── Gallery skeleton — détecte le chargement des images ──────────────── */
+  function initGallerySkeleton(el) {
+    el.querySelectorAll('.bt-gallery__link:not(.bt-gallery__link--loaded)').forEach(function (link) {
+      var img = link.querySelector('.bt-gallery__img');
+      if (!img) return;
+      if (img.complete && img.naturalWidth > 0) {
+        link.classList.add('bt-gallery__link--loaded');
+      } else {
+        img.addEventListener('load',  function () { link.classList.add('bt-gallery__link--loaded'); });
+        img.addEventListener('error', function () { link.classList.add('bt-gallery__link--loaded'); });
+      }
+    });
+  }
+
   function initGallery(el) {
+    initGallerySkeleton(el);
     el.querySelectorAll('[data-bt-gallery]:not([data-bt-g-init])').forEach(function (gallery) {
       gallery.setAttribute('data-bt-g-init', '1');
 
@@ -602,20 +802,32 @@
       try { images = JSON.parse(raw); } catch (e) { return; }
       if (!images || !images.length) return;
 
-      // Click sur une image individuelle
+      /**
+       * Lit la configuration popup depuis les data-attributes du wrapper.
+       * @returns {{ tpl: number, showToggle: boolean, gap: number }}
+       */
+      function _galleryOpts() {
+        return {
+          tpl:        parseInt(gallery.getAttribute('data-bt-lb-tpl')    || '1', 10),
+          showToggle: gallery.getAttribute('data-bt-lb-toggle')           === 'yes',
+          gap:        parseFloat(gallery.getAttribute('data-bt-lb-gap')  || '3'),
+        };
+      }
+
+      /* Click sur une image individuelle */
       gallery.querySelectorAll('[data-bt-lb-index]').forEach(function (a) {
         a.addEventListener('click', function (e) {
           e.preventDefault();
-          _lbOpen(images, parseInt(a.getAttribute('data-bt-lb-index'), 10) || 0);
+          _lbOpen(images, parseInt(a.getAttribute('data-bt-lb-index'), 10) || 0, _galleryOpts());
         });
       });
 
-      // Click "Voir toutes les photos"
-      var btn = gallery.querySelector('[data-bt-lb-open]');
-      if (btn) {
-        btn.addEventListener('click', function (e) {
+      /* Click "Voir toutes les photos" — ouvre à l'index 0 */
+      var openBtn = gallery.querySelector('[data-bt-lb-open]');
+      if (openBtn) {
+        openBtn.addEventListener('click', function (e) {
           e.preventDefault();
-          _lbOpen(images, 0);
+          _lbOpen(images, 0, _galleryOpts());
         });
       }
     });
@@ -704,6 +916,32 @@
         // Masquer le bouton trigger quand le body est ouvert
         trigger.style.display = isHidden ? 'none' : '';
 
+        // ── Hide/Show classes (lues depuis le body pricing) ─────────────
+        var hideRaw = body.getAttribute('data-bt-body-hide') || '';
+        var showRaw = body.getAttribute('data-bt-body-show') || '';
+
+        if (hideRaw) {
+          hideRaw.split(',').forEach(function (sel) {
+            sel = sel.trim();
+            if (!sel) return;
+            document.querySelectorAll(sel).forEach(function (el) {
+              // isHidden = était masqué → on ouvre → cacher les éléments
+              el.style.display = isHidden ? 'none' : '';
+            });
+          });
+        }
+
+        if (showRaw) {
+          showRaw.split(',').forEach(function (sel) {
+            sel = sel.trim();
+            if (!sel) return;
+            document.querySelectorAll(sel).forEach(function (el) {
+              // isHidden = était masqué → on ouvre → afficher les éléments
+              el.style.display = isHidden ? '' : 'none';
+            });
+          });
+        }
+
         // Masquer les divs [data-bt-pricing-div] sur mobile quand le body s'ouvre
         if (window.innerWidth < 768) {
           document.querySelectorAll('[data-bt-pricing-div]').forEach(function (div) {
@@ -729,6 +967,180 @@
     });
   }
 
+  /* ── Highlights Slider (Swiper) ─────────────────────────────────────────── */
+
+  /**
+   * Breakpoints : desktop ≥ 1025, tablet 768–1024, mobile < 768.
+   * Si le device courant n'est pas dans la liste slider_devices, on détruit
+   * Swiper et on remet le fallback grid/list. Sinon on init Swiper.
+   */
+  var _hlSwipers = {}; // uid → { swiper, config, wrap }
+
+  function _hlGetDevice() {
+    var w = window.innerWidth || document.documentElement.clientWidth;
+    if (w >= 1025) return 'desktop';
+    if (w >= 768)  return 'tablet';
+    return 'mobile';
+  }
+
+  function _hlBuildSwiperOpts(config, wrap) {
+    var device = _hlGetDevice();
+    var opts = {
+      slidesPerView: config.slidesPerView[device] || 1,
+      spaceBetween:  config.spaceBetween[device]  || 16,
+      speed:         config.speed || 400,
+      loop:          config.loop,
+      grabCursor:    true,
+      breakpoints: {
+        0: {
+          slidesPerView: config.slidesPerView.mobile  || 1,
+          spaceBetween:  config.spaceBetween.mobile   || 8,
+        },
+        768: {
+          slidesPerView: config.slidesPerView.tablet  || 2,
+          spaceBetween:  config.spaceBetween.tablet   || 12,
+        },
+        1025: {
+          slidesPerView: config.slidesPerView.desktop || 3,
+          spaceBetween:  config.spaceBetween.desktop  || 16,
+        },
+      },
+    };
+
+    if (config.autoplay) {
+      opts.autoplay = {
+        delay: config.autoplaySpeed || 4000,
+        disableOnInteraction: false,
+        pauseOnMouseEnter: true,
+      };
+    }
+
+    if (config.arrows) {
+      opts.navigation = {
+        prevEl: wrap.querySelector('.bt-highlights__arrow--prev'),
+        nextEl: wrap.querySelector('.bt-highlights__arrow--next'),
+      };
+    }
+
+    if (config.dots) {
+      var dotsEl = wrap.querySelector('.bt-highlights__dots');
+      opts.pagination = {
+        el: dotsEl,
+        clickable: true,
+        bulletClass: 'bt-highlights__dot',
+        bulletActiveClass: 'bt-highlights__dot--active',
+      };
+    }
+
+    return opts;
+  }
+
+  function _hlInitOne(wrap) {
+    var uid = wrap.id;
+    var raw = wrap.getAttribute('data-bt-highlights-slider');
+    if (!raw) return;
+
+    var config;
+    try { config = JSON.parse(raw); } catch (e) { return; }
+
+    var swiperEl = wrap.querySelector('.bt-highlights__swiper');
+    if (!swiperEl) return;
+
+    // Stocke les données
+    _hlSwipers[uid] = { swiper: null, config: config, wrap: wrap, swiperEl: swiperEl };
+
+    _hlCheckDevice(uid);
+  }
+
+  function _hlApplyFallback(data) {
+    var device  = _hlGetDevice();
+    var config  = data.config;
+    var wrapper = data.swiperEl.querySelector('.swiper-wrapper');
+    if (!wrapper) return;
+
+    var isListLayout = config.layout === 'list';
+    var cols = config.columns[device] || 3;
+    var gap  = config.spaceBetween[device] || 16;
+
+    if (isListLayout) {
+      wrapper.style.display = 'flex';
+      wrapper.style.flexDirection = 'column';
+      wrapper.style.gap = gap + 'px';
+      wrapper.style.gridTemplateColumns = '';
+    } else {
+      wrapper.style.display = 'grid';
+      wrapper.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
+      wrapper.style.gap = gap + 'px';
+      wrapper.style.flexDirection = '';
+    }
+    wrapper.style.transform = 'none';
+
+    // Reset inline widths que Swiper met sur les slides
+    var slides = wrapper.querySelectorAll('.swiper-slide');
+    for (var i = 0; i < slides.length; i++) {
+      slides[i].style.width = '';
+      slides[i].style.marginRight = '';
+    }
+  }
+
+  function _hlClearFallback(data) {
+    var wrapper = data.swiperEl.querySelector('.swiper-wrapper');
+    if (!wrapper) return;
+    wrapper.style.display = '';
+    wrapper.style.gridTemplateColumns = '';
+    wrapper.style.gap = '';
+    wrapper.style.flexDirection = '';
+    wrapper.style.transform = '';
+  }
+
+  function _hlCheckDevice(uid) {
+    var data = _hlSwipers[uid];
+    if (!data) return;
+
+    var device  = _hlGetDevice();
+    var devices = data.config.devices || ['desktop', 'tablet', 'mobile'];
+    var shouldSlide = devices.indexOf(device) !== -1;
+
+    if (shouldSlide && !data.swiper) {
+      // Activer le slider
+      _hlClearFallback(data);
+      data.wrap.classList.add('bt-highlights__slider-wrap--active');
+      data.wrap.classList.remove('bt-highlights__slider-wrap--fallback');
+
+      if (typeof Swiper !== 'undefined') {
+        var opts = _hlBuildSwiperOpts(data.config, data.wrap);
+        data.swiper = new Swiper(data.swiperEl, opts);
+      }
+    } else if (!shouldSlide && data.swiper) {
+      // Désactiver le slider → fallback grid/list
+      data.swiper.destroy(true, true);
+      data.swiper = null;
+      data.wrap.classList.remove('bt-highlights__slider-wrap--active');
+      data.wrap.classList.add('bt-highlights__slider-wrap--fallback');
+      _hlApplyFallback(data);
+    } else if (!shouldSlide && !data.swiper) {
+      data.wrap.classList.remove('bt-highlights__slider-wrap--active');
+      data.wrap.classList.add('bt-highlights__slider-wrap--fallback');
+      _hlApplyFallback(data);
+    }
+  }
+
+  // Debounced resize
+  var _hlResizeTimer;
+  window.addEventListener('resize', function () {
+    clearTimeout(_hlResizeTimer);
+    _hlResizeTimer = setTimeout(function () {
+      Object.keys(_hlSwipers).forEach(_hlCheckDevice);
+    }, 200);
+  });
+
+  function initHighlightsSlider(el) {
+    el.querySelectorAll('[data-bt-highlights-slider]:not([data-bt-hl-init])').forEach(function (wrap) {
+      wrap.setAttribute('data-bt-hl-init', '1');
+      _hlInitOne(wrap);
+    });
+  }
+
   function boot(scope) {
     var el = (scope && scope !== document) ? scope : document;
 
@@ -746,7 +1158,20 @@
     initPricingButtons(el);
     initPricingTrigger(el);
     initPricingBodyTrigger(el);
+
+    // Masquer les éléments "show" au chargement si le body pricing est hidden
+    el.querySelectorAll('[data-bt-pricing-body][data-bt-body-show]').forEach(function (body) {
+      if (!body.classList.contains('bt-pricing-body--hidden')) return;
+      var showRaw = body.getAttribute('data-bt-body-show') || '';
+      showRaw.split(',').forEach(function (sel) {
+        sel = sel.trim();
+        if (!sel) return;
+        document.querySelectorAll(sel).forEach(function (e) { e.style.display = 'none'; });
+      });
+    });
+
     initGallery(el);
+    initHighlightsSlider(el);
     el.querySelectorAll('[data-bt-share]:not([data-bt-share-init])').forEach(function (btn) {
       btn.setAttribute('data-bt-share-init', '1');
       var url    = btn.getAttribute('data-bt-url')    || window.location.href;
