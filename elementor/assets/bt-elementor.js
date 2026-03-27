@@ -582,6 +582,18 @@
       var dx = e.changedTouches[0].clientX - _tx;
       if (Math.abs(dx) > 40) _lbGo(dx < 0 ? 1 : -1);
     }, { passive: true });
+
+    /*
+     * Wheel scroll — template 2 : l'overlay fixed capte les événements roue
+     * avant qu'ils atteignent le grid. On délègue manuellement.
+     */
+    _lb.addEventListener('wheel', function (e) {
+      if (_lbTpl !== 2) return;
+      var grid = _lb.querySelector('.bt-lb__grid');
+      if (!grid) return;
+      e.preventDefault();
+      grid.scrollTop += e.deltaY;
+    }, { passive: false });
   }
 
   /**

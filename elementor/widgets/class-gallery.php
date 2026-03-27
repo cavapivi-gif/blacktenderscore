@@ -141,6 +141,18 @@ class Gallery extends AbstractBtWidget {
             'default'      => 'yes',
         ]);
 
+        $this->add_control('popup_lb_quality', [
+            'label'     => __('Qualité des images (visionneuse)', 'blacktenderscore'),
+            'type'      => Controls_Manager::SELECT,
+            'options'   => [
+                'full'         => __('Originale — max qualité', 'blacktenderscore'),
+                'large'        => __('Grande — 1024px', 'blacktenderscore'),
+                'medium_large' => __('Moyen-grand — 768px', 'blacktenderscore'),
+            ],
+            'default'   => 'full',
+            'separator' => 'before',
+        ]);
+
         $this->end_controls_section();
 
         // ── Grille libre [condition: grid] ─────────────────────────────────
@@ -523,11 +535,18 @@ class Gallery extends AbstractBtWidget {
 
         // Build JSON image list for custom lightbox (all images, including hidden)
         $lb_data = [];
+        // Qualité image dans la visionneuse : full | large | medium_large
+        $lb_quality = $s['popup_lb_quality'] ?? 'full';
+
         if ($lightbox) {
             foreach ($all_images as $img) {
                 if (!is_array($img) || empty($img['url'])) continue;
+                // Choisit la taille demandée avec fallback vers l'originale
+                $lb_src = $lb_quality !== 'full'
+                    ? ($img['sizes'][$lb_quality] ?? ($img['sizes']['large'] ?? $img['url']))
+                    : $img['url'];
                 $lb_data[] = [
-                    'src'     => $img['url'],
+                    'src'     => $lb_src,
                     'thumb'   => $img['sizes']['medium'] ?? ($img['sizes']['thumbnail'] ?? $img['url']),
                     'alt'     => $img['alt']     ?? ($img['title'] ?? ''),
                     'caption' => $img['caption'] ?? '',
