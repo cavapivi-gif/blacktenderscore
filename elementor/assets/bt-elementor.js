@@ -717,7 +717,7 @@
       item.setAttribute('data-lb-grid-i', i);
 
       var img = document.createElement('img');
-      img.src     = im.thumb || im.src;
+      img.src     = im.src;   /* src = qualité visionneuse, pas le thumb (medium 300px) */
       img.alt     = im.alt || '';
       img.loading = i < 10 ? 'eager' : 'lazy';
       item.appendChild(img);
