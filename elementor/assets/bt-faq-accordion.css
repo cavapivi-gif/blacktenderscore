@@ -55,50 +55,50 @@
   flex: 1;
 }
 
-/* ── Icône CSS (fallback si pas d'icône FA) ───────────────── */
+/* ── Icône (approche Elementor-like : toggle display) ─────── */
 .bt-faq__icon {
   flex-shrink: 0;
-  width: 16px;
-  height: 16px;
-  position: relative;
+  width: 1em;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
-.bt-faq__icon::before,
-.bt-faq__icon::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  background: currentColor;
-  transform: translate(-50%, -50%);
-  transition: opacity .25s, transform .25s;
+/* SVG fallback */
+.bt-faq__icon svg {
+  width: 1em;
+  height: 1em;
 }
 
-/* "+" */
-.bt-faq__icon::before { width: 2px;  height: 14px; }
-.bt-faq__icon::after  { width: 14px; height: 2px;  }
-
-/* → "-" quand actif */
-.bt-faq__item--active .bt-faq__icon::before {
-  transform: translate(-50%, -50%) rotate(90deg);
-  opacity: 0;
+/* Font Awesome icons (i element with ::before) */
+.bt-faq__icon i,
+.bt-faq__icon span.e-font-icon-svg {
+  font-size: inherit;
+  line-height: 1;
 }
 
-/* Si le widget utilise des icônes Elementor (Font Awesome, SVG, etc.),
-   on désactive le +/− CSS pour éviter le spam visuel. */
-.bt-faq__icon--has-fa::before,
-.bt-faq__icon--has-fa::after {
-  content: none;
+/* SVG icons from Elementor Icons library */
+.bt-faq__icon .e-font-icon-svg {
+  width: 1em;
+  height: 1em;
+  fill: currentColor;
 }
 
-/* ── Icônes FA (selected_icon / selected_active_icon) ─────── */
-.bt-faq__icon--open   { display: none; }
+/* Toggle : closed visible, open masqué */
+.bt-faq__icon--closed { display: inline-flex; align-items: center; justify-content: center; }
+.bt-faq__icon--open   { display: none; align-items: center; justify-content: center; }
 
+/* Etat actif : inverse */
 .bt-faq__item--active .bt-faq__icon--closed { display: none; }
 .bt-faq__item--active .bt-faq__icon--open   { display: inline-flex; }
+
+/* S'assurer que tous les types d'icônes héritent de la taille */
+.bt-faq__icon--closed > *,
+.bt-faq__icon--open > * {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
 
 /* ── Corps réponse ────────────────────────────────────────── */
 .bt-faq--accordion .bt-faq__body {

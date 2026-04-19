@@ -225,11 +225,11 @@ class ReservationDb {
         $values = [];
 
         if (!empty($params['from'])) {
-            $where[]  = 'appointment_date >= %s';
+            $where[]  = 'DATE(created_at) >= %s';
             $values[] = $params['from'];
         }
         if (!empty($params['to'])) {
-            $where[]  = 'appointment_date <= %s';
+            $where[]  = 'DATE(created_at) <= %s';
             $values[] = $params['to'];
         }
         if (!empty($params['status'])) {
@@ -262,12 +262,12 @@ class ReservationDb {
             $values
                 ? $wpdb->prepare(
                     "SELECT * FROM `{$this->table}` WHERE {$where_sql}
-                     ORDER BY appointment_date DESC, id DESC LIMIT %d OFFSET %d",
+                     ORDER BY created_at DESC, id DESC LIMIT %d OFFSET %d",
                     ...[...$values, $per_page, $offset]
                 )
                 : $wpdb->prepare(
                     "SELECT * FROM `{$this->table}` WHERE {$where_sql}
-                     ORDER BY appointment_date DESC, id DESC LIMIT %d OFFSET %d",
+                     ORDER BY created_at DESC, id DESC LIMIT %d OFFSET %d",
                     $per_page,
                     $offset,
                 ),

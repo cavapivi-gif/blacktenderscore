@@ -352,6 +352,10 @@ trait BtNavControls {
             'name'     => "{$prefix}_border",
             'selector' => $item_sel,
         ]);
+        $this->add_group_control(Group_Control_Box_Shadow::get_type(), [
+            'name'     => "{$prefix}_shadow",
+            'selector' => $item_sel,
+        ]);
         $this->end_controls_tab();
 
         $this->start_controls_tab("{$prefix}_tab_hover", ['label' => __('Survol', 'blacktenderscore')]);
@@ -364,6 +368,10 @@ trait BtNavControls {
             'name'     => "{$prefix}_border_hover",
             'selector' => $hover_sel,
         ]);
+        $this->add_group_control(Group_Control_Box_Shadow::get_type(), [
+            'name'     => "{$prefix}_shadow_hover",
+            'selector' => $hover_sel,
+        ]);
         $this->end_controls_tab();
 
         $this->start_controls_tab("{$prefix}_tab_active", ['label' => __('Actif', 'blacktenderscore')]);
@@ -374,6 +382,10 @@ trait BtNavControls {
         ]);
         $this->add_group_control(Group_Control_Border::get_type(), [
             'name'     => "{$prefix}_border_active",
+            'selector' => $active_sel,
+        ]);
+        $this->add_group_control(Group_Control_Box_Shadow::get_type(), [
+            'name'     => "{$prefix}_shadow_active",
             'selector' => $active_sel,
         ]);
         $this->end_controls_tab();
@@ -394,11 +406,6 @@ trait BtNavControls {
             'type'       => Controls_Manager::DIMENSIONS,
             'size_units' => ['px', 'em'],
             'selectors'  => [$item_sel => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
-        ]);
-
-        $this->add_group_control(Group_Control_Box_Shadow::get_type(), [
-            'name'     => "{$prefix}_shadow",
-            'selector' => $item_sel,
         ]);
 
         $this->end_controls_section();

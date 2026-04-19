@@ -28,9 +28,22 @@ class Highlights extends AbstractBtWidget {
             'id'       => 'bt-highlights',
             'title'    => 'BT — Points forts',
             'icon'     => 'eicon-check-circle',
-            'keywords' => ['highlights', 'points', 'forts', 'inclus', 'avantages', 'bt'],
+            'keywords' => ['highlights', 'points', 'forts', 'inclus', 'avantages', 'bt', 'slider'],
             'css'      => ['bt-highlights'],
+            'js'       => ['bt-elementor'],
         ];
+    }
+
+    /**
+     * Swiper JS/CSS toujours déclarés — chargés par Elementor uniquement
+     * si le widget est sur la page.
+     */
+    public function get_script_depends(): array {
+        return array_merge(parent::get_script_depends(), ['swiper']);
+    }
+
+    public function get_style_depends(): array {
+        return array_merge(parent::get_style_depends(), ['swiper']);
     }
 
     // ── Controls ─────────────────────────────────────────────────────────────
@@ -204,6 +217,24 @@ class Highlights extends AbstractBtWidget {
             'default'      => 'yes',
         ]);
 
+        $this->add_control('item_title_tag', [
+            'label'     => __('Balise des titres', 'blacktenderscore'),
+            'type'      => Controls_Manager::SELECT,
+            'options'   => [
+                'h1'   => 'H1',
+                'h2'   => 'H2',
+                'h3'   => 'H3',
+                'h4'   => 'H4',
+                'h5'   => 'H5',
+                'h6'   => 'H6',
+                'p'    => 'p',
+                'span' => 'span',
+                'div'  => 'div',
+            ],
+            'default'   => 'span',
+            'condition' => ['show_title' => 'yes'],
+        ]);
+
         $this->add_control('show_desc', [
             'label'        => __('Afficher la description', 'blacktenderscore'),
             'type'         => Controls_Manager::SWITCHER,
@@ -216,6 +247,31 @@ class Highlights extends AbstractBtWidget {
             'type'         => Controls_Manager::SWITCHER,
             'return_value' => 'yes',
             'default'      => 'yes',
+        ]);
+
+        $this->add_control('steps_numbered', [
+            'label'        => __('Numéroter les étapes', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => '',
+            'condition'    => ['show_steps' => 'yes'],
+            'separator'    => 'before',
+        ]);
+
+        $this->add_control('steps_number_prefix', [
+            'label'       => __('Texte avant le chiffre', 'blacktenderscore'),
+            'description' => __('Ex: "Étape " → Étape 1, ou vide → 1', 'blacktenderscore'),
+            'type'        => Controls_Manager::TEXT,
+            'default'     => '',
+            'condition'   => ['show_steps' => 'yes', 'steps_numbered' => 'yes'],
+        ]);
+
+        $this->add_control('steps_number_suffix', [
+            'label'       => __('Texte après le chiffre', 'blacktenderscore'),
+            'description' => __('Ex: "." → 1. ou ")" → 1)', 'blacktenderscore'),
+            'type'        => Controls_Manager::TEXT,
+            'default'     => '',
+            'condition'   => ['show_steps' => 'yes', 'steps_numbered' => 'yes'],
         ]);
 
         $this->end_controls_section();
@@ -270,7 +326,138 @@ class Highlights extends AbstractBtWidget {
             'selectors'  => ['{{WRAPPER}} .bt-highlights' => 'margin-bottom: {{SIZE}}{{UNIT}}'],
         ]);
 
+        $this->add_control('slider_sep', ['type' => Controls_Manager::DIVIDER]);
+
+        // ── Mode Slider ─────────────────────────────────────────────────────
+        $this->add_control('slider_enabled', [
+            'label'        => __('Afficher en Slider', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => '',
+            'render_type'  => 'template',
+        ]);
+
+        $this->add_control('slider_devices', [
+            'label'       => __('Devices en mode Slider', 'blacktenderscore'),
+            'type'        => Controls_Manager::SELECT2,
+            'multiple'    => true,
+            'options'     => [
+                'desktop' => __('Desktop', 'blacktenderscore'),
+                'tablet'  => __('Tablette', 'blacktenderscore'),
+                'mobile'  => __('Mobile', 'blacktenderscore'),
+            ],
+            'default'     => ['desktop', 'tablet', 'mobile'],
+            'condition'   => ['slider_enabled' => 'yes'],
+            'render_type' => 'template',
+        ]);
+
+        $this->add_responsive_control('slides_per_view', [
+            'label'          => __('Slides visibles', 'blacktenderscore'),
+            'type'           => Controls_Manager::NUMBER,
+            'min'            => 1,
+            'max'            => 10,
+            'step'           => 0.5,
+            'default'        => 3,
+            'tablet_default' => 2,
+            'mobile_default' => 1,
+            'condition'      => ['slider_enabled' => 'yes'],
+        ]);
+
+        $this->add_responsive_control('slides_gap', [
+            'label'          => __('Espace entre slides', 'blacktenderscore'),
+            'type'           => Controls_Manager::SLIDER,
+            'size_units'     => ['px'],
+            'range'          => ['px' => ['min' => 0, 'max' => 80]],
+            'default'        => ['size' => 16, 'unit' => 'px'],
+            'tablet_default' => ['size' => 12, 'unit' => 'px'],
+            'mobile_default' => ['size' => 8,  'unit' => 'px'],
+            'condition'      => ['slider_enabled' => 'yes'],
+        ]);
+
+        $this->add_control('slider_autoplay', [
+            'label'        => __('Autoplay', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => '',
+            'condition'    => ['slider_enabled' => 'yes'],
+        ]);
+
+        $this->add_control('slider_autoplay_speed', [
+            'label'     => __('Intervalle autoplay (ms)', 'blacktenderscore'),
+            'type'      => Controls_Manager::NUMBER,
+            'min'       => 1000,
+            'max'       => 15000,
+            'step'      => 500,
+            'default'   => 4000,
+            'condition' => ['slider_enabled' => 'yes', 'slider_autoplay' => 'yes'],
+        ]);
+
+        $this->add_control('slider_loop', [
+            'label'        => __('Boucle infinie', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => 'yes',
+            'condition'    => ['slider_enabled' => 'yes'],
+        ]);
+
+        $this->add_control('slider_speed', [
+            'label'     => __('Vitesse transition (ms)', 'blacktenderscore'),
+            'type'      => Controls_Manager::NUMBER,
+            'min'       => 100,
+            'max'       => 2000,
+            'step'      => 50,
+            'default'   => 400,
+            'condition' => ['slider_enabled' => 'yes'],
+        ]);
+
+        $this->add_control('slider_arrows', [
+            'label'        => __('Flèches navigation', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => 'yes',
+            'condition'    => ['slider_enabled' => 'yes'],
+        ]);
+
+        $this->add_control('slider_dots', [
+            'label'        => __('Points de pagination', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => 'yes',
+            'condition'    => ['slider_enabled' => 'yes'],
+        ]);
+
+        $this->add_control('slider_offset_side', [
+            'label'     => __('Direction de l\'offset', 'blacktenderscore'),
+            'type'      => Controls_Manager::CHOOSE,
+            'options'   => [
+                'both'  => ['title' => __('Les deux côtés', 'blacktenderscore'), 'icon' => 'eicon-h-align-stretch'],
+                'left'  => ['title' => __('Gauche', 'blacktenderscore'),         'icon' => 'eicon-h-align-left'],
+                'right' => ['title' => __('Droite', 'blacktenderscore'),         'icon' => 'eicon-h-align-right'],
+            ],
+            'default'   => 'both',
+            'toggle'    => false,
+            'condition' => ['slider_enabled' => 'yes'],
+        ]);
+
+        $this->add_responsive_control('slider_offset', [
+            'label'          => __('Offset (aperçu slide suivant)', 'blacktenderscore'),
+            'type'           => Controls_Manager::SLIDER,
+            'size_units'     => ['px', '%'],
+            'range'          => ['px' => ['min' => 0, 'max' => 200], '%' => ['min' => 0, 'max' => 30]],
+            'default'        => ['size' => 0, 'unit' => 'px'],
+            'tablet_default' => ['size' => 0, 'unit' => 'px'],
+            'mobile_default' => ['size' => 0, 'unit' => 'px'],
+            'condition'      => ['slider_enabled' => 'yes'],
+            'selectors'      => [
+                '{{WRAPPER}} .bt-highlights__swiper[data-offset-side="both"]  ' => 'padding-left: {{SIZE}}{{UNIT}}; padding-right: {{SIZE}}{{UNIT}}',
+                '{{WRAPPER}} .bt-highlights__swiper[data-offset-side="left"]  ' => 'padding-left: {{SIZE}}{{UNIT}}; padding-right: 0',
+                '{{WRAPPER}} .bt-highlights__swiper[data-offset-side="right"] ' => 'padding-left: 0; padding-right: {{SIZE}}{{UNIT}}',
+            ],
+        ]);
+
         // ── Position & alignement icône (responsive — mobile passe en colonne) ───
+        // Comme Icon Box / Image Box d'Elementor : quand l'icône est à droite,
+        // le texte s'aligne à droite automatiquement.
         $this->add_responsive_control('icon_position', [
             'label'          => __('Position icône', 'blacktenderscore'),
             'type'           => Controls_Manager::CHOOSE,
@@ -282,7 +469,12 @@ class Highlights extends AbstractBtWidget {
             'default'        => 'row',
             'mobile_default' => 'column',
             'condition'      => ['show_icon' => 'yes'],
-            'selectors'      => ['{{WRAPPER}} .bt-highlights__item' => 'flex-direction: {{VALUE}}'],
+            'selectors_dictionary' => [
+                'row'         => 'flex-direction: row; --bt-hl-text-align: left;',
+                'row-reverse' => 'flex-direction: row-reverse; --bt-hl-text-align: right;',
+                'column'      => 'flex-direction: column; --bt-hl-text-align: inherit;',
+            ],
+            'selectors'      => ['{{WRAPPER}} .bt-highlights__item' => '{{VALUE}}'],
             'separator'      => 'before',
         ]);
 
@@ -313,15 +505,15 @@ class Highlights extends AbstractBtWidget {
         ]);
 
         $this->add_control('content_text_align', [
-            'label'     => __('Alignement texte', 'blacktenderscore'),
-            'type'      => Controls_Manager::CHOOSE,
-            'options'   => [
+            'label'       => __('Alignement texte', 'blacktenderscore'),
+            'type'        => Controls_Manager::CHOOSE,
+            'options'     => [
                 'left'   => ['title' => __('Gauche', 'blacktenderscore'), 'icon' => 'eicon-text-align-left'],
                 'center' => ['title' => __('Centre', 'blacktenderscore'), 'icon' => 'eicon-text-align-center'],
                 'right'  => ['title' => __('Droite', 'blacktenderscore'), 'icon' => 'eicon-text-align-right'],
             ],
-            'condition' => ['icon_position' => 'column'],
-            'selectors' => ['{{WRAPPER}} .bt-highlights__content' => 'text-align: {{VALUE}}'],
+            'description' => __('Par défaut : gauche si icône à gauche, droite si icône à droite', 'blacktenderscore'),
+            'selectors'   => ['{{WRAPPER}} .bt-highlights__content' => 'text-align: {{VALUE}}'],
         ]);
 
         $this->add_responsive_control('icon_spacing', [
@@ -376,13 +568,110 @@ class Highlights extends AbstractBtWidget {
             '{{WRAPPER}} .bt-highlights__item'
         );
 
-        $this->register_icon_style_section(
-            'icon',
-            __('Style — Icône / Image', 'blacktenderscore'),
-            '{{WRAPPER}} .bt-highlights__icon',
-            ['size' => 28],
-            ['show_icon' => 'yes']
-        );
+        // ── Style — Icône / Image ────────────────────────────────────────────
+        $this->start_controls_section('style_icon_img', [
+            'label'     => __('Style — Icône / Image', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_STYLE,
+            'condition' => ['show_icon' => 'yes'],
+        ]);
+
+        // Taille (font-size) — emoji, icônes font, SVG Elementor
+        $this->add_responsive_control('icon_size', [
+            'label'      => __('Taille icône', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px', 'em'],
+            'range'      => ['px' => ['min' => 12, 'max' => 80]],
+            'default'    => ['size' => 28, 'unit' => 'px'],
+            'selectors'  => ['{{WRAPPER}} .bt-highlights__icon' => 'font-size: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        $this->add_control('icon_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => [
+                '{{WRAPPER}} .bt-highlights__icon'     => 'color: {{VALUE}}',
+                '{{WRAPPER}} .bt-highlights__icon i'   => 'color: {{VALUE}}',
+                '{{WRAPPER}} .bt-highlights__icon svg' => 'fill: {{VALUE}}; color: {{VALUE}}',
+            ],
+        ]);
+
+        $this->add_control('icon_bg', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-highlights__icon' => 'background-color: {{VALUE}}'],
+        ]);
+
+        $this->add_responsive_control('icon_padding', [
+            'label'      => __('Padding', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', 'em'],
+            'selectors'  => ['{{WRAPPER}} .bt-highlights__icon' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+
+        $this->add_responsive_control('icon_radius', [
+            'label'      => __('Border radius', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px', '%'],
+            'selectors'  => ['{{WRAPPER}} .bt-highlights__icon' => 'border-radius: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        // ── Image uniquement ─────────────────────────────────────────────────
+        $this->add_control('icon_img_heading', [
+            'label'     => __('Image (dimensions / recadrage)', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'separator' => 'before',
+        ]);
+
+        $this->add_responsive_control('icon_img_width', [
+            'label'      => __('Largeur', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px', '%', 'em'],
+            'range'      => ['px' => ['min' => 20, 'max' => 800], '%' => ['min' => 1, 'max' => 100]],
+            'selectors'  => ['{{WRAPPER}} .bt-highlights__icon--img' => 'width: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        $this->add_responsive_control('icon_img_height', [
+            'label'       => __('Hauteur', 'blacktenderscore'),
+            'description' => __('Fixe une hauteur uniforme (évite l\'effet escalier en slider).', 'blacktenderscore'),
+            'type'        => Controls_Manager::SLIDER,
+            'size_units'  => ['px', 'em', 'vh'],
+            'range'       => ['px' => ['min' => 20, 'max' => 800]],
+            'selectors'   => ['{{WRAPPER}} .bt-highlights__icon--img' => 'height: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        $this->add_control('icon_img_fit', [
+            'label'     => __('Object-fit', 'blacktenderscore'),
+            'type'      => Controls_Manager::SELECT,
+            'options'   => [
+                'contain'    => 'contain — cadre sans recadrage',
+                'cover'      => 'cover — remplit (recadré)',
+                'fill'       => 'fill — étire',
+                'none'       => 'none — taille naturelle',
+                'scale-down' => 'scale-down — contain ou none (le plus petit)',
+            ],
+            'default'   => 'contain',
+            'selectors' => ['{{WRAPPER}} .bt-highlights__icon--img img' => 'object-fit: {{VALUE}}'],
+        ]);
+
+        $this->add_control('icon_img_position', [
+            'label'     => __('Object-position', 'blacktenderscore'),
+            'type'      => Controls_Manager::SELECT,
+            'options'   => [
+                'center'       => 'center',
+                'top'          => 'top',
+                'bottom'       => 'bottom',
+                'left center'  => 'left center',
+                'right center' => 'right center',
+                'top left'     => 'top left',
+                'top right'    => 'top right',
+                'bottom left'  => 'bottom left',
+                'bottom right' => 'bottom right',
+            ],
+            'default'   => 'center',
+            'selectors' => ['{{WRAPPER}} .bt-highlights__icon--img img' => 'object-position: {{VALUE}}'],
+        ]);
+
+        $this->end_controls_section();
 
         $this->register_typography_section(
             'item_title',
@@ -410,6 +699,330 @@ class Highlights extends AbstractBtWidget {
             [],
             ['show_steps' => 'yes']
         );
+
+        // ── Style — Numéro d'étape ──────────────────────────────────────────
+        $this->register_button_style(
+            'step_number',
+            __('Style — Numéro étape', 'blacktenderscore'),
+            '{{WRAPPER}} .bt-highlights__step-num',
+            [],
+            ['show_steps' => 'yes', 'steps_numbered' => 'yes'],
+            ['with_gap' => false]
+        );
+
+        // ── Style — Slider Navigation ──────────────────────────────────────
+        $this->register_slider_style_controls();
+    }
+
+    /**
+     * Enregistre les contrôles de style pour le mode slider (flèches + dots).
+     */
+    private function register_slider_style_controls(): void {
+
+        // ── Flèches ─────────────────────────────────────────────────────────
+        $this->start_controls_section('style_slider_arrows', [
+            'label'     => __('Style — Slider Flèches', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_STYLE,
+            'condition' => ['slider_enabled' => 'yes', 'slider_arrows' => 'yes'],
+        ]);
+
+        $this->add_responsive_control('arrow_size', [
+            'label'      => __('Taille icône', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 10, 'max' => 60]],
+            'default'    => ['size' => 20, 'unit' => 'px'],
+            'selectors'  => ['{{WRAPPER}} .bt-highlights__arrow' => 'font-size: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        $this->add_responsive_control('arrow_box_size', [
+            'label'      => __('Taille du bouton', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 20, 'max' => 80]],
+            'default'    => ['size' => 40, 'unit' => 'px'],
+            'selectors'  => [
+                '{{WRAPPER}} .bt-highlights__arrow' => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}}',
+            ],
+        ]);
+
+        $this->start_controls_tabs('arrow_state_tabs');
+
+        $this->start_controls_tab('arrow_tab_normal', ['label' => __('Normal', 'blacktenderscore')]);
+        $this->add_control('arrow_color', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-highlights__arrow' => 'color: {{VALUE}}'],
+        ]);
+        $this->add_control('arrow_bg', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-highlights__arrow' => 'background-color: {{VALUE}}'],
+        ]);
+        $this->end_controls_tab();
+
+        $this->start_controls_tab('arrow_tab_hover', ['label' => __('Survol', 'blacktenderscore')]);
+        $this->add_control('arrow_color_hover', [
+            'label'     => __('Couleur', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-highlights__arrow:hover' => 'color: {{VALUE}}'],
+        ]);
+        $this->add_control('arrow_bg_hover', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-highlights__arrow:hover' => 'background-color: {{VALUE}}'],
+        ]);
+        $this->end_controls_tab();
+
+        $this->end_controls_tabs();
+
+        $this->add_responsive_control('arrow_border_radius', [
+            'label'      => __('Border radius', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', '%'],
+            'default'    => ['top' => '50', 'right' => '50', 'bottom' => '50', 'left' => '50', 'unit' => '%'],
+            'selectors'  => ['{{WRAPPER}} .bt-highlights__arrow' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+            'separator'  => 'before',
+        ]);
+
+        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
+            'name'     => 'arrow_border',
+            'selector' => '{{WRAPPER}} .bt-highlights__arrow',
+        ]);
+
+        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), [
+            'name'     => 'arrow_shadow',
+            'selector' => '{{WRAPPER}} .bt-highlights__arrow',
+        ]);
+
+        // ── Flèche Précédent — Icône & Position ─────────────────────────────
+        $this->add_control('arrow_prev_heading', [
+            'label'     => __('Flèche Précédent', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'separator' => 'before',
+        ]);
+
+        $this->add_control('arrow_prev_icon_mode', [
+            'label'   => __('Icône', 'blacktenderscore'),
+            'type'    => Controls_Manager::SELECT,
+            'options' => [
+                'default' => __('Flèche par défaut', 'blacktenderscore'),
+                'icon'    => __('Icône personnalisée', 'blacktenderscore'),
+                'none'    => __('Aucune', 'blacktenderscore'),
+            ],
+            'default' => 'default',
+        ]);
+
+        $this->add_control('arrow_prev_icon', [
+            'label'     => __('Icône personnalisée', 'blacktenderscore'),
+            'type'      => Controls_Manager::ICONS,
+            'skin'      => 'inline',
+            'condition' => ['arrow_prev_icon_mode' => 'icon'],
+        ]);
+
+        $this->add_control('arrow_prev_h_orient', [
+            'label'   => __('Horizontal — Ancrage', 'blacktenderscore'),
+            'type'    => Controls_Manager::CHOOSE,
+            'options' => [
+                'start'  => ['title' => __('Gauche',  'blacktenderscore'), 'icon' => 'eicon-h-align-left'],
+                'center' => ['title' => __('Centre',  'blacktenderscore'), 'icon' => 'eicon-h-align-center'],
+                'end'    => ['title' => __('Droite',  'blacktenderscore'), 'icon' => 'eicon-h-align-right'],
+            ],
+            'default'              => 'start',
+            'toggle'               => false,
+            'selectors_dictionary' => [
+                'start'  => '--bt-prev-l: 0px; --bt-prev-r: auto; --bt-prev-trx: 0px',
+                'center' => '--bt-prev-l: 50%; --bt-prev-r: auto; --bt-prev-trx: -50%',
+                'end'    => '--bt-prev-l: auto; --bt-prev-r: 0px; --bt-prev-trx: 0px',
+            ],
+            'selectors'            => ['{{WRAPPER}} .bt-highlights__arrow--prev' => '{{VALUE}}'],
+        ]);
+
+        $this->add_responsive_control('arrow_prev_h_pos', [
+            'label'      => __('Horizontal — Décalage', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px', '%'],
+            'range'      => ['px' => ['min' => -200, 'max' => 200], '%' => ['min' => -50, 'max' => 50]],
+            'default'    => ['size' => -20, 'unit' => 'px'],
+            'selectors'  => ['{{WRAPPER}} .bt-highlights__arrow--prev' => '--bt-prev-h-off: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        $this->add_control('arrow_prev_v_orient', [
+            'label'   => __('Vertical — Ancrage', 'blacktenderscore'),
+            'type'    => Controls_Manager::CHOOSE,
+            'options' => [
+                'start'  => ['title' => __('Haut',   'blacktenderscore'), 'icon' => 'eicon-v-align-top'],
+                'center' => ['title' => __('Centre', 'blacktenderscore'), 'icon' => 'eicon-v-align-middle'],
+                'end'    => ['title' => __('Bas',    'blacktenderscore'), 'icon' => 'eicon-v-align-bottom'],
+            ],
+            'default'              => 'center',
+            'toggle'               => false,
+            'selectors_dictionary' => [
+                'start'  => '--bt-prev-t: 0px; --bt-prev-b: auto; --bt-prev-try: 0px',
+                'center' => '--bt-prev-t: 50%; --bt-prev-b: auto; --bt-prev-try: -50%',
+                'end'    => '--bt-prev-t: auto; --bt-prev-b: 0px; --bt-prev-try: 0px',
+            ],
+            'selectors'            => ['{{WRAPPER}} .bt-highlights__arrow--prev' => '{{VALUE}}'],
+        ]);
+
+        $this->add_responsive_control('arrow_prev_v_pos', [
+            'label'      => __('Vertical — Décalage', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px', '%'],
+            'range'      => ['px' => ['min' => -200, 'max' => 200], '%' => ['min' => -50, 'max' => 50]],
+            'default'    => ['size' => 0, 'unit' => 'px'],
+            'selectors'  => ['{{WRAPPER}} .bt-highlights__arrow--prev' => '--bt-prev-v-off: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        // ── Flèche Suivant — Icône & Position ──────────────────────────────
+        $this->add_control('arrow_next_heading', [
+            'label'     => __('Flèche Suivant', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'separator' => 'before',
+        ]);
+
+        $this->add_control('arrow_next_icon_mode', [
+            'label'   => __('Icône', 'blacktenderscore'),
+            'type'    => Controls_Manager::SELECT,
+            'options' => [
+                'default' => __('Flèche par défaut', 'blacktenderscore'),
+                'icon'    => __('Icône personnalisée', 'blacktenderscore'),
+                'none'    => __('Aucune', 'blacktenderscore'),
+            ],
+            'default' => 'default',
+        ]);
+
+        $this->add_control('arrow_next_icon', [
+            'label'     => __('Icône personnalisée', 'blacktenderscore'),
+            'type'      => Controls_Manager::ICONS,
+            'skin'      => 'inline',
+            'condition' => ['arrow_next_icon_mode' => 'icon'],
+        ]);
+
+        $this->add_control('arrow_next_h_orient', [
+            'label'   => __('Horizontal — Ancrage', 'blacktenderscore'),
+            'type'    => Controls_Manager::CHOOSE,
+            'options' => [
+                'start'  => ['title' => __('Gauche',  'blacktenderscore'), 'icon' => 'eicon-h-align-left'],
+                'center' => ['title' => __('Centre',  'blacktenderscore'), 'icon' => 'eicon-h-align-center'],
+                'end'    => ['title' => __('Droite',  'blacktenderscore'), 'icon' => 'eicon-h-align-right'],
+            ],
+            'default'              => 'end',
+            'toggle'               => false,
+            'selectors_dictionary' => [
+                'start'  => '--bt-next-l: 0px; --bt-next-r: auto; --bt-next-trx: 0px',
+                'center' => '--bt-next-l: 50%; --bt-next-r: auto; --bt-next-trx: -50%',
+                'end'    => '--bt-next-l: auto; --bt-next-r: 0px; --bt-next-trx: 0px',
+            ],
+            'selectors'            => ['{{WRAPPER}} .bt-highlights__arrow--next' => '{{VALUE}}'],
+        ]);
+
+        $this->add_responsive_control('arrow_next_h_pos', [
+            'label'      => __('Horizontal — Décalage', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px', '%'],
+            'range'      => ['px' => ['min' => -200, 'max' => 200], '%' => ['min' => -50, 'max' => 50]],
+            'default'    => ['size' => -20, 'unit' => 'px'],
+            'selectors'  => ['{{WRAPPER}} .bt-highlights__arrow--next' => '--bt-next-h-off: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        $this->add_control('arrow_next_v_orient', [
+            'label'   => __('Vertical — Ancrage', 'blacktenderscore'),
+            'type'    => Controls_Manager::CHOOSE,
+            'options' => [
+                'start'  => ['title' => __('Haut',   'blacktenderscore'), 'icon' => 'eicon-v-align-top'],
+                'center' => ['title' => __('Centre', 'blacktenderscore'), 'icon' => 'eicon-v-align-middle'],
+                'end'    => ['title' => __('Bas',    'blacktenderscore'), 'icon' => 'eicon-v-align-bottom'],
+            ],
+            'default'              => 'center',
+            'toggle'               => false,
+            'selectors_dictionary' => [
+                'start'  => '--bt-next-t: 0px; --bt-next-b: auto; --bt-next-try: 0px',
+                'center' => '--bt-next-t: 50%; --bt-next-b: auto; --bt-next-try: -50%',
+                'end'    => '--bt-next-t: auto; --bt-next-b: 0px; --bt-next-try: 0px',
+            ],
+            'selectors'            => ['{{WRAPPER}} .bt-highlights__arrow--next' => '{{VALUE}}'],
+        ]);
+
+        $this->add_responsive_control('arrow_next_v_pos', [
+            'label'      => __('Vertical — Décalage', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px', '%'],
+            'range'      => ['px' => ['min' => -200, 'max' => 200], '%' => ['min' => -50, 'max' => 50]],
+            'default'    => ['size' => 0, 'unit' => 'px'],
+            'selectors'  => ['{{WRAPPER}} .bt-highlights__arrow--next' => '--bt-next-v-off: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        $this->end_controls_section();
+
+        // ── Dots / Pagination ───────────────────────────────────────────────
+        $this->start_controls_section('style_slider_dots', [
+            'label'     => __('Style — Slider Pagination', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_STYLE,
+            'condition' => ['slider_enabled' => 'yes', 'slider_dots' => 'yes'],
+        ]);
+
+        $this->add_responsive_control('dot_size', [
+            'label'      => __('Taille du point', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 4, 'max' => 24]],
+            'default'    => ['size' => 8, 'unit' => 'px'],
+            'selectors'  => [
+                '{{WRAPPER}} .bt-highlights__dot' => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}}',
+            ],
+        ]);
+
+        $this->add_responsive_control('dot_active_width', [
+            'label'      => __('Largeur point actif', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 4, 'max' => 40]],
+            'default'    => ['size' => 20, 'unit' => 'px'],
+            'selectors'  => [
+                '{{WRAPPER}} .bt-highlights__dot--active' => 'width: {{SIZE}}{{UNIT}}',
+            ],
+        ]);
+
+        $this->add_responsive_control('dot_gap', [
+            'label'      => __('Espace entre points', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 0, 'max' => 20]],
+            'default'    => ['size' => 6, 'unit' => 'px'],
+            'selectors'  => ['{{WRAPPER}} .bt-highlights__dots' => 'gap: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        $this->add_responsive_control('dots_spacing', [
+            'label'      => __('Espace au-dessus des points', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 0, 'max' => 40]],
+            'default'    => ['size' => 16, 'unit' => 'px'],
+            'selectors'  => ['{{WRAPPER}} .bt-highlights__dots' => 'margin-top: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        $this->add_control('dot_color', [
+            'label'     => __('Couleur point', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-highlights__dot' => 'background-color: {{VALUE}}'],
+        ]);
+
+        $this->add_control('dot_active_color', [
+            'label'     => __('Couleur point actif', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-highlights__dot--active' => 'background-color: {{VALUE}}'],
+        ]);
+
+        $this->add_responsive_control('dot_border_radius', [
+            'label'      => __('Border radius', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', '%'],
+            'default'    => ['top' => '50', 'right' => '50', 'bottom' => '50', 'left' => '50', 'unit' => '%'],
+            'selectors'  => ['{{WRAPPER}} .bt-highlights__dot' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+
+        $this->end_controls_section();
     }
 
     // ── Render ───────────────────────────────────────────────────────────────
@@ -425,7 +1038,7 @@ class Highlights extends AbstractBtWidget {
         if (!$rows) return;
 
         $layout      = $s['layout'] ?: 'grid';
-        $wrap_cls    = $layout === 'list' ? 'bt-highlights__list' : 'bt-highlights__grid';
+        $is_slider   = ($s['slider_enabled'] ?? '') === 'yes';
         $collapsible = isset($s['collapsible_mode']) && $s['collapsible_mode'] !== '';
 
         echo '<div class="bt-highlights">';
@@ -434,42 +1047,163 @@ class Highlights extends AbstractBtWidget {
         } else {
             $this->render_section_title($s, 'bt-highlights__section-title');
         }
-        echo "<div class=\"{$wrap_cls}\">";
 
-        foreach ($rows as $row) {
-            echo '<div class="bt-highlights__item">';
-
-            if ($s['show_icon'] === 'yes') {
-                $this->render_icon_slot($row['icon']);
-            }
-
-            echo '<div class="bt-highlights__content">';
-
-            if ($s['show_title'] === 'yes' && $row['title']) {
-                echo '<span class="bt-highlights__title">' . esc_html($row['title']) . '</span>';
-            }
-
-            if ($s['show_desc'] === 'yes' && $row['desc']) {
-                echo '<div class="bt-highlights__desc">' . wp_kses_post($row['desc']) . '</div>';
-            }
-
-            if ($s['show_steps'] === 'yes' && !empty($row['steps'])) {
-                echo '<ul class="bt-highlights__steps">';
-                foreach ($row['steps'] as $step) {
-                    echo '<li>' . esc_html($step) . '</li>';
-                }
-                echo '</ul>';
-            }
-
-            echo '</div>'; // .bt-highlights__content
-            echo '</div>'; // .bt-highlights__item
+        if ($is_slider) {
+            $this->render_slider($s, $rows);
+        } else {
+            $this->render_grid_list($s, $rows, $layout);
         }
 
-        echo '</div>'; // grid / list
         if ($collapsible) {
             $this->render_collapsible_section_close();
         }
         echo '</div>'; // .bt-highlights
+    }
+
+    /**
+     * Rendu mode grille / liste (comportement original).
+     */
+    private function render_grid_list(array $s, array $rows, string $layout): void {
+        $wrap_cls = $layout === 'list' ? 'bt-highlights__list' : 'bt-highlights__grid';
+        echo "<div class=\"{$wrap_cls}\">";
+        foreach ($rows as $row) {
+            $this->render_single_item($s, $row);
+        }
+        echo '</div>';
+    }
+
+    /**
+     * Rendu mode slider (Swiper).
+     * Les data-attributes sont lus par le JS pour configurer Swiper.
+     */
+    private function render_slider(array $s, array $rows): void {
+        $devices = $s['slider_devices'] ?? ['desktop', 'tablet', 'mobile'];
+        if (!is_array($devices)) $devices = ['desktop', 'tablet', 'mobile'];
+
+        $config = [
+            'devices'       => $devices,
+            'slidesPerView' => [
+                'desktop' => (float) ($s['slides_per_view']        ?? 3),
+                'tablet'  => (float) ($s['slides_per_view_tablet'] ?? 2),
+                'mobile'  => (float) ($s['slides_per_view_mobile'] ?? 1),
+            ],
+            'spaceBetween'  => [
+                'desktop' => (int) ($s['slides_gap']['size']        ?? 16),
+                'tablet'  => (int) (($s['slides_gap_tablet']['size'] ?? null) ?: ($s['slides_gap']['size'] ?? 16)),
+                'mobile'  => (int) (($s['slides_gap_mobile']['size'] ?? null) ?: ($s['slides_gap']['size'] ?? 16)),
+            ],
+            'autoplay'      => ($s['slider_autoplay'] ?? '') === 'yes',
+            'autoplaySpeed' => (int) ($s['slider_autoplay_speed'] ?? 4000),
+            'loop'          => ($s['slider_loop'] ?? '') === 'yes',
+            'speed'         => (int) ($s['slider_speed'] ?? 400),
+            'arrows'        => ($s['slider_arrows'] ?? '') === 'yes',
+            'dots'          => ($s['slider_dots'] ?? '') === 'yes',
+            'layout'        => $s['layout'] ?: 'grid',
+            'columns'       => [
+                'desktop' => (int) ($s['columns']        ?? 3),
+                'tablet'  => (int) ($s['columns_tablet'] ?? 2),
+                'mobile'  => (int) ($s['columns_mobile'] ?? 1),
+            ],
+        ];
+
+        $uid = 'bt-hl-slider-' . $this->get_id();
+
+        echo '<div class="bt-highlights__slider-wrap" id="' . esc_attr($uid) . '" data-bt-highlights-slider=\'' . wp_json_encode($config) . '\'>';
+
+        // Swiper container — data-offset-side pour le sélecteur CSS conditionnel
+        $offset_side = esc_attr($s['slider_offset_side'] ?? 'both');
+        echo '<div class="swiper bt-highlights__swiper" data-offset-side="' . $offset_side . '">';
+        echo '<div class="swiper-wrapper">';
+        foreach ($rows as $row) {
+            echo '<div class="swiper-slide">';
+            $this->render_single_item($s, $row);
+            echo '</div>';
+        }
+        echo '</div>'; // .swiper-wrapper
+        echo '</div>'; // .swiper
+
+        // Arrows
+        if ($config['arrows']) {
+            $prev_mode = $s['arrow_prev_icon_mode'] ?? 'default';
+            $next_mode = $s['arrow_next_icon_mode'] ?? 'default';
+
+            echo '<button class="bt-highlights__arrow bt-highlights__arrow--prev" aria-label="' . esc_attr__('Précédent', 'blacktenderscore') . '">';
+            if ($prev_mode === 'icon') {
+                $prev_icon = $s['arrow_prev_icon'] ?? [];
+                if (is_array($prev_icon) && !empty($prev_icon['value'])) {
+                    Icons_Manager::render_icon($prev_icon, ['aria-hidden' => 'true']);
+                }
+            } elseif ($prev_mode !== 'none') {
+                echo '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>';
+            }
+            echo '</button>';
+
+            echo '<button class="bt-highlights__arrow bt-highlights__arrow--next" aria-label="' . esc_attr__('Suivant', 'blacktenderscore') . '">';
+            if ($next_mode === 'icon') {
+                $next_icon = $s['arrow_next_icon'] ?? [];
+                if (is_array($next_icon) && !empty($next_icon['value'])) {
+                    Icons_Manager::render_icon($next_icon, ['aria-hidden' => 'true']);
+                }
+            } elseif ($next_mode !== 'none') {
+                echo '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+            }
+            echo '</button>';
+        }
+
+        // Dots
+        if ($config['dots']) {
+            echo '<div class="bt-highlights__dots"></div>';
+        }
+
+        echo '</div>'; // .bt-highlights__slider-wrap
+    }
+
+    /**
+     * Rendu d'un seul item (partagé entre grid/list et slider).
+     */
+    private function render_single_item(array $s, array $row): void {
+        echo '<div class="bt-highlights__item">';
+
+        if ($s['show_icon'] === 'yes') {
+            $this->render_icon_slot($row['icon']);
+        }
+
+        echo '<div class="bt-highlights__content">';
+
+        if ($s['show_title'] === 'yes' && $row['title']) {
+            $title_tag = $s['item_title_tag'] ?? 'span';
+            $allowed_tags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'div'];
+            if (!in_array($title_tag, $allowed_tags, true)) {
+                $title_tag = 'span';
+            }
+            echo '<' . $title_tag . ' class="bt-highlights__title">' . esc_html($row['title']) . '</' . $title_tag . '>';
+        }
+
+        if ($s['show_desc'] === 'yes' && $row['desc']) {
+            echo '<div class="bt-highlights__desc">' . wp_kses_post($row['desc']) . '</div>';
+        }
+
+        if ($s['show_steps'] === 'yes' && !empty($row['steps'])) {
+            $numbered = ($s['steps_numbered'] ?? '') === 'yes';
+            $prefix   = $numbered ? esc_html($s['steps_number_prefix'] ?? '') : '';
+            $suffix   = $numbered ? esc_html($s['steps_number_suffix'] ?? '') : '';
+            $tag      = $numbered ? 'ol' : 'ul';
+            $cls      = 'bt-highlights__steps' . ($numbered ? ' bt-highlights__steps--numbered' : '');
+
+            echo '<' . $tag . ' class="' . esc_attr($cls) . '">';
+            foreach ($row['steps'] as $i => $step) {
+                if ($numbered) {
+                    $num = $prefix . ($i + 1) . $suffix;
+                    echo '<li><span class="bt-highlights__step-num">' . esc_html($num) . '</span>' . esc_html($step) . '</li>';
+                } else {
+                    echo '<li>' . esc_html($step) . '</li>';
+                }
+            }
+            echo '</' . $tag . '>';
+        }
+
+        echo '</div>'; // .bt-highlights__content
+        echo '</div>'; // .bt-highlights__item
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

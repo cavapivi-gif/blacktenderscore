@@ -34,6 +34,9 @@ trait BtExcursionPricing {
         );
         if (!$rows) return;
 
+        // Wrapper .bt-pricing pour unifier les sélecteurs CSS avec le mode boat (.bt-bprice)
+        echo '<div class="bt-pricing">';
+
         $layout   = $s['exc_layout'] ?? 'tabs';
         $currency = esc_html($s['exc_currency'] ?: '€');
         $uid      = 'bt-pricing-' . $this->get_id();
@@ -61,6 +64,8 @@ trait BtExcursionPricing {
         } else {
             $this->render_exc_tabs_layout($s, $rows, $uid, $currency, $tab_uuids, $active_uuid, $post_id, $lazy);
         }
+
+        echo '</div>'; // .bt-pricing
     }
 
     // ── SVG icons ──
@@ -217,7 +222,13 @@ trait BtExcursionPricing {
                     ? ($row[$booking_sub] ?? '')
                     : (get_field($booking_field, $post_id) ?: '');
                 if ($tab_uuid) {
-                    echo $this->render_exc_booking_widget($tab_uuid, $post_id, $i);
+                    // Lazy : le JS injecte le widget + charge Regiondo via IntersectionObserver
+                    echo '<div class="bt-pricing__booking-lazy">';
+                    echo '<div class="bt-booking-loader" aria-live="polite"><span class="bt-booking-loader__spinner"></span><span class="bt-booking-loader__text">Chargement...</span></div>';
+                    echo '<template class="bt-booking-tpl">';
+                    echo $this->render_exc_booking_widget_lazy($tab_uuid);
+                    echo '</template>';
+                    echo '</div>';
                 }
             }
             echo '</div>';
@@ -374,6 +385,7 @@ trait BtExcursionPricing {
 
         if ($active_uuid) {
             echo '<div class="bt-pricing__booking-lazy">';
+            echo '<div class="bt-booking-loader" aria-live="polite"><span class="bt-booking-loader__spinner"></span><span class="bt-booking-loader__text">Chargement...</span></div>';
             echo '<template class="bt-booking-tpl">';
             echo $this->render_exc_booking_widget_lazy($active_uuid);
             echo '</template>';

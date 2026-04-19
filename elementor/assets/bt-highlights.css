@@ -43,20 +43,33 @@
 
 /* ── Icône — image (ACF Image field ou URL) ──────────────── */
 .bt-highlights__icon--img {
-  /* width contrôlée par le contrôle Elementor (icon_size) */
-  /* height auto pour ne pas déformer l'image */
+  /* Largeur / hauteur injectées par les contrôles Elementor
+     icon_img_width / icon_img_height.
+     Sans hauteur explicite : l'image garde sa hauteur naturelle.
+     Avec hauteur explicite : overflow:hidden (via parent) clip l'image,
+     object-fit / object-position contrôlent le recadrage. */
 }
 
 .bt-highlights__icon--img img {
   display: block;
   width: 100%;
+  /* height: 100% est effectif uniquement quand le parent a une hauteur définie.
+     Sans hauteur sur le parent, l'img prend sa hauteur naturelle. */
   height: 100%;
-  object-fit: contain;
+  object-fit: contain; /* défaut CSS — surchargé par le contrôle icon_img_fit */
+  object-position: center;
   border-radius: inherit; /* hérite du border-radius du wrapper */
 }
 
 /* ── Contenu ─────────────────────────────────────────────── */
-.bt-highlights__content { flex: 1; min-width: 0; overflow: hidden; word-break: break-word; }
+.bt-highlights__content {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  word-break: break-word;
+  /* text-align dynamique selon position icône (row=left, row-reverse=right, column=inherit) */
+  text-align: var(--bt-hl-text-align, left);
+}
 .bt-highlights__title   { display: block; font-weight: 600; }
 .bt-highlights__desc    { margin: .25em 0 0; }
 /* Neutralise les marges que le thème applique aux <p> dans le WYSIWYG ACF */
@@ -79,8 +92,8 @@
   line-height: 1.4;
 }
 
-/* Dot bullet */
-.bt-highlights__steps li::before {
+/* Dot bullet — uniquement sur les listes non numérotées */
+.bt-highlights__steps:not(.bt-highlights__steps--numbered) li::before {
   content: '';
   position: absolute;
   left: 0;
@@ -90,4 +103,152 @@
   border-radius: 50%;
   background: currentColor;
   opacity: .5;
+}
+
+/* ── Étapes numérotées ───────────────────────────────────── */
+.bt-highlights__steps--numbered {
+  counter-reset: none; /* on gère via le markup, pas CSS counters */
+}
+
+.bt-highlights__steps--numbered li {
+  padding-left: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.bt-highlights__step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 1.6em;
+  height: 1.6em;
+  font-size: .75em;
+  font-weight: 600;
+  line-height: 1;
+  border-radius: 50%;
+  background: #222;
+  color: #fff;
+}
+
+/* ══════════════════════════════════════════════════════════
+   SLIDER MODE
+   ══════════════════════════════════════════════════════════ */
+
+.bt-highlights__slider-wrap {
+  position: relative;
+}
+
+/* Overflow sur le wrap parent pour que l'offset (padding swiper) reste visible */
+.bt-highlights__slider-wrap--active {
+  overflow: hidden;
+}
+
+/* Le swiper lui-même doit pouvoir déborder dans le padding (offset) */
+.bt-highlights__slider-wrap--active .bt-highlights__swiper {
+  overflow: visible;
+}
+
+/* Fallback : quand le slider est désactivé sur le device courant,
+   le JS applique grid-template-columns/gap/flex dynamiquement.
+   Ici on pose juste les resets structurels. */
+.bt-highlights__slider-wrap--fallback .swiper-slide {
+  width: auto !important; /* override Swiper inline width */
+  margin-right: 0 !important;
+}
+
+/* Masquer nav en mode fallback */
+.bt-highlights__slider-wrap--fallback .bt-highlights__arrow,
+.bt-highlights__slider-wrap--fallback .bt-highlights__dots {
+  display: none;
+}
+
+/* ── Flèches ─────────────────────────────────────────────── */
+.bt-highlights__arrow {
+  position: absolute;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  cursor: pointer;
+  transition: background-color .2s, color .2s, box-shadow .2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .12);
+  padding: 0;
+  line-height: 1;
+}
+
+.bt-highlights__arrow:hover {
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .18);
+}
+
+/* Per-arrow positioning via CSS vars — Elementor CHOOSE + SLIDER controls inject them.
+   Defaults reproduce the original -20px offset centred vertically.
+   Multiple translateX/Y are additive: trx = anchor centering, h-off = user offset. */
+.bt-highlights__arrow--prev {
+  left:   var(--bt-prev-l, 0px);
+  right:  var(--bt-prev-r, auto);
+  top:    var(--bt-prev-t, 50%);
+  bottom: var(--bt-prev-b, auto);
+  transform: translateX(var(--bt-prev-trx, 0px))
+             translateX(var(--bt-prev-h-off, -20px))
+             translateY(var(--bt-prev-try, -50%))
+             translateY(var(--bt-prev-v-off, 0px));
+}
+
+.bt-highlights__arrow--next {
+  left:   var(--bt-next-l, auto);
+  right:  var(--bt-next-r, 0px);
+  top:    var(--bt-next-t, 50%);
+  bottom: var(--bt-next-b, auto);
+  transform: translateX(var(--bt-next-trx, 0px))
+             translateX(var(--bt-next-h-off, 20px))
+             translateY(var(--bt-next-try, -50%))
+             translateY(var(--bt-next-v-off, 0px));
+}
+
+.bt-highlights__arrow svg {
+  width: 1em;
+  height: 1em;
+  display: block;
+}
+
+/* Disabled state (Swiper ajoute swiper-button-disabled) */
+.bt-highlights__arrow.swiper-button-disabled {
+  opacity: .35;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* ── Dots / Pagination ───────────────────────────────────── */
+.bt-highlights__dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-top: 16px;
+}
+
+.bt-highlights__dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ccc;
+  cursor: pointer;
+  transition: background-color .2s, width .2s;
+}
+
+.bt-highlights__dot--active {
+  width: 20px;
+  border-radius: 4px;
+  background: #333;
 }

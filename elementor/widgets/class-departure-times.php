@@ -190,6 +190,44 @@ class DepartureTimes extends AbstractBtWidget {
             'condition' => ['show_duration' => 'yes'],
         ]);
 
+        $this->add_control('show_price', [
+            'label'        => __('Afficher le prix', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => '',
+            'separator'    => 'before',
+        ]);
+
+        $this->add_control('price_subfield', [
+            'label'       => __('Sous-champ prix', 'blacktenderscore'),
+            'type'        => Controls_Manager::TEXT,
+            'default'     => 'exc_price',
+            'description' => __('Nom du sous-champ contenant le prix dans le repeater durée.', 'blacktenderscore'),
+            'condition'   => ['show_price' => 'yes'],
+        ]);
+
+        $this->add_control('price_suffix', [
+            'label'     => __('Suffixe prix', 'blacktenderscore'),
+            'type'      => Controls_Manager::TEXT,
+            'default'   => '€',
+            'condition' => ['show_price' => 'yes'],
+        ]);
+
+        $this->add_control('show_pricing_note', [
+            'label'        => __('Afficher la note de tarif', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => '',
+            'separator'    => 'before',
+        ]);
+
+        $this->add_control('pricing_note_field', [
+            'label'     => __('Champ ACF note de tarif', 'blacktenderscore'),
+            'type'      => Controls_Manager::TEXT,
+            'default'   => 'exp_pricing_note',
+            'condition' => ['show_pricing_note' => 'yes'],
+        ]);
+
         $this->end_controls_section();
 
         // ── Point de départ ───────────────────────────────────────────────
@@ -293,6 +331,26 @@ class DepartureTimes extends AbstractBtWidget {
             [],
             [],
             ['show_duration' => 'yes']
+        );
+
+        // Prix : typographie
+        $this->register_typography_section(
+            'price',
+            'Style — Prix',
+            '{{WRAPPER}} .bt-deptimes__price',
+            [],
+            [],
+            ['show_price' => 'yes']
+        );
+
+        // Note de tarif : typographie
+        $this->register_typography_section(
+            'pricing_note',
+            'Style — Note de tarif',
+            '{{WRAPPER}} .bt-deptimes__pricing-note',
+            [],
+            [],
+            ['show_pricing_note' => 'yes']
         );
 
         // Point de départ : typographie + lien Maps
@@ -426,20 +484,33 @@ class DepartureTimes extends AbstractBtWidget {
 
             echo "<ul class=\"{$wrap_cls}\">";
 
+            $sf_price    = $s['show_price'] === 'yes' ? sanitize_key($s['price_subfield'] ?: 'exc_price') : '';
+            $price_sfx   = $s['price_suffix'] ?? '€';
+
             foreach ($rows as $orig_idx => $row) {
                 $time   = $row[$sf_time]   ?? '';
                 $season = $row[$sf_season] ?? 'all';
 
-                if (!$time) continue;
-
-                // Durée correspondante par index (non-repeater dans la row, une seule valeur)
+                // Durée correspondante par index
                 $duration_val = '';
                 if ($s['show_duration'] === 'yes' && isset($duration_rows[$orig_idx][$sf_duration])) {
                     $duration_val = trim($duration_rows[$orig_idx][$sf_duration]);
                 }
 
+                // Prix correspondant par index
+                $price_val = '';
+                if ($sf_price && isset($duration_rows[$orig_idx][$sf_price])) {
+                    $price_val = trim($duration_rows[$orig_idx][$sf_price]);
+                }
+
+                // Skip si ni horaire ni prix
+                if (!$time && !$price_val) continue;
+
                 echo '<li class="bt-deptimes__badge">';
-                echo '<span class="bt-deptimes__time">' . esc_html($time) . '</span>';
+
+                if ($time) {
+                    echo '<span class="bt-deptimes__time">' . esc_html($time) . '</span>';
+                }
 
                 if ($s['show_season_badge'] === 'yes' && isset($season_labels[$season])) {
                     echo '<span class="bt-deptimes__season-badge bt-deptimes__season--' . esc_attr($season) . '">';
@@ -457,10 +528,23 @@ class DepartureTimes extends AbstractBtWidget {
                     echo '</span>';
                 }
 
+                if ($price_val !== '') {
+                    echo '<span class="bt-deptimes__price">' . esc_html($price_val) . esc_html($price_sfx) . '</span>';
+                }
+
                 echo '</li>';
             }
 
             echo '</ul>';
+        }
+
+        // Note de tarif
+        if ($s['show_pricing_note'] === 'yes') {
+            $note_field = sanitize_text_field($s['pricing_note_field'] ?: 'exp_pricing_note');
+            $note_val   = get_field($note_field, $post_id);
+            if ($note_val) {
+                echo '<p class="bt-deptimes__pricing-note">' . esc_html($note_val) . '</p>';
+            }
         }
 
         echo '</div>';

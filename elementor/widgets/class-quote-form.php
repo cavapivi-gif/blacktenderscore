@@ -86,6 +86,55 @@ class QuoteForm extends AbstractBtWidget {
             'condition'   => ['step_exc_enable' => 'yes'],
         ]);
 
+        $this->add_control('exc_card_template', [
+            'label'     => __('Template card', 'blacktenderscore'),
+            'type'      => Controls_Manager::SELECT,
+            'options'   => [
+                't1' => __('Template 1 — Compact', 'blacktenderscore'),
+                't2' => __('Template 2 — Large', 'blacktenderscore'),
+            ],
+            'default'   => 't1',
+            'condition' => ['step_exc_enable' => 'yes'],
+        ]);
+
+        // ── Option "Trajet sur mesure" ──
+        $this->add_control('qt_custom_trip_heading', [
+            'label'     => __('Option "Trajet sur mesure"', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'separator' => 'before',
+            'condition' => ['step_exc_enable' => 'yes'],
+        ]);
+
+        $this->add_control('qt_show_custom_trip', [
+            'label'        => __('Afficher "Trajet sur mesure"', 'blacktenderscore'),
+            'description'  => __('Ajoute une option en premier dans la liste des excursions.', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => 'yes',
+            'condition'    => ['step_exc_enable' => 'yes'],
+        ]);
+
+        $this->add_control('qt_custom_trip_label', [
+            'label'     => __('Label', 'blacktenderscore'),
+            'type'      => Controls_Manager::TEXT,
+            'default'   => __('Trajet sur mesure', 'blacktenderscore'),
+            'condition' => ['step_exc_enable' => 'yes', 'qt_show_custom_trip' => 'yes'],
+        ]);
+
+        $this->add_control('qt_custom_trip_desc', [
+            'label'     => __('Description', 'blacktenderscore'),
+            'type'      => Controls_Manager::TEXT,
+            'default'   => __('Créez votre propre itinéraire', 'blacktenderscore'),
+            'condition' => ['step_exc_enable' => 'yes', 'qt_show_custom_trip' => 'yes'],
+        ]);
+
+        $this->add_control('qt_custom_trip_img', [
+            'label'     => __('Image', 'blacktenderscore'),
+            'type'      => Controls_Manager::MEDIA,
+            'default'   => ['url' => 'https://dev.studiojae.fr/wp-content/uploads/2026/02/images.png'],
+            'condition' => ['step_exc_enable' => 'yes', 'qt_show_custom_trip' => 'yes'],
+        ]);
+
         $this->end_controls_section();
 
         // ─────────────────────────────────────────────────────────────────────
@@ -133,6 +182,33 @@ class QuoteForm extends AbstractBtWidget {
             'default'     => '',
             'description' => __('ID du template Elementor ouvert en modal (contexte = post du bateau). Ex: 2632', 'blacktenderscore'),
             'condition'   => ['step_boat_enable' => 'yes', 'show_boat_more_btn' => 'yes'],
+        ]);
+
+        $this->add_control('boat_card_template', [
+            'label'     => __('Template card', 'blacktenderscore'),
+            'type'      => Controls_Manager::SELECT,
+            'options'   => [
+                'template-1' => __('Template 1 — Panoramique', 'blacktenderscore'),
+                'template-2' => __('Template 2', 'blacktenderscore'),
+            ],
+            'default'   => 'template-1',
+            'separator' => 'before',
+            'condition' => ['step_boat_enable' => 'yes', 'boat_loop_tpl' => ''],
+        ]);
+
+        $this->add_control('boat_pax_suffix', [
+            'label'     => __('Suffixe capacité', 'blacktenderscore'),
+            'type'      => Controls_Manager::TEXT,
+            'default'   => __('pers.', 'blacktenderscore'),
+            'condition' => ['step_boat_enable' => 'yes', 'boat_loop_tpl' => ''],
+        ]);
+
+        $this->add_control('boat_current_label', [
+            'label'       => __('Badge bateau actuel', 'blacktenderscore'),
+            'type'        => Controls_Manager::TEXT,
+            'default'     => __('Actuel', 'blacktenderscore'),
+            'description' => __('Affiché à côté du nom du bateau de la page courante.', 'blacktenderscore'),
+            'condition'   => ['step_boat_enable' => 'yes', 'boat_loop_tpl' => ''],
         ]);
 
         $this->end_controls_section();
@@ -913,13 +989,16 @@ class QuoteForm extends AbstractBtWidget {
         echo '</div>';
         echo '<div class="bt-quote-datepicker__calendar"></div>';
 
-        // Matin / Après-midi (visible uniquement pour demi-journée)
+        // Matin / Après-midi / Soirée (visible uniquement pour demi-journée)
         echo '<div class="bt-quote-timeslot" data-bt-timeslot style="display:none">';
+        echo '<p class="bt-quote-timeslot__title">' . esc_html__('Choisissez votre créneau', 'blacktenderscore') . '</p>';
         echo '<div class="bt-quote-timeslot__options">';
         echo '<button type="button" class="bt-quote-timeslot__btn" data-timeslot="matin" aria-selected="false">'
            . esc_html__('Matin', 'blacktenderscore') . '</button>';
         echo '<button type="button" class="bt-quote-timeslot__btn" data-timeslot="apres-midi" aria-selected="false">'
            . esc_html__('Après-midi', 'blacktenderscore') . '</button>';
+        echo '<button type="button" class="bt-quote-timeslot__btn" data-timeslot="soiree" aria-selected="false">'
+           . esc_html__('Soirée', 'blacktenderscore') . '</button>';
         echo '</div>';
         echo '<input type="hidden" name="timeslot" value="">';
         echo '</div>';
@@ -1054,12 +1133,18 @@ class QuoteForm extends AbstractBtWidget {
             return;
         }
 
-        $tpl_id = (int) ($s['exc_loop_tpl'] ?? 0);
+        $tpl_id   = (int) ($s['exc_loop_tpl'] ?? 0);
+        $template = $s['exc_card_template'] ?? 't1';
+        $tpl_cls  = $tpl_id ? '' : ' bt-quote-exc-card--' . esc_attr($template);
 
         echo '<div class="bt-quote-exc-cards">';
         foreach ($excursions as $exc) {
-            echo '<div class="bt-quote-exc-card" data-exc-id="' . esc_attr($exc->ID) . '" tabindex="0" role="option" aria-selected="false">';
-            echo $this->render_shared_loop_item($tpl_id, $exc);
+            echo '<div class="bt-quote-exc-card' . $tpl_cls . '" data-exc-id="' . esc_attr($exc->ID) . '" tabindex="0" role="option" aria-selected="false">';
+            if ($tpl_id) {
+                echo $this->render_shared_loop_item($tpl_id, $exc);
+            } else {
+                $this->render_default_exc_card($exc->ID, $exc, $s);
+            }
             echo '</div>';
         }
         echo '</div>';
@@ -1085,20 +1170,30 @@ class QuoteForm extends AbstractBtWidget {
             return;
         }
 
-        $tpl_id = (int) ($s['boat_loop_tpl'] ?? 0);
+        $tpl_id   = (int) ($s['boat_loop_tpl'] ?? 0);
+        $template = $s['boat_card_template'] ?? 'template-1';
+        $current_post_id = get_the_ID();
 
         echo '<div class="bt-quote-boat-cards">';
+        $is_first = true;
         foreach ($boat_ids as $bid) {
             $boat = get_post($bid);
             if (!$boat || $boat->post_status !== 'publish') continue;
 
-            echo '<div class="bt-quote-boat-card" data-boat-id="' . esc_attr($bid) . '">';
+            // Le premier bateau OU celui qui correspond au post courant = "Actuel"
+            $is_current = $is_first || ($bid === $current_post_id);
+            $tpl_class  = $tpl_id ? '' : ' bt-quote-boat-card--' . esc_attr($template);
+
+            echo '<div class="bt-quote-boat-card' . $tpl_class . '" data-boat-id="' . esc_attr($bid) . '" tabindex="0" role="option" aria-pressed="false">';
             if ($tpl_id) {
                 echo $this->render_shared_loop_item($tpl_id, $boat);
             } else {
-                $this->render_default_boat_card($bid, $boat);
+                $this->render_default_boat_card($bid, $boat, array_merge($s, [
+                    'is_current' => $is_current && $is_first,
+                ]));
             }
             echo '</div>';
+            $is_first = false;
         }
         echo '</div>';
     }

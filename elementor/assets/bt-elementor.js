@@ -20,10 +20,13 @@
   }
 
   function openItem(item) {
-    item.classList.add('bt-faq__item--active');
     var body = getBody(item);
+    // Lecture AVANT modification du DOM (évite layout thrashing)
+    var height = body ? body.scrollHeight : 0;
+
+    item.classList.add('bt-faq__item--active');
     // Style inline : priorité absolue sur tout CSS thème
-    if (body) body.style.maxHeight = body.scrollHeight + 'px';
+    if (body) body.style.maxHeight = height + 'px';
     var btn = item.querySelector('.bt-faq__header');
     if (btn) btn.setAttribute('aria-expanded', 'true');
   }
@@ -40,14 +43,26 @@
     var isFaqMode = root.hasAttribute('data-bt-faq-mode');
 
     // Pose immédiatement les max-height inline pour éviter tout flash de contenu
-    root.querySelectorAll('.bt-faq__item').forEach(function (item) {
+    // Batch read/write pour éviter le layout thrashing
+    var items = root.querySelectorAll('.bt-faq__item');
+    var heights = [];
+
+    // Phase 1: batch read (toutes les lectures d'abord)
+    items.forEach(function (item) {
       var body = getBody(item);
-      if (!body) return;
+      if (!body) { heights.push(null); return; }
       if (item.classList.contains('bt-faq__item--active')) {
-        body.style.maxHeight = body.scrollHeight + 'px';
+        heights.push(body.scrollHeight);
       } else {
-        body.style.maxHeight = '0px';
+        heights.push(0);
       }
+    });
+
+    // Phase 2: batch write (toutes les écritures ensuite)
+    items.forEach(function (item, i) {
+      var body = getBody(item);
+      if (!body || heights[i] === null) return;
+      body.style.maxHeight = heights[i] + 'px';
     });
 
     root.querySelectorAll('.bt-faq__header').forEach(function (btn) {
@@ -255,26 +270,142 @@
 
   /**
    * Injecte le booking-widget depuis le <template> lazy dans son conteneur.
-   * Ajoute le script Regiondo s'il n'est pas encore sur la page.
-   * Idempotent : marqueur data-bt-bk-loaded empêche la double injection.
+   * Protection triple contre les doublons.
    */
   function injectBookingLazy(root) {
-    root.querySelectorAll('.bt-pricing__booking-lazy:not([data-bt-bk-loaded])').forEach(function (placeholder) {
-      placeholder.setAttribute('data-bt-bk-loaded', '1');
+    if (!root) return;
+
+    // Trouver les containers lazy dans le scope
+    var lazyContainers = root.classList && root.classList.contains('bt-pricing__booking-lazy')
+      ? [root]
+      : root.querySelectorAll('.bt-pricing__booking-lazy');
+
+    lazyContainers.forEach(function (placeholder) {
+      // Protection 1: déjà traité
+      if (placeholder.hasAttribute('data-bt-bk-loaded')) {
+        var loader = placeholder.querySelector('.bt-booking-loader');
+        if (loader) loader.hidden = true;
+        return;
+      }
+
+      // Protection 2: pas de template
       var tpl = placeholder.querySelector('template.bt-booking-tpl');
       if (!tpl) return;
+
+      // Protection 3: widget déjà présent (hors template)
+      var existingWidget = placeholder.querySelector('.bt-pricing__booking > booking-widget');
+      if (existingWidget) {
+        placeholder.setAttribute('data-bt-bk-loaded', '1');
+        var loader = placeholder.querySelector('.bt-booking-loader');
+        if (loader) loader.hidden = true;
+        return;
+      }
+
+      // Marquer AVANT de cloner pour éviter race conditions
+      placeholder.setAttribute('data-bt-bk-loaded', '1');
 
       // Cloner le contenu du template
       var clone = document.importNode(tpl.content, true);
       placeholder.appendChild(clone);
 
-      // Injecter le script Regiondo si absent (async — chargement en arrière-plan)
+      // Observer le widget pour masquer le loader
+      var widget = placeholder.querySelector('.bt-pricing__booking > booking-widget');
+      var loader = placeholder.querySelector('.bt-booking-loader');
+      if (widget && loader) {
+        observeWidgetHydration(widget, loader);
+      }
+
+      // Injecter le script Regiondo si absent
       if (!document.querySelector('script[src*="regiondo.net"]')) {
         var s = document.createElement('script');
         s.src   = 'https://widgets.regiondo.net/booking/v1/booking-widget.min.js';
         s.async = true;
         document.head.appendChild(s);
       }
+    });
+  }
+
+  /**
+   * Masque le loader quand le widget Regiondo est hydraté.
+   * Polling : vérifie toutes les 100ms si Regiondo a rendu le contenu.
+   * Gère à la fois le DOM normal et le Shadow DOM.
+   */
+  function observeWidgetHydration(widget, loader) {
+    var maxAttempts = 100; // 10s max
+    var attempts = 0;
+
+    function isWidgetHydrated() {
+      // Check dans le DOM normal
+      if (widget.querySelector('.regiondo-widget, .regiondo-content, .regiondo-booking-widget')) {
+        return true;
+      }
+      // Check dans le Shadow DOM si présent
+      if (widget.shadowRoot && widget.shadowRoot.querySelector('.regiondo-widget, .regiondo-content, div')) {
+        return true;
+      }
+      // Check si le widget a des enfants visibles (autre que <style>)
+      var children = widget.children;
+      for (var i = 0; i < children.length; i++) {
+        if (children[i].tagName !== 'STYLE') {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function checkHydrated() {
+      attempts++;
+
+      if (isWidgetHydrated()) {
+        loader.hidden = true;
+        return;
+      }
+
+      if (attempts >= maxAttempts) {
+        loader.hidden = true;
+        return;
+      }
+
+      setTimeout(checkHydrated, 100);
+    }
+
+    checkHydrated();
+  }
+
+  /**
+   * IntersectionObserver : charge le booking-widget Regiondo quand son
+   * conteneur lazy entre dans le viewport (300px de marge).
+   * Idempotent :
+   *   - data-bt-bk-loaded empêche le re-traitement
+   *   - data-bt-bk-observed empêche d'ajouter un second observer
+   */
+  function initBookingObserver(scope) {
+    var root     = (scope && scope !== document) ? scope : document;
+    // Exclure les éléments déjà observés ou déjà chargés
+    var lazyEls  = root.querySelectorAll('.bt-pricing__booking-lazy:not([data-bt-bk-loaded]):not([data-bt-bk-observed])');
+    if (!lazyEls.length) return;
+
+    if (!('IntersectionObserver' in window)) {
+      // Vieux navigateurs : injection immédiate
+      lazyEls.forEach(function (el) { injectBookingLazy(el); });
+      return;
+    }
+
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        // Ne pas injecter si le parent forfait-content est hidden
+        var forfaitContent = entry.target.closest('.bt-forfait-content');
+        if (forfaitContent && forfaitContent.hidden) return;
+        obs.unobserve(entry.target);
+        injectBookingLazy(entry.target);
+      });
+    }, { rootMargin: '300px' });
+
+    lazyEls.forEach(function (el) {
+      // Marquer comme observé avant d'ajouter à l'observer
+      el.setAttribute('data-bt-bk-observed', '1');
+      obs.observe(el);
     });
   }
 
@@ -1183,6 +1314,7 @@
     });
 
     initGallery(el);
+    initBookingObserver(el);
     initHighlightsSlider(el);
     el.querySelectorAll('[data-bt-share]:not([data-bt-share-init])').forEach(function (btn) {
       btn.setAttribute('data-bt-share-init', '1');
@@ -1268,5 +1400,8 @@
   document.addEventListener('DOMContentLoaded', function () { boot(document); });
 
   // API publique (réutilisable par d'autres scripts)
-  window.btWidgets = { boot: boot };
+  window.btWidgets = {
+    boot: boot,
+    injectBookingLazy: injectBookingLazy
+  };
 }());

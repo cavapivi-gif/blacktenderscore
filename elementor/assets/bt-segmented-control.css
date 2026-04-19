@@ -368,3 +368,34 @@
    CONTENU SOUS LES CARDS
    ══════════════════════════════════════════ */
 .bt-forfait-content {}
+
+/* ══════════════════════════════════════════
+   BOOKING LOADER
+   Affiché pendant le chargement du widget Regiondo
+   ══════════════════════════════════════════ */
+.bt-booking-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 20px;
+  color: var(--bt-loader-color, #717171);
+  font-size: 14px;
+}
+.bt-booking-loader[hidden] {
+  display: none;
+}
+.bt-booking-loader__spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: bt-spin 0.8s linear infinite;
+}
+.bt-booking-loader__text {
+  font-weight: 500;
+}
+@keyframes bt-spin {
+  to { transform: rotate(360deg); }
+}

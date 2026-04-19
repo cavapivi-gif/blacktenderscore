@@ -17,6 +17,8 @@ import BookingsSyncSection from './settings/BookingsSyncSection'
 import ReservationsImportSection from './settings/ReservationsImportSection'
 import StatsImportSection from './settings/StatsImportSection'
 import InstallationSection from './settings/InstallationSection'
+import MarkdownSection from './settings/MarkdownSection'
+import SchemaSection from './settings/SchemaSection'
 
 export default function Settings() {
   const { section = 'api' } = useParams()
@@ -258,8 +260,15 @@ export default function Settings() {
     setRSyncLoading(true)
     setRSyncLog([])
     try {
-      const res = await api.importReservations({ from: fmtYMD(daysAgo(30)), to: fmtYMD(new Date()) })
-      const msg = `30 derniers jours — ${res.fetched} récupérés, ${res.inserted ?? 0} insérés, ${res.updated ?? 0} mis à jour`
+      // Depuis le dernier import si connu, sinon fallback 7 jours
+      const lastImport = rSyncStatus?.last_import
+      const from = lastImport
+        ? fmtYMD(new Date(new Date(lastImport).setDate(new Date(lastImport).getDate() - 1)))
+        : fmtYMD(daysAgo(7))
+      const to = fmtYMD(new Date())
+      const res = await api.importReservations({ from, to })
+      const label = lastImport ? `Depuis ${from}` : '7 derniers jours'
+      const msg = `${label} — ${res.fetched} récupérés, ${res.inserted ?? 0} insérés, ${res.updated ?? 0} mis à jour`
       setRSyncLog([{ ok: !(res.errors?.length), msg }])
       const status = await api.importReservationsStatus().catch(() => null)
       if (status) setRSyncStatus(status)
@@ -425,6 +434,12 @@ export default function Settings() {
 
       case 'permissions':
         return <RolePermissions />
+
+      case 'markdown':
+        return <MarkdownSection />
+
+      case 'schema':
+        return <SchemaSection />
 
       default:
         return <Notice type="warn">Section inconnue.</Notice>

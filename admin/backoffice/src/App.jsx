@@ -35,6 +35,7 @@ const AIChat     = lazy(() => import('./pages/AIChat'))
 const Translator = lazy(() => import('./pages/Translator'))
 const Corrector  = lazy(() => import('./pages/Corrector'))
 const Forms      = lazy(() => import('./pages/Forms'))
+const GYG        = lazy(() => import('./pages/GYG'))
 
 // Valeur injectée par PHP via wp_localize_script — statique au chargement de la page.
 // Après onboardingComplete(), window.location.reload() recharge la page avec onboarding_done = true.
@@ -78,6 +79,7 @@ export default function App() {
         <Route path="/ai-chat"           element={<AIChat />} />
         <Route path="/translator"        element={<Translator />} />
         <Route path="/corrector"         element={<Corrector />} />
+        <Route path="/gyg"               element={<GYG />} />
         {/* Settings : redirect racine → première section */}
         <Route path="/settings"          element={<Navigate to="/settings/api" replace />} />
         <Route path="/settings/:section" element={<Settings />} />

@@ -20,8 +20,11 @@ function todayStr() { return new Date().toISOString().slice(0, 10) }
 
 /** Date relative lisible. */
 const fmtDate = d => {
-  if (!d || d === '0000-00-00') return '—'
-  const date = new Date(d.includes('T') ? d : d + 'T12:00:00')
+  if (!d || d === '0000-00-00' || d === '0000-00-00 00:00:00') return '—'
+  // MySQL datetime uses space separator → convert to ISO before parsing
+  const iso = typeof d === 'string' && !d.includes('T') ? d.replace(' ', 'T') : d
+  const date = new Date(iso.length === 10 ? iso + 'T12:00:00' : iso)
+  if (isNaN(date.getTime())) return '—'
   const days = Math.floor((Date.now() - date.getTime()) / 86400000)
   if (days < 0)  return format(date, 'd MMM yy', { locale: fr })
   if (days === 0) return "auj."
@@ -372,7 +375,7 @@ export default function Bookings() {
         </div>
 
         <p className="px-6 mt-2 mb-8 text-[11px] text-muted-foreground">
-          Cliquez sur une ligne pour voir le détail client. Filtres sur la date de commande.
+          Cliquez sur une ligne pour voir le détail client. Filtres sur la date de vente (created_at).
         </p>
       </div>
 

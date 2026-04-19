@@ -30,6 +30,9 @@
         zoomControl: true,
       });
 
+      // Exposé sur l'élément DOM pour que bt-itinerary.js puisse appeler flyTo
+      el._btLeafletMap = map;
+
       // Tiles CartoDB Voyager — moderna, lisible, RGPD-safe
       L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
@@ -41,20 +44,21 @@
       // Ligne de route maritime (droite, pas de calcul d'itinéraire routier)
       L.polyline(latlngs, { color: lineColor, weight: 3, opacity: 0.8 }).addTo(map);
 
-      // Markers numérotés — bleu aller, teinte retour configurable
+      // Markers numérotés — bleu aller, teinte retour, style distinct pour départ/arrivée
       points.forEach(function (p, i) {
         var bg  = p.return ? returnColor : lineColor;
-        var num = i + 1;
+        var num = p.start ? '▶' : (p.end ? '⚓' : (i + 1));
+        var extraClass = p.start ? ' bt-map-pin--start' : (p.end ? ' bt-map-pin--end' : '');
         var icon = L.divIcon({
           className: '',
-          html: '<div class="bt-map-pin" style="background:' + bg + '">' + num + '</div>',
+          html: '<div class="bt-map-pin' + extraClass + '" style="background:' + bg + '">' + num + '</div>',
           iconSize:   [28, 28],
           iconAnchor: [14, 14],
           popupAnchor: [0, -16],
         });
         // Use DOM nodes for popup to prevent XSS (audit §C08)
         var popupEl = document.createElement('strong');
-        popupEl.textContent = p.title || ('Étape ' + num);
+        popupEl.textContent = p.title || ('Étape ' + (i + 1));
         L.marker([p.lat, p.lng], { icon: icon })
           .addTo(map)
           .bindPopup(popupEl);

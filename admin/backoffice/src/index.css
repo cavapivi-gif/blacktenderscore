@@ -2,19 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Buenos Aires — police de marque ── */
-/* Fonts servies localement depuis le plugin (assets/fonts/) */
-@font-face {
-  font-family: 'Buenos Aires';
-  src: url('./assets/fonts/buenos-aires-light.woff2') format('woff2');
-  font-weight: 300; font-style: normal; font-display: swap;
-}
-@font-face {
-  font-family: 'Buenos Aires';
-  src: url('./assets/fonts/buenos-aires-bold.woff2') format('woff2');
-  font-weight: 700; font-style: normal; font-display: swap;
-}
-
 /* ── Design Tokens ── */
 #bt-backoffice-root {
   --background: #fbfaf8; --foreground: #1a1917;
@@ -30,7 +17,7 @@
 
 /* ── Root scope ── */
 #bt-backoffice-root {
-  font-family: 'Buenos Aires', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 14px; line-height: 1.5;
   color: var(--foreground); background: var(--background);
   min-height: calc(100vh - 32px); overflow-x: hidden;

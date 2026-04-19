@@ -14,6 +14,7 @@ import {
   Sparks,
   Cpu,
   Mail,
+  Globe,
 } from 'iconoir-react'
 import BtLogo from '../assets/BtLogo'
 
@@ -42,6 +43,8 @@ const SETTINGS_TOOLS = [
   { path: '/settings/diagnostic',         label: 'Diagnostic'         },
   { path: '/settings/installation',       label: 'Installation'       },
   { path: '/settings/permissions',        label: 'Permissions'        },
+  { path: '/settings/markdown',           label: 'Markdown Editor'    },
+  { path: '/settings/schema',             label: 'Schema SEO'         },
 ]
 
 const nav = [
@@ -53,6 +56,7 @@ const nav = [
   { to: '/forms',     label: 'Formulaires',     icon: Mail           },
   { to: '/analytics', label: 'Analytics',       icon: StatsUpSquare  },
   { to: '/reviews',   label: 'Avis',            icon: Star           },
+  { to: '/gyg',       label: 'GetYourGuide',    icon: Globe          },
   {
     to: '/ai-tools', label: 'Outils IA', icon: Sparks,
     matchPaths: ['/translator', '/corrector', '/ai-chat'],

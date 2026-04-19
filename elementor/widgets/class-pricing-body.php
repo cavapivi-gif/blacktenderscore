@@ -11,6 +11,7 @@ require_once __DIR__ . '/../traits/trait-bt-excursion-pricing.php';
 require_once __DIR__ . '/../traits/trait-bt-boat-pricing.php';
 require_once __DIR__ . '/../traits/trait-bt-pricing-shared.php';
 require_once __DIR__ . '/../traits/trait-bt-quote-style-controls.php';
+require_once __DIR__ . '/../traits/trait-bt-gyg-pricing.php';
 
 /**
  * Widget Elementor — Tarifs Body.
@@ -30,6 +31,7 @@ class PricingBody extends AbstractBtWidget {
     use \BlackTenders\Elementor\Traits\BtBoatPricing;
     use \BlackTenders\Elementor\Traits\BtPricingShared;
     use \BlackTenders\Elementor\Traits\BtQuoteStyleControls;
+    use \BlackTenders\Elementor\Traits\BtGygPricing;
 
     protected static function get_bt_config(): array {
         return [
@@ -60,8 +62,29 @@ class PricingBody extends AbstractBtWidget {
                 'excursion'  => __('Excursion', 'blacktenderscore'),
                 'boat'       => __('Bateau', 'blacktenderscore'),
                 'devis_only' => __('Devis uniquement', 'blacktenderscore'),
+                'gyg'        => __('GetYourGuide (GYG)', 'blacktenderscore'),
             ],
             'default' => 'auto',
+        ]);
+
+        $this->add_control('body_template', [
+            'label'   => __('Template', 'blacktenderscore'),
+            'type'    => Controls_Manager::SELECT,
+            'options' => [
+                'cards'    => __('Cards (défaut)', 'blacktenderscore'),
+                'dropdown' => __('Dropdown', 'blacktenderscore'),
+            ],
+            'default'   => 'cards',
+            'condition' => ['pricing_mode' => ['auto', 'boat', 'devis_only']],
+        ]);
+
+        $this->add_control('gyg_product_id', [
+            'label'       => __('GYG Product / Option ID', 'blacktenderscore'),
+            'type'        => Controls_Manager::TEXT,
+            'default'     => '',
+            'placeholder' => __('ex: 67890 (gyg_option_id du mapping)', 'blacktenderscore'),
+            'description' => __('Identifiant produit GYG (gyg_option_id configuré dans le mapping GYG du backoffice).', 'blacktenderscore'),
+            'condition'   => ['pricing_mode' => 'gyg'],
         ]);
 
         $this->add_control('body_initial_state', [
@@ -73,6 +96,21 @@ class PricingBody extends AbstractBtWidget {
             ],
             'default'     => 'hidden',
             'description' => __('Ajoutez data-bt-pricing-trigger sur n\'importe quel bouton Elementor pour déclencher l\'affichage.', 'blacktenderscore'),
+        ]);
+
+        $this->add_control('devis_btn_hide_classes', [
+            'label'       => __('Classes à cacher au clic', 'blacktenderscore'),
+            'description' => __('Sélecteurs CSS séparés par virgule, masqués quand le body pricing s\'ouvre. Ex: .ma-classe, .autre-bloc', 'blacktenderscore'),
+            'type'        => Controls_Manager::TEXT,
+            'default'     => '',
+            'separator'   => 'before',
+        ]);
+
+        $this->add_control('devis_btn_show_classes', [
+            'label'       => __('Classes à afficher au clic', 'blacktenderscore'),
+            'description' => __('Sélecteurs CSS séparés par virgule, affichés quand le body pricing s\'ouvre (mode switch). Ex: .bloc-alternatif', 'blacktenderscore'),
+            'type'        => Controls_Manager::TEXT,
+            'default'     => '',
         ]);
 
         $this->end_controls_section();
@@ -122,6 +160,7 @@ class PricingBody extends AbstractBtWidget {
             'mobile_default' => '1',
             'selectors' => [
                 '{{WRAPPER}} .bt-pricing .bt-forfaits__grid' => 'grid-template-columns: repeat({{VALUE}}, 1fr)',
+                '{{WRAPPER}} .bt-bprice .bt-forfaits__grid'  => 'grid-template-columns: repeat({{VALUE}}, 1fr)',
             ],
             'condition' => ['exc_layout' => 'grid'],
         ]);
@@ -217,6 +256,53 @@ class PricingBody extends AbstractBtWidget {
             'type'      => Controls_Manager::TEXT,
             'default'   => __('Promo', 'blacktenderscore'),
             'condition' => ['exc_show_badge' => 'yes'],
+        ]);
+
+        $this->add_responsive_control('exc_badge_align', [
+            'label'     => __('Position badge', 'blacktenderscore'),
+            'type'      => Controls_Manager::CHOOSE,
+            'options'   => [
+                'left'  => ['title' => __('Gauche', 'blacktenderscore'), 'icon' => 'eicon-h-align-left'],
+                'right' => ['title' => __('Droite', 'blacktenderscore'), 'icon' => 'eicon-h-align-right'],
+            ],
+            'default'   => 'left',
+            'condition' => ['exc_show_badge' => 'yes'],
+        ]);
+
+        $this->add_responsive_control('exc_badge_offset_x', [
+            'label'      => __('Décalage horizontal', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px', '%'],
+            'range'      => ['px' => ['min' => 0, 'max' => 80], '%' => ['min' => 0, 'max' => 40]],
+            'default'    => ['size' => 12, 'unit' => 'px'],
+            'condition'  => ['exc_show_badge' => 'yes', 'exc_badge_align' => 'left'],
+            'selectors'  => [
+                '{{WRAPPER}} .bt-forfait-card__badge' => 'left: {{SIZE}}{{UNIT}}; right: auto;',
+            ],
+        ]);
+
+        $this->add_responsive_control('exc_badge_offset_x_right', [
+            'label'      => __('Décalage horizontal', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px', '%'],
+            'range'      => ['px' => ['min' => 0, 'max' => 80], '%' => ['min' => 0, 'max' => 40]],
+            'default'    => ['size' => 12, 'unit' => 'px'],
+            'condition'  => ['exc_show_badge' => 'yes', 'exc_badge_align' => 'right'],
+            'selectors'  => [
+                '{{WRAPPER}} .bt-forfait-card__badge' => 'right: {{SIZE}}{{UNIT}}; left: auto;',
+            ],
+        ]);
+
+        $this->add_responsive_control('exc_badge_offset_y', [
+            'label'      => __('Décalage vertical', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px', '%'],
+            'range'      => ['px' => ['min' => -20, 'max' => 50], '%' => ['min' => -10, 'max' => 30]],
+            'default'    => ['size' => -9, 'unit' => 'px'],
+            'condition'  => ['exc_show_badge' => 'yes'],
+            'selectors'  => [
+                '{{WRAPPER}} .bt-forfait-card__badge' => 'top: {{SIZE}}{{UNIT}};',
+            ],
         ]);
 
         $this->add_control('exc_show_discount', [
@@ -327,6 +413,13 @@ class PricingBody extends AbstractBtWidget {
         $this->add_control('label_deposit', [
             'label' => __('Label caution', 'blacktenderscore'), 'type' => Controls_Manager::TEXT, 'default' => __('Caution', 'blacktenderscore'), 'condition' => ['show_deposit' => 'yes'],
         ]);
+        $this->add_control('show_boat_model', [
+            'label'        => __('Afficher le modèle du bateau', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => '',
+            'description'  => __('Valeur dynamique : taxonomie <code>boat-model</code> ou champ ACF <code>boat_model_name</code>', 'blacktenderscore'),
+        ]);
         $this->add_control('show_boat_year', [
             'label'        => __('Afficher l\'année du bateau', 'blacktenderscore'),
             'type'         => Controls_Manager::SWITCHER,
@@ -349,7 +442,8 @@ class PricingBody extends AbstractBtWidget {
             'tablet_default' => '2',
             'mobile_default' => '1',
             'selectors' => [
-                '{{WRAPPER}} .bt-bprice .bt-forfaits__grid' => 'grid-template-columns: repeat({{VALUE}}, 1fr)',
+                '{{WRAPPER}} .bt-bprice .bt-forfaits__grid'  => 'grid-template-columns: repeat({{VALUE}}, 1fr)',
+                '{{WRAPPER}} .bt-pricing .bt-forfaits__grid' => 'grid-template-columns: repeat({{VALUE}}, 1fr)',
             ],
             'condition' => ['pricing_mode' => ['auto', 'boat'], 'layout' => 'cards'],
         ]);
@@ -362,6 +456,16 @@ class PricingBody extends AbstractBtWidget {
         ]);
         $this->add_control('table_col_price', [
             'label' => __('En-tête Prix', 'blacktenderscore'), 'type' => Controls_Manager::TEXT, 'default' => __('Prix', 'blacktenderscore'), 'condition' => ['layout' => 'table'],
+        ]);
+
+        $this->add_control('hide_cards_on_trigger', [
+            'label'        => __('Cacher les forfaits au trigger', 'blacktenderscore'),
+            'description'  => __('Retire les cartes du DOM dès que le formulaire de devis est ouvert.', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => '',
+            'separator'    => 'before',
+            'condition'    => ['show_quote_form' => 'yes'],
         ]);
 
         $this->end_controls_section();
@@ -387,6 +491,79 @@ class PricingBody extends AbstractBtWidget {
         ]);
         $this->add_control('zones_col_full', [
             'label' => __('En-tête journée', 'blacktenderscore'), 'type' => Controls_Manager::TEXT, 'default' => __('Journée', 'blacktenderscore'), 'condition' => ['show_zones' => 'yes'],
+        ]);
+
+        $this->end_controls_section();
+
+        // ── Cards devis (templates exc + boat) ───────────────────────────
+        $this->start_controls_section('section_quote_cards', [
+            'label'     => __('Cards devis', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_CONTENT,
+            'condition' => ['show_quote_form' => 'yes'],
+        ]);
+
+        // Excursion
+        $this->add_control('quote_exc_heading', [
+            'label' => __('Excursions', 'blacktenderscore'),
+            'type'  => Controls_Manager::HEADING,
+        ]);
+
+        $this->add_control('exc_card_template', [
+            'label'   => __('Template card excursion', 'blacktenderscore'),
+            'type'    => Controls_Manager::SELECT,
+            'options' => [
+                't1' => __('Template 1 — Compact', 'blacktenderscore'),
+                't2' => __('Template 2 — Large', 'blacktenderscore'),
+            ],
+            'default' => 't1',
+        ]);
+
+        $this->add_control('exc_skipper_mode', [
+            'label'   => __('Badge texte', 'blacktenderscore'),
+            'type'    => Controls_Manager::SELECT,
+            'options' => [
+                'hide'   => __('Masquer', 'blacktenderscore'),
+                'custom' => __('Message personnalisé', 'blacktenderscore'),
+            ],
+            'default' => 'hide',
+        ]);
+
+        $this->add_control('exc_skipper_text', [
+            'label'       => __('Texte skipper', 'blacktenderscore'),
+            'type'        => Controls_Manager::TEXT,
+            'default'     => __('Skipper professionnel inclus', 'blacktenderscore'),
+            'condition'   => ['exc_skipper_mode' => 'custom'],
+            'description' => __('Message affiché sur toutes les cards excursion.', 'blacktenderscore'),
+        ]);
+
+        // Bateau
+        $this->add_control('quote_boat_heading', [
+            'label'     => __('Bateaux', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'separator' => 'before',
+        ]);
+
+        $this->add_control('boat_card_template', [
+            'label'   => __('Template card bateau', 'blacktenderscore'),
+            'type'    => Controls_Manager::SELECT,
+            'options' => [
+                'template-1' => __('Template 1 — Panoramique', 'blacktenderscore'),
+                'template-2' => __('Template 2', 'blacktenderscore'),
+            ],
+            'default' => 'template-1',
+        ]);
+
+        $this->add_control('boat_pax_suffix', [
+            'label'   => __('Suffixe capacité', 'blacktenderscore'),
+            'type'    => Controls_Manager::TEXT,
+            'default' => __('pers.', 'blacktenderscore'),
+        ]);
+
+        $this->add_control('boat_current_label', [
+            'label'       => __('Badge bateau actuel', 'blacktenderscore'),
+            'type'        => Controls_Manager::TEXT,
+            'default'     => __('Actuel', 'blacktenderscore'),
+            'description' => __('Affiché à côté du nom du bateau de la page courante.', 'blacktenderscore'),
         ]);
 
         $this->end_controls_section();
@@ -435,12 +612,42 @@ class PricingBody extends AbstractBtWidget {
             'condition' => ['show_quote_form' => 'yes', 'devis_btn_icon_mode' => 'icon'],
         ]);
 
-        $this->add_control('devis_btn_hide_classes', [
-            'label'       => __('Classes à cacher au clic du bouton devis', 'blacktenderscore'),
-            'description' => __('Sélecteurs CSS séparés par virgule. Ex: .ma-classe, .autre-bloc', 'blacktenderscore'),
-            'type'        => Controls_Manager::TEXT,
-            'default'     => '',
-            'condition'   => ['show_quote_form' => 'yes'],
+        // ── Option "Trajet sur mesure" ──
+        $this->add_control('qt_custom_trip_heading', [
+            'label'     => __('Option "Trajet sur mesure"', 'blacktenderscore'),
+            'type'      => Controls_Manager::HEADING,
+            'separator' => 'before',
+            'condition' => ['show_quote_form' => 'yes'],
+        ]);
+
+        $this->add_control('qt_show_custom_trip', [
+            'label'        => __('Afficher "Trajet sur mesure"', 'blacktenderscore'),
+            'description'  => __('Ajoute une option en premier dans la liste des excursions.', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => 'yes',
+            'condition'    => ['show_quote_form' => 'yes'],
+        ]);
+
+        $this->add_control('qt_custom_trip_label', [
+            'label'     => __('Label', 'blacktenderscore'),
+            'type'      => Controls_Manager::TEXT,
+            'default'   => __('Trajet sur mesure', 'blacktenderscore'),
+            'condition' => ['show_quote_form' => 'yes', 'qt_show_custom_trip' => 'yes'],
+        ]);
+
+        $this->add_control('qt_custom_trip_desc', [
+            'label'     => __('Description', 'blacktenderscore'),
+            'type'      => Controls_Manager::TEXT,
+            'default'   => __('Créez votre propre itinéraire', 'blacktenderscore'),
+            'condition' => ['show_quote_form' => 'yes', 'qt_show_custom_trip' => 'yes'],
+        ]);
+
+        $this->add_control('qt_custom_trip_img', [
+            'label'     => __('Image', 'blacktenderscore'),
+            'type'      => Controls_Manager::MEDIA,
+            'default'   => ['url' => 'https://dev.studiojae.fr/wp-content/uploads/2026/02/images.png'],
+            'condition' => ['show_quote_form' => 'yes', 'qt_show_custom_trip' => 'yes'],
         ]);
 
         $this->end_controls_section();
@@ -481,9 +688,11 @@ class PricingBody extends AbstractBtWidget {
 
         // ── 2. Conteneur interne (.bt-pricing + .bt-bprice — fusionnés) ──
         // Excursion = .bt-pricing  |  Bateau = .bt-bprice
+        // Masqué en mode GYG et devis_only (pas de conteneur interne)
         $this->start_controls_section('style_inner_container', [
-            'label' => __('Conteneur interne', 'blacktenderscore'),
-            'tab'   => Controls_Manager::TAB_STYLE,
+            'label'     => __('Conteneur interne', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_STYLE,
+            'condition' => ['pricing_mode!' => ['gyg', 'devis_only']],
         ]);
 
         $this->add_group_control(\Elementor\Group_Control_Background::get_type(), [
@@ -520,47 +729,58 @@ class PricingBody extends AbstractBtWidget {
 
         $this->end_controls_section();
 
-        // ── Segmented Control (Réserver / Devis) ─────────────────────────
-        $this->start_controls_section('style_seg_control', [
-            'label'     => __('Onglets Forfaits / Devis', 'blacktenderscore'),
+        // ── Onglets Forfaits / Devis — Conteneur ─────────────────────────
+        $this->start_controls_section('style_seg_container', [
+            'label'     => __('Onglets — Conteneur', 'blacktenderscore'),
             'tab'       => Controls_Manager::TAB_STYLE,
             'condition' => ['show_quote_form' => 'yes'],
         ]);
 
-        $this->add_control('seg_track_bg', [
-            'label'     => __('Fond track', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'default'   => '#f3f3f3',
-            'selectors' => ['{{WRAPPER}} .bt-seg' => 'background-color: {{VALUE}}'],
+        $this->add_group_control(\Elementor\Group_Control_Background::get_type(), [
+            'name'     => 'seg_bg',
+            'types'    => ['classic', 'gradient'],
+            'selector' => '{{WRAPPER}} .bt-seg',
         ]);
-        $this->add_control('seg_active_bg', [
-            'label'     => __('Fond actif', 'blacktenderscore'),
-            'type'      => Controls_Manager::COLOR,
-            'default'   => '#ffffff',
-            'selectors' => ['{{WRAPPER}} .bt-seg__indicator' => 'background-color: {{VALUE}}'],
+
+        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
+            'name'     => 'seg_border',
+            'selector' => '{{WRAPPER}} .bt-seg',
         ]);
+
         $this->add_responsive_control('seg_radius', [
             'label'      => __('Border radius', 'blacktenderscore'),
-            'type'       => Controls_Manager::SLIDER,
-            'size_units' => ['px'],
-            'range'      => ['px' => ['min' => 0, 'max' => 30]],
-            'default'    => ['size' => 10, 'unit' => 'px'],
-            'selectors'  => [
-                '{{WRAPPER}} .bt-seg'           => 'border-radius: {{SIZE}}{{UNIT}}',
-                '{{WRAPPER}} .bt-seg__indicator' => 'border-radius: calc({{SIZE}}{{UNIT}} - 4px)',
-                '{{WRAPPER}} .bt-seg__btn'       => 'border-radius: calc({{SIZE}}{{UNIT}} - 4px)',
-            ],
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', '%'],
+            'selectors'  => ['{{WRAPPER}} .bt-seg' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
         ]);
+
         $this->add_responsive_control('seg_padding', [
-            'label'      => __('Padding track', 'blacktenderscore'),
+            'label'      => __('Padding', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', 'em'],
+            'selectors'  => ['{{WRAPPER}} .bt-seg' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+
+        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), [
+            'name'     => 'seg_shadow',
+            'selector' => '{{WRAPPER}} .bt-seg',
+        ]);
+
+        $this->add_responsive_control('seg_margin_bottom', [
+            'label'      => __('Marge basse', 'blacktenderscore'),
             'type'       => Controls_Manager::SLIDER,
-            'size_units' => ['px'],
-            'range'      => ['px' => ['min' => 2, 'max' => 8]],
-            'default'    => ['size' => 4, 'unit' => 'px'],
-            'selectors'  => [
-                '{{WRAPPER}} .bt-seg'            => 'padding: {{SIZE}}{{UNIT}}',
-                '{{WRAPPER}} .bt-seg__indicator' => 'top: {{SIZE}}{{UNIT}}; bottom: {{SIZE}}{{UNIT}}; left: {{SIZE}}{{UNIT}}',
-            ],
+            'size_units' => ['px', 'em'],
+            'range'      => ['px' => ['min' => 0, 'max' => 60]],
+            'selectors'  => ['{{WRAPPER}} .bt-seg' => 'margin-bottom: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        $this->end_controls_section();
+
+        // ── Onglets Forfaits / Devis — Boutons ───────────────────────────
+        $this->start_controls_section('style_seg_buttons', [
+            'label'     => __('Onglets — Boutons', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_STYLE,
+            'condition' => ['show_quote_form' => 'yes'],
         ]);
 
         $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
@@ -568,38 +788,162 @@ class PricingBody extends AbstractBtWidget {
             'selector' => '{{WRAPPER}} .bt-seg__btn',
         ]);
 
-        $this->start_controls_tabs('seg_state_tabs');
-        $this->start_controls_tab('seg_tab_normal', ['label' => __('Normal', 'blacktenderscore')]);
-        $this->add_control('seg_text_color', [
+        $this->add_responsive_control('seg_btn_padding', [
+            'label'      => __('Padding boutons', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', 'em'],
+            'selectors'  => ['{{WRAPPER}} .bt-seg__btn' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+
+        $this->add_responsive_control('seg_btn_radius', [
+            'label'      => __('Border radius boutons', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', '%'],
+            'selectors'  => [
+                '{{WRAPPER}} .bt-seg__btn'       => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}',
+                '{{WRAPPER}} .bt-seg__indicator' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}',
+            ],
+        ]);
+
+        $this->start_controls_tabs('seg_btn_tabs');
+
+        // Normal
+        $this->start_controls_tab('seg_btn_normal', ['label' => __('Normal', 'blacktenderscore')]);
+        $this->add_control('seg_btn_color', [
             'label'     => __('Couleur texte', 'blacktenderscore'),
             'type'      => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-seg__btn' => 'color: {{VALUE}}'],
+            'selectors' => ['{{WRAPPER}} .bt-seg__btn:not(.bt-seg__btn--active)' => 'color: {{VALUE}}'],
+        ]);
+        $this->add_control('seg_btn_bg', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-seg__btn:not(.bt-seg__btn--active)' => 'background-color: {{VALUE}}'],
         ]);
         $this->end_controls_tab();
-        $this->start_controls_tab('seg_tab_active', ['label' => __('Actif', 'blacktenderscore')]);
-        $this->add_control('seg_text_color_active', [
+
+        // Hover
+        $this->start_controls_tab('seg_btn_hover', ['label' => __('Survol', 'blacktenderscore')]);
+        $this->add_control('seg_btn_hover_color', [
+            'label'     => __('Couleur texte', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-seg__btn:not(.bt-seg__btn--active):hover' => 'color: {{VALUE}}'],
+        ]);
+        $this->add_control('seg_btn_hover_bg', [
+            'label'     => __('Fond', 'blacktenderscore'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-seg__btn:not(.bt-seg__btn--active):hover' => 'background-color: {{VALUE}}'],
+        ]);
+        $this->end_controls_tab();
+
+        // Actif
+        $this->start_controls_tab('seg_btn_active', ['label' => __('Actif', 'blacktenderscore')]);
+        $this->add_control('seg_btn_active_color', [
             'label'     => __('Couleur texte', 'blacktenderscore'),
             'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-seg__btn--active' => 'color: {{VALUE}}'],
         ]);
+        $this->add_control('seg_btn_active_bg', [
+            'label'       => __('Fond indicateur', 'blacktenderscore'),
+            'description' => __('Fond de l\'onglet actif (indicator)', 'blacktenderscore'),
+            'type'        => Controls_Manager::COLOR,
+            'selectors'   => ['{{WRAPPER}} .bt-seg__indicator' => 'background-color: {{VALUE}}'],
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), [
+            'name'     => 'seg_indicator_shadow',
+            'label'    => __('Ombre indicateur', 'blacktenderscore'),
+            'selector' => '{{WRAPPER}} .bt-seg__indicator',
+        ]);
         $this->end_controls_tab();
+
         $this->end_controls_tabs();
 
-        $this->add_responsive_control('seg_margin_bottom', [
-            'label'      => __('Marge basse', 'blacktenderscore'),
+        $this->end_controls_section();
+
+        // ── 4. Grille Forfaits — Conteneur (.bt-forfaits__grid) ───────────
+        $this->start_controls_section('style_forfaits_grid', [
+            'label'     => __('Grille Forfaits — Conteneur', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_STYLE,
+            'condition' => ['pricing_mode!' => ['gyg', 'devis_only']],
+        ]);
+
+        $this->add_group_control(\Elementor\Group_Control_Background::get_type(), [
+            'name'     => 'fgrid_bg',
+            'types'    => ['classic', 'gradient'],
+            'selector' => '{{WRAPPER}} .bt-forfaits__grid',
+        ]);
+
+        $this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
+            'name'     => 'fgrid_border',
+            'selector' => '{{WRAPPER}} .bt-forfaits__grid',
+        ]);
+
+        $this->add_responsive_control('fgrid_radius', [
+            'label'      => __('Border radius', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', '%'],
+            'selectors'  => ['{{WRAPPER}} .bt-forfaits__grid' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+
+        $this->add_responsive_control('fgrid_padding', [
+            'label'      => __('Padding', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', 'em', '%'],
+            'selectors'  => ['{{WRAPPER}} .bt-forfaits__grid' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+
+        $this->add_responsive_control('fgrid_margin', [
+            'label'      => __('Margin', 'blacktenderscore'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', 'em', '%'],
+            'selectors'  => ['{{WRAPPER}} .bt-forfaits__grid' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+
+        $this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), [
+            'name'     => 'fgrid_shadow',
+            'selector' => '{{WRAPPER}} .bt-forfaits__grid',
+        ]);
+
+        // ── Colonnes (unifié excursion + bateau) ──
+        $this->add_responsive_control('fgrid_columns', [
+            'label'   => __('Colonnes', 'blacktenderscore'),
+            'type'    => Controls_Manager::SELECT,
+            'options' => [
+                ''  => __('— Défaut —', 'blacktenderscore'),
+                '1' => '1',
+                '2' => '2',
+                '3' => '3',
+                '4' => '4',
+            ],
+            'default'        => '',
+            'tablet_default' => '',
+            'mobile_default' => '',
+            'separator'      => 'before',
+            'selectors' => [
+                '{{WRAPPER}} .bt-pricing .bt-forfaits__grid' => 'grid-template-columns: repeat({{VALUE}}, 1fr)',
+                '{{WRAPPER}} .bt-bprice .bt-forfaits__grid'  => 'grid-template-columns: repeat({{VALUE}}, 1fr)',
+            ],
+        ]);
+
+        // ── Gap entre cartes ──
+        $this->add_responsive_control('fgrid_gap', [
+            'label'      => __('Espacement (gap)', 'blacktenderscore'),
             'type'       => Controls_Manager::SLIDER,
-            'size_units' => ['px', 'em'],
+            'size_units' => ['px', 'em', 'rem'],
             'range'      => ['px' => ['min' => 0, 'max' => 60]],
-            'separator'  => 'before',
-            'selectors'  => ['{{WRAPPER}} .bt-seg' => 'margin-bottom: {{SIZE}}{{UNIT}}'],
+            'selectors'  => [
+                '{{WRAPPER}} .bt-pricing .bt-forfaits__grid' => 'gap: {{SIZE}}{{UNIT}}',
+                '{{WRAPPER}} .bt-bprice .bt-forfaits__grid'  => 'gap: {{SIZE}}{{UNIT}}',
+            ],
         ]);
 
         $this->end_controls_section();
 
-        // ── 4. Cards — Forfaits ───────────────────────────────────────────
+        // ── 5. Cards — Forfaits ───────────────────────────────────────────
+        // Masqué en mode GYG et devis_only (pas de forfaits rendus)
         $this->start_controls_section('style_forfait_cards', [
-            'label' => __('Cards — Forfaits', 'blacktenderscore'),
-            'tab'   => Controls_Manager::TAB_STYLE,
+            'label'     => __('Cards — Forfaits', 'blacktenderscore'),
+            'tab'       => Controls_Manager::TAB_STYLE,
+            'condition' => ['pricing_mode!' => ['gyg', 'devis_only']],
         ]);
 
         // ── Alignement du contenu ──
@@ -748,23 +1092,33 @@ class PricingBody extends AbstractBtWidget {
             'selectors' => ['{{WRAPPER}} .bt-forfait-card__subtitle' => 'color: {{VALUE}}'],
         ]);
 
-        // Prix
+        // Prix + devise (€)
         $this->add_control('fcard_price_heading', [
-            'label' => __('Prix', 'blacktenderscore'), 'type' => Controls_Manager::HEADING, 'separator' => 'before',
+            'label' => __('Prix + devise', 'blacktenderscore'), 'type' => Controls_Manager::HEADING, 'separator' => 'before',
         ]);
         $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
-            'name' => 'fcard_price_typo', 'selector' => '{{WRAPPER}} .bt-forfait-card__price',
+            'name' => 'fcard_price_typo',
+            'selector' => '{{WRAPPER}} .bt-forfait-card__price, {{WRAPPER}} .bt-forfait-card__currency',
         ]);
         $this->add_control('fcard_price_color', [
-            'label' => __('Couleur prix', 'blacktenderscore'), 'type' => Controls_Manager::COLOR,
-            'selectors' => ['{{WRAPPER}} .bt-forfait-card__price' => 'color: {{VALUE}}'],
-        ]);
-        $this->add_control('fcard_currency_color', [
-            'label' => __('Couleur devise + / pers.', 'blacktenderscore'), 'type' => Controls_Manager::COLOR,
+            'label' => __('Couleur prix + devise', 'blacktenderscore'), 'type' => Controls_Manager::COLOR,
             'selectors' => [
+                '{{WRAPPER}} .bt-forfait-card__price'    => 'color: {{VALUE}}',
                 '{{WRAPPER}} .bt-forfait-card__currency' => 'color: {{VALUE}}',
-                '{{WRAPPER}} .bt-forfait-card__per'      => 'color: {{VALUE}}',
             ],
+        ]);
+
+        // Suffixe "/ pers."
+        $this->add_control('fcard_per_heading', [
+            'label' => __('Suffixe (/ pers.)', 'blacktenderscore'), 'type' => Controls_Manager::HEADING, 'separator' => 'before',
+        ]);
+        $this->add_group_control(\Elementor\Group_Control_Typography::get_type(), [
+            'name'     => 'fcard_per_typo',
+            'selector' => '{{WRAPPER}} .bt-forfait-card__per',
+        ]);
+        $this->add_control('fcard_per_color', [
+            'label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .bt-forfait-card__per' => 'color: {{VALUE}}'],
         ]);
         $this->add_control('fcard_original_color', [
             'label' => __('Prix barré', 'blacktenderscore'), 'type' => Controls_Manager::COLOR,
@@ -814,12 +1168,54 @@ class PricingBody extends AbstractBtWidget {
                 '{{WRAPPER}} .bt-forfait-card__icon'      => 'color: {{VALUE}}',
             ],
         ]);
+        $this->add_control('fcard_separator_heading', [
+            'label' => __('Séparateur', 'blacktenderscore'), 'type' => Controls_Manager::HEADING, 'separator' => 'before',
+        ]);
         $this->add_control('fcard_separator_color', [
-            'label' => __('Couleur séparateur / ligne méta', 'blacktenderscore'), 'type' => Controls_Manager::COLOR,
+            'label' => __('Couleur', 'blacktenderscore'), 'type' => Controls_Manager::COLOR,
             'selectors' => [
                 '{{WRAPPER}} .bt-forfait-card__separator' => 'background-color: {{VALUE}}',
                 '{{WRAPPER}} .bt-forfait-card__meta'      => 'border-top-color: {{VALUE}}',
             ],
+        ]);
+        $this->add_responsive_control('fcard_separator_width', [
+            'label'      => __('Largeur', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px', '%'],
+            'range'      => ['px' => ['min' => 10, 'max' => 200], '%' => ['min' => 10, 'max' => 100]],
+            'selectors'  => ['{{WRAPPER}} .bt-forfait-card__separator' => 'width: {{SIZE}}{{UNIT}}'],
+        ]);
+        $this->add_responsive_control('fcard_separator_height', [
+            'label'      => __('Épaisseur', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 1, 'max' => 10]],
+            'selectors'  => ['{{WRAPPER}} .bt-forfait-card__separator' => 'height: {{SIZE}}{{UNIT}}'],
+        ]);
+        $this->add_responsive_control('fcard_separator_radius', [
+            'label'      => __('Border radius', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 0, 'max' => 10]],
+            'selectors'  => ['{{WRAPPER}} .bt-forfait-card__separator' => 'border-radius: {{SIZE}}{{UNIT}}'],
+        ]);
+        $this->add_responsive_control('fcard_separator_margin', [
+            'label'      => __('Marge verticale', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 0, 'max' => 30]],
+            'selectors'  => ['{{WRAPPER}} .bt-forfait-card__separator' => 'margin: {{SIZE}}{{UNIT}} 0'],
+        ]);
+
+        // ── Espacement entre la grille et le bouton devis ──
+        $this->add_responsive_control('devis_btn_gap', [
+            'label'      => __('Espacement avant le bouton devis', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px', 'em', 'rem'],
+            'range'      => ['px' => ['min' => 0, 'max' => 80]],
+            'separator'  => 'before',
+            'condition'  => ['show_quote_form' => 'yes', 'pricing_mode' => ['auto', 'boat']],
+            'selectors'  => ['{{WRAPPER}} .bt-bprice-devis-reveal' => 'margin-top: {{SIZE}}{{UNIT}}'],
         ]);
 
         $this->end_controls_section();
@@ -857,8 +1253,21 @@ class PricingBody extends AbstractBtWidget {
         $cls  = 'bt-pricing-body';
         $cls .= $hidden ? ' bt-pricing-body--hidden' : '';
 
+        $hide_cls = trim((string) ($s['devis_btn_hide_classes'] ?? ''));
+        $show_cls = trim((string) ($s['devis_btn_show_classes'] ?? ''));
+
         echo '<div class="' . esc_attr($cls) . '" data-bt-pricing-body'
-           . ($hidden ? ' aria-hidden="true"' : '') . '>';
+           . ($hidden ? ' aria-hidden="true"' : '')
+           . ($hide_cls !== '' ? ' data-bt-body-hide="' . esc_attr($hide_cls) . '"' : '')
+           . ($show_cls !== '' ? ' data-bt-body-show="' . esc_attr($show_cls) . '"' : '')
+           . '>';
+
+        // Mode GYG — tarifs depuis le cache des disponibilités GYG
+        if ($mode === 'gyg') {
+            $this->render_gyg_pricing();
+            echo '</div>';
+            return;
+        }
 
         // Mode devis uniquement — pas de forfaits, juste le formulaire
         if ($mode === 'devis_only') {
@@ -907,9 +1316,12 @@ class PricingBody extends AbstractBtWidget {
                 $btn_inner = $icon_position === 'after'
                     ? '<span>' . $devis_label . '</span>' . $icon_html
                     : $icon_html . '<span>' . $devis_label . '</span>';
-                $hide_classes = trim((string) ($s['devis_btn_hide_classes'] ?? ''));
-                $data_hide_cls = $hide_classes !== '' ? ' data-bt-reveal-hide-classes="' . esc_attr($hide_classes) . '"' : '';
-                echo '<div class="bt-bprice-devis-reveal" data-bt-trigger="reveal" data-bt-reveal-inline' . $data_hide_cls . '>';
+                $hide_classes   = trim((string) ($s['devis_btn_hide_classes'] ?? ''));
+                $show_classes   = trim((string) ($s['devis_btn_show_classes'] ?? ''));
+                $data_hide_cls  = $hide_classes !== '' ? ' data-bt-reveal-hide-classes="' . esc_attr($hide_classes) . '"' : '';
+                $data_show_cls  = $show_classes !== '' ? ' data-bt-reveal-show-classes="' . esc_attr($show_classes) . '"' : '';
+                $data_hide_cards = ($s['hide_cards_on_trigger'] ?? '') === 'yes' ? ' data-bt-hide-cards' : '';
+                echo '<div class="bt-bprice-devis-reveal" data-bt-trigger="reveal" data-bt-reveal-inline' . $data_hide_cls . $data_show_cls . $data_hide_cards . '>';
                 echo '<button type="button" class="bt-pricing__trigger bt-pricing__trigger--fullwidth bt-bprice__devis-btn" aria-expanded="false">' . $btn_inner . '</button>';
                 echo '<div class="bt-pricing__reveal-content"><div>';
                 $this->render_embedded_quote_form($s, $post_id);

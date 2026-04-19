@@ -1,0 +1,3955 @@
+/* -- Dynamic Tag : bt-exp-price prefix / suffix --------------------------------- */
+.bt-exp-price__prefix,
+.bt-exp-price__suffix {
+  font-size: 0.55em;
+  font-weight: 400;
+  vertical-align: middle;
+}
+
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   BlackTenders â€” Elementor Widgets â€” GLOBAL STYLES ONLY
+   Per-widget styles live in their own bt-{widget}.css files.
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+
+/* â”€â”€ Variables globales â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+:root {
+  --bt-tab-active-color:   #000;     /* couleur onglet actif   (FAQ, Pricing, BoatPricing) */
+  --bt-tab-hover-color:    #333;     /* couleur onglet survol  */
+  --bt-tab-inactive-color: #666;     /* couleur onglet inactif */
+  --bt-border-light:       #e0e0e0;  /* bordure lÃ©gÃ¨re         (tablists, accordÃ©on) */
+  --bt-star-color:         #f4a900;  /* couleur Ã©toiles        (Reviews) */
+}
+
+/* â”€â”€ Placeholder Ã©diteur â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.bt-widget-placeholder {
+  padding: 16px;
+  border: 2px dashed #d0d0d0;
+  color: #888;
+  font-size: 13px;
+  text-align: center;
+  background: #fafafa;
+  border-radius: 4px;
+}
+
+/* â”€â”€ SÃ©parateur : option Â« Saut de ligne Â» (trait register_separator_controls) â”€â”€â”€
+   Quand le widget ajoute .bt-sep--line-break sur l'Ã©lÃ©ment, la ligne est masquÃ©e,
+   seul l'espacement (margin) reste. */
+.bt-sep--line-break {
+  height: 0 !important;
+  min-height: 0 !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+/* â”€â”€ Bloc repliable (contÃ´le global collapsible_mode) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   Ã€ partir du titre de section : clic pour ouvrir/fermer, rÃ©duit le scroll sur mobile. */
+.bt-collapsible-block__trigger {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--bt-border-light);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+.bt-collapsible-block__trigger:hover {
+  opacity: 0.9;
+}
+.bt-collapsible-block--icon-left .bt-collapsible-block__trigger {
+  flex-direction: row-reverse;
+}
+.bt-collapsible-block--icon-right .bt-collapsible-block__trigger {
+  flex-direction: row;
+}
+.bt-collapsible-block__trigger > span:first-child {
+  flex: 1 1 auto;
+}
+/* IcÃ´ne repliable : en haut du titre, pas en absolute (fermÃ© = trait, ouvert = chevron) */
+.bt-collapsible-block__icon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.bt-collapsible-block__icon--closed,
+.bt-collapsible-block__icon--open {
+  width: 24px;
+  height: 24px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+/* FermÃ© : chevron vers le bas (cliquer pour ouvrir) */
+.bt-collapsible-block__icon--closed {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M16.59%208.59003L12%2013.17L7.41%208.59003L6%2010L12%2016L18%2010L16.59%208.59003Z' fill='currentColor'/%3E%3C/svg%3E");
+  display: block;
+}
+.bt-collapsible-block__icon--open {
+  display: none;
+}
+/* Ouvert : trait horizontal (moins, cliquer pour fermer) */
+.bt-collapsible-block__icon--open {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24'%3E%3Cpath d='M19 11H5V13H19V11Z' fill='currentColor'/%3E%3C/svg%3E");
+}
+.bt-collapsible-block--open .bt-collapsible-block__icon--closed {
+  display: none;
+}
+.bt-collapsible-block--open .bt-collapsible-block__icon--open {
+  display: block;
+}
+.bt-collapsible-block__panel {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+.bt-collapsible-block--open .bt-collapsible-block__panel {
+  max-height: 2000px; /* fallback si JS n'a pas encore mis scrollHeight */
+}
+
+/* mobile only : repliable uniquement sur mobile */
+@media (min-width: 768px) {
+  .bt-collapsible-block[data-bt-collapsible="mobile"] .bt-collapsible-block__panel {
+    max-height: none;
+    overflow: visible;
+  }
+  .bt-collapsible-block[data-bt-collapsible="mobile"] .bt-collapsible-block__trigger {
+    cursor: default;
+    pointer-events: none;
+  }
+  .bt-collapsible-block[data-bt-collapsible="mobile"] .bt-collapsible-block__icon {
+    display: none;
+  }
+}
+/* pc only : repliable uniquement sur PC */
+@media (max-width: 767px) {
+  .bt-collapsible-block[data-bt-collapsible="pc"] .bt-collapsible-block__panel {
+    max-height: none;
+    overflow: visible;
+  }
+  .bt-collapsible-block[data-bt-collapsible="pc"] .bt-collapsible-block__trigger {
+    cursor: default;
+    pointer-events: none;
+  }
+  .bt-collapsible-block[data-bt-collapsible="pc"] .bt-collapsible-block__icon {
+    display: none;
+  }
+}
+
+/* â”€â”€ Composant partagÃ© : onglets (FAQ, Pricing, BoatPricing) â”€
+   Les rÃ¨gles ci-dessous s'appliquent aux 3 widgets Ã  la fois.
+   Les spÃ©cificitÃ©s propres Ã  chaque widget sont juste en dessous
+   de leur en-tÃªte de section respective.
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+
+/* Tablists â€” display:flex commun (FAQ + Pricing) */
+.bt-faq--tabs .bt-faq__tablist,
+.bt-pricing__tablist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 0;
+}
+
+/* Bouton onglet â€” base commune aux 3 widgets */
+.bt-faq--tabs .bt-faq__tab,
+.bt-pricing__tab,
+.bt-bprice__tab {
+  padding: 10px 20px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 500;
+  color: var(--bt-tab-inactive-color);
+  transition: color .15s, border-color .15s;
+}
+
+/* Pricing + BoatPricing : nowrap */
+.bt-pricing__tab,
+.bt-bprice__tab { white-space: nowrap; }
+
+/* BoatPricing : poids et transition supplÃ©mentaire */
+.bt-bprice__tab {
+  font-weight: 600;
+  transition: color .15s, background-color .15s, border-color .15s;
+}
+
+/* Hover â€” commun aux 3 widgets */
+.bt-faq--tabs .bt-faq__tab:hover,
+.bt-pricing__tab:hover,
+.bt-bprice__tab:hover { color: var(--bt-tab-hover-color); }
+
+/* Actif â€” commun aux 3 widgets */
+.bt-faq--tabs .bt-faq__tab--active,
+.bt-pricing__tab--active,
+.bt-bprice__tab--active {
+  color: var(--bt-tab-active-color);
+  border-bottom-color: var(--bt-tab-active-color);
+}
+
+/* ── Dynamic Tag : bt-exp-price prefix / suffix ─────────────────────────────── */
+.bt-exp-price__prefix,
+.bt-exp-price__suffix {
+  font-size: 0.55em;
+  font-weight: 400;
+  vertical-align: middle;
+}
+/* ══════════════════════════════════════════════════════════
+   Boat Pricing — Layout specifics for cards / tabs / table
+   LAYOUT ONLY — visual styling driven by Elementor controls
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Cards layout ─────────────────────────────────────── */
+.bt-bprice__cards {
+  display: grid;
+  gap: 16px;
+}
+
+.bt-bprice__card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bt-bprice__card-label {
+  display: block;
+}
+
+.bt-bprice__amount-block {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.bt-bprice__amount {
+  line-height: 1;
+}
+
+.bt-bprice__duration {
+  font-size: .875em;
+}
+
+.bt-bprice__per-person {
+  font-size: .875em;
+}
+
+.bt-bprice__deposit {
+  font-size: .875em;
+  margin: 0;
+}
+
+.bt-bprice__year {
+  display: inline-block;
+  font-size: .75em;
+  opacity: .55;
+  margin-top: 4px;
+}
+
+.bt-bprice__price-note {
+  font-size: .85em;
+}
+
+/* ── Boat tabs layout ─────────────────────────────────── */
+.bt-bprice__tablist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 0;
+}
+
+.bt-bprice__tab {
+  padding: 10px 20px;
+  background-color: transparent;
+  border-width: 0;
+  border-style: solid;
+  border-color: transparent;
+  border-bottom-width: 2px;
+  margin-bottom: -2px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color .2s, background-color .2s, border-color .2s;
+  white-space: nowrap;
+}
+
+.bt-bprice__panel {
+  display: none;
+}
+
+.bt-bprice__panel--active {
+  display: block;
+  padding-top: 20px;
+}
+
+/* ── Table layout ─────────────────────────────────────── */
+.bt-bprice__table-wrap {
+  overflow-x: auto;
+}
+
+.bt-bprice__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.bt-bprice__table th,
+.bt-bprice__table td {
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid rgba(0, 0, 0, .08);
+}
+
+.bt-bprice__table thead th {
+  font-size: .8em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+/* ── Zones table ──────────────────────────────────────── */
+.bt-bprice__zones {
+  margin-top: 24px;
+}
+
+.bt-bprice__zones-title {
+  margin: 0 0 12px;
+}
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Boat Specs
+   ══════════════════════════════════════════════════════════ */
+.bt-bspecs__title {
+  margin: 0 0 20px;
+}
+
+.bt-bspecs__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.bt-bspecs__list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bt-bspecs__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+}
+
+.bt-bspecs__item-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.bt-bspecs__item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bt-bspecs__item-label {
+  font-size: .8em;
+  opacity: .65;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.bt-bspecs__item-value {
+  font-weight: 600;
+  font-size: 1.05em;
+}
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Captain
+   ══════════════════════════════════════════════════════════ */
+
+.bt-captain__section-title { margin: 0 0 1em; }
+
+.bt-captain__card {
+  display: flex;
+  flex-direction: row; /* override par control card_direction */
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.bt-captain__photo-wrap {
+  flex-shrink: 0;
+  width: 100px;
+  height: 100px;
+  overflow: hidden;
+  border-radius: 50%; /* override par photo_radius */
+}
+
+.bt-captain__photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+}
+
+.bt-captain__info  { flex: 1; min-width: 0; }
+.bt-captain__name  { font-weight: 700; margin: 0 0 .25em; }
+.bt-captain__since { margin: 0 0 .5em; font-size: .9em; opacity: .8; }
+.bt-captain__bio   { margin: 0; }
+.bt-captain__bio p { margin: 0 0 .5em; }
+.bt-captain__bio p:last-child { margin-bottom: 0; }
+
+@media (max-width: 480px) {
+  .bt-captain__card { flex-direction: column; }
+}
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Departure Times
+   ══════════════════════════════════════════════════════════ */
+.bt-deptimes__title {
+  margin: 0 0 16px;
+}
+
+.bt-deptimes__departure-info {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: .95em;
+}
+
+.bt-deptimes__map-link {
+  font-size: .85em;
+  text-decoration: underline;
+  opacity: .7;
+}
+
+.bt-deptimes__map-link:hover { opacity: 1; }
+
+.bt-deptimes__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.bt-deptimes__inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bt-deptimes__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bt-deptimes__badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(0,0,0,.04);
+  text-align: center;
+}
+
+.bt-deptimes__time {
+  font-weight: 700;
+  font-size: 1.1em;
+}
+
+.bt-deptimes__season-badge {
+  font-size: .7em;
+  padding: 2px 6px;
+  border-radius: 12px;
+  background: rgba(0,0,0,.08);
+  white-space: nowrap;
+}
+
+.bt-deptimes__season--summer    { background: #fff3cd; color: #7a5500; }
+.bt-deptimes__season--offseason { background: #e8f4fd; color: #1a5276; }
+.bt-deptimes__season--all       { background: #e8f5e9; color: #2d5a27; }
+/* ══════════════════════════════════════════════════════════
+   WIDGET : FAQ Accordion
+   ══════════════════════════════════════════════════════════ */
+
+/* Section title optionnel */
+.bt-faq__section-title {
+  margin: 0 0 20px;
+}
+
+/* Liste */
+.bt-faq__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Accordéon — Item ─────────────────────────────────────── */
+.bt-faq--accordion .bt-faq__item {
+  border: 1px solid var(--bt-border-light);
+  /* PAS de overflow:hidden sur l'item : la grille CSS a besoin de s'étendre */
+}
+
+/* ── Header (bouton question) ─────────────────────────────── */
+.bt-faq__header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  font-weight: 600;
+  transition: background .15s, color .15s;
+}
+
+.bt-faq__header:hover {
+  background: rgba(0, 0, 0, .03);
+}
+
+/* Icône à gauche → inverser l'ordre flex */
+.bt-faq--icon-left .bt-faq__header {
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+}
+
+/* Texte question */
+.bt-faq__title-text {
+  flex: 1;
+}
+
+/* ── Icône CSS (fallback si pas d'icône FA) ───────────────── */
+.bt-faq__icon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bt-faq__icon::before,
+.bt-faq__icon::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  background: currentColor;
+  transform: translate(-50%, -50%);
+  transition: opacity .25s, transform .25s;
+}
+
+/* "+" */
+.bt-faq__icon::before { width: 2px;  height: 14px; }
+.bt-faq__icon::after  { width: 14px; height: 2px;  }
+
+/* → "-" quand actif */
+.bt-faq__item--active .bt-faq__icon::before {
+  transform: translate(-50%, -50%) rotate(90deg);
+  opacity: 0;
+}
+
+/* Si le widget utilise des icônes Elementor (Font Awesome, SVG, etc.),
+   on désactive le +/− CSS pour éviter le spam visuel. */
+.bt-faq__icon--has-fa::before,
+.bt-faq__icon--has-fa::after {
+  content: none;
+}
+
+/* ── Icônes FA (selected_icon / selected_active_icon) ─────── */
+.bt-faq__icon--open   { display: none; }
+
+.bt-faq__item--active .bt-faq__icon--closed { display: none; }
+.bt-faq__item--active .bt-faq__icon--open   { display: inline-flex; }
+
+/* ── Corps réponse ────────────────────────────────────────── */
+.bt-faq--accordion .bt-faq__body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .3s ease;
+}
+
+.bt-faq__body-inner {
+  padding: 0 20px 20px;
+  line-height: 1.7;
+}
+
+/* ── Tabs (FAQ) — spécificités ───────────────────────────── */
+
+/* Panels tabs : masqués par défaut via classe CSS (pas [hidden]) */
+.bt-faq--tabs .bt-faq__tabpanel {
+  display: none;
+}
+
+.bt-faq--tabs .bt-faq__tabpanel--active {
+  display: block;
+  padding: 20px 0 0;
+}
+
+.bt-faq--tabs .bt-faq__body-inner {
+  padding: 0;
+}
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Fixed CTA
+   Zéro valeur visuelle en dur — tout via var(--btc-*)
+   ══════════════════════════════════════════════════════════ */
+
+.btc-fixed-cta {
+  position: fixed;
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  gap: var(--btc-gap, 10px);
+  background: var(--btc-container-bg, #ffffff);
+  border: var(--btc-container-border-width, 1px) solid var(--btc-container-border-color, rgba(0,0,0,0.15));
+  border-radius: var(--btc-container-radius, 100px);
+  padding: var(--btc-container-padding, 7px 14px 7px 8px);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+  z-index: var(--btc-z, 9999);
+  transition: all 400ms cubic-bezier(0.16,0.93,0,0.99);
+  box-sizing: border-box;
+}
+
+/* ── Position via data-attribute ────────────────────────── */
+.btc-fixed-cta[data-pos="bottom-right"] { bottom: var(--btc-y, 20px); right: var(--btc-x, 20px); }
+.btc-fixed-cta[data-pos="bottom-left"]  { bottom: var(--btc-y, 20px); left:  var(--btc-x, 20px); }
+.btc-fixed-cta[data-pos="top-right"]    { top:    var(--btc-y, 20px); right: var(--btc-x, 20px); }
+.btc-fixed-cta[data-pos="top-left"]     { top:    var(--btc-y, 20px); left:  var(--btc-x, 20px); }
+
+/* ── Type de positionnement (if/else via data-pos-type) ──── */
+/* fixed = défaut via la règle de base ci-dessus              */
+.btc-fixed-cta[data-pos-type="sticky"]   { position: sticky; }
+.btc-fixed-cta[data-pos-type="absolute"] { position: absolute; }
+.btc-fixed-cta[data-pos-type="relative"] {
+  position: relative;
+  top: auto; right: auto; bottom: auto; left: auto;
+}
+
+/* ── Avatar side via data-attribute ─────────────────────── */
+.btc-fixed-cta[data-avatar-side="right"] { flex-direction: row-reverse; }
+
+/* ── Éditeur Elementor — pas de position fixed ──────────── */
+.elementor-editor-active .btc-fixed-cta {
+  position: relative;
+  bottom: auto; right: auto; top: auto; left: auto;
+}
+
+/* ── Avatar ─────────────────────────────────────────────── */
+/* Wrap = positionnement relatif pour le dot (pas d'overflow hidden) */
+.btc-cta__avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+  width: var(--btc-avatar-size, 48px);
+  height: var(--btc-avatar-size, 48px);
+}
+
+/* Inner = clip l'image avec border-radius + overflow hidden */
+.btc-cta__avatar-inner {
+  position: relative;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--btc-avatar-radius, 50%);
+  overflow: hidden;
+}
+
+.btc-cta__avatar-img {
+  width: 100%;
+  height: 100%;
+  border: var(--btc-avatar-border-width, 0px) solid var(--btc-avatar-border-color, transparent);
+  object-fit: cover;
+  display: block;
+  box-sizing: border-box;
+}
+
+.btc-cta__avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  border: var(--btc-avatar-border-width, 0px) solid var(--btc-avatar-border-color, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--btc-avatar-size, 48px) * 0.35);
+  font-weight: 500;
+  color: var(--btc-avatar-initials-color, #5a4fcf);
+  background: var(--btc-avatar-bg, #e8e4ff);
+  box-sizing: border-box;
+}
+
+/* ── Dot de statut ──────────────────────────────────────── */
+/* Positionné en absolute par rapport au wrap (pas clippé) */
+.btc-cta__dot {
+  position: absolute;
+  bottom: 1px;
+  right: 1px;
+  width: var(--btc-dot-size, 11px);
+  height: var(--btc-dot-size, 11px);
+  border-radius: 50%;
+  border: 2px solid var(--btc-container-bg, #ffffff);
+  transition: background 0.4s ease;
+  background: var(--btc-dot-color-offline, #94A3B8);
+  z-index: 1;
+}
+
+.btc-cta__dot[data-status="online"]  { background: var(--btc-dot-color-online, #22C55E); }
+.btc-cta__dot[data-status="offline"] { background: var(--btc-dot-color-offline, #94A3B8); }
+.btc-cta__dot[data-hidden="true"]    { display: none; }
+
+/* ── Meta (nom + poste) ─────────────────────────────────── */
+.btc-cta__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.btc-cta__name {
+  font-size: var(--btc-name-size, 13px);
+  font-weight: 500;
+  color: var(--btc-name-color, #111111);
+  white-space: nowrap;
+  line-height: 1.3;
+}
+
+.btc-cta__job {
+  font-size: var(--btc-job-size, 11px);
+  color: var(--btc-job-color, #888888);
+  white-space: nowrap;
+  line-height: 1.3;
+}
+
+/* ══════════════════════════════════════════════════════════
+   BOUTON CTA + BORDURE RAINBOW ANIMÉE
+   Technique : pseudo-element ::before avec conic-gradient
+   qui tourne via @keyframes. Le ::before est plus grand
+   que le bouton, et overflow:hidden + inset clip = fausse
+   bordure arc-en-ciel animée.
+   ══════════════════════════════════════════════════════════ */
+
+@keyframes btc-halo-spin {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.btc-cta__btn-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--btc-btn-radius, 100px);
+  overflow: hidden;
+  /* L'épaisseur de la fausse bordure rainbow */
+  padding: var(--btc-halo-thickness, 2px);
+}
+
+/* Le gradient qui tourne — crée la bordure animée */
+.btc-cta__halo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  /* 200% pour couvrir toute la surface même pendant la rotation */
+  width: 200%;
+  height: 200%;
+  transform: translate(-50%, -50%) rotate(0deg);
+  background: conic-gradient(
+    from 0deg,
+    #ff6b6b, #ffd93d, #6bcb77, #4d96ff, #c77dff, #ff6b6b
+  );
+  opacity: var(--btc-halo-opacity, 1);
+  pointer-events: none;
+  z-index: 0;
+  animation: btc-halo-spin var(--btc-halo-speed, 3s) linear infinite;
+  filter: blur(var(--btc-halo-blur, 0px));
+  transition: opacity 400ms ease, filter 400ms ease;
+}
+
+.btc-cta__btn-wrap:hover .btc-cta__halo {
+  opacity: var(--btc-halo-hover-opacity, 1);
+  filter: blur(var(--btc-halo-hover-blur, 2px));
+}
+
+.btc-cta__btn-wrap:active .btc-cta__halo {
+  opacity: 0.4;
+  transition-duration: 150ms;
+}
+
+/* Masquer le halo si désactivé */
+.btc-cta__btn-wrap[data-halo="false"] .btc-cta__halo { display: none; }
+.btc-cta__btn-wrap[data-halo="false"] { padding: 0; }
+
+.btc-cta__btn {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  padding: var(--btc-btn-padding, 9px 18px);
+  border-radius: var(--btc-btn-radius, 100px);
+  font-size: var(--btc-btn-size, 13px);
+  font-weight: 500;
+  color: var(--btc-btn-color, #f2f2f2);
+  background: var(--btc-btn-bg, #1F1F22);
+  border: none;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 400ms ease, background 400ms ease;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.btc-cta__btn-wrap:hover .btc-cta__btn {
+  color: var(--btc-btn-hover-color, #ffffff);
+  background: var(--btc-btn-hover-bg, #3a3a42);
+}
+
+.btc-cta__btn-wrap:active .btc-cta__btn {
+  opacity: 0.85;
+  transition-duration: 150ms;
+}
+
+/* ── Bouton fermer ──────────────────────────────────────── */
+.btc-cta__close {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--btc-container-border-color, rgba(0,0,0,0.15));
+  background: var(--btc-container-bg, #ffffff);
+  color: var(--btc-job-color, #888);
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 3;
+}
+
+.btc-fixed-cta:hover .btc-cta__close {
+  opacity: 1;
+}
+
+.btc-cta__close:hover {
+  color: var(--btc-name-color, #111);
+}
+
+/* ── État fermé ─────────────────────────────────────────── */
+.btc-fixed-cta--hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(20px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* ── Protection couleur bouton contre overrides thème ───── */
+/* Rey (et d'autres thèmes) appliquent color:black !important sur les <a>
+   quand le header scrolle. On bat leur spécificité (0,4,1) avec (0,5,1).
+   --btc-btn-rey-color est défini via Elementor seulement si la couleur
+   protégée est configurée ; sinon fallback sur la couleur normale.       */
+.btc-fixed-cta .btc-cta__btn-wrap a.btc-cta__btn.btc-cta__btn.btc-cta__btn {
+  color: var(--btc-btn-rey-color, var(--btc-btn-color, #f2f2f2)) !important;
+}
+.btc-fixed-cta .btc-cta__btn-wrap:hover a.btc-cta__btn.btc-cta__btn.btc-cta__btn {
+  color: var(--btc-btn-rey-color, var(--btc-btn-hover-color, #ffffff)) !important;
+}
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Highlights
+   ══════════════════════════════════════════════════════════ */
+
+.bt-highlights__section-title { margin: 0 0 1em; }
+/* Dans le trigger repliable, le titre ne doit pas avoir de margin-bottom
+   (l'espacement est géré sur le .bt-collapsible-block parent) */
+.bt-collapsible-block__trigger .bt-highlights__section-title { margin-bottom: 0; }
+
+.bt-highlights__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.bt-highlights__list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bt-highlights__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;          /* prevent grid/flex overflow */
+  /* flex-direction override par control icon_position */
+}
+
+/* ── Icône — emoji, fa, SVG Elementor ────────────────────── */
+.bt-highlights__icon {
+  flex-shrink: 0;
+  font-size: 28px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;      /* clip image si border-radius défini */
+}
+
+.bt-highlights__icon i   { font-size: inherit; color: inherit; }
+.bt-highlights__icon svg { width: 1em; height: 1em; fill: currentColor; }
+
+/* ── Icône — image (ACF Image field ou URL) ──────────────── */
+.bt-highlights__icon--img {
+  /* Largeur / hauteur injectées par les contrôles Elementor
+     icon_img_width / icon_img_height.
+     Sans hauteur explicite : l'image garde sa hauteur naturelle.
+     Avec hauteur explicite : overflow:hidden (via parent) clip l'image,
+     object-fit / object-position contrôlent le recadrage. */
+}
+
+.bt-highlights__icon--img img {
+  display: block;
+  width: 100%;
+  /* height: 100% est effectif uniquement quand le parent a une hauteur définie.
+     Sans hauteur sur le parent, l'img prend sa hauteur naturelle. */
+  height: 100%;
+  object-fit: contain; /* défaut CSS — surchargé par le contrôle icon_img_fit */
+  object-position: center;
+  border-radius: inherit; /* hérite du border-radius du wrapper */
+}
+
+/* ── Contenu ─────────────────────────────────────────────── */
+.bt-highlights__content { flex: 1; min-width: 0; overflow: hidden; word-break: break-word; }
+.bt-highlights__title   { display: block; font-weight: 600; }
+.bt-highlights__desc    { margin: .25em 0 0; }
+/* Neutralise les marges que le thème applique aux <p> dans le WYSIWYG ACF */
+.bt-highlights__desc p  { margin: 0; }
+
+
+/* ── Étapes enfant (dot list) ────────────────────────────── */
+.bt-highlights__steps {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bt-highlights__steps li {
+  padding-left: 1.1em;
+  position: relative;
+  line-height: 1.4;
+}
+
+/* Dot bullet — uniquement sur les listes non numérotées */
+.bt-highlights__steps:not(.bt-highlights__steps--numbered) li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: .5em;
+  width: .35em;
+  height: .35em;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: .5;
+}
+
+/* ── Étapes numérotées ───────────────────────────────────── */
+.bt-highlights__steps--numbered {
+  counter-reset: none; /* on gère via le markup, pas CSS counters */
+}
+
+.bt-highlights__steps--numbered li {
+  padding-left: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bt-highlights__step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 1.6em;
+  height: 1.6em;
+  font-size: .75em;
+  font-weight: 600;
+  line-height: 1;
+  border-radius: 50%;
+  background: #222;
+  color: #fff;
+}
+
+/* ══════════════════════════════════════════════════════════
+   SLIDER MODE
+   ══════════════════════════════════════════════════════════ */
+
+.bt-highlights__slider-wrap {
+  position: relative;
+}
+
+/* Overflow sur le wrap parent pour que l'offset (padding swiper) reste visible */
+.bt-highlights__slider-wrap--active {
+  overflow: hidden;
+}
+
+/* Le swiper lui-même doit pouvoir déborder dans le padding (offset) */
+.bt-highlights__slider-wrap--active .bt-highlights__swiper {
+  overflow: visible;
+}
+
+/* Fallback : quand le slider est désactivé sur le device courant,
+   le JS applique grid-template-columns/gap/flex dynamiquement.
+   Ici on pose juste les resets structurels. */
+.bt-highlights__slider-wrap--fallback .swiper-slide {
+  width: auto !important; /* override Swiper inline width */
+  margin-right: 0 !important;
+}
+
+/* Masquer nav en mode fallback */
+.bt-highlights__slider-wrap--fallback .bt-highlights__arrow,
+.bt-highlights__slider-wrap--fallback .bt-highlights__dots {
+  display: none;
+}
+
+/* ── Flèches ─────────────────────────────────────────────── */
+.bt-highlights__arrow {
+  position: absolute;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  cursor: pointer;
+  transition: background-color .2s, color .2s, box-shadow .2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .12);
+  padding: 0;
+  line-height: 1;
+}
+
+.bt-highlights__arrow:hover {
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .18);
+}
+
+/* Per-arrow positioning via CSS vars — Elementor CHOOSE + SLIDER controls inject them.
+   Defaults reproduce the original -20px offset centred vertically.
+   Multiple translateX/Y are additive: trx = anchor centering, h-off = user offset. */
+.bt-highlights__arrow--prev {
+  left:   var(--bt-prev-l, 0px);
+  right:  var(--bt-prev-r, auto);
+  top:    var(--bt-prev-t, 50%);
+  bottom: var(--bt-prev-b, auto);
+  transform: translateX(var(--bt-prev-trx, 0px))
+             translateX(var(--bt-prev-h-off, -20px))
+             translateY(var(--bt-prev-try, -50%))
+             translateY(var(--bt-prev-v-off, 0px));
+}
+
+.bt-highlights__arrow--next {
+  left:   var(--bt-next-l, auto);
+  right:  var(--bt-next-r, 0px);
+  top:    var(--bt-next-t, 50%);
+  bottom: var(--bt-next-b, auto);
+  transform: translateX(var(--bt-next-trx, 0px))
+             translateX(var(--bt-next-h-off, 20px))
+             translateY(var(--bt-next-try, -50%))
+             translateY(var(--bt-next-v-off, 0px));
+}
+
+.bt-highlights__arrow svg {
+  width: 1em;
+  height: 1em;
+  display: block;
+}
+
+/* Disabled state (Swiper ajoute swiper-button-disabled) */
+.bt-highlights__arrow.swiper-button-disabled {
+  opacity: .35;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* ── Dots / Pagination ───────────────────────────────────── */
+.bt-highlights__dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-top: 16px;
+}
+
+.bt-highlights__dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ccc;
+  cursor: pointer;
+  transition: background-color .2s, width .2s;
+}
+
+.bt-highlights__dot--active {
+  width: 20px;
+  border-radius: 4px;
+  background: #333;
+}
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Included / Excluded
+   ══════════════════════════════════════════════════════════ */
+
+.bt-inclexcl__section-title { margin: 0 0 1em; }
+
+.bt-inclexcl__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+
+.bt-inclexcl__col-title { margin: 0 0 .75em; font-weight: 700; }
+
+.bt-inclexcl__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bt-inclexcl__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bt-inclexcl__icon { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; }
+.bt-inclexcl__icon img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.bt-inclexcl__icon i { font-size: inherit; }
+.bt-inclexcl__icon svg { width: 1em; height: 1em; fill: currentColor; display: block; }
+
+.bt-inclexcl__col--included .bt-inclexcl__icon svg,
+.bt-inclexcl__item--included .bt-inclexcl__icon svg { fill: #22c55e; }
+
+.bt-inclexcl__col--excluded .bt-inclexcl__icon svg,
+.bt-inclexcl__item--excluded .bt-inclexcl__icon svg { fill: #ef4444; }
+.bt-inclexcl__text { flex: 1; }
+.bt-inclexcl__desc { display: block; font-size: .875em; }
+
+.bt-inclexcl__col--included .bt-inclexcl__icon,
+.bt-inclexcl__item--included .bt-inclexcl__icon { color: #22c55e; }
+
+.bt-inclexcl__col--excluded .bt-inclexcl__icon,
+.bt-inclexcl__item--excluded .bt-inclexcl__icon { color: #ef4444; }
+
+@media (max-width: 600px) {
+  .bt-inclexcl__grid { grid-template-columns: 1fr; }
+}
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Itinerary v3 — timeline unifiée <ol>
+   Icônes via ICONS control Elementor (FA + SVG inline)
+   Carte : Leaflet.js
+   ══════════════════════════════════════════════════════════ */
+.bt-itin__title {
+  margin: 0 0 24px;
+}
+
+.bt-itin__list {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 20px; /* +20px indent → dots + connecteur décalés ensemble à droite */
+  display: flex;
+  flex-direction: column;
+  gap: 32px; /* override par Elementor steps_gap */
+}
+
+/* li doit être positionné pour que ::before soit relatif à lui (pas à un ancêtre lointain) */
+.bt-itin__list > li {
+  position: relative;
+}
+
+/* Chaque item : dot + corps côte à côte */
+.bt-itin__step {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px; /* override par Elementor dot_gap */
+}
+
+/* ── Ligne verticale reliant uniquement les étapes ACF ────────
+   Tous les li sauf le dernier reçoivent un connecteur vertical —
+   transport inclus (departure, outboard, arrival font partie de la chaîne).
+   left  = var(--bt-itin-dot-center) → centré sur le dot de l'étape
+   bottom = calc(-gap) → comble le gap entre deux <li>            */
+.bt-itin:not(.bt-itin--no-connector)
+  .bt-itin__list > li:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: var(--bt-itin-dot-center, 10px);
+  top: 22px;
+  bottom: calc(-1 * var(--bt-itin-gap, 32px));
+  width: 2px;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--bt-itin-line-color, #d0d0d0) 0,
+    var(--bt-itin-line-color, #d0d0d0) 5px,
+    transparent 5px,
+    transparent 10px
+  );
+  background-color: transparent; /* évite le conflit avec background-color Elementor */
+  z-index: 0;
+}
+
+/* ── Dot base ─────────────────────────────────────────────────
+   Partagé par transport + ACF, surchargé par les classes BEM   */
+.bt-itin__dot {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: currentColor;
+  margin-top: 4px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Dot ACF : icône FA ou image ──────────────────────────── */
+.bt-itin__dot--icon {
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px; /* override par Elementor dot_icon_size */
+}
+
+.bt-itin__dot-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+  display: block;
+}
+
+/* ── Dot transport — icône Elementor (FA + SVG uploadé) ───────
+   Icons_Manager::render_icon() → <i> pour FA, <svg> pour upload */
+.bt-itin__dot--transport {
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;  /* override par Elementor transport_dot_size */
+  height: 22px;
+  font-size: 22px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  margin-top: 2px;
+}
+
+/* FA icon et SVG uploadé remplissent le conteneur */
+.bt-itin__dot--transport i,
+.bt-itin__dot--transport svg {
+  font-size: 1em;
+  width: 1em;
+  height: 1em;
+  display: block;
+  line-height: 1;
+}
+
+/* ── Corps de l'étape ─────────────────────────────────────── */
+.bt-itin__step-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ── Textes ───────────────────────────────────────────────── */
+.bt-itin__time {
+  font-size: .8em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  opacity: .6;
+}
+
+.bt-itin__step-title {
+  font-size: 1em;
+  font-weight: 700;
+  display: block;
+}
+
+.bt-itin__step-desc {
+  margin: 0;
+  font-size: .9em;
+  line-height: 1.6;
+  opacity: .75;
+}
+
+/* Méta : heure + durée */
+.bt-itin__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.bt-itin__duration {
+  font-size: .8em;
+  opacity: .55;
+}
+
+/* ── Blocs transport (départ / hors-bord / arrivée) ───────── */
+.bt-itin__step--transport .bt-itin__step-body {
+  padding: 10px 14px;
+  border-radius: 8px;
+  /* Bug fix v4 : fallback explicite si la CSS var du thème n'est pas définie */
+  background: var(--var--beige-on-bg, #F5F0E8);
+  font-size: .9em;
+  max-width: fit-content;
+  display: inline-flex;
+}
+
+/* Label "DÉPART / ARRIVÉE" — petit texte au-dessus du titre */
+.bt-itin__transport-label {
+  display: block;
+  font-weight: 600;
+  font-size: .72em;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  opacity: .5;
+  margin-bottom: 2px;
+}
+
+/* ── Layout côte-à-côte (timeline | carte) ────────────────── */
+.bt-itin__layout--side {
+  display: grid;
+  grid-template-columns: 1fr var(--bt-itin-map-col, 50%);
+  gap: 24px; /* override par Elementor map_gap */
+  align-items: start;
+}
+
+/* Carte à gauche → on inverse l'ordre des colonnes */
+.bt-itin__layout--side.bt-itin__layout--map-left {
+  grid-template-columns: var(--bt-itin-map-col, 50%) 1fr;
+}
+
+/* La colonne timeline doit dépasser la carte ? non, scroll natif. */
+.bt-itin__col-timeline {
+  min-width: 0; /* évite overflow flex/grid */
+}
+
+/* Map sticky en mode side → suit le scroll */
+.bt-itin__col-map {
+  position: sticky;
+  top: 24px;
+  min-width: 0;
+}
+
+/* En mode side, la map prend 100% de sa colonne */
+.bt-itin__layout--side .bt-itin__map {
+  height: 100%;
+  min-height: 300px;
+}
+
+/* ── Responsive : mobile = stacked ────────────────────────── */
+@media (max-width: 767px) {
+  .bt-itin__layout--side {
+    grid-template-columns: 1fr;
+  }
+
+  .bt-itin__col-map {
+    position: static;
+  }
+
+  /* Carte à gauche : en mobile, on remet timeline en premier */
+  .bt-itin__layout--map-left .bt-itin__col-timeline {
+    order: -1;
+  }
+}
+
+/* ── Dots numérotés — CSS counter sur étapes sans icône ───────
+   counter-increment sur le <li> → counter(bt-step) lisible
+   depuis le pseudo-élément d'un descendant direct.              */
+.bt-itin__list {
+  counter-reset: bt-step;
+}
+
+.bt-itin__list > li:not(.bt-itin__step--transport) {
+  counter-increment: bt-step;
+}
+
+.bt-itin__list > li:not(.bt-itin__step--transport) .bt-itin__dot:not(.bt-itin__dot--icon) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bt-itin__list > li:not(.bt-itin__step--transport) .bt-itin__dot:not(.bt-itin__dot--icon)::after {
+  content: counter(bt-step);
+  font-size: 9px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+}
+
+/* ── Connecteur étapes retour — couleur via CSS var ───────────
+   Deux cas (transport inclus maintenant que tous les li ont ::before) :
+   1. Un li--return : colorie le connecteur qu'il dessine vers le suivant.
+   2. Tout li dont le suivant EST un li--return
+      (ligne aller/transport → premier retour).
+   Fallback : reprend --bt-itin-line-color si non défini.        */
+.bt-itin:not(.bt-itin--no-connector)
+  .bt-itin__list > li.bt-itin__step--return:not(:last-child)::before,
+.bt-itin:not(.bt-itin--no-connector)
+  .bt-itin__list > li:not(:last-child):has(+ .bt-itin__step--return)::before {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--bt-itin-return-line-color, var(--bt-itin-line-color, #d0d0d0)) 0,
+    var(--bt-itin-return-line-color, var(--bt-itin-line-color, #d0d0d0)) 5px,
+    transparent 5px,
+    transparent 10px
+  );
+}
+
+/* ── Carte Google Maps Static API (<img>) ─────────────────── */
+.bt-itin__map-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.bt-itin__map {
+  display: block;
+  width: 100%;
+  height: 400px; /* override par le control Elementor map_height */
+  object-fit: cover; /* recadre l'image dans la hauteur choisie */
+  object-position: center;
+}
+
+/* ── Carte Leaflet interactive (<div>) ────────────────────── */
+.bt-itin__map--leaflet {
+  /* height fixée par le control Elementor map_height */
+  z-index: 1;
+}
+
+/* Marker custom — cercle numéroté, couleur injectée inline par JS */
+.bt-map-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .35);
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* Marqueurs départ/arrivée — légèrement plus grands */
+.bt-map-pin--start,
+.bt-map-pin--end {
+  width: 32px;
+  height: 32px;
+  font-size: 13px;
+}
+
+/* ── Durée totale (sous le titre de section) ──────────────── */
+.bt-itin__total-duration {
+  margin: -16px 0 20px;
+  font-size: .85em;
+  opacity: .65;
+}
+
+/* ── Badges de type (activity / transfer / free / meal) ───── */
+.bt-itin__badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: .72em;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  /* Couleurs par défaut; Elementor override via {{WRAPPER}} */
+}
+
+/* ── Badge "Facultatif · +15€" après la description ──────── */
+.bt-itin__optional {
+  display: block;
+  font-style: normal;
+  font-size: .8em;
+  margin-top: 4px;
+  color: #6b7280; /* override par Elementor optional_color */
+}
+
+/* ── Accordéon ────────────────────────────────────────────── */
+
+/* Trigger : toute la ligne titre est cliquable */
+.bt-itin__step-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  width: 100%;
+}
+
+/* Chevron — transformé via aria-expanded */
+.bt-itin__chevron {
+  margin-left: auto;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  position: relative;
+  opacity: .5;
+  transition: transform .2s ease;
+}
+
+.bt-itin__chevron::before,
+.bt-itin__chevron::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 7px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 1px;
+  transition: transform .2s ease;
+}
+
+.bt-itin__chevron::before { right: 50%; transform: translateY(-50%) rotate(-45deg); transform-origin: right center; }
+.bt-itin__chevron::after  { left: 50%;  transform: translateY(-50%) rotate(45deg);  transform-origin: left center; }
+
+.bt-itin__step-trigger[aria-expanded="true"] .bt-itin__chevron::before {
+  transform: translateY(-50%) rotate(45deg);
+}
+.bt-itin__step-trigger[aria-expanded="true"] .bt-itin__chevron::after {
+  transform: translateY(-50%) rotate(-45deg);
+}
+
+/* Panneau description (hidden géré par l'attribut HTML hidden) */
+.bt-itin__step-panel {
+  margin-top: 6px;
+}
+
+/* Survol li avec coords — feedback visuel map↔timeline */
+.bt-itin__list > li[data-lat] {
+  cursor: pointer;
+}
+
+.bt-itin__list > li[data-lat]:hover .bt-itin__dot {
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, .25);
+}
+/* ══════════════════════════════════════════════════════════
+   Shared Pricing — Tabs, Trigger, Reveal, Wrapper, Modal
+   LAYOUT ONLY — visual styling driven by Elementor controls
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Wrapper Forfaits / Devis (parent tabs) ───────────── */
+.bt-bprice-wrapper {}
+
+.bt-bprice-wrapper__tablist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 0;
+}
+
+.bt-bprice-wrapper__tab {
+  padding: 10px 20px;
+  background-color: transparent;
+  border-width: 0;
+  border-style: solid;
+  border-color: transparent;
+  border-bottom-width: 2px;
+  margin-bottom: -2px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color .2s, background-color .2s, border-color .2s;
+  white-space: nowrap;
+}
+
+.bt-bprice-wrapper__panel {
+  display: none;
+}
+
+.bt-bprice-wrapper__panel--active {
+  display: block;
+  padding-top: 20px;
+}
+
+/* ── Excursion pricing tab bar (child tabs) ───────────── */
+.bt-pricing__tablist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 0;
+}
+
+.bt-pricing__tab {
+  padding: 10px 20px;
+  background-color: transparent;
+  border-width: 0;
+  border-style: solid;
+  border-color: transparent;
+  border-bottom-width: 2px;
+  margin-bottom: -2px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color .2s, background-color .2s, border-color .2s;
+  white-space: nowrap;
+}
+
+.bt-pricing__section-desc {
+  margin-top: .5em;
+  margin-bottom: 1em;
+}
+
+/* ── Panels ───────────────────────────────────────────── */
+.bt-pricing__panel {
+  display: none;
+}
+
+.bt-pricing__panel--active {
+  display: block;
+  padding-top: 20px;
+}
+
+/* ── Price block ──────────────────────────────────────── */
+.bt-pricing__price-block {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.bt-pricing__price {
+  line-height: 1;
+}
+
+.bt-pricing__per {
+  font-size: .875em;
+}
+
+.bt-pricing__note {
+  font-size: .85em;
+}
+
+.bt-pricing__discount {
+  display: inline-block;
+}
+
+.bt-pricing__deposit {
+  font-size: .875em;
+  margin: 0;
+}
+
+/* ── Booking ──────────────────────────────────────────── */
+.bt-pricing__booking {
+  margin-top: 20px;
+}
+
+/* ── Buttons layout (pills) ───────────────────────────── */
+.bt-pricing--buttons .bt-pricing__btn-title {
+  margin: 0 0 16px;
+}
+
+.bt-pricing__slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.bt-pricing__slot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-width: 1.5px;
+  border-style: solid;
+  border-color: transparent;
+  border-radius: 999px;
+  background-color: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: background-color .2s, border-color .2s, color .2s;
+}
+
+/* In buttons layout, panels are hidden until a slot is clicked */
+.bt-pricing--buttons .bt-pricing__panel {
+  display: none;
+}
+
+.bt-pricing--buttons .bt-pricing__panel--active {
+  display: block;
+}
+
+/* Booking reveal — hidden by default, animated on show */
+.bt-pricing__booking-reveal {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height .4s ease, opacity .3s ease;
+}
+
+.bt-pricing__booking-reveal--visible {
+  max-height: 900px;
+  opacity: 1;
+}
+
+/* ── Trigger button ───────────────────────────────────── */
+.bt-pricing-trigger-wrap,
+.bt-bprice-trigger-wrap {
+  display: block;
+}
+
+.bt-pricing__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 36px;
+  border-width: 0;
+  border-style: solid;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background-color .2s, transform .15s;
+}
+
+.bt-pricing__trigger:hover {
+  transform: translateY(-1px);
+}
+
+.bt-pricing__trigger--fullwidth {
+  width: 100%;
+  justify-content: center;
+}
+
+.bt-bprice__devis-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+}
+
+/* ── Reveal content (grid animation) ──────────────────── */
+.bt-pricing__reveal-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  overflow: hidden;
+  transition: grid-template-rows .45s cubic-bezier(.4, 0, .2, 1);
+  margin-top: 0;
+}
+
+.bt-pricing__reveal-content > * {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.bt-pricing__reveal-content--open {
+  grid-template-rows: 1fr;
+  margin-top: 16px;
+}
+
+/* ── Modal (native <dialog>) ──────────────────────────── */
+.bt-pricing-modal {
+  border-width: 0;
+  border-radius: 16px;
+  padding: 0;
+  max-width: min(640px, 96vw);
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .18), 0 4px 16px rgba(0, 0, 0, .12);
+}
+
+.bt-pricing-modal::backdrop {
+  background-color: rgba(0, 0, 0, .5);
+  backdrop-filter: blur(2px);
+}
+
+.bt-pricing-modal__inner {
+  position: relative;
+  padding: 36px 28px 28px;
+  overflow-y: auto;
+  max-height: 90vh;
+}
+
+.bt-pricing-modal__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 34px;
+  height: 34px;
+  border-width: 0;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, .07);
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color .15s;
+  color: inherit;
+}
+
+.bt-pricing-modal__close:hover {
+  background-color: rgba(0, 0, 0, .14);
+}
+
+/* Mobile : bottom-sheet */
+@media (max-width: 600px) {
+  .bt-pricing-modal {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    max-height: 85vh;
+    margin: 0;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   Pricing Body — Visibility toggle
+   ══════════════════════════════════════════════════════════ */
+
+.bt-pricing-body--hidden {
+  display: none;
+}
+
+/* Éditeur : montrer le body masqué avec un indicateur visuel */
+.elementor-editor-active .bt-pricing-body--hidden {
+  display: block;
+  opacity: .45;
+  outline: 2px dashed rgba(0, 0, 0, .15);
+  outline-offset: 4px;
+  position: relative;
+}
+
+.elementor-editor-active .bt-pricing-body--hidden::before {
+  content: 'Masqué — visible au clic du trigger';
+  display: block;
+  text-align: center;
+  font-size: .75em;
+  padding: 4px 12px;
+  color: #666;
+  background: rgba(255, 255, 255, .8);
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+/* ══════════════════════════════════════════════════════════
+   Pricing Div — Masqué sur mobile au déclenchement du trigger
+   Utilisation : data-bt-pricing-div (optionnel: ="targetId")
+   ══════════════════════════════════════════════════════════ */
+
+@media (max-width: 767px) {
+  [data-bt-pricing-div].bt-pricing-div--hidden {
+    display: none;
+  }
+}
+
+/* Éditeur : indicateur visuel même en mode édition */
+.elementor-editor-active [data-bt-pricing-div] {
+  outline: 2px dashed rgba(255, 165, 0, .4);
+  outline-offset: 4px;
+}
+/* bt-quote-form.css — structural only, zéro couleur hardcodée.
+   Toutes les couleurs sont injectées par Elementor via {{WRAPPER}} selectors.
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Wrapper ── */
+
+.bt-quote {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ══════════════════════════════════════════
+   STEPS
+   ══════════════════════════════════════════ */
+
+.bt-quote-step {
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: opacity .3s, border-color .3s;
+}
+
+/* Étape future — réduite */
+.bt-quote-step--collapsed {
+  opacity: .6;
+}
+
+/* Étape active — bordure plus épaisse, opacité forcée (spécificité 0-2-0 pour battre Elementor) */
+.bt-quote-step.bt-quote-step--active {
+  border-width: 2px;
+  opacity: 1;
+}
+
+/* Étape complétée — pleine opacité (même spécificité) */
+.bt-quote-step.bt-quote-step--done {
+  opacity: 1;
+}
+
+/* ── Header ── */
+
+.bt-quote-step__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.bt-quote-step__number {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.bt-quote-step__title {
+  font-size: 14px;
+  font-weight: 600;
+  flex: 1;
+}
+
+/* SVG check — caché par défaut, visible sur --done */
+.bt-quote-step__check {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  display: none;
+  stroke: currentColor;
+  fill: none;
+}
+
+.bt-quote-step--done .bt-quote-step__check {
+  display: block;
+}
+
+/* ── Summary (en dessous du header, hors flow header) ── */
+
+.bt-quote-step__summary {
+  font-size: 12px;
+  padding: 0 18px 12px 54px; /* 54px = 26px numéro + 10px gap + 18px left-padding */
+  display: none;
+}
+
+.bt-quote-step--done .bt-quote-step__summary:not(:empty) {
+  display: block;
+}
+
+/* ── Content ── */
+
+.bt-quote-step__content {
+  display: none;
+  padding: 0 18px 18px;
+}
+
+.bt-quote-step--active .bt-quote-step__content {
+  display: block;
+}
+
+/* ── Actions (à l'intérieur de __content) ── */
+
+.bt-quote-step__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.bt-quote-step__next {
+  padding: 9px 22px;
+  border-width: 0;
+  border-style: solid;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: filter .15s, transform .1s;
+}
+
+.bt-quote-step__next:hover {
+  filter: brightness(1.1);
+}
+
+.bt-quote-step__next:active {
+  transform: scale(.97);
+}
+
+/* Shake feedback */
+.bt-quote-step--shake {
+  animation: btQuoteShake .4s ease;
+}
+
+@keyframes btQuoteShake {
+  0%, 100% { transform: translateX(0); }
+  25%       { transform: translateX(-6px); }
+  75%       { transform: translateX(6px); }
+}
+
+/* ══════════════════════════════════════════
+   STEP 1 — EXCURSION
+   ══════════════════════════════════════════ */
+
+.bt-quote-exc-auto {
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+
+.bt-quote-exc-auto__name {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.bt-quote-exc-choice {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.bt-quote-exc-choice__btn {
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color .2s, background-color .2s, color .2s;
+}
+
+.bt-quote-exc-choice__btn--selected,
+.bt-quote-exc-choice__btn[aria-selected="true"] {
+  border-width: 2px;
+}
+
+.bt-quote-exc-custom {
+  margin-top: 12px;
+}
+
+/* Excursion cards */
+
+.bt-quote-exc-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bt-quote-exc-card {
+  display: flex;
+  flex-direction: row; /* Elementor override via qt_exc_card_direction */
+  align-items: stretch;
+  gap: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.bt-quote-exc-card__img {
+  position: relative;
+  flex-shrink: 0;
+  width: 110px; /* Default, Elementor override via qt_exc_img_width */
+  min-width: 110px;
+  min-height: 80px;
+  overflow: hidden;
+}
+
+/* Mode vertical (image en haut) */
+.bt-quote-exc-card[style*="column"] .bt-quote-exc-card__img,
+.bt-quote-exc-card.bt-quote-exc-card--vertical .bt-quote-exc-card__img {
+  width: 100%;
+  min-width: 100%;
+  height: 140px; /* Default, Elementor override via qt_exc_img_height */
+}
+
+.bt-quote-exc-card__img img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bt-quote-exc-card__body {
+  flex: 1;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bt-quote-exc-card__title {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.bt-quote-exc-card__price {
+  margin: 2px 0 0;
+}
+
+.bt-quote-exc-card__price-amount {
+  font-weight: 500;
+  font-size: .82em;
+}
+
+.bt-quote-exc-card__price-suffix {
+  font-size: .8em;
+}
+
+.bt-quote-exc-card__departure,
+.bt-quote-exc-card__skipper {
+  display: inline-block;
+  font-size: .75em;
+  margin-top: 2px;
+}
+.bt-quote-exc-card__skipper { margin-left: 6px; opacity: .75; }
+
+.bt-quote-exc-card__discount {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: .7em;
+  font-weight: 700;
+  border-radius: 12px;
+}
+
+.bt-quote-exc-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.bt-quote-exc-card__tag {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: .75em;
+  font-weight: 600;
+  border-radius: 12px;
+}
+
+/* ══════════════════════════════════════════
+   STEP 2 — BOAT CARDS
+   ══════════════════════════════════════════ */
+
+.bt-quote-boat-auto {
+  padding: 12px 14px;
+  border-radius: 8px;
+}
+
+.bt-quote-boat-auto__name {
+  font-weight: 600;
+  margin: 0;
+  font-size: 13px;
+}
+
+/* ══════════════════════════════════════════
+   STEP 3 — DURÉE + TIMESLOT
+   ══════════════════════════════════════════ */
+
+.bt-quote-duration-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.bt-quote-duration-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  transition: border-color .2s, background-color .2s, color .2s;
+  user-select: none;
+}
+
+.bt-quote-duration-card--selected,
+.bt-quote-duration-card[aria-selected="true"] {
+  border-width: 2px;
+}
+
+.bt-quote-duration-card__label {
+  font-size: .9em;
+  font-weight: 600;
+}
+
+.bt-quote-fields__textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+/* Timeslot */
+
+.bt-quote-timeslot {
+  margin-top: 12px;
+}
+
+.bt-quote-timeslot__options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.bt-quote-timeslot__btn {
+  padding: 10px;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  transition: border-color .2s, background-color .2s, color .2s;
+}
+
+.bt-quote-timeslot__btn--selected,
+.bt-quote-timeslot__btn[aria-selected="true"] {
+  border-width: 2px;
+}
+
+/* ══════════════════════════════════════════
+   DATE PICKER
+   ══════════════════════════════════════════ */
+
+.bt-dp {
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 8px;
+  padding: 14px;
+  user-select: none;
+}
+
+.bt-dp__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.bt-dp__month-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.bt-dp__prev,
+.bt-dp__next {
+  width: 28px;
+  height: 28px;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: background-color .15s;
+}
+
+.bt-dp__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.bt-dp__day-header {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 4px 0;
+}
+
+.bt-dp__cell {
+  text-align: center;
+  padding: 6px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color .15s, color .15s;
+}
+
+.bt-dp__cell--empty {
+  cursor: default;
+}
+
+.bt-dp__cell--disabled {
+  opacity: .3;
+  cursor: not-allowed;
+}
+
+.bt-dp__cell--today {
+  font-weight: 700;
+}
+
+.bt-dp__cell--start,
+.bt-dp__cell--end {
+  font-weight: 700;
+  position: relative;
+  z-index: 1;
+}
+
+.bt-dp__cell--start {
+  border-radius: 6px 0 0 6px;
+}
+
+.bt-dp__cell--end {
+  border-radius: 0 6px 6px 0;
+}
+
+.bt-dp__cell--range {
+  border-radius: 0;
+  background-color: color-mix(in srgb, currentColor 8%, transparent);
+}
+
+/* ══════════════════════════════════════════
+   CHAMPS CONTACT (STEP 4)
+   ══════════════════════════════════════════ */
+
+.bt-quote-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bt-quote-fields__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.bt-quote-fields__group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bt-quote-fields__label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.bt-quote-fields__input {
+  padding: 9px 12px;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  background: transparent;
+  transition: border-color .2s, box-shadow .2s;
+  outline: none;
+}
+
+.bt-quote-fields__input--error {
+  border-width: 2px;
+}
+
+/* ══════════════════════════════════════════
+   RECAP + SUBMIT (STEP 5)
+   ══════════════════════════════════════════ */
+
+.bt-quote-recap {
+  margin-bottom: 14px;
+}
+
+.bt-quote-recap__line {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  font-size: 13px;
+}
+
+.bt-quote-recap__label {}
+
+.bt-quote-recap__value {
+  font-weight: 600;
+}
+
+.bt-quote-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border-width: 0;
+  border-style: solid;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  width: 100%;
+  transition: filter .15s, transform .1s;
+}
+
+.bt-quote-submit:hover {
+  filter: brightness(1.1);
+}
+
+.bt-quote-submit:active {
+  transform: scale(.98);
+}
+
+.bt-quote-submit:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+
+.bt-quote-submit--loading::after {
+  content: '';
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+  border-style: solid;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: btQuoteSpin .6s linear infinite;
+}
+
+@keyframes btQuoteSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* Messages */
+
+.bt-quote-message {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.bt-quote-message:empty {
+  display: none;
+}
+
+/* ══════════════════════════════════════════
+   POPUP (DIALOG)
+   ══════════════════════════════════════════ */
+
+.bt-quote-popup {
+  border-width: 0;
+  border-radius: 12px;
+  padding: 32px;
+  max-width: 800px;
+  width: 90vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,.25);
+}
+
+.bt-quote-popup::backdrop {
+  background-color: rgba(0,0,0,.5);
+}
+
+.bt-quote-popup__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border-width: 0;
+  border-radius: 50%;
+  font-size: 1.2em;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  transition: opacity .15s;
+}
+
+.bt-quote-popup__close:hover {
+  opacity: .7;
+}
+
+.bt-quote-popup__title {
+  font-size: 1.2em;
+  font-weight: 700;
+  margin: 0 0 16px;
+}
+
+.bt-quote-popup__table-wrap {
+  overflow-x: auto;
+}
+
+.bt-quote-popup__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .9em;
+}
+
+.bt-quote-popup__table th,
+.bt-quote-popup__table td {
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+}
+
+.bt-quote-popup__table thead th {
+  font-weight: 600;
+  font-size: .8em;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.bt-quote-popup__tag {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: .8em;
+  font-weight: 600;
+  border-radius: 12px;
+}
+
+/* ══════════════════════════════════════════
+   LOADING / EMPTY / ERROR
+   ══════════════════════════════════════════ */
+
+.bt-quote__loading {
+  display: flex;
+  justify-content: center;
+  padding: 32px 0;
+}
+
+.bt-quote__loading::after {
+  content: '';
+  width: 24px;
+  height: 24px;
+  border-width: 3px;
+  border-style: solid;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: btQuoteSpin .7s linear infinite;
+}
+
+.bt-quote__empty,
+.bt-quote__error {
+  text-align: center;
+  padding: 16px;
+  font-size: .9em;
+}
+
+.bt-quote-loop-fallback {
+  text-align: center;
+  padding: 24px 16px;
+  font-size: .9em;
+}
+
+/* ══════════════════════════════════════════
+   OPTIONS BATEAU — Step boat-options
+   ══════════════════════════════════════════ */
+.bt-quote-taxo-group {
+  margin-bottom: 16px;
+}
+.bt-quote-taxo-group__label {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ══════════════════════════════════════════
+   CARD "TRAJET SUR MESURE" — Option custom
+   Visuellement distincte des excursions classiques
+   ══════════════════════════════════════════ */
+.bt-quote-exc-card--custom {
+  border: 2px dashed var(--bt-quote-custom-border, var(--bt-quote-border, #d4d4d4));
+  background: var(--bt-quote-custom-bg, linear-gradient(135deg, #fafbfc 0%, #f4f5f6 100%));
+  position: relative;
+}
+/* Icône ou indicateur visuel pour le distinguer */
+.bt-quote-exc-card--custom::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23737373' stroke-width='2'%3E%3Cpath d='M12 20h9'/%3E%3Cpath d='M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z'/%3E%3C/svg%3E") center/contain no-repeat;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+.bt-quote-exc-card--custom:hover::before,
+.bt-quote-exc-card--custom:focus::before {
+  opacity: 1;
+}
+.bt-quote-exc-card--custom:hover,
+.bt-quote-exc-card--custom:focus {
+  border-color: var(--bt-quote-custom-hover-border, var(--bt-quote-primary, #0a0a0a));
+  background: var(--bt-quote-custom-hover-bg, linear-gradient(135deg, #fff 0%, #fafbfc 100%));
+}
+/* État sélectionné — garde le style dashed pour rester distinct */
+.bt-quote-exc-card--custom[aria-selected="true"] {
+  border-style: dashed;
+  border-width: 2px;
+  border-color: var(--bt-quote-custom-sel-border, var(--bt-quote-primary, #0a0a0a));
+  background: var(--bt-quote-custom-sel-bg, #fff);
+  box-shadow: 0 0 0 3px rgba(10, 10, 10, 0.08);
+}
+.bt-quote-exc-card--custom[aria-selected="true"]::before {
+  opacity: 1;
+  stroke: var(--bt-quote-primary, #0a0a0a);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230a0a0a' stroke-width='2'%3E%3Cpath d='M12 20h9'/%3E%3Cpath d='M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z'/%3E%3C/svg%3E");
+}
+.bt-quote-exc-card__desc {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--bt-quote-muted, #737373);
+}
+
+/* ══════════════════════════════════════════
+   WIDGET BOAT TARIFS (.bt-btarifs)
+   Classes séparées pour éviter conflits avec Tarifs Body
+   ══════════════════════════════════════════ */
+.bt-btarifs {
+  display: block;
+}
+.bt-btarifs--hidden {
+  display: none;
+}
+.bt-btarifs__inner {
+  display: block;
+}
+.bt-btarifs__devis-reveal {
+  margin-top: 24px;
+}
+.bt-btarifs__devis-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  background: var(--bt-quote-primary, #0a0a0a);
+  color: #fff;
+  cursor: pointer;
+  transition: background .2s, transform .15s;
+}
+.bt-btarifs__devis-btn:hover {
+  background: var(--bt-quote-primary-hover, #262626);
+}
+.bt-btarifs__devis-btn:active {
+  transform: scale(0.98);
+}
+.bt-btarifs__devis-btn-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════════ */
+
+@media (max-width: 600px) {
+  /* .bt-quote-exc-card responsive géré par Elementor (qt_exc_card_direction) */
+  .bt-quote-fields__row {
+    grid-template-columns: 1fr;
+  }
+  .bt-quote-popup {
+    width: 95vw;
+    padding: 20px;
+  }
+}
+/* ══════════════════════════════════════════════════════════════
+   BT Quote — Sub-steps (progressive disclosure intra-step)
+   Animations CSS, zéro display:none pendant la transition.
+   Les groupes inactifs restent dans le DOM : pointer-events:none.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Container racine ── */
+.bt-quote-substep {
+  position: relative;
+}
+
+/* ── Barre de progression ── */
+.bt-quote-substep__progress {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+.bt-quote-substep__prog-seg {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: currentColor;
+  opacity: .18;
+  transition: opacity .25s ease;
+}
+.bt-quote-substep__prog-seg--done   { opacity: 1; }
+.bt-quote-substep__prog-seg--active { opacity: .6; }
+
+/* ── En-tête (compteur + libellé) ── */
+.bt-quote-substep__header {
+  margin-bottom: 14px;
+}
+.bt-quote-substep__counter {
+  display: block;
+  font-size: .72em;
+  opacity: .5;
+  margin-bottom: 3px;
+  letter-spacing: .03em;
+}
+.bt-quote-substep__label {
+  margin: 0;
+  font-size: 1em;
+  font-weight: 600;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   GROUPES — CSS grid 1 colonne pour superposition.
+   Tous les groupes occupent la même cellule ; seul le visible
+   a opacity:1 + pointer-events:auto.
+   ══════════════════════════════════════════════════════════════ */
+.bt-quote-substep__groups {
+  display: grid;
+  /* min-height mis à jour par JS pour éviter l'effondrement quand
+     le groupe actif est plus petit que ses voisins */
+}
+.bt-quote-substep__group {
+  grid-column: 1;
+  grid-row: 1;
+  will-change: transform, opacity;
+  transition: transform 350ms ease, opacity 350ms ease;
+  /* position par défaut : in-flow (contribue à la hauteur de la grille) */
+}
+.bt-quote-substep__group[aria-hidden="true"] {
+  pointer-events: none;
+  /* transform + opacity injectés par JS */
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CHIPS (sélection des termes)
+   Reprend les variables de couleur du reste du widget.
+   ══════════════════════════════════════════════════════════════ */
+.bt-quote-substep__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 4px;
+}
+.bt-quote-substep__chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 16px;
+  border-radius: 24px;
+  border: 1.5px solid currentColor;
+  font-size: .85em;
+  cursor: pointer;
+  user-select: none;
+  opacity: .55;
+  transition: opacity .18s, background-color .18s, color .18s;
+  /* [CTRL: Elementor border-color + bg via widget] */
+}
+.bt-quote-substep__chip:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.bt-quote-substep__chip--selected {
+  opacity: 1;
+  /* bg + color : [CTRL: qt_chip_selected_bg] + [CTRL: qt_chip_selected_color] via {{WRAPPER}} */
+}
+
+/* ══════════════════════════════════════════════════════════════
+   NAVIGATION intra-substep
+   Trois rôles distincts → trois styles complets.
+
+   [A] __btn-back   "← Retour"  → ghost / secondaire
+   [B] __btn-next   "Passer →"  → plein / primaire
+       (label change en "Valider →" au dernier groupe)
+   [C] .bt-quote-step__next hors substep → style wizard (bt-quote-form.css)
+   ══════════════════════════════════════════════════════════════ */
+.bt-quote-substep__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* ── [A] Retour — ghost, bordure, texte secondaire ── */
+.bt-quote-substep__btn-back {
+  padding: 8px 18px;
+  border: 1.5px solid currentColor;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  opacity: .65;
+  transition: opacity .15s, transform .1s;
+  line-height: 1.4;
+}
+.bt-quote-substep__btn-back:hover  { opacity: 1; }
+.bt-quote-substep__btn-back:active { transform: scale(.97); }
+/* Caché sur index 0 — visibility pour garder la place dans le flex */
+.bt-quote-substep__btn-back[hidden] {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* ── [B] Passer / Valider — plein, couleur héritée ── */
+.bt-quote-substep__btn-next {
+  padding: 9px 22px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  /* bg + color : hérités du parent → Elementor les surcharge via {{WRAPPER}} */
+  background: currentColor;
+  color: #fff; /* fallback ; Elementor override possible */
+  transition: filter .15s, transform .1s;
+  line-height: 1.4;
+  margin-left: auto; /* colle à droite même si Retour est hidden */
+}
+.bt-quote-substep__btn-next:hover  { filter: brightness(1.1); }
+.bt-quote-substep__btn-next:active { transform: scale(.97); }
+
+/* ══════════════════════════════════════════════════════════════
+   RÉCAP FINAL
+   ══════════════════════════════════════════════════════════════ */
+.bt-quote-substep__recap {
+  animation: btSubRecapIn .3s ease both;
+}
+@keyframes btSubRecapIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.bt-quote-substep__recap-group {
+  margin-bottom: 10px;
+}
+.bt-quote-substep__recap-group-label {
+  display: block;
+  font-size: .7em;
+  font-weight: 700;
+  opacity: .5;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.bt-quote-substep__recap-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.bt-quote-substep__recap-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: .82em;
+  border: 1px solid currentColor;
+  opacity: .8;
+}
+.bt-quote-substep__recap-tag--none {
+  opacity: .4;
+}
+.bt-quote-substep__recap-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.bt-quote-substep__btn-modify {
+  padding: 0;
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: .85em;
+  cursor: pointer;
+  text-decoration: underline;
+  opacity: .7;
+}
+.bt-quote-substep__btn-modify:hover { opacity: 1; }
+
+.bt-quote-substep__btn-confirm {
+  padding: 9px 22px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  background: currentColor;
+  color: #fff;
+  line-height: 1.4;
+  transition: filter .15s, transform .1s;
+}
+.bt-quote-substep__btn-confirm:hover  { filter: brightness(1.1); }
+.bt-quote-substep__btn-confirm:active { transform: scale(.97); }
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Repeater Section
+   ══════════════════════════════════════════════════════════ */
+
+/* En-tête */
+.bt-rsection__header { margin-bottom: 1em; }
+.bt-rsection__title  { margin: 0 0 .5em; }
+.bt-rsection__desc   { margin: 0; }
+
+/* Liste */
+.bt-rsection__items--list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Grille — colonnes définies par le control responsive Elementor */
+.bt-rsection__items--grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* Item */
+.bt-rsection__item {
+  display: flex;
+  align-items: flex-start;
+  gap: .75em;
+}
+
+.bt-rsection__item-link {
+  display: flex;
+  align-items: flex-start;
+  gap: .75em;
+  width: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
+.bt-rsection__item-icon    { flex-shrink: 0; line-height: 1; }
+.bt-rsection__item-icon img { display: block; max-width: 1em; height: auto; }
+.bt-rsection__item-content { flex: 1; }
+.bt-rsection__item-title   { display: block; }
+.bt-rsection__item-body    { margin: .25em 0 0; }
+
+/* Mode auto : chaque sous-champ sur sa propre ligne */
+.bt-rsection__item-field     { display: block; }
+.bt-rsection__item-field img { max-width: 100%; height: auto; }
+
+/* État vide */
+.bt-rsection__empty { margin: 0; }
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Reviews
+   ══════════════════════════════════════════════════════════ */
+.bt-reviews__section-title {
+  margin: 0 0 24px;
+}
+
+.bt-reviews__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.bt-reviews__list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bt-reviews__card {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bt-reviews__stars {
+  font-size: 18px;
+  color: var(--bt-star-color);
+  letter-spacing: 2px;
+}
+
+.bt-reviews__text {
+  margin: 0;
+  font-style: italic;
+  line-height: 1.7;
+}
+
+.bt-reviews__quote {
+  font-size: 1.6em;
+  line-height: .5;
+  vertical-align: -0.3em;
+  margin-right: 2px;
+  opacity: .3;
+}
+
+.bt-reviews__name {
+  font-size: .85em;
+  font-weight: 600;
+  opacity: .65;
+  margin-top: auto;
+}
+
+/* ── Étoiles ─────────────────────────────────────────────── */
+.bt-star {
+  display: inline-block;
+  font-size: inherit;
+  line-height: 1;
+}
+.bt-star--filled {
+  color: var(--bt-star-color, #f59e0b);
+}
+.bt-star--empty {
+  color: var(--bt-star-empty, #d1d5db);
+  opacity: .4;
+}
+
+/* ── Note chiffrée ───────────────────────────────────────── */
+.bt-reviews__rating-number {
+  font-size: .8em;
+  font-weight: 700;
+  opacity: .6;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+/* ── Meta (date + source) ────────────────────────────────── */
+.bt-reviews__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .75em;
+  opacity: .5;
+  margin-top: auto;
+}
+.bt-reviews__date {
+  white-space: nowrap;
+}
+.bt-reviews__source {
+  white-space: nowrap;
+}
+.bt-reviews__source::before {
+  content: "·";
+  margin-right: 8px;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .bt-reviews__grid {
+    grid-template-columns: 1fr;
+  }
+}
+/* ═══════════════════════════════════════════
+   bt-segmented-control.css
+   ZÉRO couleur hardcodée.
+   Chaque couleur = contrôle Elementor ou héritage.
+   Les commentaires [CTRL: xxx] indiquent quel
+   contrôle Elementor pilote la propriété.
+   ═══════════════════════════════════════════ */
+/* ── Variables layout uniquement ── */
+:root {
+  --bt-seg-radius: 10px;
+  --bt-seg-padding: 4px;
+  --bt-seg-font-size: 14px;
+  --bt-seg-shadow: 0 1px 3px rgba(0,0,0,.08);
+  --bt-seg-transition: .25s cubic-bezier(.4,0,.2,1);
+  --bt-card-radius: 12px;
+}
+/* ══════════════════════════════════════════
+   SEGMENTED CONTROL
+   [CTRL: seg_track_bg]        → --bt-seg-bg
+   [CTRL: seg_active_bg]       → --bt-seg-active-bg
+   [CTRL: seg_radius]          → --bt-seg-radius
+   [CTRL: seg_padding]         → --bt-seg-padding
+   [CTRL: seg_typography]      → font sur .bt-seg__btn
+   [CTRL: seg_text_color]      → color sur .bt-seg__btn
+   [CTRL: seg_text_color_active] → color sur .bt-seg__btn--active
+   ══════════════════════════════════════════ */
+.bt-seg {
+  display: flex;
+  position: relative;
+  /* background-color: [CTRL: seg_track_bg] */
+  border-radius: var(--bt-seg-radius);
+  padding: var(--bt-seg-padding);
+  margin-bottom: 24px;
+}
+.bt-seg__btn {
+  flex: 1;
+  position: relative;
+  z-index: 1;
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 10px 16px;
+  font-size: var(--bt-seg-font-size);
+  font-weight: 500;
+  /* color: [CTRL: seg_text_color] */
+  cursor: pointer;
+  border-radius: calc(var(--bt-seg-radius) - var(--bt-seg-padding));
+  transition: color var(--bt-seg-transition);
+  text-align: center;
+  line-height: 1.4;
+  font-family: inherit;
+}
+/* .bt-seg__btn--active color: [CTRL: seg_text_color_active] */
+.bt-seg__indicator {
+  position: absolute;
+  top: var(--bt-seg-padding);
+  bottom: var(--bt-seg-padding);
+  left: var(--bt-seg-padding);
+  width: calc(50% - var(--bt-seg-padding));
+  /* background-color: [CTRL: seg_active_bg] → injecté par Elementor sur .bt-seg__indicator */
+  border-radius: calc(var(--bt-seg-radius) - var(--bt-seg-padding));
+  box-shadow: var(--bt-seg-shadow);
+  transition: transform var(--bt-seg-transition);
+  z-index: 0;
+  pointer-events: none;
+}
+.bt-seg[data-bt-seg-active="1"] .bt-seg__indicator {
+  transform: translateX(100%);
+}
+/* ══════════════════════════════════════════
+   PANELS
+   ══════════════════════════════════════════ */
+.bt-seg__panel { display: none; }
+.bt-seg__panel--active { display: block; }
+/* ══════════════════════════════════════════
+   GRID
+   [CTRL: exc_cards_columns] → grid-template-columns
+   ══════════════════════════════════════════ */
+.bt-forfaits__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+/* ══════════════════════════════════════════
+   FORFAIT CARD
+   [CTRL: fcard_bg]            → background-color
+   [CTRL: fcard_border_color]  → border-color
+   [CTRL: fcard_active_border] → border-color + box-shadow
+   [CTRL: fcard_radius]        → border-radius
+   [CTRL: fcard_padding]       → padding
+   ══════════════════════════════════════════ */
+.bt-forfait-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  appearance: none;
+  border: 1.5px solid;
+  /* border-color: [CTRL: fcard_border_color] */
+  border-radius: var(--bt-card-radius);
+  /* background: [CTRL: fcard_bg] */
+  padding: 16px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition:
+    border-color var(--bt-seg-transition),
+    box-shadow var(--bt-seg-transition);
+}
+.bt-forfait-card:hover {
+  opacity: .9;
+}
+.bt-forfait-card--active {
+  border-width: 2px;
+  /* border-color + box-shadow: [CTRL: fcard_active_border] */
+}
+/* ── BADGE ──
+   [CTRL: fcard_badge_bg]    → background-color
+   [CTRL: fcard_badge_color] → color
+   [CTRL: fcard_badge_typo]  → font
+   ══════════════════════════ */
+.bt-forfait-card__badge {
+  position: absolute;
+  top: -9px;
+  left: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 4px;
+  line-height: 1.4;
+}
+/* ── CONTENT WRAPPER ── */
+.bt-forfait-card__content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+/* ── NOM FORFAIT ──
+   [CTRL: fcard_name_typo]  → font
+   [CTRL: fcard_name_color] → color
+   ══════════════════════════ */
+.bt-forfait-card__name {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+/* ── PRICING ──
+   [CTRL: fcard_price_typo]    → font sur __price
+   [CTRL: fcard_price_color]   → color sur __price
+   [CTRL: fcard_currency_color] → color sur __currency + __per
+   ══════════════════════════════ */
+.bt-forfait-card__pricing {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.bt-forfait-card__price {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1;
+}
+.bt-forfait-card__currency {
+  font-size: 14px;
+}
+.bt-forfait-card__per {
+  font-size: 12px;
+  margin-left: 2px;
+}
+/* ── PRIX PAR PERSONNE (secondaire, sous le prix total bateau) ── */
+.bt-forfait-card__pp {
+  font-size: 13px;
+  opacity: .65;
+  margin: 2px 0 0;
+  line-height: 1.2;
+}
+.bt-forfait-card__pp .bt-forfait-card__per {
+  font-size: 12px;
+  margin-left: 1px;
+}
+/* ── PRIX BARRÉ ──
+   [CTRL: fcard_original_color] → color
+   ══════════════════════════════ */
+.bt-forfait-card__original {
+  font-size: 14px;
+  text-decoration: line-through;
+  margin-right: 2px;
+}
+/* ── DISCOUNT BADGE ──
+   [CTRL: fcard_discount_bg]    → background-color
+   [CTRL: fcard_discount_color] → color
+   ══════════════════════════════ */
+.bt-forfait-card__discount {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-top: 6px;
+  align-self: flex-start;
+}
+/* ── SÉPARATEUR (inline only) ──
+   [CTRL: fcard_separator_color] → background
+   ══════════════════════════════ */
+.bt-forfait-card__separator {
+  display: none;
+}
+/* ── META ──
+   [CTRL: fcard_meta_typo]         → font sur __meta-item
+   [CTRL: fcard_meta_color]        → color sur __meta-item + __icon
+   [CTRL: fcard_meta_border_color] → border-top-color sur __meta
+   ══════════════════════════════════ */
+.bt-forfait-card__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid;
+  /* border-top-color: [CTRL: fcard_meta_border_color] */
+}
+.bt-forfait-card__meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+.bt-forfait-card__icon {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+/* ── RADIO DOT (inline only) ── */
+.bt-forfait-card__radio {
+  display: none;
+}
+/* ══════════════════════════════════════════
+   MODE INLINE (1 col horizontal)
+   ══════════════════════════════════════════ */
+.bt-forfaits__grid--inline {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.bt-forfaits__grid--inline .bt-forfait-card {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+}
+.bt-forfaits__grid--inline .bt-forfait-card__content {
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+}
+.bt-forfaits__grid--inline .bt-forfait-card__meta,
+.bt-forfait-card__meta--row {
+  flex-direction: row;
+  gap: 14px;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+.bt-forfaits__grid--inline .bt-forfait-card__meta-item {
+  font-size: 13px;
+}
+.bt-forfaits__grid--inline .bt-forfait-card__separator {
+  display: block;
+  width: 1px;
+  height: 32px;
+  flex-shrink: 0;
+}
+.bt-forfaits__grid--inline .bt-forfait-card__radio {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid;
+  flex-shrink: 0;
+  position: relative;
+  transition: border-color var(--bt-seg-transition);
+}
+.bt-forfaits__grid--inline .bt-forfait-card--active .bt-forfait-card__radio::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: currentColor;
+}
+/* ══════════════════════════════════════════
+   CARD AVEC IMAGE (bateaux)
+   ══════════════════════════════════════════ */
+.bt-forfait-card--has-image {
+  padding: 0;
+  overflow: hidden;
+}
+/* __body : alias sémantique de __content utilisé par trait-bt-boat-pricing */
+.bt-forfait-card--has-image .bt-forfait-card__body {
+  padding: 12px 14px;
+  flex: 1;
+  min-width: 0;
+}
+.bt-forfait-card__image {
+  aspect-ratio: 16 / 9;
+  position: relative;
+  overflow: hidden;
+}
+.bt-forfait-card__image img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.bt-forfait-card--has-image .bt-forfait-card__content {
+  padding: 12px 14px;
+}
+/* [CTRL: fcard_title_typo] + [CTRL: fcard_title_color] */
+.bt-forfait-card__title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 2px;
+}
+/* [CTRL: fcard_subtitle_typo] + [CTRL: fcard_subtitle_color] */
+.bt-forfait-card__subtitle {
+  font-size: 11px;
+  margin: 0 0 8px;
+}
+/* ── NOTE TARIFAIRE ──
+   [CTRL: fcard_note_typo]  → font
+   [CTRL: fcard_note_color] → color
+   ══════════════════════════ */
+.bt-forfait-card__note {
+  font-size: 11px;
+  padding: 0 14px 12px;
+  margin: 0;
+  opacity: .7;
+}
+.bt-forfait-card--has-image .bt-forfait-card__badge {
+  top: 8px;
+  left: 8px;
+}
+.bt-forfaits__grid--inline .bt-forfait-card--has-image {
+  flex-direction: row;
+  align-items: stretch;
+}
+.bt-forfaits__grid--inline .bt-forfait-card__image {
+  width: var(--bt-fcard-img-width, 110px); /* [CTRL: fcard_img_width] */
+  aspect-ratio: auto;
+  flex-shrink: 0;
+  align-self: stretch; /* force fill vertical quelle que soit la hauteur */
+}
+.bt-forfaits__grid--inline .bt-forfait-card--has-image .bt-forfait-card__content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+}
+/* ══════════════════════════════════════════
+   CONTENU SOUS LES CARDS
+   ══════════════════════════════════════════ */
+.bt-forfait-content {}
+/* ══════════════════════════════════════════
+   BOOKING LOADER
+   Affiché pendant le chargement du widget Regiondo
+   ══════════════════════════════════════════ */
+.bt-booking-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 20px;
+  color: var(--bt-loader-color, #717171);
+  font-size: 14px;
+}
+.bt-booking-loader[hidden] {
+  display: none;
+}
+.bt-booking-loader__spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: bt-spin 0.8s linear infinite;
+}
+.bt-booking-loader__text {
+  font-weight: 500;
+}
+@keyframes bt-spin {
+  to { transform: rotate(360deg); }
+}
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Share
+   ══════════════════════════════════════════════════════════ */
+
+.bt-share {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Bouton principal ─────────────────────────────────────── */
+.bt-share__top {
+  display: flex;
+}
+
+.bt-share__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  border: none;
+  background: #0f172a;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 600;
+  font-size: 1em;
+  transition: background .2s, transform .15s;
+  text-decoration: none;
+}
+
+.bt-share__btn:hover  { background: #1e293b; }
+.bt-share__btn:active { transform: scale(.97); }
+
+.bt-share__btn-icon {
+  flex-shrink: 0;
+}
+
+.bt-share__btn-icon svg,
+.bt-share__btn-icon i {
+  display: block;
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+}
+
+/* ── Sections (social / IA) ───────────────────────────────── */
+.bt-share__section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bt-share__section-title {
+  margin: 0;
+  font-size: .8em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: #64748b;
+}
+
+/* ── Boutons réseaux sociaux ─────────────────────────────── */
+.bt-share__social-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bt-share__social-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: transparent;
+  color: #334155;
+  font: inherit;
+  font-size: .875em;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background .15s, border-color .15s, color .15s;
+}
+
+.bt-share__social-link:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.bt-share__social-link svg { flex-shrink: 0; }
+
+/* Couleurs marque — subtiles par défaut */
+.bt-share__social-link--x:hover         { color: #000; border-color: #000; }
+.bt-share__social-link--facebook:hover  { color: #1877f2; border-color: #1877f2; }
+.bt-share__social-link--whatsapp:hover  { color: #25d366; border-color: #25d366; }
+.bt-share__social-link--linkedin:hover  { color: #0a66c2; border-color: #0a66c2; }
+.bt-share__social-link--email:hover     { color: #475569; border-color: #475569; }
+
+/* ── Liens IA ────────────────────────────────────────────── */
+.bt-share__ai-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bt-share__ai-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1.5px solid currentColor;
+  text-decoration: none;
+  font-size: .875em;
+  font-weight: 600;
+  transition: background .15s, box-shadow .15s;
+}
+
+.bt-share__ai-link:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+/* Couleurs spécifiques par IA */
+.bt-share__ai-link--claude  { color: #c96a35; }
+.bt-share__ai-link--chatgpt { color: #10a37f; }
+.bt-share__ai-link--gemini  { color: #1a73e8; }
+
+.bt-share__ai-link--claude:hover  { background: #fff9f6; }
+.bt-share__ai-link--chatgpt:hover { background: #f0fdf4; }
+.bt-share__ai-link--gemini:hover  { background: #eff6ff; }
+
+/* Logo SVG IA */
+.bt-share__ai-logo {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  fill: currentColor;
+}
+/* ══════════════════════════════════════════════════════════
+   WIDGET : BT — Affichage Taxonomie
+   ══════════════════════════════════════════════════════════ */
+
+.bt-taxdisp { display: block; }
+.bt-taxdisp__section-title { margin: 0 0 8px; }
+.bt-taxdisp__section-desc { margin: 0 0 12px; }
+.bt-taxdisp__text { margin: 0; }
+
+/* ── Layouts ────────────────────────────────────────────── */
+
+.bt-taxdisp__text--list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.bt-taxdisp__text--grid {
+    display: grid;
+    gap: 12px;
+    /* grid-template-columns et gap gérés par les contrôles Elementor */
+}
+
+/* ── Items ──────────────────────────────────────────────── */
+
+/* Item inline (default) */
+.bt-taxdisp__item {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* Item en liste ou grille → block-level, taille contenu (pas étirement cellule) */
+.bt-taxdisp__text--list .bt-taxdisp__item {
+    display: flex;
+    align-items: flex-start;
+    align-self: flex-start; /* ne remplit pas toute la largeur du flex-column */
+}
+
+.bt-taxdisp__text--grid .bt-taxdisp__item {
+    display: flex;
+    align-items: flex-start;
+}
+
+/* Corps : label et description empilés verticalement */
+.bt-taxdisp__body {
+    display: inline-flex;
+    flex-direction: column;
+}
+
+.bt-taxdisp__text--list .bt-taxdisp__body,
+.bt-taxdisp__text--grid .bt-taxdisp__body {
+    display: flex;
+    width: fit-content; /* fond/bordure collés au contenu, pas à la cellule */
+}
+
+/* ── Séparateur inline ──────────────────────────────────── */
+
+.bt-taxdisp__sep { display: inline; }
+
+/* ── Description ────────────────────────────────────────── */
+
+.bt-taxdisp__desc {
+    display: block;
+    margin-top: 2px;
+}
+
+/* ── Icône ──────────────────────────────────────────────── */
+
+.bt-taxdisp__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.bt-taxdisp__text--list .bt-taxdisp__icon,
+.bt-taxdisp__text--grid .bt-taxdisp__icon {
+    display: flex;
+}
+
+.bt-taxdisp__icon svg,
+.bt-taxdisp__icon img { display: block; }
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Taxonomy List
+   ══════════════════════════════════════════════════════════ */
+.bt-taxlist__title {
+  margin: 0 0 16px;
+}
+
+.bt-taxlist__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 12px;
+}
+
+/* Verticale (défaut) */
+.bt-taxlist__list--list {
+  flex-direction: column;
+}
+
+/* Grille */
+.bt-taxlist__list--grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* Inline */
+.bt-taxlist__list--inline {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.bt-taxlist__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.bt-taxlist__item-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Taille pilotée par le control Elementor icon_size (défaut 24px) */
+  width: 24px;
+  height: 24px;
+  font-size: 24px; /* hérité par <i> FA */
+}
+
+.bt-taxlist__item-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.bt-taxlist__item-icon i {
+  font-size: 1em; /* suit font-size du conteneur */
+  line-height: 1;
+}
+
+.bt-taxlist__item-icon-fallback {
+  color: currentColor;
+  opacity: .6;
+  font-size: .85em;
+}
+
+.bt-taxlist__item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bt-taxlist__item-name {
+  font-weight: 500;
+}
+
+.bt-taxlist__item-desc--inline {
+  display: inline;
+  margin-left: .4em;
+  opacity: .7;
+}
+
+.bt-taxlist__item-desc--below {
+  display: block;
+  font-size: .875em;
+  opacity: .7;
+}
+
+/* Inline layout : centrage vertical */
+.bt-taxlist__list--inline .bt-taxlist__item {
+  align-items: center;
+}
+/* ══════════════════════════════════════════════════════════
+   WIDGET : BT — Titre + Icône + Descriptif
+   ══════════════════════════════════════════════════════════ */
+
+.bt-tid { display: block; }
+.bt-tid__inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.bt-tid__icon { flex-shrink: 0; }
+.bt-tid__desc { flex: 1; margin: 0; }
+
+/* ══════════════════════════════════════════════════════════
+   WIDGET : BT — Badge High Demand
+   ══════════════════════════════════════════════════════════ */
+
+.bt-high-demand {
+    position: relative;
+    display: inline-block;
+}
+
+.bt-high-demand__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    white-space: nowrap;
+    z-index: 10;
+}
+
+.bt-high-demand__text {
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+}
+
+.bt-high-demand__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+    flex-shrink: 0;
+}
+
+.bt-high-demand__icon i {
+    line-height: 1;
+    display: inline-block;
+}
+
+.bt-high-demand__icon svg {
+    flex-shrink: 0;
+    display: block;
+    vertical-align: middle;
+}
+
+/* ══════════════════════════════════════════════════════════
+   WIDGET : BT — Badge ACF (generique)
+   ══════════════════════════════════════════════════════════ */
+
+.bt-acf-badge {
+    position: relative;
+    display: inline-block;
+}
+
+.bt-acf-badge__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    white-space: nowrap;
+    z-index: 10;
+}
+
+.bt-acf-badge__text {
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+}
+
+.bt-acf-badge__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+    flex-shrink: 0;
+}
+
+.bt-acf-badge__icon i {
+    line-height: 1;
+    display: inline-block;
+}
+
+.bt-acf-badge__icon svg {
+    flex-shrink: 0;
+    display: block;
+    vertical-align: middle;
+}
+
+.bt-acf-badge__image {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.bt-acf-badge__image img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bt-high-demand__badge,
+    .bt-acf-badge__badge {
+        transition: none;
+    }
+}

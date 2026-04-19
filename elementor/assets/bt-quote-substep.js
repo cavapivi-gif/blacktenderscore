@@ -60,6 +60,7 @@
     var btnNext = el('button', 'bt-quote-substep__btn-next');
     btnBack.type = 'button';
     btnNext.type = 'button';
+    btnBack.textContent = '← Retour';
     btnBack.setAttribute('hidden', '');
     nav.appendChild(btnBack);
     nav.appendChild(btnNext);

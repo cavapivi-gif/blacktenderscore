@@ -203,3 +203,48 @@
   font-weight: 400;
   vertical-align: middle;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Glassmorphism Buttons
+   Usage: ajouter .btn-glass-white ou .btn-glass-black sur un bouton Elementor
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* Base glass */
+.btn-glass-white,
+.btn-glass-black {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
+}
+
+/* White Glass */
+.btn-glass-white {
+  background: rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  color: #fff !important;
+}
+.btn-glass-white:hover {
+  background: rgba(255, 255, 255, 0.35) !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Black Glass */
+.btn-glass-black {
+  background: rgba(0, 0, 0, 0.25) !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #fff !important;
+}
+.btn-glass-black:hover {
+  background: rgba(0, 0, 0, 0.4) !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Variantes avec bordure plus visible */
+.btn-glass-white--border {
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+.btn-glass-black--border {
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}

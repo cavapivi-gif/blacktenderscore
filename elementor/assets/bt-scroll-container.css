@@ -1,0 +1,287 @@
+/**
+ * BT Carousel — Swiper Styles with CSS Variables
+ * All visual properties controlled via Elementor controls
+ *
+ * @package BlackTenders
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CSS Variables (defaults)
+   ═══════════════════════════════════════════════════════════════════════════ */
+.bt-carousel {
+    /* Arrow styling */
+    --bt-arrow-size: 20px;
+    --bt-arrow-box: 44px;
+    --bt-arrow-color: #0a0a0a;
+    --bt-arrow-bg: rgba(255, 255, 255, 0.9);
+    --bt-arrow-color-hover: #0a0a0a;
+    --bt-arrow-bg-hover: #fff;
+    --bt-arrow-radius: 50%;
+
+    /* Arrow prev positioning */
+    --bt-prev-l: 0px;
+    --bt-prev-r: auto;
+    --bt-prev-trx: 0px;
+    --bt-prev-h-off: 16px;
+    --bt-prev-t: 50%;
+    --bt-prev-b: auto;
+    --bt-prev-try: -50%;
+    --bt-prev-v-off: 0px;
+
+    /* Arrow next positioning */
+    --bt-next-l: auto;
+    --bt-next-r: 0px;
+    --bt-next-trx: 0px;
+    --bt-next-h-off: -16px;
+    --bt-next-t: 50%;
+    --bt-next-b: auto;
+    --bt-next-try: -50%;
+    --bt-next-v-off: 0px;
+
+    /* Dots styling */
+    --bt-dot-size: 8px;
+    --bt-dot-gap: 8px;
+    --bt-dot-spacing: 16px;
+    --bt-dot-color: rgba(10, 10, 10, 0.25);
+    --bt-dot-active: #0a0a0a;
+
+    /* Spacing */
+    --bt-gap: 20px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Base Container
+   ═══════════════════════════════════════════════════════════════════════════ */
+.bt-carousel {
+    position: relative;
+    overflow: hidden;
+}
+
+.bt-carousel.swiper {
+    overflow: hidden;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Offset — slides visible beyond container
+   Parent (.elementor-element) clips, container (.e-con) overflows
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Container overflow via data attribute — beats Elementor's .e-con specificity */
+.bt-carousel[data-bt-overflow="visible"],
+.e-con.bt-carousel[data-bt-overflow="visible"],
+.e-con.e-con-full.bt-carousel[data-bt-overflow="visible"] {
+    overflow: visible !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Wrapper
+   ═══════════════════════════════════════════════════════════════════════════ */
+.bt-carousel .swiper-wrapper {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch;
+    box-sizing: content-box;
+}
+
+.bt-carousel.e-con-boxed > .e-con-inner.swiper-wrapper {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Slides
+   ═══════════════════════════════════════════════════════════════════════════ */
+.bt-carousel .swiper-slide {
+    width: auto;
+    flex-shrink: 0;
+    height: auto;
+    box-sizing: border-box;
+}
+
+.bt-carousel .swiper-slide.e-con {
+    height: auto;
+}
+
+.bt-carousel .swiper-slide > .e-con,
+.bt-carousel .swiper-slide > .elementor-widget,
+.bt-carousel .swiper-slide > .elementor-element {
+    height: 100%;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Navigation Arrows — all styling via CSS vars
+   ═══════════════════════════════════════════════════════════════════════════ */
+.bt-arrow {
+    position: absolute;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--bt-arrow-box);
+    height: var(--bt-arrow-box);
+    font-size: var(--bt-arrow-size);
+    color: var(--bt-arrow-color);
+    background-color: var(--bt-arrow-bg);
+    border-radius: var(--bt-arrow-radius);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    user-select: none;
+}
+
+.bt-arrow:hover {
+    color: var(--bt-arrow-color-hover);
+    background-color: var(--bt-arrow-bg-hover);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.bt-arrow:focus {
+    outline: 2px solid var(--bt-arrow-color);
+    outline-offset: 2px;
+}
+
+.bt-arrow.swiper-button-disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.bt-arrow.swiper-button-lock {
+    display: none;
+}
+
+.bt-arrow i {
+    line-height: 1;
+}
+
+/* Arrow Prev — positioned via CSS vars (transforms are additive) */
+.bt-arrow--prev {
+    left: var(--bt-prev-l);
+    right: var(--bt-prev-r);
+    top: var(--bt-prev-t);
+    bottom: var(--bt-prev-b);
+    transform: translateX(calc(var(--bt-prev-trx) + var(--bt-prev-h-off, 0px)))
+               translateY(calc(var(--bt-prev-try) + var(--bt-prev-v-off, 0px)));
+}
+
+/* Arrow Next — positioned via CSS vars (transforms are additive) */
+.bt-arrow--next {
+    left: var(--bt-next-l);
+    right: var(--bt-next-r);
+    top: var(--bt-next-t);
+    bottom: var(--bt-next-b);
+    transform: translateX(calc(var(--bt-next-trx) + var(--bt-next-h-off, 0px)))
+               translateY(calc(var(--bt-next-try) + var(--bt-next-v-off, 0px)));
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Pagination — all styling via CSS vars
+   ═══════════════════════════════════════════════════════════════════════════ */
+.bt-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--bt-dot-gap);
+    padding: 8px 0;
+    z-index: 10;
+}
+
+/* Bullets */
+.bt-pagination .swiper-pagination-bullet {
+    width: var(--bt-dot-size);
+    height: var(--bt-dot-size);
+    border-radius: 50%;
+    background-color: var(--bt-dot-color);
+    opacity: 1;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin: 0 !important;
+}
+
+.bt-pagination .swiper-pagination-bullet:hover {
+    background-color: var(--bt-dot-active);
+    opacity: 0.7;
+}
+
+.bt-pagination .swiper-pagination-bullet-active {
+    background-color: var(--bt-dot-active);
+    transform: scale(1.2);
+}
+
+/* Dynamic bullets */
+.bt-pagination .swiper-pagination-bullet-active-main {
+    background-color: var(--bt-dot-active);
+}
+
+/* Position: Outside (default) — pagination is sibling of .bt-carousel */
+.bt-pagination--outside .bt-pagination {
+    position: relative;
+    width: 100%;
+    margin-top: var(--bt-dot-spacing);
+    clear: both;
+}
+
+/* Position: Inside */
+.bt-pagination--inside .bt-pagination {
+    position: absolute;
+    bottom: var(--bt-dot-spacing);
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.bt-pagination--inside .bt-pagination .swiper-pagination-bullet {
+    background-color: rgba(255, 255, 255, 0.5);
+}
+
+.bt-pagination--inside .bt-pagination .swiper-pagination-bullet:hover {
+    background-color: rgba(255, 255, 255, 0.7);
+}
+
+.bt-pagination--inside .bt-pagination .swiper-pagination-bullet-active {
+    background-color: #fff;
+}
+
+/* Fraction */
+.bt-pagination.swiper-pagination-fraction {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--bt-arrow-color);
+}
+
+/* Progressbar */
+.bt-pagination.swiper-pagination-progressbar {
+    position: relative;
+    width: 100%;
+    height: 4px;
+    background: var(--bt-dot-color);
+    margin-top: var(--bt-dot-spacing);
+}
+
+.bt-pagination.swiper-pagination-progressbar .swiper-pagination-progressbar-fill {
+    background: var(--bt-dot-active);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Grab Cursor
+   ═══════════════════════════════════════════════════════════════════════════ */
+.bt-carousel.swiper-grab,
+.bt-carousel .swiper-wrapper {
+    cursor: grab;
+}
+
+.bt-carousel.swiper-grabbing,
+.bt-carousel .swiper-wrapper:active {
+    cursor: grabbing;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Editor Preview
+   ═══════════════════════════════════════════════════════════════════════════ */
+.elementor-editor-active .bt-carousel {
+    overflow: visible !important;
+}
+
+.elementor-editor-active .bt-arrow.swiper-button-disabled {
+    opacity: 0.5;
+    pointer-events: auto;
+}

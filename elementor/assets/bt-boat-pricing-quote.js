@@ -43,6 +43,27 @@
       state.boat_name = autoBoat.querySelector('.bt-quote-boat-auto__name')?.textContent || '';
     }
 
+    // Auto-select from excursion dropdown if present
+    var excDropdown = root.querySelector('[data-bt-exc-dropdown]');
+    if (excDropdown && !state.excursion_id) {
+      var selOpt = excDropdown.querySelector('.bt-quote-dd__opt--sel');
+      if (selOpt) {
+        state.excursion_id   = parseInt(selOpt.getAttribute('data-exc-id'), 10) || 0;
+        state.excursion_name = selOpt.getAttribute('data-name') || '';
+        state.exc_custom     = selOpt.hasAttribute('data-custom-trip') || state.excursion_id === 0;
+      }
+    }
+
+    // Auto-select from boat dropdown if present
+    var boatDropdown = root.querySelector('[data-bt-boat-dropdown]');
+    if (boatDropdown && !state.boat_id) {
+      var selOpt = boatDropdown.querySelector('.bt-quote-dd__opt--sel');
+      if (selOpt) {
+        state.boat_id   = parseInt(selOpt.getAttribute('data-boat-id'), 10) || 0;
+        state.boat_name = selOpt.getAttribute('data-name') || '';
+      }
+    }
+
     // Step header click → go to that step
     steps.forEach(function (step) {
       var header = step.querySelector('.bt-quote-step__header');
@@ -102,6 +123,17 @@
     function validateStep(step) {
       var type = step.getAttribute('data-step-type');
       if (type === 'excursion') {
+        // Check dropdown first
+        var excDropdown = step.querySelector('[data-bt-exc-dropdown]');
+        if (excDropdown) {
+          var selId = parseInt(excDropdown.getAttribute('data-selected-id'), 10);
+          var hidden = excDropdown.querySelector('[name="excursion_id"]');
+          if (hidden) selId = parseInt(hidden.value, 10) || selId;
+          if (selId > 0 || excDropdown.querySelector('.bt-quote-dd__opt--sel[data-custom-trip]')) {
+            return true;
+          }
+        }
+        // Fallback to card selection
         if (!state.excursion_id) {
           var selected = step.querySelector('.bt-quote-exc-card[aria-selected="true"]');
           if (!selected) {
@@ -112,6 +144,16 @@
         return true;
       }
       if (type === 'boat') {
+        // Check dropdown first
+        var boatDropdown = step.querySelector('[data-bt-boat-dropdown]');
+        if (boatDropdown) {
+          var selOpt = boatDropdown.querySelector('.bt-quote-dd__opt--sel');
+          if (selOpt) {
+            var boatId = parseInt(selOpt.getAttribute('data-boat-id'), 10);
+            if (boatId > 0) return true;
+          }
+        }
+        // Fallback to card
         if (!state.boat_id) {
           shakeFeedback(step);
           return false;
@@ -128,6 +170,17 @@
         if (durType.value === 'half' || durType.value === 'full') {
           var dateInp = step.querySelector('.bt-quote-datepicker--single [name="date_start"]');
           if (dateInp && !dateInp.value) { shakeFeedback(step); return false; }
+        }
+        // Pour demi-journée, le créneau est obligatoire
+        if (durType.value === 'half') {
+          var tsInp = step.querySelector('[name="timeslot"]');
+          if (!tsInp || !tsInp.value) {
+            // Highlight la section timeslot
+            var tsWrap = step.querySelector('[data-bt-timeslot]');
+            if (tsWrap) tsWrap.classList.add('bt-quote-timeslot--error');
+            shakeFeedback(step);
+            return false;
+          }
         }
         if (durType.value === 'multi') {
           var startInp = step.querySelector('.bt-quote-datepicker--range [name="date_start"]');
@@ -164,10 +217,22 @@
     function collectStepData(step) {
       var type = step.getAttribute('data-step-type');
       if (type === 'excursion') {
-        var excCard = step.querySelector('.bt-quote-exc-card[aria-selected="true"]');
-        if (excCard) {
-          state.excursion_id   = parseInt(excCard.getAttribute('data-exc-id'), 10) || 0;
-          state.excursion_name = excCard.querySelector('.bt-quote-exc-card__title')?.textContent || '';
+        // Check dropdown first
+        var excDropdown = step.querySelector('[data-bt-exc-dropdown]');
+        if (excDropdown) {
+          var selOpt = excDropdown.querySelector('.bt-quote-dd__opt--sel');
+          if (selOpt) {
+            state.excursion_id   = parseInt(selOpt.getAttribute('data-exc-id'), 10) || 0;
+            state.excursion_name = selOpt.getAttribute('data-name') || '';
+            state.exc_custom     = selOpt.hasAttribute('data-custom-trip') || state.excursion_id === 0;
+          }
+        } else {
+          // Fallback to card
+          var excCard = step.querySelector('.bt-quote-exc-card[aria-selected="true"]');
+          if (excCard) {
+            state.excursion_id   = parseInt(excCard.getAttribute('data-exc-id'), 10) || 0;
+            state.excursion_name = excCard.querySelector('.bt-quote-exc-card__title')?.textContent || '';
+          }
         }
         // Collect custom request text if "sur mesure"
         var customTa = step.querySelector('[name="exc_custom_request"]');
@@ -181,6 +246,15 @@
         }
       }
       if (type === 'boat') {
+        // Check dropdown first
+        var boatDropdown = step.querySelector('[data-bt-boat-dropdown]');
+        if (boatDropdown) {
+          var selOpt = boatDropdown.querySelector('.bt-quote-dd__opt--sel');
+          if (selOpt) {
+            state.boat_id   = parseInt(selOpt.getAttribute('data-boat-id'), 10) || 0;
+            state.boat_name = selOpt.getAttribute('data-name') || '';
+          }
+        }
         var summary = step.querySelector('.bt-quote-step__summary');
         if (summary) summary.textContent = state.boat_name;
       }
@@ -331,6 +405,9 @@
         var tsHidden  = timeslot.querySelector('[name="timeslot"]');
         tsBtns.forEach(function (btn) {
           btn.addEventListener('click', function () {
+            // Retirer l'état d'erreur dès qu'on sélectionne
+            timeslot.classList.remove('bt-quote-timeslot--error');
+
             tsBtns.forEach(function (b) {
               b.setAttribute('aria-selected', 'false');
               b.classList.remove('bt-quote-timeslot__btn--selected');
@@ -338,6 +415,11 @@
             btn.setAttribute('aria-selected', 'true');
             btn.classList.add('bt-quote-timeslot__btn--selected');
             if (tsHidden) tsHidden.value = btn.getAttribute('data-timeslot');
+
+            // Mettre à jour le résumé de date pour refléter le créneau
+            if (singlePick && singlePick._updateDateSummary) {
+              singlePick._updateDateSummary();
+            }
           });
         });
       }
@@ -427,7 +509,118 @@
     }
 
     /* ════════════════════════════════════════════════════════════════════════
-       EXCURSION CHOICE — "Cette excursion" / "Expérience sur mesure"
+       EXCURSION DROPDOWN — Sélection excursion via dropdown
+       ════════════════════════════════════════════════════════════════════════ */
+
+    root.querySelectorAll('[data-bt-exc-dropdown]').forEach(function (dd) {
+      initDropdown(dd, function (opt) {
+        var excId   = parseInt(opt.getAttribute('data-exc-id'), 10) || 0;
+        var excName = opt.getAttribute('data-name') || '';
+        var isCustom = opt.hasAttribute('data-custom-trip') || excId === 0;
+
+        state.excursion_id   = excId;
+        state.excursion_name = excName;
+        state.exc_custom     = isCustom;
+
+        // Update hidden input
+        var hidden = dd.querySelector('[name="excursion_id"]');
+        if (hidden) hidden.value = excId;
+      });
+    });
+
+    /* ════════════════════════════════════════════════════════════════════════
+       BOAT DROPDOWN — Sélection bateau via dropdown
+       ════════════════════════════════════════════════════════════════════════ */
+
+    root.querySelectorAll('[data-bt-boat-dropdown]').forEach(function (dd) {
+      initDropdown(dd, function (opt) {
+        var boatId   = parseInt(opt.getAttribute('data-boat-id'), 10) || 0;
+        var boatName = opt.getAttribute('data-name') || '';
+
+        state.boat_id   = boatId;
+        state.boat_name = boatName;
+
+        // Update hidden input
+        var hidden = dd.querySelector('[name="boat_id"]');
+        if (hidden) hidden.value = boatId;
+      });
+    });
+
+    /**
+     * Initialize a dropdown with open/close, selection, outside click
+     */
+    function initDropdown(dd, onSelect) {
+      var trigger = dd.querySelector('.bt-quote-dd__trigger');
+      var menu    = dd.querySelector('.bt-quote-dd__menu');
+      if (!trigger || !menu) return;
+
+      // Toggle on trigger click
+      trigger.addEventListener('click', function (e) {
+        e.preventDefault();
+        var isOpen = trigger.getAttribute('aria-expanded') === 'true';
+
+        // Close all other dropdowns first
+        document.querySelectorAll('.bt-quote-dd__trigger[aria-expanded="true"]').forEach(function (t) {
+          if (t !== trigger) t.setAttribute('aria-expanded', 'false');
+        });
+
+        trigger.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+      });
+
+      // Option selection
+      menu.querySelectorAll('.bt-quote-dd__opt').forEach(function (opt) {
+        opt.addEventListener('click', function () {
+          // Remove selection from all
+          menu.querySelectorAll('.bt-quote-dd__opt').forEach(function (o) {
+            o.classList.remove('bt-quote-dd__opt--sel');
+          });
+          // Mark as selected
+          opt.classList.add('bt-quote-dd__opt--sel');
+
+          // Update trigger display
+          var thumb = opt.getAttribute('data-thumb');
+          var name  = opt.getAttribute('data-name');
+          var sub   = opt.getAttribute('data-sub');
+
+          var trigThumb = trigger.querySelector('.bt-quote-dd__thumb');
+          var trigName  = trigger.querySelector('.bt-quote-dd__name');
+          var trigSub   = trigger.querySelector('.bt-quote-dd__sub');
+
+          if (trigThumb && thumb) trigThumb.src = thumb;
+          if (trigName) trigName.textContent = name || '';
+          if (trigSub) {
+            trigSub.textContent = sub || '';
+            trigSub.style.display = sub ? '' : 'none';
+          }
+
+          // Close dropdown
+          trigger.setAttribute('aria-expanded', 'false');
+
+          // Callback
+          if (typeof onSelect === 'function') onSelect(opt);
+        });
+      });
+
+      // Close on outside click
+      document.addEventListener('click', function (e) {
+        if (!dd.contains(e.target)) {
+          trigger.setAttribute('aria-expanded', 'false');
+        }
+      });
+
+      // Keyboard navigation
+      trigger.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          trigger.click();
+        } else if (e.key === 'Escape') {
+          trigger.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
+
+    /* ════════════════════════════════════════════════════════════════════════
+       EXCURSION CHOICE (legacy) — "Cette excursion" / "Expérience sur mesure"
        ════════════════════════════════════════════════════════════════════════ */
 
     root.querySelectorAll('[data-bt-exc-choice]').forEach(function (wrap) {
@@ -464,6 +657,8 @@
         card.setAttribute('aria-selected', 'true');
         state.excursion_id   = parseInt(card.getAttribute('data-exc-id'), 10) || 0;
         state.excursion_name = card.querySelector('.bt-quote-exc-card__title')?.textContent || '';
+        // Detect "Trajet sur mesure" card (data-custom-trip="1" or data-exc-id="0")
+        state.exc_custom = card.hasAttribute('data-custom-trip') || state.excursion_id === 0;
       });
       card.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -510,7 +705,6 @@
         // Sélection de la card entière
         card.addEventListener('click', function (e) {
           if (e.target.closest('.bt-quote-boat-card__more')) return;
-          if (e.target.closest('.bt-quote-boat-card__forfait')) return; // géré séparément
           boatCards.forEach(function (c) {
             c.classList.remove('bt-quote-boat-card--selected', 'bt-forfait-card--active');
             c.setAttribute('aria-pressed', 'false');
@@ -519,30 +713,6 @@
           card.setAttribute('aria-pressed', 'true');
           state.boat_id   = parseInt(card.getAttribute('data-boat-id'), 10) || 0;
           state.boat_name = card.querySelector('.bt-quote-boat-card__title')?.textContent || '';
-          syncActiveForfait(card);
-        });
-
-        // Click sur un forfait pill
-        var forfaits = card.querySelectorAll('.bt-quote-boat-card__forfait');
-        forfaits.forEach(function (pill) {
-          pill.addEventListener('click', function (e) {
-            e.stopPropagation();
-            // Sélectionner la card si pas encore sélectionnée
-            if (!card.classList.contains('bt-quote-boat-card--selected')) {
-              boatCards.forEach(function (c) {
-                c.classList.remove('bt-quote-boat-card--selected', 'bt-forfait-card--active');
-                c.setAttribute('aria-pressed', 'false');
-              });
-              card.classList.add('bt-quote-boat-card--selected', 'bt-forfait-card--active');
-              card.setAttribute('aria-pressed', 'true');
-              state.boat_id   = parseInt(card.getAttribute('data-boat-id'), 10) || 0;
-              state.boat_name = card.querySelector('.bt-quote-boat-card__title')?.textContent || '';
-            }
-            // Activer ce forfait
-            forfaits.forEach(function (p) { p.classList.remove('bt-quote-boat-card__forfait--active'); });
-            pill.classList.add('bt-quote-boat-card__forfait--active');
-            syncActiveForfait(card);
-          });
         });
 
         // "Plus d'infos" button
@@ -557,33 +727,6 @@
           });
         }
       });
-
-      // Init : sync le pp du bateau pré-sélectionné
-      var preSelected = container.querySelector('.bt-quote-boat-card--selected');
-      if (preSelected) syncActiveForfait(preSelected);
-    }
-
-    /** Met à jour le prix/pers affiché selon le forfait actif de la card. */
-    function syncActiveForfait(card) {
-      var activePill = card.querySelector('.bt-quote-boat-card__forfait--active');
-      var ppEl       = card.querySelector('.bt-quote-boat-card__pp');
-      if (!activePill || !ppEl) return;
-
-      var price  = parseFloat(activePill.getAttribute('data-price')) || 0;
-      var pax    = parseInt(activePill.getAttribute('data-pax'), 10) || parseInt(card.getAttribute('data-pax-max'), 10) || 0;
-      var pp     = (price && pax) ? Math.ceil(price / pax) : 0;
-
-      ppEl.textContent = pp ? pp + ' € ' : '';
-      if (pp) {
-        var perSpan = document.createElement('span');
-        perSpan.className = 'bt-quote-boat-card__per';
-        perSpan.textContent = '/ pers.';
-        ppEl.appendChild(perSpan);
-      }
-
-      // Mémoriser le forfait sélectionné dans le state
-      state.boat_forfait_price = price;
-      state.boat_forfait_label = activePill.querySelector('.bt-quote-boat-card__forfait-label')?.textContent || '';
     }
 
     /* ════════════════════════════════════════════════════════════════════════
@@ -734,6 +877,7 @@
               }
             }
             renderCalendar();
+            updateDateSummary();
           });
         });
       }
@@ -747,6 +891,65 @@
       }
 
       function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+      /**
+       * Met à jour le résumé de date sous le calendrier
+       * - 1 jour : "Vendredi 3 avril 2026 • Matin"
+       * - Plusieurs jours : "Du 3 au 5 avril 2026"
+       */
+      function updateDateSummary() {
+        var summaryEl = wrap.querySelector('[data-bt-date-summary]');
+        if (!summaryEl) return;
+
+        // Pas de date sélectionnée → masquer
+        if (!selStart) {
+          summaryEl.style.display = 'none';
+          summaryEl.innerHTML = '';
+          return;
+        }
+
+        var DAYS_FULL = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+        var MONTHS_FULL = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+                          'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+        var TIMESLOT_LABELS = { 'matin': 'Matin', 'apres-midi': 'Après-midi', 'soiree': 'Soirée' };
+
+        var html = '';
+
+        if (isRange && selStart && selEnd) {
+          // Plusieurs jours : "Du 3 au 5 avril 2026"
+          var sameMonth = selStart.getMonth() === selEnd.getMonth() && selStart.getFullYear() === selEnd.getFullYear();
+          html = '<span class="bt-quote-date-summary__meta">Du</span> ';
+          html += '<span class="bt-quote-date-summary__value">' + selStart.getDate();
+          if (!sameMonth) {
+            html += ' ' + MONTHS_FULL[selStart.getMonth()];
+            if (selStart.getFullYear() !== selEnd.getFullYear()) html += ' ' + selStart.getFullYear();
+          }
+          html += '</span>';
+          html += ' <span class="bt-quote-date-summary__meta">au</span> ';
+          html += '<span class="bt-quote-date-summary__value">' + selEnd.getDate() + ' ' + MONTHS_FULL[selEnd.getMonth()] + ' ' + selEnd.getFullYear() + '</span>';
+        } else if (selStart) {
+          // Jour unique : "Vendredi 3 avril 2026 • Matin"
+          var dayName = DAYS_FULL[selStart.getDay()];
+          var monthName = MONTHS_FULL[selStart.getMonth()];
+          html = '<span class="bt-quote-date-summary__value">' + dayName + ' ' + selStart.getDate() + ' ' + monthName + ' ' + selStart.getFullYear() + '</span>';
+
+          // Ajouter le créneau si sélectionné (uniquement pour single)
+          if (!isRange) {
+            var tsHidden = wrap.closest('[data-step-type="dates"]')?.querySelector('[name="timeslot"]');
+            var tsVal = tsHidden ? tsHidden.value : '';
+            if (tsVal && TIMESLOT_LABELS[tsVal]) {
+              html += '<span class="bt-quote-date-summary__sep">•</span>';
+              html += '<span class="bt-quote-date-summary__value">' + TIMESLOT_LABELS[tsVal] + '</span>';
+            }
+          }
+        }
+
+        summaryEl.innerHTML = html;
+        summaryEl.style.display = html ? '' : 'none';
+      }
+
+      // Expose pour appels externes (timeslot change)
+      wrap._updateDateSummary = updateDateSummary;
 
       renderCalendar();
     }
@@ -787,10 +990,12 @@
         var nm = contactStep.querySelector('[name="client_name"]');
         var em = contactStep.querySelector('[name="client_email"]');
         var ph = contactStep.querySelector('[name="client_phone"]');
+        var nt = contactStep.querySelector('[name="client_note"]');
         var fullName = (fn ? fn.value + ' ' : '') + (nm ? nm.value : '');
         if (fullName.trim()) lines.push({ label: 'Nom', value: fullName.trim() });
         if (em && em.value) lines.push({ label: 'E-mail', value: em.value });
         if (ph && ph.value) lines.push({ label: 'Téléphone', value: ph.value });
+        if (nt && nt.value.trim()) lines.push({ label: 'Note', value: nt.value.trim() });
       }
 
       recapEl.innerHTML = lines.map(function (l) {
@@ -825,6 +1030,10 @@
         fd.append('boat_forfait_label', state.boat_forfait_label || '');
         fd.append('boat_forfait_price', state.boat_forfait_price || '');
 
+        // Date custom (demande spécifique)
+        var dateCustomEl = root.querySelector('[name="date_custom"]');
+        if (dateCustomEl) fd.append('date_custom', dateCustomEl.value || '');
+
         if (contactStep) {
           var fields = contactStep.querySelectorAll('.bt-quote-fields__input');
           fields.forEach(function (f) {
@@ -848,6 +1057,16 @@
             submitBtn.disabled = false;
             submitBtn.classList.remove('bt-quote-submit--loading');
             if (res.success) {
+              // GTM Event - generate_lead
+              window.dataLayer = window.dataLayer || [];
+              window.dataLayer.push({
+                event: 'generate_lead',
+                form_name: 'devis_' + pricingMode,
+                excursion_id: state.excursion_id || '',
+                boat_id: state.boat_id || '',
+                boat_name: state.boat_name || ''
+              });
+
               if (msgEl) {
                 msgEl.className = 'bt-quote-message bt-quote-message--success';
                 msgEl.textContent = config.msg_success || 'Envoyé !';

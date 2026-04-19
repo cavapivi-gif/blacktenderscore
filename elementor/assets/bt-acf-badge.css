@@ -1,0 +1,68 @@
+/**
+ * ACF Badge Widget - Styles de base
+ *
+ * @package BlackTendersCore
+ */
+
+/* Wrapper */
+.bt-acf-badge {
+    position: relative;
+    display: inline-block;
+}
+
+/* Badge : flex + align-items (controle Elementor en direct) */
+.bt-acf-badge__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    white-space: nowrap;
+    z-index: 10;
+}
+
+.bt-acf-badge__text {
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Icone : line-height: 0 evite le decalage font/SVG (technique Elementor) */
+.bt-acf-badge__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+    flex-shrink: 0;
+}
+
+.bt-acf-badge__icon i {
+    line-height: 1;
+    display: inline-block;
+}
+
+.bt-acf-badge__icon svg {
+    flex-shrink: 0;
+    display: block;
+    vertical-align: middle;
+}
+
+/* Image */
+.bt-acf-badge__image {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.bt-acf-badge__image img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+/* Accessibilite */
+@media (prefers-reduced-motion: reduce) {
+    .bt-acf-badge__badge {
+        transition: none;
+    }
+}

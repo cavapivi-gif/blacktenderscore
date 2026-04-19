@@ -115,7 +115,7 @@ export default function ReservationsImportSection({
         </Btn>
         <Btn variant="secondary" loading={rSyncLoading} onClick={handleIncrImport} disabled={rSyncLoading}>
           <RefreshDouble width={14} height={14} />
-          Import incrémental (30 j.)
+          {rSyncStatus?.last_import ? 'Sync depuis le dernier import' : 'Sync (7 derniers jours)'}
         </Btn>
         <Btn variant="danger" loading={rResetLoading} onClick={() => setShowResetModal(true)}
           disabled={rSyncLoading || rResetLoading}

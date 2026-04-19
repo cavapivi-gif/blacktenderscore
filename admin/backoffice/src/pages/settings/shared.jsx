@@ -15,6 +15,8 @@ export const SECTIONS = {
   diagnostic:           { title: 'Diagnostic API',      subtitle: 'Teste chaque endpoint et affiche les réponses brutes',                            hasSave: false },
   installation:         { title: 'Installation',        subtitle: 'Relancer le wizard de configuration initiale du plugin',                          hasSave: false },
   permissions:          { title: 'Permissions',         subtitle: 'Droits d\'accès par rôle WordPress',                                              hasSave: false },
+  markdown:             { title: 'Markdown Editor',     subtitle: 'Post types et style visuel par défaut pour le widget Elementor Markdown Renderer', hasSave: false },
+  schema:               { title: 'Schema SEO',          subtitle: 'Injection automatique Schema.org GeoCoordinates (JSON-LD) par post type et taxonomie', hasSave: false },
 }
 
 // ── CSS Sanitizer — strips XSS vectors ───────────────────────────────────────

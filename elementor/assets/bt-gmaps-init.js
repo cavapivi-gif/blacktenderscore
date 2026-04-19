@@ -337,31 +337,57 @@
   // Callback appelé par l'URL Maps API (&callback=btGmapsReady)
   window.btGmapsReady = initBtGmaps;
 
-  // Fallback : si l'API est déjà chargée (ou chargée sans callback)
-  function maybeInit() {
-    if (window.google && google.maps && google.maps.Map) {
-      initBtGmaps();
-    } else {
-      var attempts = 0;
-      var t = setInterval(function () {
-        if (++attempts > 300 || (window.google && google.maps && google.maps.Map)) {
-          clearInterval(t);
-          if (window.google && google.maps && google.maps.Map) initBtGmaps();
-        }
-      }, 100);
+  // ── Lazy load de l'API Maps via IntersectionObserver ──────────────────────
+
+  var _mapsApiQueued = false;
+
+  /**
+   * Charge dynamiquement le script Google Maps API.
+   * L'URL (avec clé API) est passée par PHP via wp_localize_script → BT_GMaps.apiUrl.
+   */
+  function _loadMapsApi() {
+    if (_mapsApiQueued) return;
+    if (typeof BT_GMaps === 'undefined' || !BT_GMaps.apiUrl) return;
+    _mapsApiQueued = true;
+    var s   = document.createElement('script');
+    s.src   = BT_GMaps.apiUrl;
+    s.async = true;
+    document.head.appendChild(s);
+  }
+
+  /**
+   * Observe chaque .bt-gmaps-js et déclenche le chargement de l'API
+   * dès que l'un d'eux entre dans la zone viewport + 200px.
+   * Fallback immédiat si IntersectionObserver absent.
+   */
+  function _observeMaps() {
+    var maps = document.querySelectorAll('.bt-gmaps-js');
+    if (!maps.length) return;
+
+    if (!('IntersectionObserver' in window)) {
+      _loadMapsApi();
+      return;
     }
+
+    var obs = new IntersectionObserver(function (entries) {
+      if (!entries.some(function (e) { return e.isIntersecting; })) return;
+      obs.disconnect();
+      _loadMapsApi();
+    }, { rootMargin: '200px' });
+
+    maps.forEach(function (el) { obs.observe(el); });
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', maybeInit);
+    document.addEventListener('DOMContentLoaded', _observeMaps);
   } else {
-    maybeInit();
+    _observeMaps();
   }
 
+  // Réinitialisation dans l'éditeur Elementor si l'API est déjà chargée
   if (window.elementorFrontend) {
-    elementorFrontend.on('init', initBtGmaps);
     elementorFrontend.on('components:init', initBtGmaps);
   }
 
-  window.btGmaps = { init: initBtGmaps };
+  window.btGmaps = { init: initBtGmaps, loadApi: _loadMapsApi };
 }());

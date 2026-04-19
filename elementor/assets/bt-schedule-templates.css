@@ -1,0 +1,344 @@
+/* ═══════════════════════════════════════════════════════════════
+   BT Schedule Templates — Presets pour DT Horaires & départ
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+    --bt-sched-text-primary:   #1a1a1a;
+    --bt-sched-text-secondary: #6b7280;
+    --bt-sched-bg-secondary:   #f5f5f4;
+    --bt-sched-border:         #e5e7eb;
+    --bt-sched-border-mid:     #d1d5db;
+    --bt-sched-accent:         #185FA5;
+    --bt-sched-accent-bg:      #E6F1FB;
+    --bt-sched-radius-md:      8px;
+    --bt-sched-radius-lg:      12px;
+    --bt-sched-radius-pill:    100px;
+}
+
+/* ── V1 — Pills ───────────────────────────────────────────────── */
+.bt-schedule--v1 .bt-schedule__row {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--bt-sched-border);
+}
+.bt-schedule--v1 .bt-schedule__row:last-child { border-bottom: none; }
+
+.bt-schedule--v1 .bt-schedule__price {
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--bt-sched-text-primary);
+    min-width: 56px;
+    padding-top: 2px;
+    flex-shrink: 0;
+}
+
+.bt-schedule--v1 .bt-schedule__dates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.bt-schedule--v1 .bt-schedule__date {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: var(--bt-sched-radius-pill);
+    background-color: var(--color-violet);
+    color: var(--blackgrey);
+    border: 1px solid var(--bt-sched-border);
+    white-space: nowrap;
+}
+
+/* ── V2 — Split colonne ───────────────────────────────────────── */
+.bt-schedule--v2 {
+    border: 1px solid var(--bt-sched-border);
+    border-radius: var(--bt-sched-radius-lg);
+    overflow: hidden;
+}
+
+.bt-schedule--v2 .bt-schedule__row {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    border-bottom: 1px solid var(--bt-sched-border);
+}
+.bt-schedule--v2 .bt-schedule__row:last-child { border-bottom: none; }
+
+.bt-schedule--v2 .bt-schedule__price {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 12px;
+    font-size: 18px;
+    font-weight: 500;
+    background: var(--bt-sched-bg-secondary);
+    border-right: 1px solid var(--bt-sched-border);
+    color: var(--bt-sched-text-primary);
+}
+
+.bt-schedule--v2 .bt-schedule__dates {
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.bt-schedule--v2 .bt-schedule__date {
+    font-size: 13px;
+    color: var(--bt-sched-text-secondary);
+}
+
+/* ── V3 — Cards badge ─────────────────────────────────────────── */
+.bt-schedule--v3 {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.bt-schedule--v3 .bt-schedule__row {
+    border: 1px solid var(--bt-sched-border);
+    border-radius: var(--bt-sched-radius-md);
+    padding: 12px 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    background: #fff;
+}
+
+.bt-schedule--v3 .bt-schedule__price {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--bt-sched-accent);
+    background: var(--bt-sched-accent-bg);
+    border-radius: 6px;
+    padding: 4px 10px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.bt-schedule--v3 .bt-schedule__dates {
+    font-size: 13px;
+    color: var(--bt-sched-text-secondary);
+    line-height: 1.8;
+}
+
+.bt-schedule--v3 .bt-schedule__date {
+    display: inline;
+}
+.bt-schedule--v3 .bt-schedule__date:not(:last-child)::after {
+    content: ' · ';
+    color: var(--bt-sched-border-mid);
+}
+
+/* ── V4 — Minimal lignes ──────────────────────────────────────── */
+.bt-schedule--v4 {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.bt-schedule--v4 .bt-schedule__row {
+    border-bottom: 1px solid var(--bt-sched-border);
+}
+.bt-schedule--v4 .bt-schedule__row:last-child { border-bottom: none; }
+
+.bt-schedule--v4 .bt-schedule__price {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--bt-sched-text-primary);
+    padding: 10px 16px 10px 0;
+    vertical-align: top;
+    white-space: nowrap;
+    width: 60px;
+}
+
+.bt-schedule--v4 .bt-schedule__dates {
+    padding: 10px 0;
+    vertical-align: top;
+}
+
+.bt-schedule--v4 .bt-schedule__date {
+    display: inline;
+    font-size: 13px;
+    color: var(--bt-sched-text-secondary);
+}
+
+.bt-schedule--v4 .bt-schedule__date:not(:last-child)::after {
+    content: ' · ';
+    color: var(--bt-sched-border-mid);
+    margin: 0 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Price cell wrapper (prix + carburant en colonne)
+   ═══════════════════════════════════════════════════════════════ */
+
+.bt-schedule__price-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+/* ── Carburant inclus ────────────────────────────────────────── */
+.bt-schedule__carburant {
+    font-size: 8px;
+    color: var(--bt-sched-text-secondary);
+    white-space: nowrap;
+}
+
+/* ── Label HT/TTC ────────────────────────────────────────────── */
+.bt-schedule__tax-label {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--bt-sched-text-secondary);
+    opacity: 0.85;
+}
+
+/* Ajustements V2 pour price-cell dans le grid */
+.bt-schedule--v2 .bt-schedule__price-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 12px;
+    background: var(--bt-sched-bg-secondary);
+    border-right: 1px solid var(--bt-sched-border);
+}
+
+.bt-schedule--v2 .bt-schedule__price-cell .bt-schedule__price {
+    padding: 0;
+    background: transparent;
+    border: none;
+}
+
+/* Ajustements V3 pour price-cell */
+.bt-schedule--v3 .bt-schedule__price-cell {
+    align-items: flex-start;
+}
+
+.bt-schedule--v3 .bt-schedule__carburant {
+    padding-left: 10px;
+}
+
+/* Ajustements V4 pour price-cell dans le table */
+.bt-schedule--v4 .bt-schedule__price-cell {
+    padding: 10px 16px 10px 0;
+    vertical-align: top;
+}
+
+.bt-schedule--v4 .bt-schedule__price-cell .bt-schedule__price {
+    padding: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Prix par personne — Boat mode
+   ═══════════════════════════════════════════════════════════════ */
+
+.bt-schedule__per-person {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--bt-sched-text-secondary);
+    white-space: nowrap;
+}
+
+.bt-schedule__pp-text {
+    opacity: 0.85;
+}
+
+.bt-schedule__pp-tooltip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: help;
+    color: var(--bt-sched-text-secondary);
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.bt-schedule__pp-tooltip:hover {
+    opacity: 1;
+}
+
+.bt-schedule__info-icon {
+    width: 14px;
+    height: 14px;
+}
+
+/* Tooltip natif title — ou custom si besoin */
+.bt-schedule__pp-tooltip::after {
+    content: attr(title);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 6px 10px;
+    background: var(--bt-sched-text-primary);
+    color: #fff;
+    font-size: 11px;
+    line-height: 1.4;
+    border-radius: 6px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.bt-schedule__pp-tooltip::before {
+    content: '';
+    position: absolute;
+    bottom: calc(100% + 2px);
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: var(--bt-sched-text-primary);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
+    z-index: 10;
+}
+
+.bt-schedule__pp-tooltip:hover::after,
+.bt-schedule__pp-tooltip:hover::before {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ── Layout ajustements par template ─────────────────────────────── */
+
+/* V1 avec per-person */
+.bt-schedule--v1.bt-schedule--with-per-person .bt-schedule__row {
+    align-items: baseline;
+}
+
+.bt-schedule--v1.bt-schedule--with-per-person .bt-schedule__per-person {
+    margin-left: auto;
+}
+
+/* V2 avec per-person */
+.bt-schedule--v2.bt-schedule--with-per-person .bt-schedule__row {
+    grid-template-columns: 80px 1fr auto;
+}
+
+.bt-schedule--v2.bt-schedule--with-per-person .bt-schedule__per-person {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-left: 1px solid var(--bt-sched-border);
+    background: var(--bt-sched-bg-secondary);
+}
+
+/* V3 avec per-person */
+.bt-schedule--v3.bt-schedule--with-per-person .bt-schedule__per-person {
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+/* V4 avec per-person */
+.bt-schedule--v4.bt-schedule--with-per-person .bt-schedule__per-person {
+    padding: 10px 0 10px 16px;
+    vertical-align: middle;
+}

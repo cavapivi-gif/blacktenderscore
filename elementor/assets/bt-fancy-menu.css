@@ -1,0 +1,369 @@
+/* ═══════════════════════════════════════════════════════════════
+   BT — Fancy Menu
+   Menu multi-niveaux avec navigation animée (slide horizontal)
+   ═══════════════════════════════════════════════════════════════ */
+
+.bt-fancyMenu {
+    position: relative;
+    overflow: hidden;
+    transition: height 0.5s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.bt-fancyMenu ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* ── Back button ─────────────────────────────────────────────── */
+.bt-fancyMenu .bt-fancyMenu-back {
+    border: 0;
+    padding: 0;
+    background: transparent;
+    opacity: 0;
+    visibility: hidden;
+    transition: 0.3s cubic-bezier(0.33, 1, 0.68, 1);
+    transition-property: opacity, transform, visibility, background-color, color;
+    color: inherit;
+    position: relative;
+    cursor: pointer;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5em;
+}
+
+.bt-fancyMenu .bt-fancyMenu-back:focus {
+    outline: var(--focus-ring-size, 3px) auto -webkit-focus-ring-color;
+    outline-offset: 2px;
+}
+
+/* ── Back main row (icon + label) ───────────────────────────── */
+.bt-fancyMenu-back__main {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ── Back icon wrapper ──────────────────────────────────────── */
+.bt-fancyMenu-back__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.bt-fancyMenu-back__icon svg {
+    width: 1em;
+    height: 1em;
+    display: block;
+    fill: currentColor;
+}
+
+.bt-fancyMenu-back__icon i {
+    line-height: 1;
+}
+
+/* ── Back label — layout only ───────────────────────────────── */
+.bt-fancyMenu-back__label {
+    display: none;
+}
+.bt-fancyMenu.--back-has-label .bt-fancyMenu-back__label {
+    display: inline;
+}
+
+/* ── Breadcrumb (séparé du button) ──────────────────────────── */
+.bt-fancyMenu-breadcrumb {
+    display: none;
+}
+.bt-fancyMenu.--back-has-breadcrumb .bt-fancyMenu-breadcrumb {
+    display: block;
+}
+
+/* ── Back icon position ─────────────────────────────────────── */
+.bt-fancyMenu.--back-icon-left .bt-fancyMenu-back__main {
+    flex-direction: row;
+}
+
+.bt-fancyMenu.--back-icon-right .bt-fancyMenu-back__main {
+    flex-direction: row-reverse;
+}
+
+/* Fallback SVG icon */
+.bt-fancyMenu .bt-fancyMenu-back .bt-arrowSvg {
+    width: 1em;
+    height: 1em;
+    display: block;
+}
+
+/* Back button wrapper (li) — pas de style list */
+.bt-fancyMenu-back-wrapper {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* Boutons dans les sous-menus — visibles quand --start */
+.bt-fancyMenu-nav .sub-menu > .bt-fancyMenu-back-wrapper > .bt-fancyMenu-back {
+    transform: translateX(1.5em);
+}
+
+/* ── Menu items ──────────────────────────────────────────────── */
+.bt-fancyMenu-nav .menu-item > a {
+    display: inline-block;
+    transition: 0.3s cubic-bezier(0.33, 1, 0.68, 1);
+    transition-property: transform, opacity, visibility;
+    position: relative;
+}
+
+.bt-fancyMenu-nav .menu-item > a span {
+    transition: color 0.1s cubic-bezier(0.33, 1, 0.68, 1);
+    vertical-align: middle;
+}
+
+/* Staggered animation delays */
+.bt-fancyMenu-nav .menu-item:nth-child(1) > a { transition-delay: 0.04s; }
+.bt-fancyMenu-nav .menu-item:nth-child(2) > a { transition-delay: 0.08s; }
+.bt-fancyMenu-nav .menu-item:nth-child(3) > a { transition-delay: 0.12s; }
+.bt-fancyMenu-nav .menu-item:nth-child(4) > a { transition-delay: 0.16s; }
+.bt-fancyMenu-nav .menu-item:nth-child(5) > a { transition-delay: 0.20s; }
+.bt-fancyMenu-nav .menu-item:nth-child(6) > a { transition-delay: 0.24s; }
+.bt-fancyMenu-nav .menu-item:nth-child(7) > a { transition-delay: 0.28s; }
+.bt-fancyMenu-nav .menu-item:nth-child(8) > a { transition-delay: 0.32s; }
+.bt-fancyMenu-nav .menu-item:nth-child(9) > a { transition-delay: 0.36s; }
+.bt-fancyMenu-nav .menu-item:nth-child(10) > a { transition-delay: 0.40s; }
+.bt-fancyMenu-nav .menu-item:nth-child(11) > a { transition-delay: 0.44s; }
+.bt-fancyMenu-nav .menu-item:nth-child(12) > a { transition-delay: 0.48s; }
+.bt-fancyMenu-nav .menu-item:nth-child(13) > a { transition-delay: 0.52s; }
+.bt-fancyMenu-nav .menu-item:nth-child(14) > a { transition-delay: 0.56s; }
+.bt-fancyMenu-nav .menu-item:nth-child(15) > a { transition-delay: 0.60s; }
+
+/* Hidden submenu items by default */
+.bt-fancyMenu-nav .menu-item .menu-item > a {
+    transform: translateX(1.5em);
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* ── Active state (--start) ──────────────────────────────────── */
+.bt-fancyMenu-nav.--start > .menu-item > a,
+.bt-fancyMenu-nav .--start > .menu-item > a {
+    z-index: 1;
+    transform: translateX(0);
+    opacity: 1;
+    visibility: visible;
+}
+
+.bt-fancyMenu-nav.--start > .menu-item > ul,
+.bt-fancyMenu-nav .--start > .menu-item > ul {
+    pointer-events: none;
+}
+
+.bt-fancyMenu-nav.--start > .bt-fancyMenu-back-wrapper > .bt-fancyMenu-back,
+.bt-fancyMenu-nav .--start > .bt-fancyMenu-back-wrapper > .bt-fancyMenu-back {
+    transform: translateX(0);
+    z-index: 1;
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ── Back state (--back) ─────────────────────────────────────── */
+.bt-fancyMenu-nav.--back > .menu-item > a,
+.bt-fancyMenu-nav .--back > .menu-item > a {
+    z-index: 0;
+    transform: translateX(-1.5em);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.bt-fancyMenu-nav.--back > .bt-fancyMenu-back-wrapper > .bt-fancyMenu-back,
+.bt-fancyMenu-nav .--back > .bt-fancyMenu-back-wrapper > .bt-fancyMenu-back {
+    transform: translateX(-1.5em);
+    z-index: 0;
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* ── Submenus ────────────────────────────────────────────────── */
+.bt-fancyMenu-nav .sub-menu {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+}
+
+/* ── Submenu indicators ──────────────────────────────────────── */
+.bt-fancyMenu .--submenu-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 0.5em;
+    font-size: 12px;
+    color: inherit;
+    transition: color 0.15s ease, transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.bt-fancyMenu .--submenu-indicator svg {
+    display: block;
+    width: 1em;
+    height: 1em;
+    fill: currentColor;
+}
+
+.bt-fancyMenu .--submenu-indicator i {
+    line-height: 1;
+}
+
+/* Hover effect sur l'indicateur */
+.bt-fancyMenu .menu-item > a:hover .--submenu-indicator {
+    transform: translateX(3px);
+}
+
+/* Template caché pour clonage JS */
+.bt-fancyMenu-indicator-tpl {
+    display: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Icône & Description (ACF fields)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Link layout ────────────────────────────────────────────── */
+.bt-fancyMenu-link {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    flex-direction: row;
+    gap: 0.5em;
+}
+
+/* ── Content wrapper (title + desc) ─────────────────────────── */
+.bt-fancyMenu-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.bt-fancyMenu-title {
+    display: block;
+}
+
+/* ── Description ────────────────────────────────────────────── */
+.bt-fancyMenu-desc {
+    display: block;
+    font-size: 0.75em;
+    opacity: 0.7;
+    line-height: 1.4;
+    margin-top: 4px;
+    transition: color 0.15s ease, opacity 0.15s ease;
+}
+
+.bt-fancyMenu .menu-item > a:hover .bt-fancyMenu-desc {
+    opacity: 1;
+}
+
+/* ── Icône ──────────────────────────────────────────────────── */
+.bt-fancyMenu-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 1.2em;
+    height: 1.2em;
+    transition: color 0.15s ease, transform 0.2s ease;
+}
+
+.bt-fancyMenu-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.bt-fancyMenu-icon svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+
+/* Hover effect */
+.bt-fancyMenu .menu-item > a:hover .bt-fancyMenu-icon {
+    transform: scale(1.1);
+}
+
+/* ── Modifier: has icons ────────────────────────────────────── */
+.bt-fancyMenu.--has-icons .bt-fancyMenu-link {
+    /* Ensures consistent alignment when some items have icons and others don't */
+}
+
+/* ── Modifier: has descriptions ─────────────────────────────── */
+.bt-fancyMenu.--has-desc .menu-item > a {
+    /* Extra padding for description layout */
+}
+
+/* ── Description alignment ──────────────────────────────────── */
+.bt-fancyMenu.--desc-left .bt-fancyMenu-desc {
+    text-align: left;
+}
+.bt-fancyMenu.--desc-center .bt-fancyMenu-desc {
+    text-align: center;
+}
+.bt-fancyMenu.--desc-right .bt-fancyMenu-desc {
+    text-align: right;
+}
+
+/* ── Icon position via wrapper ──────────────────────────────── */
+.bt-fancyMenu.--icon-left .bt-fancyMenu-link {
+    flex-direction: row;
+}
+.bt-fancyMenu.--icon-right .bt-fancyMenu-link {
+    flex-direction: row-reverse;
+}
+.bt-fancyMenu.--icon-right .bt-fancyMenu-content {
+    text-align: right;
+}
+.bt-fancyMenu.--icon-top .bt-fancyMenu-link {
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+/* ── Count badge ────────────────────────────────────────────── */
+.bt-fancyMenu-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* Tailles en px pour éviter le conflit avec font-size du parent */
+    min-width: 22px;
+    height: 22px;
+    padding: 0 4px;
+    /* Font-size indépendante de la taille du badge */
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    color: #fff;
+    background-color: #0a0a0a;
+    border-radius: 50%;
+    margin-left: 8px;
+    flex-shrink: 0;
+    vertical-align: middle;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.bt-fancyMenu .menu-item > a:hover .bt-fancyMenu-count {
+    transform: scale(1.1);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Dividers (séparateurs entre items)
+   ═══════════════════════════════════════════════════════════════ */
+
+.bt-fancyMenu.--has-dividers .bt-fancyMenu-nav > .menu-item:not(:last-child)::after,
+.bt-fancyMenu.--has-dividers .sub-menu > .menu-item:not(:last-child)::after {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 1px;
+    background-color: #e5e5e5;
+    margin-top: 10px;
+}

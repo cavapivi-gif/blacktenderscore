@@ -78,6 +78,19 @@
     object-fit: cover;
 }
 
+/* iframe (YouTube/Vimeo) : fill simple — le wrapper porte déjà le bon
+   aspect-ratio, pas besoin de cover/zoom. */
+.bt-video-player__wrap .plyr__video-wrapper iframe {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: unset !important;
+    min-height: unset !important;
+    aspect-ratio: unset !important;
+    transform: none !important;
+}
+
 .bt-video-player__wrap .plyr__poster {
     background-size: cover;
     background-position: center;
@@ -97,6 +110,12 @@
     left: 50% !important;
     transform: translate(-50%, -50%) !important;
     z-index: 6;
+}
+
+/* Masque le gros bouton play de Plyr quand notre poster custom est présent —
+   évite deux boutons play visibles simultanément. */
+.bt-video-player:not(.bt-video-player--active) .plyr__control--overlaid {
+    display: none !important;
 }
 
 /* ── Poster overlay ───────────────────────────────────────────── */
@@ -176,6 +195,42 @@
     outline-offset: 3px;
 }
 
+/* ── Tap-to-play overlay (autoplay bloqué sur mobile/Low Power Mode) ── */
+.bt-video-player__tap-play {
+    position: absolute;
+    inset: 0;
+    z-index: 8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,.35);
+    cursor: pointer;
+    animation: bt-video-fadein .3s ease;
+}
+
+.bt-video-player__tap-play button {
+    width: 68px;
+    height: 68px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255,255,255,.92);
+    color: #111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 24px rgba(0,0,0,.3);
+    pointer-events: none; /* le click remonte au div parent */
+}
+
+.bt-video-player__tap-play button svg {
+    width: 28px;
+    height: 28px;
+    margin-left: 3px;
+}
+
+@keyframes bt-video-fadein { from { opacity: 0; } to { opacity: 1; } }
+
 /* ── Loading ──────────────────────────────────────────────────── */
 .bt-video-player--loading .bt-video-player__poster::before {
     content: '';
@@ -198,7 +253,58 @@
 @media (max-width: 768px) {
     .bt-video-player__play { width: 56px; height: 56px; }
     .bt-video-player__play svg { width: 22px; height: 22px; }
+
+    /* Barre de contrôles Plyr : empêche le débordement horizontal
+       (cause du "widget sort de l'écran" dans l'éditeur mobile) */
+    .bt-video-player__wrap .plyr__controls {
+        flex-wrap: nowrap;
+        overflow: hidden;
+        padding: 8px !important;
+        gap: 2px !important;
+    }
+
+    /* Tous les boutons de contrôle : taille explicite, ne pas réduire à 0 */
+    .bt-video-player__wrap .plyr__controls .plyr__controls__item {
+        flex-shrink: 0;
+    }
+
+    /* Boutons icônes (play, mute, settings, pip…) : taille fixe */
+    .bt-video-player__wrap .plyr__control {
+        width: 32px !important;
+        height: 32px !important;
+        padding: 4px !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* SVG dans les boutons : taille explicite (remplace --plyr-control-icon-size) */
+    .bt-video-player__wrap .plyr__control svg {
+        width: 16px !important;
+        height: 16px !important;
+    }
+
+    /* Volume : ne pas s'effondrer à 0 une fois le range caché */
+    .bt-video-player__wrap .plyr__volume {
+        min-width: 32px;
+        flex-shrink: 0;
+    }
+
+    /* Slider volume caché sur mobile — seul le bouton mute reste */
+    .bt-video-player__wrap .plyr__volume input[type="range"] {
+        display: none !important;
+    }
+
+    /* Réduire la taille du texte de temps */
+    .bt-video-player__wrap .plyr__time {
+        font-size: 0.7rem;
+        min-width: 0;
+    }
+
+    /* Settings + PiP : réduire la largeur du menu pour qu'il reste dans le viewport */
+    .bt-video-player__wrap .plyr__menu__container {
+        max-width: calc(100vw - 32px);
+    }
 }
+
 @media (max-width: 480px) {
     .bt-video-player__play { width: 48px; height: 48px; }
     .bt-video-player__play svg { width: 18px; height: 18px; }

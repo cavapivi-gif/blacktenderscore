@@ -501,12 +501,19 @@ class GoogleMap extends AbstractBtWidget {
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     /** Enqueue la Maps JavaScript API une seule fois par page. */
+    /**
+     * Transmet l'URL de l'API Google Maps à bt-gmaps-init.js via wp_localize_script.
+     * Le chargement effectif est délégué à l'IntersectionObserver côté JS (lazy).
+     */
     private function enqueue_maps_api(): void {
-        if (wp_script_is('google-maps-api', 'enqueued')) return;
+        static $done = false;
+        if ($done) return;
+        $done     = true;
         $api_key  = get_option('elementor_google_maps_api_key', '');
         $maps_url = 'https://maps.googleapis.com/maps/api/js?callback=btGmapsReady&loading=async';
         if ($api_key) $maps_url .= '&key=' . rawurlencode($api_key);
-        wp_enqueue_script('google-maps-api', $maps_url, [], null, true);
+        // Pas de wp_enqueue_script — le JS charge l'API dynamiquement au scroll
+        wp_localize_script('bt-gmaps-init', 'BT_GMaps', ['apiUrl' => $maps_url]);
     }
 
     /**

@@ -41,6 +41,36 @@
   grid-row: span 2;
 }
 
+/*
+ * Mobile : même technique que desktop (hauteur fixe, items height:100%).
+ * Seule la disposition change : image principale en haut pleine largeur,
+ * 2 vignettes en dessous. Items 4+ masqués.
+ *
+ *   ┌──────────────────────┐
+ *   │         1            │
+ *   │      [btn]           │
+ *   ├──────────┬───────────┤
+ *   │    2     │    3+x    │
+ *   └──────────┴───────────┘
+ */
+@media (max-width: 767px) {
+  .bt-gallery.bt-gallery--airbnb .bt-gallery__grid.bt-gallery__grid {
+    height: auto;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+  }
+  .bt-gallery.bt-gallery--airbnb .bt-gallery__item--main {
+    grid-column: span 2;
+    grid-row: span 1;
+  }
+  .bt-gallery.bt-gallery--airbnb .bt-gallery__item:not(.bt-gallery__item--main) {
+    height: 120px;
+  }
+  .bt-gallery.bt-gallery--airbnb .bt-gallery__item:nth-child(n+4) {
+    display: none;
+  }
+}
+
 /* ── Layout : Grille libre ────────────────────────────────────────────── */
 /*
  * Colonnes : 3 par défaut (overridé via control responsive columns).
@@ -109,6 +139,29 @@
   text-decoration: none;
 }
 
+/* ── Skeleton shimmer — visible tant que l'image n'est pas chargée ────── */
+@keyframes bt-skeleton-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.bt-gallery__link::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: bt-skeleton-shimmer 1.5s ease-in-out infinite;
+  transition: opacity 0.3s ease;
+}
+
+/* L'image chargée masque le skeleton */
+.bt-gallery__link.bt-gallery__link--loaded::before {
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* ── Image ────────────────────────────────────────────────────────────── */
 .bt-gallery__img {
   display: block;
@@ -116,7 +169,12 @@
   height: 100%;
   object-fit: cover;
   object-position: center center;
-  transition: transform 0.35s ease;
+  transition: transform 0.35s ease, opacity 0.3s ease;
+  opacity: 0;
+}
+
+.bt-gallery__link--loaded .bt-gallery__img {
+  opacity: 1;
 }
 
 /* ── Zoom au survol (activé via .bt-gallery--zoom) ────────────────────── */
@@ -169,6 +227,9 @@
   position: absolute;
   display: inline-flex;
   align-items: center;
+  left: 5px;
+  width: fit-content;
+  bottom: 5px;
   gap: 6px;
   padding: 8px 14px;
   background: rgba(255, 255, 255, 0.92);

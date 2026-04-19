@@ -73,32 +73,17 @@
         card.classList.add(ACTIVE_CARD);
         card.setAttribute('aria-pressed', 'true');
 
-        // Switch content
+        // Switch content + trigger lazy load pour le forfait actif
+        var activeContent = null;
         contents.forEach(function (c) {
-          c.hidden = c.dataset.btForfaitContent !== idx;
+          var isActive = c.dataset.btForfaitContent === idx;
+          c.hidden = !isActive;
+          if (isActive) activeContent = c;
         });
 
-        // Swap booking widget UUID si booking_per_tab actif
-        var uuid = card.dataset.btForfaitUuid;
-        if (uuid) {
-          var booking = wrapper.querySelector('.bt-pricing__booking');
-          if (booking) {
-            var old = booking.querySelector('booking-widget');
-            if (old && old.getAttribute('widget-id') === uuid) return;
-            var fresh = document.createElement('booking-widget');
-            fresh.setAttribute('widget-id', uuid);
-            if (old) {
-              var oldStyle = old.querySelector('style');
-              if (oldStyle) {
-                var s = document.createElement('style');
-                s.textContent = oldStyle.textContent;
-                fresh.appendChild(s);
-              }
-              old.parentNode.replaceChild(fresh, old);
-            } else {
-              booking.appendChild(fresh);
-            }
-          }
+        // Déclencher le lazy loading du booking-widget pour ce forfait
+        if (activeContent && window.btWidgets && window.btWidgets.injectBookingLazy) {
+          window.btWidgets.injectBookingLazy(activeContent);
         }
       });
     });

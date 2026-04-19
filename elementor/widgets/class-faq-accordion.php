@@ -5,6 +5,7 @@ use BlackTenders\Elementor\AbstractBtWidget;
 use BlackTenders\Elementor\Traits\BtSharedControls;
 use Elementor\Controls_Manager;
 use Elementor\Group_Control_Border;
+use Elementor\Group_Control_Box_Shadow;
 use Elementor\Group_Control_Typography;
 
 defined('ABSPATH') || exit;
@@ -50,10 +51,12 @@ class FaqAccordion extends AbstractBtWidget {
         $this->register_section_title_controls();
 
         $this->add_control('acf_field', [
-            'label'   => __('Champ ACF (FAQ)', 'blacktenderscore'),
-            'type'    => Controls_Manager::SELECT,
-            'options' => self::get_faq_field_options(),
-            'default' => 'exp_faq',
+            'label'       => __('Champ ACF (FAQ)', 'blacktenderscore'),
+            'type'        => Controls_Manager::SELECT2,
+            'multiple'    => true,
+            'options'     => self::get_faq_field_options(),
+            'default'     => ['exp_faq'],
+            'label_block' => true,
         ]);
 
         $this->add_control('prioritize_page_questions', [
@@ -79,12 +82,13 @@ class FaqAccordion extends AbstractBtWidget {
         ]);
 
         $this->add_control('combined_relationship_field', [
-            'label'       => __('Champ relation vers pages FAQ', 'blacktenderscore'),
-            'type'        => Controls_Manager::SELECT,
+            'label'       => __('Champ(s) relation vers pages FAQ', 'blacktenderscore'),
+            'type'        => Controls_Manager::SELECT2,
+            'multiple'    => true,
             'options'     => self::get_faq_relationship_options(),
-            'default'     => 'exp_faq',
+            'default'     => ['exp_faq'],
             'label_block' => true,
-            'description' => __('Champ ACF de type Relationship qui pointe vers les pages FAQ (ex: exp_faq).', 'blacktenderscore'),
+            'description' => __('Champs ACF de type Relationship qui pointent vers les pages FAQ (ex: exp_faq). Plusieurs champs possibles.', 'blacktenderscore'),
             'condition'   => ['acf_field' => '__combined_exp_faq'],
         ]);
 
@@ -203,6 +207,14 @@ class FaqAccordion extends AbstractBtWidget {
             'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-faq__header' => 'background-color: {{VALUE}}'],
         ]);
+        $this->add_group_control(Group_Control_Border::get_type(), [
+            'name'     => 'question_border',
+            'selector' => '{{WRAPPER}} .bt-faq__header',
+        ]);
+        $this->add_group_control(Group_Control_Box_Shadow::get_type(), [
+            'name'     => 'question_shadow',
+            'selector' => '{{WRAPPER}} .bt-faq__header',
+        ]);
         $this->end_controls_tab();
 
         $this->start_controls_tab('question_tab_hover', ['label' => __('Survol', 'blacktenderscore')]);
@@ -215,6 +227,14 @@ class FaqAccordion extends AbstractBtWidget {
             'label'     => __('Fond', 'blacktenderscore'),
             'type'      => Controls_Manager::COLOR,
             'selectors' => ['{{WRAPPER}} .bt-faq__header:hover' => 'background-color: {{VALUE}}'],
+        ]);
+        $this->add_group_control(Group_Control_Border::get_type(), [
+            'name'     => 'question_border_hover',
+            'selector' => '{{WRAPPER}} .bt-faq__header:hover',
+        ]);
+        $this->add_group_control(Group_Control_Box_Shadow::get_type(), [
+            'name'     => 'question_shadow_hover',
+            'selector' => '{{WRAPPER}} .bt-faq__header:hover',
         ]);
         $this->end_controls_tab();
 
@@ -234,6 +254,14 @@ class FaqAccordion extends AbstractBtWidget {
                 '{{WRAPPER}} .bt-faq__item--active .bt-faq__header' => 'background-color: {{VALUE}}',
                 '{{WRAPPER}} .bt-faq__tab--active'                  => 'background-color: {{VALUE}}',
             ],
+        ]);
+        $this->add_group_control(Group_Control_Border::get_type(), [
+            'name'     => 'question_border_active',
+            'selector' => '{{WRAPPER}} .bt-faq__item--active .bt-faq__header',
+        ]);
+        $this->add_group_control(Group_Control_Box_Shadow::get_type(), [
+            'name'     => 'question_shadow_active',
+            'selector' => '{{WRAPPER}} .bt-faq__item--active .bt-faq__header',
         ]);
         $this->end_controls_tab();
 
@@ -269,8 +297,8 @@ class FaqAccordion extends AbstractBtWidget {
             'label'     => __('Couleur icône', 'blacktenderscore'),
             'type'      => Controls_Manager::COLOR,
             'selectors' => [
-                '{{WRAPPER}} .bt-faq__icon'         => 'color: {{VALUE}}',
-                '{{WRAPPER}} .bt-faq__icon--closed' => 'color: {{VALUE}}',
+                '{{WRAPPER}} .bt-faq__icon' => 'color: {{VALUE}}',
+                '{{WRAPPER}} .bt-faq__icon svg' => 'stroke: {{VALUE}}',
             ],
         ]);
         $this->end_controls_tab();
@@ -280,8 +308,8 @@ class FaqAccordion extends AbstractBtWidget {
             'label'     => __('Couleur icône (actif)', 'blacktenderscore'),
             'type'      => Controls_Manager::COLOR,
             'selectors' => [
-                '{{WRAPPER}} .bt-faq__item--active .bt-faq__icon'       => 'color: {{VALUE}}',
-                '{{WRAPPER}} .bt-faq__item--active .bt-faq__icon--open' => 'color: {{VALUE}}',
+                '{{WRAPPER}} .bt-faq__item--active .bt-faq__icon' => 'color: {{VALUE}}',
+                '{{WRAPPER}} .bt-faq__item--active .bt-faq__icon svg' => 'stroke: {{VALUE}}',
             ],
         ]);
         $this->end_controls_tab();
@@ -294,9 +322,8 @@ class FaqAccordion extends AbstractBtWidget {
             'size_units' => ['px'],
             'range'      => ['px' => ['min' => 8, 'max' => 48]],
             'selectors'  => [
-                '{{WRAPPER}} .bt-faq__icon'         => 'font-size: {{SIZE}}{{UNIT}}; width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}}',
-                '{{WRAPPER}} .bt-faq__icon--closed' => 'font-size: {{SIZE}}{{UNIT}}',
-                '{{WRAPPER}} .bt-faq__icon--open'   => 'font-size: {{SIZE}}{{UNIT}}',
+                '{{WRAPPER}} .bt-faq__icon' => 'font-size: {{SIZE}}{{UNIT}}; width: {{SIZE}}{{UNIT}}',
+                '{{WRAPPER}} .bt-faq__icon svg' => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}}',
             ],
         ]);
 
@@ -349,6 +376,11 @@ class FaqAccordion extends AbstractBtWidget {
             'type'       => Controls_Manager::DIMENSIONS,
             'size_units' => ['px', '%'],
             'selectors'  => ['{{WRAPPER}} .bt-faq__body-inner' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}'],
+        ]);
+
+        $this->add_group_control(Group_Control_Box_Shadow::get_type(), [
+            'name'     => 'answer_shadow',
+            'selector' => '{{WRAPPER}} .bt-faq__body-inner',
         ]);
 
         $this->end_controls_section();
@@ -425,15 +457,19 @@ class FaqAccordion extends AbstractBtWidget {
 
         if (!$this->acf_required()) return;
 
-        $field = $s['acf_field'] ?? '';
+        $fields = (array) ($s['acf_field'] ?? []);
 
-        if ($field === '__combined_exp_faq') {
+        if (in_array('__combined_exp_faq', $fields, true)) {
             $rows = $this->get_combined_faq_rows($s);
         } else {
-            $rows = $this->get_acf_rows(
-                $field,
-                sprintf(__('Aucune FAQ trouvée pour le champ « %s ».', 'blacktenderscore'), $field)
-            );
+            $rows = [];
+            foreach ($fields as $field) {
+                if (!is_string($field) || $field === '') continue;
+                foreach ((array) $this->get_acf_rows($field) as $row) {
+                    $rows[] = $row;
+                }
+            }
+            if (empty($rows)) $rows = null;
         }
 
         if (!$rows) return;
@@ -461,9 +497,13 @@ class FaqAccordion extends AbstractBtWidget {
         $faq_mode   = ($s['faq_mode'] ?? '') === 'yes';
         $icon_align = $s['icon_align'] ?? 'right';
 
-        $icon_closed_html = $this->capture_icon($s['selected_icon']        ?? []);
-        $icon_open_html   = $this->capture_icon($s['selected_active_icon'] ?? []);
-        $has_fa_icons     = $icon_closed_html !== '' || $icon_open_html !== '';
+        // Récupérer les icônes depuis les settings
+        $icon_closed = $s['selected_icon'] ?? [];
+        $icon_open   = $s['selected_active_icon'] ?? [];
+
+        // Capturer le HTML des icônes via Icons_Manager (gère tous les types)
+        $icon_closed_html = $this->render_elementor_icon($icon_closed);
+        $icon_open_html   = $this->render_elementor_icon($icon_open);
 
         $data_faq_mode = $faq_mode ? ' data-bt-faq-mode' : '';
 
@@ -483,16 +523,17 @@ class FaqAccordion extends AbstractBtWidget {
             echo "<li class=\"bt-faq__item{$cls}\">";
             echo "<button class=\"bt-faq__header\" id=\"{$item_id}\" aria-expanded=\"" . ($is_active ? 'true' : 'false') . "\" aria-controls=\"{$panel_id}\">";
 
-        // Wrapper .bt-faq__icon toujours présent :
-        // - pseudo-éléments ::before/::after dessinent un +/− CSS (fallback robuste)
-        // - si des icônes Elementor sont définies, on les injecte à l’intérieur
-        //   et on désactive le +/− CSS via la classe --has-fa (voir CSS).
-        $icon_cls  = $has_fa_icons ? 'bt-faq__icon bt-faq__icon--has-fa' : 'bt-faq__icon';
-        $icon_html = '<span class="' . esc_attr($icon_cls) . '" aria-hidden="true">';
-            if ($has_fa_icons) {
-                $icon_html .= '<span class="bt-faq__icon--closed">' . $icon_closed_html . '</span>';
-                $icon_html .= '<span class="bt-faq__icon--open">'   . $icon_open_html   . '</span>';
-            }
+            // Approche Elementor-like : wrapper + 2 spans enfants, toggle via display.
+            // Fallback SVG si aucune icône définie
+            $default_closed = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+            $default_open   = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+
+            $closed_html = $icon_closed_html ?: $default_closed;
+            $open_html   = $icon_open_html ?: $default_open;
+
+            $icon_html = '<span class="bt-faq__icon" aria-hidden="true">';
+            $icon_html .= '<span class="bt-faq__icon--closed">' . $closed_html . '</span>';
+            $icon_html .= '<span class="bt-faq__icon--open">' . $open_html . '</span>';
             $icon_html .= '</span>';
 
             if ($icon_align === 'left') {
@@ -566,7 +607,7 @@ class FaqAccordion extends AbstractBtWidget {
         $virtual_key   = '__combined_exp_faq';
         $virtual_label = __('FAQ locale + page liée (combiné)', 'blacktenderscore');
 
-        // On place l’option combinée en tête pour qu’elle soit facile à trouver.
+        // On place l'option combinée en tête pour qu'elle soit facile à trouver.
         return [$virtual_key => $virtual_label] + $options;
     }
 
@@ -642,7 +683,7 @@ class FaqAccordion extends AbstractBtWidget {
     }
 
     /**
-     * Combine les FAQ locales (page courante) et celles d’une page liée via un champ relationship.
+     * Combine les FAQ locales (page courante) et celles d'une page liée via un champ relationship.
      *
      * - Repeater locaux   : contrôlés par combined_local_fields (par défaut exp_faq_current, city_faq)
      * - Relationship FAQ  : contrôlé par combined_relationship_field (par défaut exp_faq)
@@ -668,59 +709,61 @@ class FaqAccordion extends AbstractBtWidget {
             }
         }
 
-        // Pages FAQ liées via relationship, chacune pouvant contenir un ou plusieurs repeaters de FAQ.
+        // Pages FAQ liées via relationship(s), chacune pouvant contenir un ou plusieurs repeaters de FAQ.
         $related_rows = [];
         if (function_exists('get_field')) {
-            $relationship_field = is_string($s['combined_relationship_field'] ?? '')
-                ? $s['combined_relationship_field']
-                : 'exp_faq';
+            $relationship_fields = (array) ($s['combined_relationship_field'] ?? ['exp_faq']);
 
-            $related = get_field($relationship_field, get_the_ID());
-            if ($related instanceof \WP_Post) {
-                $related = [$related];
-            }
-            foreach ((array) $related as $rel) {
-                // Relationship peut renvoyer : WP_Post, ID, ou tableau avec clé ID.
-                if ($rel instanceof \WP_Post) {
-                    $post_id = $rel->ID;
-                } elseif (is_numeric($rel)) {
-                    $post_id = (int) $rel;
-                } elseif (is_array($rel) && isset($rel['ID'])) {
-                    $post_id = (int) $rel['ID'];
-                } else {
-                    continue;
+            foreach ($relationship_fields as $relationship_field) {
+                if (!is_string($relationship_field) || $relationship_field === '') continue;
+
+                $related = get_field($relationship_field, get_the_ID());
+                if ($related instanceof \WP_Post) {
+                    $related = [$related];
                 }
-
-                if ($post_id <= 0) {
-                    continue;
-                }
-
-                $found_rows = false;
-
-                // Réutilise la même liste de repeaters que pour la page courante,
-                // mais appliquée à la page FAQ liée.
-                foreach ($local_fields as $field_name) {
-                    if (!is_string($field_name) || $field_name === '') {
+                foreach ((array) $related as $rel) {
+                    // Relationship peut renvoyer : WP_Post, ID, ou tableau avec clé ID.
+                    if ($rel instanceof \WP_Post) {
+                        $post_id = $rel->ID;
+                    } elseif (is_numeric($rel)) {
+                        $post_id = (int) $rel;
+                    } elseif (is_array($rel) && isset($rel['ID'])) {
+                        $post_id = (int) $rel['ID'];
+                    } else {
                         continue;
                     }
-                    $repeater = get_field($field_name, $post_id);
-                    foreach ((array) $repeater as $row) {
-                        if (is_array($row)) {
-                            $related_rows[] = $row;
-                            $found_rows      = true;
+
+                    if ($post_id <= 0) {
+                        continue;
+                    }
+
+                    $found_rows = false;
+
+                    // Réutilise la même liste de repeaters que pour la page courante,
+                    // mais appliquée à la page FAQ liée.
+                    foreach ($local_fields as $field_name) {
+                        if (!is_string($field_name) || $field_name === '') {
+                            continue;
+                        }
+                        $repeater = get_field($field_name, $post_id);
+                        foreach ((array) $repeater as $row) {
+                            if (is_array($row)) {
+                                $related_rows[] = $row;
+                                $found_rows      = true;
+                            }
+                        }
+                    }
+
+                    // Si aucun repeater n'a retourné de lignes, ajoute au moins la page FAQ elle-même
+                    // (resolve_qa() utilisera faq_description ou le contenu du post).
+                    if (!$found_rows) {
+                        $post = get_post($post_id);
+                        if ($post instanceof \WP_Post) {
+                            $related_rows[] = $post;
                         }
                     }
                 }
-
-                // Si aucun repeater n'a retourné de lignes, ajoute au moins la page FAQ elle-même
-                // (resolve_qa() utilisera faq_description ou le contenu du post).
-                if (!$found_rows) {
-                    $post = get_post($post_id);
-                    if ($post instanceof \WP_Post) {
-                        $related_rows[] = $post;
-                    }
-                }
-            }
+            } // end foreach $relationship_fields
         }
 
         $prioritize_page = ($s['prioritize_page_questions'] ?? '') === 'yes';
@@ -755,6 +798,39 @@ class FaqAccordion extends AbstractBtWidget {
             return [$q, $a];
         }
         return ['', ''];
+    }
+
+    /**
+     * Rend une icône Elementor et retourne le HTML.
+     * Gère Font Awesome, SVG, e-icons, et toutes les bibliothèques Elementor.
+     *
+     * @param array|mixed $icon_settings Valeur du contrôle ICONS
+     * @return string HTML de l'icône ou chaîne vide
+     */
+    private function render_elementor_icon($icon_settings): string {
+        // Vérifier que c'est un array valide
+        if (!is_array($icon_settings) || empty($icon_settings)) {
+            return '';
+        }
+
+        $value = $icon_settings['value'] ?? null;
+
+        // Pas de valeur = pas d'icône
+        if (empty($value)) {
+            return '';
+        }
+
+        // S'assurer que les styles de la librairie d'icônes sont chargés
+        if (method_exists('\Elementor\Icons_Manager', 'enqueue_icon')) {
+            \Elementor\Icons_Manager::enqueue_icon($icon_settings);
+        }
+
+        // Utiliser Icons_Manager pour rendre l'icône (gère tous les types)
+        ob_start();
+        \Elementor\Icons_Manager::render_icon($icon_settings, ['aria-hidden' => 'true']);
+        $html = ob_get_clean();
+
+        return $html ?: '';
     }
 
     private function render_schema(array $rows): void {

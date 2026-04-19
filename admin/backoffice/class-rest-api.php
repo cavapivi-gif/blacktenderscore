@@ -440,6 +440,37 @@ class RestApi {
             'callback'            => [$this, 'delete_import_profile'],
             'permission_callback' => $auth,
         ]);
+
+        // ── Schema.org SEO (admin only) ─────────────────────────────────────────
+        register_rest_route(self::NS, '/schema/settings', [
+            ['methods' => 'GET',  'callback' => [$this, 'get_schema_settings'],  'permission_callback' => $auth],
+            ['methods' => 'POST', 'callback' => [$this, 'save_schema_settings'], 'permission_callback' => $auth],
+        ]);
+
+        register_rest_route(self::NS, '/schema/post-types', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'get_schema_post_types'],
+            'permission_callback' => $auth,
+        ]);
+
+        register_rest_route(self::NS, '/schema/taxonomies', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'get_schema_taxonomies'],
+            'permission_callback' => $auth,
+        ]);
+
+        register_rest_route(self::NS, '/schema/map-fields', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'get_schema_map_fields'],
+            'permission_callback' => $auth,
+        ]);
+
+        register_rest_route(self::NS, '/schema/text-fields', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'get_schema_text_fields'],
+            'permission_callback' => $auth,
+        ]);
+
     }
 
     // ─── Handlers ─────────────────────────────────────────────────────────────
@@ -896,4 +927,5 @@ class RestApi {
         );
         return rest_ensure_response($result);
     }
+
 }

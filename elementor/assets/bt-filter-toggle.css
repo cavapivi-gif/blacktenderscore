@@ -1,0 +1,200 @@
+/* ═══════════════════════════════════════════════════════════════
+   BT Filter Everything — Toggle Switch Styles
+   Transforme les checkboxes true/false en toggle switches
+
+   USAGE:
+   1. Dans Elementor: ajouter classe CSS "wpc-toggle-switch" sur le widget Filter
+   2. Ou via PHP: filtrer la classe du conteneur
+
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Structure de base ───────────────────────────────────────── */
+
+.wpc-toggle-switch .wpc-checkbox-item,
+.wpc-toggle-switch .wpc-radio-item,
+.wpc-filter-toggle .wpc-checkbox-item,
+.wpc-filter-toggle .wpc-radio-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+}
+
+/* Masquer la checkbox/radio native */
+.wpc-toggle-switch .wpc-checkbox-item input[type="checkbox"],
+.wpc-toggle-switch .wpc-radio-item input[type="radio"],
+.wpc-filter-toggle .wpc-checkbox-item input[type="checkbox"],
+.wpc-filter-toggle .wpc-radio-item input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+/* Label = conteneur du toggle + texte */
+.wpc-toggle-switch .wpc-checkbox-item label,
+.wpc-toggle-switch .wpc-radio-item label,
+.wpc-filter-toggle .wpc-checkbox-item label,
+.wpc-filter-toggle .wpc-radio-item label {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+    font-weight: 500;
+    position: relative;
+    padding-right: 52px; /* Espace pour le toggle a droite */
+    min-height: 24px;
+}
+
+/* Track du toggle (fond pill) — a droite */
+.wpc-toggle-switch .wpc-checkbox-item label::before,
+.wpc-toggle-switch .wpc-radio-item label::before,
+.wpc-filter-toggle .wpc-checkbox-item label::before,
+.wpc-filter-toggle .wpc-radio-item label::before {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 24px;
+    background: #d1d5db;
+    border-radius: 12px;
+    transition: background-color 0.2s ease;
+}
+
+/* Knob du toggle (cercle blanc) — a droite */
+.wpc-toggle-switch .wpc-checkbox-item label::after,
+.wpc-toggle-switch .wpc-radio-item label::after,
+.wpc-filter-toggle .wpc-checkbox-item label::after,
+.wpc-filter-toggle .wpc-radio-item label::after {
+    content: '';
+    position: absolute;
+    right: 22px; /* Position OFF (a gauche du track) */
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: right 0.2s ease;
+}
+
+/* ── Etat checked ─────────────────────────────────────────────── */
+
+.wpc-toggle-switch .wpc-checkbox-item input:checked + label::before,
+.wpc-toggle-switch .wpc-radio-item input:checked + label::before,
+.wpc-filter-toggle .wpc-checkbox-item input:checked + label::before,
+.wpc-filter-toggle .wpc-radio-item input:checked + label::before {
+    background: var(--toggle-active-color, #10b981);
+}
+
+.wpc-toggle-switch .wpc-checkbox-item input:checked + label::after,
+.wpc-toggle-switch .wpc-radio-item input:checked + label::after,
+.wpc-filter-toggle .wpc-checkbox-item input:checked + label::after,
+.wpc-filter-toggle .wpc-radio-item input:checked + label::after {
+    right: 2px; /* Position ON (a droite du track) */
+}
+
+/* ── Etat hover ──────────────────────────────────────────────── */
+
+.wpc-toggle-switch .wpc-checkbox-item label:hover::before,
+.wpc-toggle-switch .wpc-radio-item label:hover::before,
+.wpc-filter-toggle .wpc-checkbox-item label:hover::before,
+.wpc-filter-toggle .wpc-radio-item label:hover::before {
+    background: #9ca3af;
+}
+
+.wpc-toggle-switch .wpc-checkbox-item input:checked + label:hover::before,
+.wpc-toggle-switch .wpc-radio-item input:checked + label:hover::before,
+.wpc-filter-toggle .wpc-checkbox-item input:checked + label:hover::before,
+.wpc-filter-toggle .wpc-radio-item input:checked + label:hover::before {
+    background: var(--toggle-active-hover, #059669);
+}
+
+/* ── Etat focus (accessibilite) ──────────────────────────────── */
+
+.wpc-toggle-switch .wpc-checkbox-item input:focus-visible + label::before,
+.wpc-toggle-switch .wpc-radio-item input:focus-visible + label::before,
+.wpc-filter-toggle .wpc-checkbox-item input:focus-visible + label::before,
+.wpc-filter-toggle .wpc-radio-item input:focus-visible + label::before {
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
+}
+
+/* ── Etat disabled ───────────────────────────────────────────── */
+
+.wpc-toggle-switch .wpc-checkbox-item input:disabled + label,
+.wpc-toggle-switch .wpc-radio-item input:disabled + label,
+.wpc-filter-toggle .wpc-checkbox-item input:disabled + label,
+.wpc-filter-toggle .wpc-radio-item input:disabled + label {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Variante compacte (plus petite)
+   Usage: ajouter "wpc-toggle-switch wpc-toggle-switch--compact"
+   ═══════════════════════════════════════════════════════════════ */
+
+.wpc-toggle-switch--compact .wpc-checkbox-item label,
+.wpc-toggle-switch--compact .wpc-radio-item label,
+.wpc-filter-toggle--compact .wpc-checkbox-item label,
+.wpc-filter-toggle--compact .wpc-radio-item label {
+    padding-right: 44px;
+    min-height: 20px;
+}
+
+.wpc-toggle-switch--compact .wpc-checkbox-item label::before,
+.wpc-toggle-switch--compact .wpc-radio-item label::before,
+.wpc-filter-toggle--compact .wpc-checkbox-item label::before,
+.wpc-filter-toggle--compact .wpc-radio-item label::before {
+    width: 36px;
+    height: 20px;
+    border-radius: 10px;
+}
+
+.wpc-toggle-switch--compact .wpc-checkbox-item label::after,
+.wpc-toggle-switch--compact .wpc-radio-item label::after,
+.wpc-filter-toggle--compact .wpc-checkbox-item label::after,
+.wpc-filter-toggle--compact .wpc-radio-item label::after {
+    width: 16px;
+    height: 16px;
+    right: 18px; /* Position OFF compact */
+}
+
+.wpc-toggle-switch--compact .wpc-checkbox-item input:checked + label::after,
+.wpc-toggle-switch--compact .wpc-radio-item input:checked + label::after,
+.wpc-filter-toggle--compact .wpc-checkbox-item input:checked + label::after,
+.wpc-filter-toggle--compact .wpc-radio-item input:checked + label::after {
+    right: 2px; /* Position ON compact */
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Variantes couleur predefinies
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Orange (high demand, fire) */
+.wpc-toggle-switch--orange {
+    --toggle-active-color: #ff6b35;
+    --toggle-active-hover: #e55a2b;
+}
+
+/* Jaune/Or (best seller, crown) */
+.wpc-toggle-switch--gold {
+    --toggle-active-color: #f59e0b;
+    --toggle-active-hover: #d97706;
+}
+
+/* Bleu (featured) */
+.wpc-toggle-switch--blue {
+    --toggle-active-color: #3b82f6;
+    --toggle-active-hover: #2563eb;
+}
+
+/* Violet (new) */
+.wpc-toggle-switch--purple {
+    --toggle-active-color: #8b5cf6;
+    --toggle-active-hover: #7c3aed;
+}

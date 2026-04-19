@@ -149,19 +149,28 @@ trait BtBoatPricing {
         $thumb   = get_the_post_thumbnail_url($post_id, 'medium_large');
         $title   = get_the_title($post_id);
 
-        // Subtitle : modele + annee.
-        // Priorité : taxo boat-model assignée au post → champ ACF boat_model_name (taxonomy field, retourne array d'IDs)
-        $model_terms = get_the_terms($post_id, 'boat-model');
-        if (!empty($model_terms) && !is_wp_error($model_terms)) {
-            $model_name = $model_terms[0]->name;
-        } else {
-            $model_ids  = get_field('boat_model_name', $post_id) ?: [];
-            $model_id   = is_array($model_ids) ? ($model_ids[0] ?? null) : $model_ids;
-            $model_term = $model_id ? get_term((int) $model_id) : null;
-            $model_name = ($model_term && !is_wp_error($model_term)) ? $model_term->name : '';
+        // Subtitle : modele (optionnel) + annee (optionnel).
+        $show_model = ($s['show_boat_model'] ?? '') === 'yes';
+        $show_year  = ($s['show_boat_year']  ?? '') === 'yes';
+
+        $model_name = '';
+        if ($show_model) {
+            // Priorité : taxo boat-model assignée au post → champ ACF boat_model_name (taxonomy field, retourne array d'IDs)
+            $model_terms = get_the_terms($post_id, 'boat-model');
+            if (!empty($model_terms) && !is_wp_error($model_terms)) {
+                $model_name = $model_terms[0]->name;
+            } else {
+                $model_ids  = get_field('boat_model_name', $post_id) ?: [];
+                $model_id   = is_array($model_ids) ? ($model_ids[0] ?? null) : $model_ids;
+                $model_term = $model_id ? get_term((int) $model_id) : null;
+                $model_name = ($model_term && !is_wp_error($model_term)) ? $model_term->name : '';
+            }
         }
-        $show_year = ($s['show_boat_year'] ?? '') === 'yes';
-        $subtitle = trim($model_name . ($boat_year && $show_year ? ($model_name ? ' · ' : '') . $boat_year : ''));
+
+        $subtitle_parts = [];
+        if ($model_name !== '') $subtitle_parts[] = $model_name;
+        if ($boat_year && $show_year) $subtitle_parts[] = (string) $boat_year;
+        $subtitle = implode(' · ', $subtitle_parts);
 
         // Pax max (toujours recuperer pour l'affichage meta)
         $pax_display = (int) get_field('boat_pax_max', $post_id);
@@ -174,10 +183,10 @@ trait BtBoatPricing {
             // Div (pas button) : les cards bateau sont un affichage de prix, pas un sélecteur interactif
             echo '<div class="bt-forfait-card' . $img_cls . '">';
 
-            // Image
+            // Image (lazy — activée par btActivateLazyMedia au reveal du pricing body)
             if ($has_image) {
                 echo '<div class="bt-forfait-card__image">';
-                echo '<img src="' . esc_url($thumb) . '" alt="' . esc_attr($title) . '" loading="lazy">';
+                echo '<img data-lazy-src="' . esc_url($thumb) . '" alt="' . esc_attr($title) . '" src="data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 1 1\'/%3E" loading="lazy">';
                 echo '</div>';
             }
 
@@ -311,7 +320,7 @@ trait BtBoatPricing {
         $col_full     = $s['zones_col_full'] ?: __('Journée',                  'blacktenderscore');
 
         echo '<div class="bt-bprice__zones">';
-        echo '<h4 class="bt-bprice__zones-title">' . esc_html($zones_title) . '</h4>';
+        echo '<div class="bt-bprice__zones-title">' . esc_html($zones_title) . '</div>';
         echo '<div class="bt-bprice__table-wrap"><table class="bt-bprice__table">';
         echo '<thead><tr>';
         echo '<th>' . esc_html($col_zone) . '</th>';

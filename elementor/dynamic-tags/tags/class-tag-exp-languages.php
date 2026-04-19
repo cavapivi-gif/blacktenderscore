@@ -4,15 +4,18 @@ namespace BlackTenders\Elementor\DynamicTags;
 defined('ABSPATH') || exit;
 
 /**
- * Dynamic Tag — Langues parlées de l'excursion (exp_languages).
+ * Dynamic Tag — Langues parlées (Excursion / Bateau).
+ *
+ * Champ ACF configurable : exp_languages, boat_languages, ou tout autre checkbox.
  *
  * Options :
- *  - format    : code (fr), nom complet (Français), drapeau (🇫🇷), code+drapeau
- *  - separator : ·, /, espace, virgule, ou custom
+ *  - field_name : nom du champ ACF checkbox (défaut: exp_languages)
+ *  - format     : code (fr), nom complet (Français), drapeau (🇫🇷), code+drapeau
+ *  - separator  : ·, /, espace, virgule, ou custom
  */
 class Tag_Exp_Languages extends Abstract_BT_Tag {
 
-    public function get_name():       string { return 'bt-exp-languages'; }
+    public function get_name():       string { return 'bt-languages'; }
     public function get_title():      string { return 'BT: Langues parlées'; }
     public function get_categories(): array  { return ['text']; }
 
@@ -35,6 +38,24 @@ class Tag_Exp_Languages extends Abstract_BT_Tag {
     // ── Controls ─────────────────────────────────────────────────────────────
 
     protected function register_controls(): void {
+
+        $this->add_control('field_name', [
+            'label'       => __('Champ ACF', 'blacktenderscore'),
+            'type'        => \Elementor\Controls_Manager::SELECT,
+            'options'     => [
+                'exp_languages'  => __('Excursion (exp_languages)', 'blacktenderscore'),
+                'boat_languages' => __('Bateau (boat_languages)', 'blacktenderscore'),
+                'custom'         => __('Autre champ…', 'blacktenderscore'),
+            ],
+            'default'     => 'exp_languages',
+        ]);
+
+        $this->add_control('custom_field', [
+            'label'       => __('Nom du champ', 'blacktenderscore'),
+            'type'        => \Elementor\Controls_Manager::TEXT,
+            'placeholder' => 'my_languages_field',
+            'condition'   => ['field_name' => 'custom'],
+        ]);
 
         $this->add_control('format', [
             'label'   => __('Format', 'blacktenderscore'),
@@ -74,7 +95,16 @@ class Tag_Exp_Languages extends Abstract_BT_Tag {
     // ── Render ───────────────────────────────────────────────────────────────
 
     public function render(): void {
-        $raw = $this->acf('exp_languages');
+
+        // Déterminer le champ ACF à lire
+        $field_choice = $this->get_settings('field_name') ?: 'exp_languages';
+        $field_name   = ($field_choice === 'custom')
+            ? trim((string) ($this->get_settings('custom_field') ?? ''))
+            : $field_choice;
+
+        if ($field_name === '') return;
+
+        $raw = $this->acf($field_name);
         if (empty($raw)) return;
 
         $langs     = (array) $raw;

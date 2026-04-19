@@ -304,8 +304,20 @@ class Gallery extends AbstractBtWidget {
             'size_units' => ['px', 'vh'],
             'range'      => ['px' => ['min' => 100, 'max' => 800], 'vh' => ['min' => 10, 'max' => 100]],
             'default'    => ['size' => 420, 'unit' => 'px'],
+            'selectors'  => [
+                '{{WRAPPER}} .bt-gallery__grid' => 'height: {{SIZE}}{{UNIT}}',
+                '{{WRAPPER}} .bt-gallery__item--main' => 'height: {{SIZE}}{{UNIT}}',
+            ],
             'condition'  => ['layout' => 'airbnb'],
-            'selectors'  => ['{{WRAPPER}} .bt-gallery__grid' => 'height: {{SIZE}}{{UNIT}}'],
+        ]);
+
+        $this->add_responsive_control('thumb_height', [
+            'label'      => __('Hauteur des vignettes', 'blacktenderscore'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px'],
+            'range'      => ['px' => ['min' => 50, 'max' => 400]],
+            'selectors'  => ['{{WRAPPER}} .bt-gallery__item:not(.bt-gallery__item--main)' => 'height: {{SIZE}}{{UNIT}}'],
+            'condition'  => ['layout' => 'airbnb'],
         ]);
 
         $this->add_control('col_ratio', [
@@ -318,8 +330,8 @@ class Gallery extends AbstractBtWidget {
                 '3fr 1fr 1fr' => __('Très grande — 60% · 20% · 20%', 'blacktenderscore'),
             ],
             'default'   => '2fr 1fr 1fr',
-            'condition' => ['layout' => 'airbnb'],
             'selectors' => ['{{WRAPPER}} .bt-gallery__grid' => 'grid-template-columns: {{VALUE}}'],
+            'condition' => ['layout' => 'airbnb'],
         ]);
 
         $this->add_responsive_control('grid_radius', [
@@ -581,7 +593,10 @@ class Gallery extends AbstractBtWidget {
             $has_over = $is_last && $show_overlay;
 
             $full_url  = $img['url'] ?? '';
-            $thumb_url = $img['sizes'][$thumb_size] ?? ($img['sizes']['large'] ?? $full_url);
+            // Vignettes airbnb : medium (300px) suffit, la grille fait ~25vw (max 300px).
+            // L'image principale garde le thumb_size choisi (large par défaut).
+            $actual_size = ($layout === 'airbnb' && !$is_main) ? 'medium' : $thumb_size;
+            $thumb_url   = $img['sizes'][$actual_size] ?? ($img['sizes']['large'] ?? $full_url);
             $alt       = esc_attr($img['alt'] ?? ($img['title'] ?? ''));
             $caption   = $img['caption'] ?? '';
 
@@ -591,29 +606,36 @@ class Gallery extends AbstractBtWidget {
 
             echo '<figure class="' . esc_attr($item_cls) . '">';
 
+            $link_cls = 'bt-gallery__link';
+            if ($is_main) $link_cls .= ' bt-gallery__link--loaded';
+
             if ($lightbox && $full_url) {
-                echo '<a class="bt-gallery__link"'
+                echo '<a class="' . esc_attr($link_cls) . '"'
                     . ' href="' . esc_url($full_url) . '"'
                     . ' data-bt-lb-index="' . (int) $i . '"'
                     . '>';
             } else {
-                echo '<span class="bt-gallery__link">';
+                echo '<span class="' . esc_attr($link_cls) . '">';
             }
 
             // Responsive images: srcset WP + sizes contextuel (basé sur le layout réel).
             // WP génère un sizes générique "768px" qui ignore la vraie taille affichée.
             $img_id = (int) ($img['ID'] ?? 0);
-            $srcset = $img_id ? wp_get_attachment_image_srcset($img_id, $thumb_size) : '';
+            $srcset = $img_id ? wp_get_attachment_image_srcset($img_id, $actual_size) : '';
             $sizes  = $this->compute_sizes($is_main, $layout, $s);
-            $img_w  = (int) ($img['sizes'][$thumb_size . '-width']  ?? ($img['width']  ?? 0));
-            $img_h  = (int) ($img['sizes'][$thumb_size . '-height'] ?? ($img['height'] ?? 0));
+            $img_w  = (int) ($img['sizes'][$actual_size . '-width']  ?? ($img['width']  ?? 0));
+            $img_h  = (int) ($img['sizes'][$actual_size . '-height'] ?? ($img['height'] ?? 0));
+
+            // Airbnb: la grille CSS fixe la taille des slots (height:420px + grid rows).
+            // Omettre width/height évite le CLS causé par le ratio déclaré ≠ ratio du slot.
+            $show_dims = ($layout !== 'airbnb');
 
             echo '<img'
                 . ' src="' . esc_url($thumb_url) . '"'
                 . ($srcset ? ' srcset="' . esc_attr($srcset) . '"' : '')
                 . ($sizes  ? ' sizes="'  . esc_attr($sizes)  . '"' : '')
-                . ($img_w  ? ' width="'  . $img_w . '"' : '')
-                . ($img_h  ? ' height="' . $img_h . '"' : '')
+                . ($show_dims && $img_w ? ' width="'  . $img_w . '"' : '')
+                . ($show_dims && $img_h ? ' height="' . $img_h . '"' : '')
                 . ' alt="' . $alt . '"'
                 . ' loading="' . ($is_main ? 'eager' : 'lazy') . '"'
                 . ($is_main ? ' fetchpriority="high"' : ' decoding="async"')
@@ -666,6 +688,9 @@ class Gallery extends AbstractBtWidget {
      * @param array  $s        Settings Elementor du widget.
      */
     private function compute_sizes(bool $is_main, string $layout, array $s): string {
+        // Max-width du container Elementor (évite de surdimensionner avec vw brut)
+        $container = 1200;
+
         if ($layout === 'airbnb') {
             // Extrait les valeurs fr de la chaîne "2fr 1fr 1fr"
             preg_match_all('/(\d+)fr/', $s['col_ratio'] ?? '2fr 1fr 1fr', $m);
@@ -676,8 +701,12 @@ class Gallery extends AbstractBtWidget {
                 ? (int) round($fractions[0] / $total * 100)                    // ex: 2/4 = 50vw
                 : (int) round(($fractions[1] ?? 1) / $total * 100);            // ex: 1/4 = 25vw
 
-            // Mobile : toute la largeur ; desktop : fraction réelle
-            return "(max-width: 767px) 100vw, {$pct}vw";
+            // Cap en px pour les grands écrans (container max-width)
+            $max_px = (int) round($container * $pct / 100);
+
+            // Mobile : main = 100vw (span 2 cols), vignettes = 50vw (2 cols)
+            $mobile_vw = $is_main ? '100vw' : '50vw';
+            return "(max-width: 767px) {$mobile_vw}, (max-width: {$container}px) {$pct}vw, {$max_px}px";
         }
 
         // Layout grid : on tient compte des colonnes responsive
@@ -688,8 +717,9 @@ class Gallery extends AbstractBtWidget {
         $pct_d = (int) round(100 / $cols_d);
         $pct_t = (int) round(100 / $cols_t);
         $pct_m = (int) round(100 / $cols_m);
+        $max_d = (int) round($container / $cols_d);
 
-        return "(max-width: 480px) {$pct_m}vw, (max-width: 1024px) {$pct_t}vw, {$pct_d}vw";
+        return "(max-width: 480px) {$pct_m}vw, (max-width: 1024px) {$pct_t}vw, (max-width: {$container}px) {$pct_d}vw, {$max_d}px";
     }
 
     private function build_overlay_text(string $mode, string $custom, int $remaining): string {
@@ -699,5 +729,39 @@ class Gallery extends AbstractBtWidget {
             'custom' => str_replace('{n}', (string) $remaining, $custom),
             default  => '',
         };
+    }
+
+    /**
+     * Calcule les données de preload pour l'image LCP de ce widget.
+     *
+     * Appelé par ElementorManager::preload_lcp_image() qui s'exécute
+     * AVANT wp_head pour permettre l'injection du <link rel="preload">.
+     *
+     * @return array{url: string, srcset: string, sizes: string}|null
+     */
+    public function get_lcp_preload_data(): ?array {
+        $s          = $this->get_settings_for_display();
+        $field_name = $s['acf_field'] ?? 'boat_gallery';
+        $all_images = get_field($field_name, get_the_ID());
+
+        if (!$all_images || !is_array($all_images) || empty($all_images[0])) {
+            return null;
+        }
+
+        $img        = $all_images[0];
+        $thumb_size = $s['thumb_size'] ?? 'large';
+        $thumb_url  = $img['sizes'][$thumb_size] ?? ($img['sizes']['large'] ?? ($img['url'] ?? ''));
+
+        if (!$thumb_url) return null;
+
+        $img_id = (int) ($img['ID'] ?? 0);
+        $srcset = $img_id ? wp_get_attachment_image_srcset($img_id, $thumb_size) : '';
+        $sizes  = $this->compute_sizes(true, $s['layout'] ?? 'airbnb', $s);
+
+        return [
+            'url'    => $thumb_url,
+            'srcset' => $srcset,
+            'sizes'  => $sizes,
+        ];
     }
 }

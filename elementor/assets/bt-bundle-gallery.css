@@ -1,0 +1,786 @@
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Gallery
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Titre de section ─────────────────────────────────────────────────── */
+.bt-gallery__title {
+  margin: 0 0 16px;
+}
+
+/* ── Grille ───────────────────────────────────────────────────────────── */
+/*
+ * Defaults de layout ; tous les paramètres visuels (gap, height, radius,
+ * col-ratio) sont overridés par les controls Elementor via {{WRAPPER}}.
+ */
+.bt-gallery__grid {
+  display: grid;
+  gap: 8px;
+}
+
+/* ── Layout : Airbnb (hero + vignettes) ───────────────────────────────── */
+/*
+ * Colonnes : 2fr 1fr 1fr (overridable via control col_ratio).
+ * Hauteur   : 420px      (overridable via control grid_height).
+ * Item --main span 2 lignes → colonne gauche = grande image.
+ *
+ *   ┌──────────────┬───────┬───────┐
+ *   │              │   2   │   3   │
+ *   │      1       ├───────┼───────┤
+ *   │   [btn]      │    4   │  5+x  │
+ *   └──────────────┴───────┴───────┘
+ */
+.bt-gallery--airbnb .bt-gallery__grid {
+  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  height: 420px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.bt-gallery--airbnb .bt-gallery__item--main {
+  grid-row: span 2;
+}
+
+/*
+ * Mobile : même technique que desktop (hauteur fixe, items height:100%).
+ * Seule la disposition change : image principale en haut pleine largeur,
+ * 2 vignettes en dessous. Items 4+ masqués.
+ *
+ *   ┌──────────────────────┐
+ *   │         1            │
+ *   │      [btn]           │
+ *   ├──────────┬───────────┤
+ *   │    2     │    3+x    │
+ *   └──────────┴───────────┘
+ */
+@media (max-width: 767px) {
+  .bt-gallery.bt-gallery--airbnb .bt-gallery__grid.bt-gallery__grid {
+    height: auto;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+  }
+  .bt-gallery.bt-gallery--airbnb .bt-gallery__item--main {
+    grid-column: span 2;
+    grid-row: span 1;
+  }
+  .bt-gallery.bt-gallery--airbnb .bt-gallery__item:not(.bt-gallery__item--main) {
+    height: 120px;
+  }
+  .bt-gallery.bt-gallery--airbnb .bt-gallery__item:nth-child(n+4) {
+    display: none;
+  }
+}
+
+/* ── Layout : Grille libre ────────────────────────────────────────────── */
+/*
+ * Colonnes : 3 par défaut (overridé via control responsive columns).
+ * Hauteur  : auto (ratio appliqué via les classes bt-gallery--*)
+ */
+.bt-gallery--grid .bt-gallery__grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* Ratios pour le layout grid */
+.bt-gallery--grid.bt-gallery--square    .bt-gallery__item { aspect-ratio: 1 / 1; }
+.bt-gallery--grid.bt-gallery--landscape .bt-gallery__item { aspect-ratio: 4 / 3; }
+.bt-gallery--grid.bt-gallery--wide      .bt-gallery__item { aspect-ratio: 16 / 9; }
+.bt-gallery--grid.bt-gallery--portrait  .bt-gallery__item { aspect-ratio: 3 / 4; }
+.bt-gallery--grid.bt-gallery--auto      .bt-gallery__item { aspect-ratio: auto; }
+
+/* ── Items ────────────────────────────────────────────────────────────── */
+.bt-gallery__item {
+  display: block;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Airbnb: fixed grid height → items stretch via height:100% */
+.bt-gallery--airbnb .bt-gallery__item {
+  height: 100%;
+}
+
+.bt-gallery--airbnb .bt-gallery__link,
+.bt-gallery--airbnb .bt-gallery__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/*
+ * Grid: aspect-ratio drives item sizing.
+ * Link + img fill the item via absolute positioning so they
+ * don't fight the aspect-ratio with their own height:100%.
+ */
+.bt-gallery--grid .bt-gallery__item {
+  position: relative;
+}
+.bt-gallery--grid .bt-gallery__link {
+  position: absolute;
+  inset: 0;
+}
+.bt-gallery--grid .bt-gallery__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Lien / wrapper ───────────────────────────────────────────────────── */
+.bt-gallery__link {
+  display: block;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+/* ── Skeleton shimmer — visible tant que l'image n'est pas chargée ────── */
+@keyframes bt-skeleton-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.bt-gallery__link::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: bt-skeleton-shimmer 1.5s ease-in-out infinite;
+  transition: opacity 0.3s ease;
+}
+
+/* L'image chargée masque le skeleton */
+.bt-gallery__link.bt-gallery__link--loaded::before {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Image ────────────────────────────────────────────────────────────── */
+.bt-gallery__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  transition: transform 0.35s ease, opacity 0.3s ease;
+  opacity: 0;
+}
+
+.bt-gallery__link--loaded .bt-gallery__img {
+  opacity: 1;
+}
+
+/* ── Zoom au survol (activé via .bt-gallery--zoom) ────────────────────── */
+.bt-gallery--zoom .bt-gallery__link:hover .bt-gallery__img {
+  transform: scale(1.04);   /* intensité overridée par hover_zoom_scale */
+}
+
+/* ── Overlay "+N photos" — uniquement sur .bt-gallery__item--last ─────── */
+/*
+ * Pas d'overlay au survol sur TOUTES les images (suppression du design
+ * précédent avec icône emoji « kitch »). L'overlay n'apparaît que sur
+ * la dernière vignette visible pour indiquer les photos cachées.
+ */
+.bt-gallery__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);  /* overridé par control overlay_bg */
+  cursor: pointer;
+  pointer-events: none;
+}
+
+.bt-gallery__count {
+  color: #fff;                      /* overridé par control count_color */
+  font-size: 1.2em;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* ── Légende ──────────────────────────────────────────────────────────── */
+.bt-gallery__caption {
+  font-size: .8em;
+  text-align: center;
+  padding: 4px 8px;
+  opacity: .75;
+}
+
+/* ── Bouton "Voir toutes les photos" ──────────────────────────────────── */
+/*
+ * Positionné en absolu sur l'image principale (.bt-gallery__item--main).
+ * Position contrôlée par les classes --bottom-left / --bottom-right / --bottom-center.
+ * Fond, typographie, padding, radius : overridés via register_box_style() +
+ * register_typography_section().
+ */
+.bt-gallery__allphotos-btn {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  left: 5px;
+  width: fit-content;
+  bottom: 5px;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #111;
+  font-size: .82em;
+  font-weight: 600;
+  border-radius: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  line-height: 1;
+  backdrop-filter: blur(4px);
+  transition: background 0.2s, opacity 0.2s;
+  z-index: 2;
+}
+
+.bt-gallery__allphotos-btn:hover {
+  background: rgba(255, 255, 255, 1);
+}
+
+.bt-gallery__allphotos-btn svg {
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.bt-gallery__allphotos-btn--bottom-left {
+  bottom: 16px;
+  left: 16px;
+}
+
+.bt-gallery__allphotos-btn--bottom-right {
+  bottom: 16px;
+  right: 16px;
+}
+
+.bt-gallery__allphotos-btn--bottom-center {
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+/* ══════════════════════════════════════════════════════════
+   WIDGET : Gallery Preview (Airbnb style)
+   ══════════════════════════════════════════════════════════ */
+
+/*
+ * Grille — taille et espacement pilotés par les controls Elementor.
+ * Layout par défaut : 3 colonnes (2fr 1fr 1fr), 2 rangées.
+ * La première image (--main) couvre toujours les 2 rangées.
+ */
+.bt-gprev__grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 8px;
+  height: 420px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* 1 image : pleine largeur */
+.bt-gprev__grid--1 {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+
+/* 2 images */
+.bt-gprev__grid--2 {
+  grid-template-columns: 2fr 1fr;
+  grid-template-rows: 1fr;
+}
+
+/* 3 images : grande (2 rangées) + 2 petites empilées */
+.bt-gprev__grid--3 {
+  grid-template-columns: 2fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+/* 4 images */
+.bt-gprev__grid--4 {
+  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+.bt-gprev__grid--4 .bt-gprev__item:nth-child(4) {
+  grid-column: span 2;
+}
+
+/* 5–9 images : layout Airbnb standard */
+.bt-gprev__grid--5,
+.bt-gprev__grid--6,
+.bt-gprev__grid--7,
+.bt-gprev__grid--8,
+.bt-gprev__grid--9 {
+  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+/* Grande image : couvre les 2 rangées */
+.bt-gprev__item--main {
+  grid-row: span 2;
+  position: relative; /* nécessaire pour le bouton "voir toutes" */
+}
+
+/* Item — reset figure + garantit que height 100% fonctionne */
+.bt-gprev__item {
+  display: block;    /* reset figure default */
+  position: relative;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  min-height: 0;     /* évite les débordements dans certains thèmes */
+}
+
+/* Lien/wrapper */
+.bt-gprev__link {
+  display: block;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+/* Image — object-fit: cover garantit la même hauteur pour toutes les vignettes */
+.bt-gprev__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center; /* override par Elementor img_position */
+  transition: transform 0.35s ease;
+}
+
+/* Zoom au survol — activé via classe bt-gprev__grid--zoom (control Elementor) */
+.bt-gprev__grid--zoom .bt-gprev__link:hover .bt-gprev__img {
+  transform: scale(1.04); /* override par Elementor hover_zoom_scale */
+}
+
+/* Overlay sur la dernière vignette */
+.bt-gprev__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45); /* override par Elementor overlay_bg */
+  cursor: pointer;
+  transition: background 0.2s;
+  pointer-events: none; /* le clic passe au lien parent */
+}
+
+.bt-gprev__link:hover .bt-gprev__overlay {
+  background: rgba(0, 0, 0, 0.55);
+}
+
+/* Compteur / texte overlay */
+.bt-gprev__count {
+  color: #fff;
+  font-size: 1.1em;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* Flou */
+.bt-gprev__item--blur .bt-gprev__img {
+  filter: blur(4px);
+  transform: scale(1.06);
+}
+
+/* ── Bouton "Voir toutes les photos" ─────────────────────── */
+.bt-gprev__allphotos-btn {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #111;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font: inherit;
+  font-size: .875em;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s, transform 0.15s;
+  backdrop-filter: blur(4px);
+  z-index: 2;
+  bottom: 12px;
+}
+
+.bt-gprev__allphotos-btn--bottom-left   { left: 12px; }
+.bt-gprev__allphotos-btn--bottom-right  { right: 12px; }
+.bt-gprev__allphotos-btn--bottom-center { left: 50%; transform: translateX(-50%); }
+
+.bt-gprev__allphotos-btn:hover {
+  background: #fff;
+}
+
+.bt-gprev__allphotos-btn svg {
+  flex-shrink: 0;
+}
+
+/* Éléments cachés pour la lightbox */
+.bt-gprev__lightbox-hidden {
+  display: none;
+}
+
+/* ── Mobile ──────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .bt-gprev__grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    height: auto;
+    border-radius: 8px;
+  }
+
+  .bt-gprev__item--main {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    aspect-ratio: 16 / 9;
+  }
+
+  .bt-gprev__item:not(.bt-gprev__item--main) {
+    aspect-ratio: 1 / 1;
+  }
+
+  /* Masquer images 4+ sur mobile */
+  .bt-gprev__item:nth-child(n+4) {
+    display: none;
+  }
+
+  .bt-gprev__grid--4 .bt-gprev__item:nth-child(4) {
+    grid-column: auto;
+  }
+}
+/* ── BT Lightbox — visionneuse custom avec strip de miniatures ────────── */
+/*
+ * Singleton : un seul #bt-lb créé par le JS pour toute la page.
+ * Remplace la lightbox native Elementor (trop basique, pas de thumbnails).
+ * Shared by: Gallery + Gallery Preview widgets.
+ *
+ * Structure :
+ *   .bt-lb
+ *     .bt-lb__close
+ *     .bt-lb__prev / .bt-lb__next
+ *     .bt-lb__stage
+ *       img.bt-lb__img
+ *       p.bt-lb__caption
+ *     .bt-lb__thumbs
+ *       button.bt-lb__thumb [--active]
+ *         img
+ */
+.bt-lb {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: rgba(0, 0, 0, 0.92);
+  flex-direction: column;
+  align-items: stretch;
+  overscroll-behavior: contain;
+}
+
+.bt-lb--open { display: flex; }
+
+/* Stage — zone image principale */
+.bt-lb__stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: 52px 72px 16px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.bt-lb__img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 6px;
+  transition: opacity 0.15s ease;
+  user-select: none;
+}
+
+.bt-lb__img--fade { opacity: 0; }
+
+.bt-lb__caption {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: .82em;
+  text-align: center;
+  margin: 10px 0 0;
+  line-height: 1.4;
+  max-width: 600px;
+}
+
+/* Boutons de navigation */
+.bt-lb__close,
+.bt-lb__prev,
+.bt-lb__next {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  line-height: 1;
+  opacity: 0.85;
+  border-radius: 50%;
+  transition: background 0.15s, opacity 0.15s;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bt-lb__close:hover,
+.bt-lb__prev:hover,
+.bt-lb__next:hover {
+  background: rgba(255, 255, 255, 0.22);
+  opacity: 1;
+}
+
+.bt-lb__close {
+  top: 14px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  font-size: 1.4rem;
+  border-radius: 50%;
+}
+
+.bt-lb__prev,
+.bt-lb__next {
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  font-size: 1.5rem;
+  /* account for thumbnail strip height */
+  margin-top: -50px;
+}
+
+.bt-lb__prev { left: 14px; }
+.bt-lb__next { right: 14px; }
+
+/* Counter */
+.bt-lb__counter {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.55);
+  font-size: .78em;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+/* Thumbnail strip */
+.bt-lb__thumbs {
+  flex-shrink: 0;
+  display: flex;
+  gap: 6px;
+  padding: 10px 16px;
+  overflow-x: auto;
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.bt-lb__thumbs::-webkit-scrollbar {
+  height: 4px;
+}
+
+.bt-lb__thumbs::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 2px;
+}
+
+.bt-lb__thumb {
+  flex-shrink: 0;
+  width: 68px;
+  height: 50px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  background: #1a1a1a;
+  padding: 0;
+  transition: border-color 0.15s, opacity 0.15s;
+  opacity: 0.55;
+}
+
+.bt-lb__thumb:hover   { opacity: 0.85; }
+.bt-lb__thumb--active { border-color: #fff; opacity: 1; }
+
+.bt-lb__thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .bt-lb__stage   { padding: 48px 12px 8px; }
+  .bt-lb__prev    { left: 6px; }
+  .bt-lb__next    { right: 6px; }
+  .bt-lb__thumb   { width: 52px; height: 40px; }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   TEMPLATE BAR — toggle Slideshow ⟺ Grille
+   Affiché uniquement quand .bt-lb--has-toggle.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+.bt-lb__tpl-bar {
+  display: none;  /* masqué par défaut */
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 3px;
+  z-index: 3;
+  align-items: center;
+}
+
+.bt-lb--has-toggle .bt-lb__tpl-bar { display: flex; }
+
+/* Quand toggle visible, le counter texte disparaît (espace déjà pris) */
+.bt-lb--has-toggle .bt-lb__counter { display: none; }
+
+.bt-lb__tpl-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 28px;
+  border: none;
+  border-radius: 16px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  padding: 0;
+}
+
+.bt-lb__tpl-btn:hover            { color: #fff; }
+.bt-lb__tpl-btn--active          { background: rgba(255, 255, 255, 0.22); color: #fff; }
+.bt-lb__tpl-btn--active:hover    { background: rgba(255, 255, 255, 0.30); }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   TEMPLATE 2 — Grille CSS
+   ════════════════════════════════════════════════════════════════════════════
+   Structure :
+     .bt-lb__grid
+       .bt-lb__grid-item (× N)
+         img
+
+   Règle :
+     • 2 colonnes, gap 3px (overridable via inline style depuis le widget)
+     • :nth-child(5n+1) → span 2 cols, aspect-ratio 16/9
+     • autres            → aspect-ratio 4/3
+     • object-fit: cover sur toutes
+     • Hover : scale(1.04) sur l'image
+   ════════════════════════════════════════════════════════════════════════════ */
+
+.bt-lb__grid {
+  display: none;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;               /* overridé par JS depuis data-bt-lb-gap */
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  min-height: 0;
+  /*
+   * padding-top : espace pour close + toggle bar
+   * padding-left/right : marges latérales → overridées par control popup_grid_padding
+   * (selector : #bt-lb .bt-lb__grid → padding-left/right)
+   */
+  padding: 52px 72px 24px;
+  align-content: start;
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+
+.bt-lb__grid::-webkit-scrollbar       { width: 4px; }
+.bt-lb__grid::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.25); border-radius: 2px; }
+
+/*
+ * Item : hauteur uniforme pour toutes les images (grande + petites).
+ * → toutes les images ont la même hauteur, grandes = pleine largeur (span 2).
+ *
+ * Hauteur pilotée par le control Elementor popup_img_height :
+ *   selector : #bt-lb .bt-lb__grid-item → height: Xpx
+ * Défaut CSS : 500px via custom property (fallback si widget non configuré).
+ */
+.bt-lb__grid-item {
+  position: relative;
+  overflow: hidden;
+  height: var(--bt-lb-img-h, 500px);
+  cursor: pointer;
+  background: #111;
+  display: block;
+}
+
+/* 1re, 6e, 11e… image → pleine largeur, même hauteur */
+.bt-lb__grid-item:nth-child(5n+1) {
+  grid-column: span 2;
+}
+
+.bt-lb__grid-item img {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.25s ease;
+  pointer-events: none;
+}
+
+.bt-lb__grid-item:hover img { transform: scale(1.04); }
+
+.bt-lb__grid-item:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.7);
+  outline-offset: -2px;
+}
+
+/* ── Mode Template 2 actif : .bt-lb--tpl2 ──────────────────────────────── */
+.bt-lb--tpl2 .bt-lb__stage   { display: none; }
+.bt-lb--tpl2 .bt-lb__prev    { display: none; }
+.bt-lb--tpl2 .bt-lb__next    { display: none; }
+.bt-lb--tpl2 .bt-lb__thumbs  { display: none; }
+.bt-lb--tpl2 .bt-lb__counter { display: none; }
+.bt-lb--tpl2 .bt-lb__grid    { display: grid; }
+
+/* Mobile — padding réduit (overridable via control tablet_default/mobile_default) */
+@media (max-width: 1024px) {
+  .bt-lb__grid { padding-left: 40px; padding-right: 40px; }
+}
+@media (max-width: 600px) {
+  .bt-lb__grid { padding-top: 48px; padding-left: 12px; padding-right: 12px; }
+}

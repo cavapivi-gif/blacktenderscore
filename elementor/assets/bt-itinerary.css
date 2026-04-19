@@ -156,7 +156,8 @@
 .bt-itin__step--transport .bt-itin__step-body {
   padding: 10px 14px;
   border-radius: 8px;
-  background: var(--var--beige-on-bg);
+  /* Bug fix v4 : fallback explicite si la CSS var du thème n'est pas définie */
+  background: var(--var--beige-on-bg, #F5F0E8);
   font-size: .9em;
   max-width: fit-content;
   display: inline-flex;
@@ -299,4 +300,105 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, .35);
   line-height: 1;
   cursor: pointer;
+}
+
+/* Marqueurs départ/arrivée — légèrement plus grands */
+.bt-map-pin--start,
+.bt-map-pin--end {
+  width: 32px;
+  height: 32px;
+  font-size: 13px;
+}
+
+/* ── Durée totale (sous le titre de section) ──────────────── */
+.bt-itin__total-duration {
+  margin: -16px 0 20px;
+  font-size: .85em;
+  opacity: .65;
+}
+
+/* ── Badges de type (activity / transfer / free / meal) ───── */
+.bt-itin__badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: .72em;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  /* Couleurs par défaut; Elementor override via {{WRAPPER}} */
+}
+
+/* ── Badge "Facultatif · +15€" après la description ──────── */
+.bt-itin__optional {
+  display: block;
+  font-style: normal;
+  font-size: .8em;
+  margin-top: 4px;
+  color: #6b7280; /* override par Elementor optional_color */
+}
+
+/* ── Accordéon ────────────────────────────────────────────── */
+
+/* Trigger : toute la ligne titre est cliquable */
+.bt-itin__step-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  width: 100%;
+}
+
+/* Chevron — transformé via aria-expanded */
+.bt-itin__chevron {
+  margin-left: auto;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  position: relative;
+  opacity: .5;
+  transition: transform .2s ease;
+}
+
+.bt-itin__chevron::before,
+.bt-itin__chevron::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 7px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 1px;
+  transition: transform .2s ease;
+}
+
+.bt-itin__chevron::before { right: 50%; transform: translateY(-50%) rotate(-45deg); transform-origin: right center; }
+.bt-itin__chevron::after  { left: 50%;  transform: translateY(-50%) rotate(45deg);  transform-origin: left center; }
+
+.bt-itin__step-trigger[aria-expanded="true"] .bt-itin__chevron::before {
+  transform: translateY(-50%) rotate(45deg);
+}
+.bt-itin__step-trigger[aria-expanded="true"] .bt-itin__chevron::after {
+  transform: translateY(-50%) rotate(-45deg);
+}
+
+/* Panneau description (hidden géré par l'attribut HTML hidden) */
+.bt-itin__step-panel {
+  margin-top: 6px;
+}
+
+/* Survol li avec coords — feedback visuel map↔timeline */
+.bt-itin__list > li[data-lat] {
+  cursor: pointer;
+}
+
+.bt-itin__list > li[data-lat]:hover .bt-itin__dot {
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, .25);
 }

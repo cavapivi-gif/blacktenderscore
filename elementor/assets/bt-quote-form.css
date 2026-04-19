@@ -188,7 +188,10 @@
   margin-top: 12px;
 }
 
-/* Excursion cards */
+/* ══════════════════════════════════════════
+   EXCURSION CARDS — Structure uniquement
+   Couleurs/typo/border/shadow via Elementor {{WRAPPER}}
+   ══════════════════════════════════════════ */
 
 .bt-quote-exc-cards {
   display: flex;
@@ -198,20 +201,23 @@
 
 .bt-quote-exc-card {
   display: flex;
+  flex-direction: row; /* Elementor override via qt_exc_card_direction */
   align-items: stretch;
-  gap: 0;
-  border-radius: 8px;
   overflow: hidden;
   cursor: pointer;
-  transition: border-color .2s, box-shadow .2s;
 }
 
 .bt-quote-exc-card__img {
-  flex: 0 0 30%;
-  max-width: 30%;
   position: relative;
-  min-height: 80px;
-  align-self: stretch;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* Mode vertical (image en haut) */
+.bt-quote-exc-card[style*="column"] .bt-quote-exc-card__img {
+  width: 100%;
+  min-width: 100%;
+  height: 140px;
 }
 
 .bt-quote-exc-card__img img {
@@ -220,238 +226,274 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
 .bt-quote-exc-card__body {
   flex: 1;
-  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  justify-content: center;
 }
 
 .bt-quote-exc-card__title {
-  font-size: 13px;
-  font-weight: 600;
   margin: 0;
+  line-height: 1.35;
 }
 
-.bt-quote-exc-card__price {
-  margin: 2px 0 0;
-}
-
-.bt-quote-exc-card__price-amount {
-  font-weight: 500;
-  font-size: .82em;
-}
-
-.bt-quote-exc-card__price-suffix {
-  font-size: .8em;
-}
-
-.bt-quote-exc-card__departure,
 .bt-quote-exc-card__skipper {
-  display: inline-block;
-  font-size: .75em;
-  margin-top: 2px;
-}
-.bt-quote-exc-card__skipper { margin-left: 6px; opacity: .75; }
-
-.bt-quote-exc-card__discount {
-  display: inline-block;
-  padding: 2px 8px;
-  font-size: .7em;
-  font-weight: 700;
-  border-radius: 12px;
+  align-self: flex-start;
+  width: fit-content;
 }
 
-.bt-quote-exc-card__tags {
-  display: flex;
-  flex-wrap: wrap;
+/* T1 — Compact */
+.bt-quote-exc-card--t1 .bt-quote-exc-card__img {
+  width: 110px;
+  min-width: 110px;
+}
+.bt-quote-exc-card--t1 .bt-quote-exc-card__body {
+  padding: 12px 14px;
   gap: 6px;
-  margin-top: 4px;
+}
+.bt-quote-exc-card--t1 .bt-quote-exc-card__title {
+  font-size: 14px;
 }
 
-.bt-quote-exc-card__tag {
-  display: inline-block;
-  padding: 2px 8px;
-  font-size: .75em;
-  font-weight: 600;
-  border-radius: 12px;
+/* T2 — Large */
+.bt-quote-exc-card--t2 .bt-quote-exc-card__img {
+  width: 160px;
+  min-width: 160px;
+}
+.bt-quote-exc-card--t2 .bt-quote-exc-card__body {
+  padding: 16px 18px;
+  gap: 8px;
+}
+.bt-quote-exc-card--t2 .bt-quote-exc-card__title {
+  font-size: 15px;
 }
 
 /* ══════════════════════════════════════════
    STEP 2 — BOAT CARDS
+   Clean template — CSS vars controllables via Elementor
    ══════════════════════════════════════════ */
 
 .bt-quote-boat-auto {
   padding: 12px 14px;
   border-radius: 8px;
 }
-
 .bt-quote-boat-auto__name {
   font-weight: 600;
   margin: 0;
   font-size: 13px;
 }
 
-/* ══════════════════════════════════════════
-   BOAT CARDS dans le devis
-   Layout : liste verticale, chaque card = image bg 30% + contenu 70%
-   ══════════════════════════════════════════ */
-
+/* ── Grid container ── */
 .bt-quote-boat-cards {
   display: grid;
-  grid-template-columns: 1fr; /* défaut 1 col — surchargé par qt_boat_cards_cols */
-  gap: 10px;                  /* défaut — surchargé par qt_boat_cards_gap */
-  min-height: 60px;
+  grid-template-columns: 1fr;
+  gap: var(--bt-boat-cards-gap, 12px);
 }
 
-/* Card : flex horizontal, bordurée, arrondie, cliquable */
+/* ══════════════════════════════════════════
+   BOAT CARD — Base (shared)
+   ══════════════════════════════════════════ */
 .bt-quote-boat-card {
   display: flex;
-  flex-direction: row;
-  align-items: stretch;
-  border: 1.5px solid rgba(0,0,0,.15);
-  border-radius: 10px;
+  position: relative;
   overflow: hidden;
   cursor: pointer;
-  transition: border-color .2s, box-shadow .2s;
-  min-height: 110px;
-  /* [CTRL: Elementor border-color via {{WRAPPER}} .bt-quote-boat-card] */
+  border-radius: var(--bt-boat-radius, 12px);
+  /* Border géré par Elementor Group_Control_Border */
+  border-style: solid;
+  border-width: 0;
+  border-color: transparent;
+  background: var(--bt-boat-bg, #fff);
+  transition: border-color .2s, box-shadow .2s, transform .15s;
+}
+.bt-quote-boat-card:hover {
+  /* Hover géré par Elementor */
+}
+.bt-quote-boat-card--selected,
+.bt-quote-boat-card.bt-forfait-card--active {
+  /* Selected géré par Elementor */
 }
 
-/* Image en background — taille pilotée par qt_boat_img_width + qt_boat_card_img_ratio */
-.bt-quote-boat-card__bg {
-  flex: 0 0 30%;            /* défaut horizontal — surchargé par qt_boat_img_width */
-  min-height: 0;            /* permet à aspect-ratio de s'appliquer en mode vertical */
+/* ── Image background ── */
+.bt-quote-boat-card__bg,
+.bt-quote-boat-card__img {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  flex-shrink: 0;
 }
 
-/*
-  Colonne droite (70%) — wrapper flex column pour body + bouton more.
-  Le body prend tout l'espace, le more reste collé en bas.
-*/
+/* Mode colonne (image en haut) : largeur 100% obligatoire */
+.bt-quote-boat-card[style*="column"] .bt-quote-boat-card__bg,
+.bt-quote-boat-card--vertical .bt-quote-boat-card__bg {
+  width: 100%;
+}
+
+/* ── Right column (body wrapper) ── */
 .bt-quote-boat-card__right {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
-  overflow: hidden;
 }
 
-/* Corps : contenu principal */
+/* ── Body content ── */
 .bt-quote-boat-card__body {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: 12px 14px;
-  min-width: 0;
+  flex: 1;
+  padding: var(--bt-boat-body-padding, 14px 16px);
+  gap: var(--bt-boat-body-gap, 8px);
 }
 
-/* Sélection active */
-.bt-quote-boat-card--selected,
-.bt-quote-boat-card.bt-forfait-card--active {
-  border-width: 2px;
-}
-
-/* Typographie */
+/* ── Title ── */
 .bt-quote-boat-card__title {
-  font-size: 14px;
-  font-weight: 600;
-  margin: 0 0 2px;
+  font-size: var(--bt-boat-title-size, 15px);
+  font-weight: var(--bt-boat-title-weight, 600);
+  color: var(--bt-boat-title-color, inherit);
+  margin: 0;
+  line-height: 1.3;
 }
+
+/* ── Subtitle (model + year) ── */
 .bt-quote-boat-card__subtitle {
-  font-size: 11px;
-  opacity: .65;
-  margin: 0 0 8px;
+  font-size: var(--bt-boat-subtitle-size, 12px);
+  color: var(--bt-boat-subtitle-color, #737373);
+  margin: 0;
 }
 
-/* Pricing */
-.bt-quote-boat-card__pricing {
-  display: flex;
-  align-items: baseline;
-  gap: 3px;
-  flex-wrap: wrap;
-}
-.bt-quote-boat-card__price {
-  font-size: 22px;
-  font-weight: 600;
-  line-height: 1;
-}
-.bt-quote-boat-card__currency {
-  font-size: 13px;
-}
-.bt-quote-boat-card__pp {
-  font-size: 12px;
-  opacity: .65;
-  margin: 2px 0 6px;
-}
-.bt-quote-boat-card__per {
-  font-size: 11px;
+/* ── Badge "(Actuel)" ── */
+.bt-quote-boat-card__badge {
+  font-size: .8em;
+  font-weight: 400;
+  opacity: .6;
 }
 
-/* Forfaits pills (durée + prix) — colonnes gérées par qt_boat_forfaits_cols */
+/* ══════════════════════════════════════════
+   FORFAITS — Pills grid
+   ══════════════════════════════════════════ */
 .bt-quote-boat-card__forfaits {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* défaut 2 cols — surchargé par Elementor responsive */
-  gap: 6px;                               /* défaut — surchargé par qt_boat_forfaits_gap */
-  margin: 6px 0 4px;
+  grid-template-columns: repeat(var(--bt-boat-forfaits-cols, 2), 1fr);
+  gap: var(--bt-boat-forfaits-gap, 6px);
 }
 .bt-quote-boat-card__forfait {
   display: flex;
   flex-direction: column;
-  align-items: flex-start; /* défaut — surchargé via qt_boat_forfait_align */
-  gap: 1px;
-  padding: 5px 10px;
-  border: 1px solid rgba(0,0,0,.15);
-  border-radius: 6px;
-  background: transparent;
-  cursor: pointer;
-  font-family: inherit;
-  text-align: left;        /* défaut — surchargé via qt_boat_forfait_align */
-  transition: background-color .15s, border-color .15s, color .15s;
-  /* [CTRL: qt_boat_forfait_*] via {{WRAPPER}} */
+  align-items: flex-start;
+  gap: 2px;
+  padding: var(--bt-boat-forfait-padding, 8px 10px);
+  border-radius: var(--bt-boat-forfait-radius, 6px);
+  border: 1px solid var(--bt-boat-forfait-border, #e5e5e5);
+  background: var(--bt-boat-forfait-bg, transparent);
+  transition: background .15s, border-color .15s;
+}
+.bt-quote-boat-card__forfait:hover {
+  background: var(--bt-boat-forfait-bg-hover, #fafafa);
+  border-color: var(--bt-boat-forfait-border-hover, #d4d4d4);
+}
+.bt-quote-boat-card__forfait--active {
+  background: var(--bt-boat-forfait-bg-active, #0a0a0a);
+  border-color: var(--bt-boat-forfait-border-active, #0a0a0a);
+}
+.bt-quote-boat-card__forfait--active .bt-quote-boat-card__forfait-label,
+.bt-quote-boat-card__forfait--active .bt-quote-boat-card__forfait-price {
+  color: var(--bt-boat-forfait-color-active, #fff);
 }
 .bt-quote-boat-card__forfait-label {
-  display: block;
-  width: 100%;
-  font-size: 9px;       /* défaut — surchargé par qt_boat_forfait_label_typo */
-  opacity: .6;          /* défaut — surchargé par qt_boat_forfait_label_opacity */
-  line-height: 1;
+  font-size: var(--bt-boat-forfait-label-size, 10px);
+  color: var(--bt-boat-forfait-label-color, #737373);
   text-transform: uppercase;
-  letter-spacing: .04em;
-  /* text-align hérité du parent via qt_boat_forfait_align */
+  letter-spacing: .03em;
+  line-height: 1;
 }
 .bt-quote-boat-card__forfait-price {
-  font-size: 13px;      /* défaut — surchargé par qt_boat_forfait_price_typo */
+  font-size: var(--bt-boat-forfait-price-size, 14px);
   font-weight: 600;
+  color: var(--bt-boat-forfait-price-color, inherit);
   line-height: 1.2;
 }
-/* [CTRL: qt_boat_forfait_active_bg + qt_boat_forfait_active_color] */
-.bt-quote-boat-card__forfait--active {
-  /* styles injectés par {{WRAPPER}} Elementor */
+
+/* ══════════════════════════════════════════
+   FORFAITS — Tabs variant (template-2)
+   ══════════════════════════════════════════ */
+.bt-quote-boat-card__forfait-tabs {
+  display: flex;
+  border: 1px solid var(--bt-boat-tabs-border, #e5e5e5);
+  border-radius: var(--bt-boat-tabs-radius, 8px);
+  overflow: hidden;
+}
+.bt-quote-boat-card__forfait-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--bt-boat-tab-padding, 8px 10px);
+  background: var(--bt-boat-tab-bg, #f5f5f5);
+  border: none;
+  transition: background .15s;
+}
+.bt-quote-boat-card__forfait-tab:not(:last-child) {
+  border-right: 1px solid var(--bt-boat-tabs-border, #e5e5e5);
+}
+.bt-quote-boat-card__forfait-tab--active {
+  background: var(--bt-boat-tab-bg-active, #0a0a0a);
+}
+.bt-quote-boat-card__forfait-tab--active .bt-quote-boat-card__forfait-label,
+.bt-quote-boat-card__forfait-tab--active .bt-quote-boat-card__forfait-price {
+  color: var(--bt-boat-tab-color-active, #fff);
 }
 
-/* Meta : pers. + jockey */
+/* ══════════════════════════════════════════
+   PRIX / PERSONNE
+   ══════════════════════════════════════════ */
+.bt-quote-boat-card__pp {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  font-size: var(--bt-boat-pp-size, 13px);
+  color: var(--bt-boat-pp-color, inherit);
+}
+.bt-quote-boat-card__pp-val {
+  font-weight: 600;
+}
+.bt-quote-boat-card__pp-label,
+.bt-quote-boat-card__per {
+  font-size: .85em;
+  opacity: .7;
+}
+
+/* ══════════════════════════════════════════
+   META (capacité, jockey)
+   ══════════════════════════════════════════ */
 .bt-quote-boat-card__meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
   align-items: center;
+  gap: var(--bt-boat-meta-gap, 8px);
 }
 .bt-quote-boat-card__meta-item {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 11px;
-  opacity: .7;
+  font-size: var(--bt-boat-meta-size, 12px);
+  color: var(--bt-boat-meta-color, #737373);
+}
+.bt-quote-boat-card__meta-item--yes {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--bt-boat-meta-yes-bg, #f0fdf4);
+  color: var(--bt-boat-meta-yes-color, #166534);
+  font-weight: 500;
 }
 .bt-quote-boat-card__icon {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   fill: none;
   stroke: currentColor;
   stroke-width: 2;
@@ -459,31 +501,75 @@
   stroke-linejoin: round;
   flex-shrink: 0;
 }
-/* Jockey : "Avec" légèrement mis en avant */
-.bt-quote-boat-card__meta-item--jockey {
-  font-style: italic;
+
+/* ── Bottom row (template-2) ── */
+.bt-quote-boat-card__bottom {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
 }
-.bt-quote-boat-card__meta-item--yes {
-  opacity: 1;
-  font-weight: 500;
-  font-style: normal;
+.bt-quote-boat-card__sep {
+  width: 1px;
+  height: 16px;
+  background: var(--bt-boat-sep-color, #e5e5e5);
+  flex-shrink: 0;
+}
+.bt-quote-boat-card__pax,
+.bt-quote-boat-card__jockey {
+  white-space: nowrap;
 }
 
-/* Bouton "Plus d'infos" (optionnel) */
+/* ══════════════════════════════════════════
+   BOUTON "Plus d'infos"
+   ══════════════════════════════════════════ */
 .bt-quote-boat-card__more {
   display: block;
   width: 100%;
-  padding: 6px;
-  font-size: 11px;
+  padding: var(--bt-boat-more-padding, 8px);
+  font-size: 12px;
   font-weight: 600;
   text-align: center;
   border: none;
-  border-top: 1px solid;
-  background: transparent;
+  border-top: 1px solid var(--bt-boat-more-border, #e5e5e5);
+  background: var(--bt-boat-more-bg, transparent);
+  color: var(--bt-boat-more-color, inherit);
   cursor: pointer;
   font-family: inherit;
-  margin-top: 8px; /* défaut — surchargé par Elementor: qt_boat_more_gap */
-  transition: background-color .15s;
+  transition: background .15s;
+}
+.bt-quote-boat-card__more:hover {
+  background: var(--bt-boat-more-bg-hover, #fafafa);
+}
+
+/* ══════════════════════════════════════════
+   TEMPLATE 1 — Horizontal (image à gauche)
+   ══════════════════════════════════════════ */
+.bt-quote-boat-card--template-1 {
+  flex-direction: row;
+  align-items: stretch;
+  min-height: 130px;
+}
+.bt-quote-boat-card--template-1 .bt-quote-boat-card__bg {
+  flex: 0 0 var(--bt-boat-img-width, 160px);
+  min-width: var(--bt-boat-img-width, 160px);
+  min-height: var(--bt-boat-img-height, 130px);
+  aspect-ratio: var(--bt-boat-img-ratio, 4/3);
+  align-self: stretch;
+}
+.bt-quote-boat-card--template-1 .bt-quote-boat-card__body {
+  justify-content: center;
+}
+
+/* ══════════════════════════════════════════
+   TEMPLATE 2 — Vertical (image en haut)
+   ══════════════════════════════════════════ */
+.bt-quote-boat-card--template-2 {
+  flex-direction: column;
+}
+.bt-quote-boat-card--template-2 .bt-quote-boat-card__img {
+  width: 100%;
+  height: var(--bt-boat-img-height, 140px);
 }
 
 /* ══════════════════════════════════════════
@@ -533,12 +619,18 @@
 /* Timeslot */
 
 .bt-quote-timeslot {
-  margin-top: 12px;
+  margin-top: 16px;
+}
+
+.bt-quote-timeslot__title {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0 0 10px;
 }
 
 .bt-quote-timeslot__options {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   margin-bottom: 16px;
 }
@@ -560,6 +652,60 @@
 .bt-quote-timeslot__btn--selected,
 .bt-quote-timeslot__btn[aria-selected="true"] {
   border-width: 2px;
+}
+
+/* État erreur — créneau obligatoire non sélectionné */
+.bt-quote-timeslot--error {
+  animation: btQuotePulseError .6s ease;
+}
+
+.bt-quote-timeslot--error .bt-quote-timeslot__title {
+  color: var(--bt-quote-error, #dc2626);
+}
+
+.bt-quote-timeslot--error .bt-quote-timeslot__btn {
+  border-color: var(--bt-quote-error, #dc2626);
+}
+
+@keyframes btQuotePulseError {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* ══════════════════════════════════════════
+   DATE SUMMARY — Résumé de sélection
+   ══════════════════════════════════════════ */
+
+.bt-quote-date-summary {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: var(--bt-quote-summary-bg, #fafafa);
+  border: 1px solid var(--bt-quote-summary-border, #e5e5e5);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.bt-quote-date-summary:empty {
+  display: none !important;
+}
+
+/* Meta label = gris foncé */
+.bt-quote-date-summary__meta {
+  color: var(--bt-quote-summary-meta, #525252);
+  font-weight: 400;
+}
+
+/* Valeur = noir (info importante) */
+.bt-quote-date-summary__value {
+  color: var(--bt-quote-summary-value, #0a0a0a);
+  font-weight: 600;
+}
+
+/* Séparateur bullet */
+.bt-quote-date-summary__sep {
+  color: var(--bt-quote-summary-meta, #525252);
+  margin: 0 6px;
 }
 
 /* ══════════════════════════════════════════
@@ -915,28 +1061,373 @@
    ══════════════════════════════════════════ */
 
 @media (max-width: 600px) {
-  .bt-quote-exc-card {
-    flex-direction: column;
-  }
-  .bt-quote-exc-card__img {
-    flex: none;
-    max-width: 100%;
-    aspect-ratio: 16 / 9;
-  }
-  .bt-quote-exc-card__img img {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-  /* bt-quote-boat-card__img supprimé — géré par bt-forfait-card__image */
   .bt-quote-fields__row {
     grid-template-columns: 1fr;
   }
   .bt-quote-popup {
     width: 95vw;
     padding: 20px;
+  }
+
+  /* Template-1 : passer en vertical sur mobile */
+  .bt-quote-boat-card--template-1 {
+    flex-direction: column;
+    min-height: auto;
+  }
+  .bt-quote-boat-card--template-1 .bt-quote-boat-card__bg {
+    flex: none;
+    width: 100%;
+    min-width: 100%;
+    height: var(--bt-boat-img-height-mobile, 140px);
+  }
+}
+
+/* ══════════════════════════════════════════
+   CARD "TRAJET SUR MESURE" — Option custom
+   Visuellement distincte des excursions classiques
+   ══════════════════════════════════════════ */
+.bt-quote-exc-card--custom {
+  border: 2px dashed var(--bt-quote-custom-border, var(--bt-quote-border, #d4d4d4));
+  background: var(--bt-quote-custom-bg, linear-gradient(135deg, #fafbfc 0%, #f4f5f6 100%));
+  position: relative;
+}
+/* Icône crayon pour indiquer "sur mesure" */
+.bt-quote-exc-card--custom::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23737373' stroke-width='2'%3E%3Cpath d='M12 20h9'/%3E%3Cpath d='M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z'/%3E%3C/svg%3E") center/contain no-repeat;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+.bt-quote-exc-card--custom:hover::before,
+.bt-quote-exc-card--custom:focus::before {
+  opacity: 1;
+}
+.bt-quote-exc-card--custom:hover,
+.bt-quote-exc-card--custom:focus {
+  border-color: var(--bt-quote-custom-hover-border, var(--bt-quote-primary, #0a0a0a));
+  background: var(--bt-quote-custom-hover-bg, linear-gradient(135deg, #fff 0%, #fafbfc 100%));
+}
+/* État sélectionné — garde le style dashed pour rester distinct */
+.bt-quote-exc-card--custom[aria-selected="true"] {
+  border-style: dashed;
+  border-width: 2px;
+  border-color: var(--bt-quote-custom-sel-border, var(--bt-quote-primary, #0a0a0a));
+  background: var(--bt-quote-custom-sel-bg, #fff);
+  box-shadow: 0 0 0 3px rgba(10, 10, 10, 0.08);
+}
+.bt-quote-exc-card--custom[aria-selected="true"]::before {
+  opacity: 1;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230a0a0a' stroke-width='2'%3E%3Cpath d='M12 20h9'/%3E%3Cpath d='M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z'/%3E%3C/svg%3E");
+}
+.bt-quote-exc-card__desc {
+  margin: 4px 0 0;
+}
+
+/* ══════════════════════════════════════════
+   WIDGET BOAT TARIFS (.bt-btarifs)
+   Classes séparées pour éviter conflits avec Tarifs Body
+   ══════════════════════════════════════════ */
+.bt-btarifs {
+  display: block;
+}
+.bt-btarifs--hidden {
+  display: none;
+}
+.bt-btarifs__inner {
+  display: block;
+}
+.bt-btarifs__devis-reveal {
+  margin-top: 24px;
+}
+.bt-btarifs__devis-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  background: var(--bt-quote-primary, #0a0a0a);
+  color: #fff;
+  cursor: pointer;
+  transition: background .2s, transform .15s;
+}
+.bt-btarifs__devis-btn:hover {
+  background: var(--bt-quote-primary-hover, #262626);
+}
+.bt-btarifs__devis-btn:active {
+  transform: scale(0.98);
+}
+.bt-btarifs__devis-btn-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* ══════════════════════════════════════════
+   DROPDOWN TEMPLATE (excursions & bateaux)
+   ══════════════════════════════════════════ */
+
+.bt-quote-dd {
+  position: relative;
+  width: 100%;
+  display: block;
+  box-sizing: border-box;
+}
+
+/* Trigger button */
+.bt-quote-dd__trigger {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 16px;
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--bt-quote-border, #e5e5e5);
+  border-radius: 10px;
+  background: var(--bt-quote-dd-bg, #fff);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.bt-quote-dd__trigger:hover {
+  border-color: var(--bt-quote-border-hover, #a3a3a3);
+}
+
+.bt-quote-dd__trigger:focus {
+  outline: none;
+  border-color: var(--bt-quote-primary, #0a0a0a);
+  box-shadow: 0 0 0 2px rgba(10, 10, 10, 0.1);
+}
+
+.bt-quote-dd__trigger[aria-expanded="true"] {
+  border-color: var(--bt-quote-primary, #0a0a0a);
+}
+
+/* Trigger thumbnail */
+.bt-quote-dd__thumb {
+  width: 52px;
+  height: 38px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+/* Trigger info */
+.bt-quote-dd__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bt-quote-dd__name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--bt-quote-text, #0a0a0a);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bt-quote-dd__sub {
+  font-size: 12px;
+  color: var(--bt-quote-text-muted, #737373);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bt-quote-dd__sub:empty {
+  display: none;
+}
+
+/* Arrow icon */
+.bt-quote-dd__arrow {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  stroke: var(--bt-quote-text-muted, #737373);
+  stroke-width: 2;
+  fill: none;
+  transition: transform .2s ease;
+}
+
+.bt-quote-dd__trigger[aria-expanded="true"] .bt-quote-dd__arrow {
+  transform: rotate(180deg);
+}
+
+/* Dropdown menu */
+.bt-quote-dd__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 320px;
+  overflow-y: auto;
+  background: var(--bt-quote-dd-bg, #fff);
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--bt-quote-border, #e5e5e5);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 100;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: opacity .2s, visibility .2s, transform .2s;
+}
+
+.bt-quote-dd__trigger[aria-expanded="true"] + .bt-quote-dd__menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* Option item */
+.bt-quote-dd__opt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background-color .15s;
+}
+
+.bt-quote-dd__opt:first-child {
+  border-radius: 9px 9px 0 0;
+}
+
+.bt-quote-dd__opt:last-child {
+  border-radius: 0 0 9px 9px;
+}
+
+.bt-quote-dd__opt:only-child {
+  border-radius: 9px;
+}
+
+.bt-quote-dd__opt:hover {
+  background: var(--bt-quote-dd-hover, #f5f5f5);
+}
+
+.bt-quote-dd__opt--sel {
+  background: var(--bt-quote-dd-selected-bg, #fafafa);
+}
+
+/* Option thumbnail */
+.bt-quote-dd__opt-thumb {
+  width: 52px;
+  height: 38px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+/* Option info */
+.bt-quote-dd__opt-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bt-quote-dd__opt-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--bt-quote-text, #0a0a0a);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bt-quote-dd__opt-sub {
+  font-size: 12px;
+  color: var(--bt-quote-text-muted, #737373);
+}
+
+/* Option prices (boats) */
+.bt-quote-dd__opt-prices {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.bt-quote-dd__opt-price {
+  font-size: 12px;
+  color: var(--bt-quote-text-muted, #737373);
+}
+
+.bt-quote-dd__opt-price strong {
+  color: var(--bt-quote-text, #0a0a0a);
+}
+
+/* Checkmark icon */
+.bt-quote-dd__check {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  stroke: var(--bt-quote-primary, #0a0a0a);
+  stroke-width: 2.5;
+  fill: none;
+  opacity: 0;
+  transition: opacity .15s;
+}
+
+.bt-quote-dd__opt--sel .bt-quote-dd__check {
+  opacity: 1;
+}
+
+/* Custom trip styling */
+.bt-quote-dd__opt[data-custom-trip="1"] {
+  border-top: 1px dashed var(--bt-quote-border, #e5e5e5);
+}
+
+.bt-quote-dd__opt[data-custom-trip="1"]:first-child {
+  border-top: none;
+}
+
+/* Separator between current and other options */
+.bt-quote-dd__opt--sel + .bt-quote-dd__opt:not(.bt-quote-dd__opt--sel) {
+  border-top: 1px solid var(--bt-quote-border, #e5e5e5);
+}
+
+/* Hide prices row for excursion dropdown (only used for boats) */
+.bt-quote-dd:not(.bt-quote-dd--boat) .bt-quote-dd__opt-prices {
+  display: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .bt-quote-dd__thumb,
+  .bt-quote-dd__opt-thumb {
+    width: 44px;
+    height: 32px;
+  }
+
+  .bt-quote-dd__trigger {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .bt-quote-dd__name {
+    font-size: 13px;
+  }
+
+  .bt-quote-dd__sub,
+  .bt-quote-dd__opt-sub {
+    font-size: 11px;
   }
 }

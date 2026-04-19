@@ -166,10 +166,12 @@ class QuoteHandler {
         $date_start      = sanitize_text_field($_POST['date_start'] ?? '');
         $date_end        = sanitize_text_field($_POST['date_end'] ?? '');
         $timeslot        = sanitize_text_field($_POST['timeslot'] ?? '');
+        $date_custom     = sanitize_textarea_field($_POST['date_custom'] ?? '');
         $name            = sanitize_text_field($_POST['client_name'] ?? '');
         $firstname       = sanitize_text_field($_POST['client_firstname'] ?? '');
         $email           = sanitize_email($_POST['client_email'] ?? '');
         $phone           = sanitize_text_field($_POST['client_phone'] ?? '');
+        $client_note     = sanitize_textarea_field($_POST['client_note'] ?? '');
         $exc_custom      = !empty($_POST['exc_custom']);
         $exc_custom_text = sanitize_textarea_field($_POST['exc_custom_text'] ?? '');
         $boat_options    = json_decode(wp_unslash($_POST['boat_options'] ?? '{}'), true);
@@ -287,7 +289,7 @@ class QuoteHandler {
             'timeslot'         => $timeslot,
             'boat_forfait'     => trim($boat_forfait_label . ($boat_forfait_price ? " — {$boat_forfait_price} €" : '')),
             'boat_options'     => !empty($boat_options) ? wp_json_encode($boat_options) : null,
-            'message'          => $exc_custom_text,
+            'message'          => trim(implode("\n", array_filter([$exc_custom_text, $date_custom ? "Disponibilités: {$date_custom}" : '', $client_note ? "Note: {$client_note}" : '']))),
             'utm_source'       => $utm_source,
             'utm_medium'       => $utm_medium,
             'utm_campaign'     => $utm_campaign,
@@ -321,14 +323,12 @@ class QuoteHandler {
         }
         $page_line = $page_url ? "Page : {$page_url}" : '';
 
-        // Options bateau (confort, activités, services, restauration)
+        // Options bateau (activités, services)
         $options_lines = '';
         if (!empty($boat_options)) {
             $option_labels = [
-                'boat_comfort'        => 'Confort',
                 'activite'            => 'Activités',
                 'boat_board_services' => 'Services à bord',
-                'boat_onboard_food'   => 'Restauration à bord',
             ];
             foreach ($boat_options as $key => $opt) {
                 $names = $opt['names'] ?? [];
@@ -349,14 +349,16 @@ class QuoteHandler {
             . "══════════════════════════════════════\n\n"
             . "Client : {$full_name}\n"
             . "E-mail : {$email}\n"
-            . "Téléphone : " . ($phone ?: '—') . "\n\n"
-            . "── Demande ──────────────────────────\n"
+            . "Téléphone : " . ($phone ?: '—') . "\n"
+            . ($client_note ? "Note : {$client_note}\n" : '')
+            . "\n── Demande ──────────────────────────\n"
             . "Excursion : {$exc_title}\n"
             . ($exc_custom_text ? "Demande sur mesure : {$exc_custom_text}\n" : '')
             . "Bateau : {$boat_title}\n"
             . $forfait_line
             . "Formule : {$dur_label}\n"
             . "Dates : " . ($date_start ?: '—') . ($timeslot ? " ({$timeslot})" : '') . ($date_end ? " → {$date_end}" : '') . "\n"
+            . ($date_custom ? "Disponibilités spécifiques : {$date_custom}\n" : '')
             . (!empty($exc_details) ? "\n── Détails excursion ────────────────\n" . implode("\n", $exc_details) . "\n" : '')
             . (!empty($boat_details) ? "\n── Détails bateau ──────────────────\n" . implode("\n", $boat_details) . "\n" : '')
             . ($options_lines ? "\n── Options sélectionnées ────────────\n" . $options_lines : '')

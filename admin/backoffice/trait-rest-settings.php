@@ -46,6 +46,14 @@ trait RestApiSettings {
             'mistral_api_key'           => self::mask_key(get_option('bt_mistral_api_key', '')),
             'grok_api_key'              => self::mask_key(get_option('bt_grok_api_key', '')),
             'meta_api_key'              => self::mask_key(get_option('bt_meta_api_key', '')),
+            // GetYourGuide — credentials masqués
+            'gyg_username'              => get_option('bt_gyg_username') ? '••••••' : '',
+            'gyg_supplier_id'           => get_option('bt_gyg_supplier_id', ''),
+            'gyg_mode'                  => get_option('bt_gyg_mode', 'sandbox'),
+            'gyg_incoming_username'     => get_option('bt_gyg_incoming_username') ? '••••••' : '',
+            'gyg_has_password'          => !empty(get_option('bt_gyg_password')),
+            'gyg_has_incoming_password' => !empty(get_option('bt_gyg_incoming_password')),
+            'gyg_product_map'           => json_decode(get_option('bt_gyg_product_map', '[]'), true),
             'products'                  => $products,
             'all_post_types' => array_values(array_map(fn($pt) => [
                 'name'  => $pt->name,
@@ -195,6 +203,45 @@ trait RestApiSettings {
             }
         }
 
+        // ── GetYourGuide credentials ──────────────────────────────────────────
+        // Les valeurs masquées ('••••••') ne sont jamais sauvegardées.
+        if (isset($body['gyg_username']) && !self::is_masked($body['gyg_username'])) {
+            $gyg_enc = new Encryption();
+            update_option('bt_gyg_username', $gyg_enc->encrypt(sanitize_text_field($body['gyg_username'])));
+        }
+        if (isset($body['gyg_password']) && !self::is_masked($body['gyg_password'])) {
+            $gyg_enc = $gyg_enc ?? new Encryption();
+            update_option('bt_gyg_password', $gyg_enc->encrypt(sanitize_text_field($body['gyg_password'])));
+        }
+        if (isset($body['gyg_supplier_id'])) {
+            update_option('bt_gyg_supplier_id', sanitize_text_field($body['gyg_supplier_id']));
+        }
+        if (isset($body['gyg_mode'])) {
+            $mode = in_array($body['gyg_mode'], ['sandbox', 'live'], true) ? $body['gyg_mode'] : 'sandbox';
+            update_option('bt_gyg_mode', $mode);
+        }
+        if (isset($body['gyg_incoming_username']) && !self::is_masked($body['gyg_incoming_username'])) {
+            $gyg_enc = $gyg_enc ?? new Encryption();
+            update_option('bt_gyg_incoming_username', $gyg_enc->encrypt(sanitize_text_field($body['gyg_incoming_username'])));
+        }
+        if (isset($body['gyg_incoming_password']) && !self::is_masked($body['gyg_incoming_password'])) {
+            $gyg_enc = $gyg_enc ?? new Encryption();
+            update_option('bt_gyg_incoming_password', $gyg_enc->encrypt(sanitize_text_field($body['gyg_incoming_password'])));
+        }
+        if (isset($body['gyg_product_map']) && is_array($body['gyg_product_map'])) {
+            // Sanitiser chaque entrée du mapping produit
+            $clean_map = [];
+            foreach ($body['gyg_product_map'] as $entry) {
+                if (!is_array($entry)) continue;
+                $clean_map[] = [
+                    'notre_product_id' => sanitize_text_field($entry['notre_product_id'] ?? ''),
+                    'gyg_option_id'    => absint($entry['gyg_option_id']    ?? 0),
+                    'active'           => !empty($entry['active']),
+                ];
+            }
+            update_option('bt_gyg_product_map', wp_json_encode($clean_map));
+        }
+
         return rest_ensure_response(['success' => true]);
     }
 
@@ -269,5 +316,229 @@ trait RestApiSettings {
         if ($recurrence) {
             wp_schedule_event(time(), $recurrence, 'bt_auto_sync');
         }
+    }
+
+    // ── Schema.org SEO ────────────────────────────────────────────────────────
+
+    /**
+     * Retourne la configuration Schema.org sauvegardée.
+     */
+    public function get_schema_settings(): \WP_REST_Response {
+        $settings = get_option('bt_schema_settings', [
+            'post_types'    => [],
+            'taxonomies'    => [],
+            'provider_name' => '',
+            'provider_url'  => '',
+        ]);
+        return rest_ensure_response($settings);
+    }
+
+    /**
+     * Sauvegarde la configuration Schema.org.
+     */
+    public function save_schema_settings(\WP_REST_Request $req): \WP_REST_Response {
+        $body = $req->get_json_params();
+
+        $clean_pt = [];
+        if (!empty($body['post_types']) && is_array($body['post_types'])) {
+            foreach ($body['post_types'] as $cfg) {
+                if (empty($cfg['post_type'])) continue;
+                $clean_pt[] = [
+                    'post_type'         => sanitize_key($cfg['post_type']),
+                    'enabled'           => !empty($cfg['enabled']),
+                    'schema_type'       => sanitize_text_field($cfg['schema_type'] ?? 'TouristTrip'),
+                    'field_description' => sanitize_key($cfg['field_description'] ?? ''),
+                    'field_depart'      => sanitize_key($cfg['field_depart'] ?? ''),
+                    'field_arrivee'     => sanitize_key($cfg['field_arrivee'] ?? ''),
+                ];
+            }
+        }
+
+        $clean_tax = [];
+        if (!empty($body['taxonomies']) && is_array($body['taxonomies'])) {
+            foreach ($body['taxonomies'] as $cfg) {
+                if (empty($cfg['taxonomy'])) continue;
+                $clean_tax[] = [
+                    'taxonomy'    => sanitize_key($cfg['taxonomy']),
+                    'enabled'     => !empty($cfg['enabled']),
+                    'schema_type' => sanitize_text_field($cfg['schema_type'] ?? 'TouristDestination'),
+                    'field_gps'   => sanitize_key($cfg['field_gps'] ?? ''),
+                ];
+            }
+        }
+
+        $settings = [
+            'post_types'    => $clean_pt,
+            'taxonomies'    => $clean_tax,
+            'provider_name' => sanitize_text_field($body['provider_name'] ?? ''),
+            'provider_url'  => esc_url_raw($body['provider_url'] ?? ''),
+        ];
+
+        update_option('bt_schema_settings', $settings);
+
+        return rest_ensure_response(['success' => true]);
+    }
+
+    /**
+     * Retourne la liste des custom post types publics (hors natifs WP).
+     */
+    public function get_schema_post_types(): \WP_REST_Response {
+        $excluded = [
+            'post', 'page', 'attachment', 'revision', 'nav_menu_item',
+            'custom_css', 'customize_changeset', 'oembed_cache', 'user_request',
+            'wp_block', 'wp_template', 'wp_template_part', 'wp_global_styles',
+            'wp_navigation', 'acf-field-group', 'acf-field', 'acf-post-type',
+            'acf-taxonomy', 'acf-ui-options-page', 'elementor_library',
+            'e-landing-page', 'e-floating-buttons',
+        ];
+
+        $pts = get_post_types(['public' => true], 'objects');
+        $result = [];
+
+        foreach ($pts as $pt) {
+            if (in_array($pt->name, $excluded, true)) continue;
+            $result[] = [
+                'name'  => $pt->name,
+                'label' => $pt->label,
+            ];
+        }
+
+        return rest_ensure_response($result);
+    }
+
+    /**
+     * Retourne la liste des taxonomies publiques (hors natives WP).
+     */
+    public function get_schema_taxonomies(): \WP_REST_Response {
+        $excluded = [
+            'category', 'post_tag', 'nav_menu', 'link_category', 'post_format',
+            'wp_theme', 'wp_template_part_area', 'elementor_library_type',
+        ];
+
+        $taxs = get_taxonomies(['public' => true], 'objects');
+        $result = [];
+
+        foreach ($taxs as $tax) {
+            if (in_array($tax->name, $excluded, true)) continue;
+            $result[] = [
+                'name'  => $tax->name,
+                'label' => $tax->label,
+            ];
+        }
+
+        return rest_ensure_response($result);
+    }
+
+    /**
+     * Retourne les champs ACF de type google_map pour un post type ou une taxonomie.
+     *
+     * @param \WP_REST_Request $req Params: name (post_type ou taxonomy), type ('post_type' ou 'taxonomy')
+     */
+    public function get_schema_map_fields(\WP_REST_Request $req): \WP_REST_Response {
+        $name = sanitize_key($req->get_param('name') ?? '');
+        $type = sanitize_key($req->get_param('type') ?? 'post_type');
+
+        if (!$name || !function_exists('acf_get_field_groups')) {
+            return rest_ensure_response([]);
+        }
+
+        // Trouver les field groups assignés à ce post type ou taxonomie
+        $location_rule = $type === 'taxonomy'
+            ? [['param' => 'taxonomy', 'operator' => '==', 'value' => $name]]
+            : [['param' => 'post_type', 'operator' => '==', 'value' => $name]];
+
+        $groups = acf_get_field_groups();
+        $matching_groups = [];
+
+        foreach ($groups as $group) {
+            foreach ($group['location'] ?? [] as $loc_group) {
+                foreach ($loc_group as $rule) {
+                    if (
+                        $rule['param'] === $location_rule[0]['param'] &&
+                        $rule['operator'] === '==' &&
+                        $rule['value'] === $name
+                    ) {
+                        $matching_groups[] = $group['key'];
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        // Extraire les champs google_map de ces groupes
+        $map_fields = [];
+        foreach ($matching_groups as $group_key) {
+            $fields = acf_get_fields($group_key);
+            if (!$fields) continue;
+
+            foreach ($fields as $field) {
+                if (($field['type'] ?? '') === 'google_map') {
+                    $map_fields[] = [
+                        'name'  => $field['name'],
+                        'label' => $field['label'],
+                    ];
+                }
+            }
+        }
+
+        return rest_ensure_response($map_fields);
+    }
+
+    /**
+     * Retourne les champs ACF de type texte pour la description (text, textarea, wysiwyg).
+     *
+     * @param \WP_REST_Request $req Params: name (post_type ou taxonomy), type ('post_type' ou 'taxonomy')
+     */
+    public function get_schema_text_fields(\WP_REST_Request $req): \WP_REST_Response {
+        $name = sanitize_key($req->get_param('name') ?? '');
+        $type = sanitize_key($req->get_param('type') ?? 'post_type');
+
+        if (!$name || !function_exists('acf_get_field_groups')) {
+            return rest_ensure_response([]);
+        }
+
+        // Trouver les field groups assignés à ce post type ou taxonomie
+        $location_rule = $type === 'taxonomy'
+            ? [['param' => 'taxonomy', 'operator' => '==', 'value' => $name]]
+            : [['param' => 'post_type', 'operator' => '==', 'value' => $name]];
+
+        $groups = acf_get_field_groups();
+        $matching_groups = [];
+
+        foreach ($groups as $group) {
+            foreach ($group['location'] ?? [] as $loc_group) {
+                foreach ($loc_group as $rule) {
+                    if (
+                        $rule['param'] === $location_rule[0]['param'] &&
+                        $rule['operator'] === '==' &&
+                        $rule['value'] === $name
+                    ) {
+                        $matching_groups[] = $group['key'];
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        // Types de champs texte valides pour la description
+        $text_types = ['text', 'textarea', 'wysiwyg'];
+        $text_fields = [];
+
+        foreach ($matching_groups as $group_key) {
+            $fields = acf_get_fields($group_key);
+            if (!$fields) continue;
+
+            foreach ($fields as $field) {
+                if (in_array($field['type'] ?? '', $text_types, true)) {
+                    $text_fields[] = [
+                        'name'  => $field['name'],
+                        'label' => $field['label'],
+                        'type'  => $field['type'],
+                    ];
+                }
+            }
+        }
+
+        return rest_ensure_response($text_fields);
     }
 }

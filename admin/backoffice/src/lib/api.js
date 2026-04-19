@@ -107,6 +107,14 @@ export const api = {
   importProfiles:       (type) => api.get('/import-profiles' + toQuery({ type })),
   saveImportProfile:    (body) => api.post('/import-profiles', body),
   deleteImportProfile:  (id)   => apiFetch(`/import-profiles/${id}`, { method: 'DELETE' }),
+
+  // Schema.org SEO
+  schemaSettings:       ()           => api.get('/schema/settings'),
+  saveSchemaSettings:   (body)       => api.post('/schema/settings', body),
+  schemaPostTypes:      ()           => api.get('/schema/post-types'),
+  schemaTaxonomies:     ()           => api.get('/schema/taxonomies'),
+  schemaMapFields:      (name, type) => api.get('/schema/map-fields' + toQuery({ name, type })),
+  schemaTextFields:     (name, type) => api.get('/schema/text-fields' + toQuery({ name, type })),
 }
 
 // streamChat() supprimé — remplacé par useAiChat hook (@ai-sdk/react)

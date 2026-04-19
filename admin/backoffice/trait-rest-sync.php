@@ -87,6 +87,27 @@ trait RestApiSync {
         $sync   = new ReservationSync();
         $result = $sync->import_period($from, $to);
 
+        // Collecter les product_ids concernés depuis le résultat
+        $synced_product_ids = [];
+        if (!empty($result['product_ids']) && is_array($result['product_ids'])) {
+            $synced_product_ids = $result['product_ids'];
+        } elseif (!empty($result['imported']) || !empty($result['updated'])) {
+            // Fallback : récupérer depuis le product_map GYG
+            $product_map = json_decode(get_option('bt_gyg_product_map', '[]'), true);
+            if (is_array($product_map)) {
+                foreach ($product_map as $entry) {
+                    if (!empty($entry['active']) && !empty($entry['notre_product_id'])) {
+                        $synced_product_ids[] = $entry['notre_product_id'];
+                    }
+                }
+            }
+        }
+
+        // Notifier les listeners qu'un sync Regiondo a eu lieu (ex: GYG notify-availability)
+        if (!empty($synced_product_ids)) {
+            do_action('bt_after_regiondo_sync', $synced_product_ids);
+        }
+
         // Mémoriser l'année synchronisée
         $status = $db->get_sync_status();
         $years  = $status['years_synced'] ?? [];

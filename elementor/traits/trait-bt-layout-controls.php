@@ -320,7 +320,7 @@ trait BtLayoutControls {
             'size_units' => ['px', 'em'],
             'range'      => ['px' => ['min' => 12, 'max' => 80]],
             'default'    => ['size' => $size, 'unit' => 'px'],
-            'selectors'  => [$selector => 'font-size: {{SIZE}}{{UNIT}}; width: {{SIZE}}{{UNIT}}'],
+            'selectors'  => [$selector => 'font-size: {{SIZE}}{{UNIT}}'],
         ]);
 
         $this->add_control("{$prefix}_color", [

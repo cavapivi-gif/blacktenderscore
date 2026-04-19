@@ -125,6 +125,13 @@ class BoatPricing extends AbstractBtWidget {
             'condition' => ['show_deposit' => 'yes'],
         ]);
 
+        $this->add_control('show_boat_model', [
+            'label'        => __('Afficher le modèle du bateau', 'blacktenderscore'),
+            'type'         => Controls_Manager::SWITCHER,
+            'return_value' => 'yes',
+            'default'      => '',
+            'description'  => __('Valeur dynamique : taxonomie <code>boat-model</code> ou champ ACF <code>boat_model_name</code>', 'blacktenderscore'),
+        ]);
         $this->add_control('show_boat_year', [
             'label'        => __('Afficher l\'année du bateau', 'blacktenderscore'),
             'type'         => Controls_Manager::SWITCHER,

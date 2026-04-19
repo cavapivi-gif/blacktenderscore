@@ -2,44 +2,120 @@
    WIDGET : Included / Excluded
    ══════════════════════════════════════════════════════════ */
 
+:root {
+    --bt-ie-included-color: #22c55e;
+    --bt-ie-excluded-color: #ef4444;
+    --bt-ie-optional-color: #f59e0b;
+}
+
 .bt-inclexcl__section-title { margin: 0 0 1em; }
 
 .bt-inclexcl__grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 32px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* défaut, surchargé par Elementor */
+    gap: 32px;
 }
 
 .bt-inclexcl__col-title { margin: 0 0 .75em; font-weight: 700; }
 
 .bt-inclexcl__list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .bt-inclexcl__item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* flex-direction et --bt-ie-text-align injectés par Elementor */
 }
 
-.bt-inclexcl__icon { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; }
-.bt-inclexcl__icon img { width: 100%; height: 100%; object-fit: contain; display: block; }
-.bt-inclexcl__icon i { font-size: inherit; }
-.bt-inclexcl__icon svg { width: 1em; height: 1em; fill: currentColor; display: block; }
+/* Alignement texte selon position icône */
+.bt-inclexcl__text {
+    text-align: var(--bt-ie-text-align, left);
+    display: flex;
+    flex-direction: column;
+}
 
-.bt-inclexcl__col--included .bt-inclexcl__icon svg { fill: #22c55e; }
-.bt-inclexcl__col--excluded .bt-inclexcl__icon svg { fill: #ef4444; }
-.bt-inclexcl__text { flex: 1; }
-.bt-inclexcl__desc { display: block; font-size: .875em; }
+/* ── Icônes ──────────────────────────────────────────────── */
 
-.bt-inclexcl__col--included .bt-inclexcl__icon { color: #22c55e; }
-.bt-inclexcl__col--excluded .bt-inclexcl__icon { color: #ef4444; }
+.bt-inclexcl__icon {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
 
-@media (max-width: 600px) {
-  .bt-inclexcl__grid { grid-template-columns: 1fr; }
+.bt-inclexcl__icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.bt-inclexcl__icon i {
+    font-size: inherit;
+}
+
+.bt-inclexcl__icon svg {
+    width: 1em;
+    height: 1em;
+    fill: currentColor;
+    display: block;
+}
+
+/* ── Couleurs par type ───────────────────────────────────── */
+
+/* Inclus */
+.bt-inclexcl__col--included .bt-inclexcl__icon,
+.bt-inclexcl__item--included .bt-inclexcl__icon {
+    color: var(--bt-ie-included-color);
+}
+
+.bt-inclexcl__col--included .bt-inclexcl__icon svg,
+.bt-inclexcl__item--included .bt-inclexcl__icon svg {
+    fill: var(--bt-ie-included-color);
+}
+
+/* Exclus */
+.bt-inclexcl__col--excluded .bt-inclexcl__icon,
+.bt-inclexcl__item--excluded .bt-inclexcl__icon {
+    color: var(--bt-ie-excluded-color);
+}
+
+.bt-inclexcl__col--excluded .bt-inclexcl__icon svg,
+.bt-inclexcl__item--excluded .bt-inclexcl__icon svg {
+    fill: var(--bt-ie-excluded-color);
+}
+
+/* Options sur demande */
+.bt-inclexcl__col--optional .bt-inclexcl__icon,
+.bt-inclexcl__item--optional .bt-inclexcl__icon {
+    color: var(--bt-ie-optional-color);
+}
+
+.bt-inclexcl__col--optional .bt-inclexcl__icon svg,
+.bt-inclexcl__item--optional .bt-inclexcl__icon svg {
+    fill: var(--bt-ie-optional-color);
+}
+
+/* ── Description ─────────────────────────────────────────── */
+
+.bt-inclexcl__desc {
+    display: block;
+    font-size: .875em;
+    opacity: .75;
+    margin-top: 2px;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+
+@media (max-width: 767px) {
+    .bt-inclexcl__grid {
+        grid-template-columns: 1fr;
+    }
 }

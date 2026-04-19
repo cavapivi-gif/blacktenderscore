@@ -90,3 +90,28 @@
 .bt-taxlist__list--inline .bt-taxlist__item {
   align-items: center;
 }
+
+/* ── Séparateur inline ── */
+.bt-taxlist__sep {
+  display: inline-flex;
+  align-items: center;
+  opacity: .5;
+  user-select: none;
+}
+
+/* ── Prefix / Suffix ── */
+.bt-taxlist__prefix,
+.bt-taxlist__suffix {
+  opacity: .6;
+}
+
+/* ── Lien ── */
+.bt-taxlist__link {
+  color: inherit;
+  text-decoration: none;
+  transition: color .2s ease;
+}
+
+.bt-taxlist__link:hover {
+  color: inherit;
+}

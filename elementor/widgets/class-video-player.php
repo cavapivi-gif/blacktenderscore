@@ -3,6 +3,7 @@ namespace BlackTenders\Elementor\Widgets;
 
 use BlackTenders\Elementor\AbstractBtWidget;
 use BlackTenders\Elementor\Traits\BtSharedControls;
+use BlackTenders\Elementor\VideoThumbnailCache;
 use Elementor\Controls_Manager;
 use Elementor\Group_Control_Border;
 use Elementor\Group_Control_Box_Shadow;
@@ -27,6 +28,10 @@ class VideoPlayer extends AbstractBtWidget {
         ];
     }
 
+    /**
+     * Enregistre les assets Plyr depuis le CDN.
+     * Chargement standard (pas de hack media=print qui peut casser avec les plugins de cache).
+     */
     public static function register_plyr_assets(): void {
         $v    = self::PLYR_VERSION;
         $base = self::PLYR_CDN_BASE;
@@ -34,7 +39,7 @@ class VideoPlayer extends AbstractBtWidget {
             wp_register_script('plyr-js', "{$base}/{$v}/plyr.polyfilled.js", [], $v, true);
         }
         if (!wp_style_is('plyr-css', 'registered')) {
-            wp_register_style('plyr-css', "{$base}/{$v}/plyr.css", [], $v);
+            wp_register_style('plyr-css', "{$base}/{$v}/plyr.css", [], $v, 'all');
         }
     }
 
@@ -95,6 +100,14 @@ class VideoPlayer extends AbstractBtWidget {
             'condition' => ['video_source' => 'acf'],
         ]);
 
+        $this->add_control('video_fallback', [
+            'label'       => __('Video fallback', 'blacktenderscore'),
+            'type'        => Controls_Manager::URL,
+            'placeholder' => 'https://www.youtube.com/watch?v=...',
+            'description' => __('Utilisee si le champ ACF est vide', 'blacktenderscore'),
+            'condition'   => ['video_source' => 'acf'],
+        ]);
+
         $this->end_controls_section();
 
         // ── Poster ───────────────────────────────────────────────────
@@ -103,15 +116,17 @@ class VideoPlayer extends AbstractBtWidget {
         ]);
 
         $this->add_control('poster_source', [
-            'label'   => __('Image', 'blacktenderscore'),
-            'type'    => Controls_Manager::SELECT,
-            'default' => 'featured',
-            'options' => [
+            'label'       => __('Image', 'blacktenderscore'),
+            'type'        => Controls_Manager::SELECT,
+            'default'     => 'featured',
+            'options'     => [
                 'none'     => __('Aucun', 'blacktenderscore'),
+                'auto'     => __('Générer automatiquement (1ère frame)', 'blacktenderscore'),
                 'featured' => __('Image mise en avant', 'blacktenderscore'),
-                'custom'   => __('Personnalisee', 'blacktenderscore'),
+                'custom'   => __('Personnalisée', 'blacktenderscore'),
                 'acf'      => 'ACF',
             ],
+            'description' => __('Auto : miniature YouTube/Vimeo via CDN, ou thumbnail WP pour les fichiers locaux (généré à l\'upload si FFmpeg installé).', 'blacktenderscore'),
         ]);
 
         $this->add_control('poster_image', [
@@ -157,11 +172,18 @@ class VideoPlayer extends AbstractBtWidget {
         ]);
 
         $this->add_control('lazy_margin', [
-            'label'   => __('Marge preload', 'blacktenderscore'),
-            'type'    => Controls_Manager::SELECT,
-            'default' => '200px',
-            'options' => ['0px' => '0px', '100px' => '100px', '200px' => '200px', '400px' => '400px'],
-            'condition' => ['lazy_load' => 'yes'],
+            'label'       => __('Marge preload', 'blacktenderscore'),
+            'type'        => Controls_Manager::SELECT,
+            'default'     => 'auto',
+            'options'     => [
+                'auto' => __('Auto (réseau adaptatif)', 'blacktenderscore'),
+                '0px'  => __('0px — uniquement au scroll', 'blacktenderscore'),
+                '200px'=> '200px',
+                '400px'=> '400px',
+                '800px'=> '800px',
+            ],
+            'description' => __('Auto adapte la marge selon la vitesse réseau détectée (Network API).', 'blacktenderscore'),
+            'condition'   => ['lazy_load' => 'yes'],
         ]);
 
         $this->add_control('plyr_controls', [
@@ -183,6 +205,13 @@ class VideoPlayer extends AbstractBtWidget {
             ],
         ]);
 
+        $this->add_control('hide_suggestions', [
+            'label'       => __('Masquer suggestions', 'blacktenderscore'),
+            'type'        => Controls_Manager::SWITCHER,
+            'default'     => 'yes',
+            'description' => __('Désactive les vidéos suggérées YouTube/Vimeo à la fin', 'blacktenderscore'),
+        ]);
+
         $this->end_controls_section();
     }
 
@@ -194,39 +223,42 @@ class VideoPlayer extends AbstractBtWidget {
             'tab'   => Controls_Manager::TAB_STYLE,
         ]);
 
-        $this->add_responsive_control('video_sizing_mode', [
-            'label'   => __('Taille', 'blacktenderscore'),
-            'type'    => Controls_Manager::SELECT,
-            'default' => 'ratio',
-            'options' => [
-                'ratio' => 'Ratio',
-                'fixed' => __('Hauteur fixe', 'blacktenderscore'),
-            ],
-        ]);
-
         $this->add_responsive_control('video_aspect_ratio', [
             'label'   => 'Ratio',
             'type'    => Controls_Manager::SELECT,
             'default' => '16-9',
             'options' => [
-                '16-9' => '16:9', '21-9' => '21:9', '4-3' => '4:3',
-                '1-1'  => '1:1',  '9-16' => '9:16',
+                '16-9' => '16:9',
+                '21-9' => '21:9',
+                '4-3'  => '4:3',
+                '1-1'  => '1:1',
+                '9-16' => '9:16',
             ],
-            'condition' => ['video_sizing_mode' => 'ratio'],
+            'selectors_dictionary' => [
+                '16-9' => '16 / 9',
+                '21-9' => '21 / 9',
+                '4-3'  => '4 / 3',
+                '1-1'  => '1 / 1',
+                '9-16' => '9 / 16',
+            ],
+            'selectors' => [
+                '{{WRAPPER}} .bt-video-player__wrap' => 'aspect-ratio: {{VALUE}};',
+            ],
         ]);
 
         $this->add_responsive_control('video_height', [
-            'label'      => __('Hauteur', 'blacktenderscore'),
-            'type'       => Controls_Manager::SLIDER,
-            'size_units' => ['px', 'vh', 'svh'],
-            'range'      => [
+            'label'       => __('Hauteur fixe', 'blacktenderscore'),
+            'type'        => Controls_Manager::SLIDER,
+            'size_units'  => ['px', 'vh', 'svh'],
+            'range'       => [
                 'px'  => ['min' => 100, 'max' => 1200, 'step' => 10],
                 'vh'  => ['min' => 10, 'max' => 100],
                 'svh' => ['min' => 10, 'max' => 100],
             ],
-            'default'    => ['size' => 400, 'unit' => 'px'],
-            'selectors'  => ['{{WRAPPER}} .bt-video-player__wrap' => 'height: {{SIZE}}{{UNIT}};'],
-            'condition'  => ['video_sizing_mode' => 'fixed'],
+            'selectors'   => [
+                '{{WRAPPER}} .bt-video-player__wrap' => 'height: {{SIZE}}{{UNIT}}; aspect-ratio: unset;',
+            ],
+            'description' => __('Override le ratio si défini', 'blacktenderscore'),
         ]);
 
         $this->add_responsive_control('video_max_width', [
@@ -342,8 +374,7 @@ class VideoPlayer extends AbstractBtWidget {
         $autoplay   = $s['autoplay'] === 'yes';
         $muted      = $s['muted'] === 'yes' || $autoplay;
         $loop       = $s['loop'] === 'yes';
-        $sizing     = $s['video_sizing_mode'] ?? 'ratio';
-        $ratio      = $s['video_aspect_ratio'] ?? '16-9';
+        $hide_suggestions = ($s['hide_suggestions'] ?? 'yes') === 'yes';
 
         $config = [
             'src'        => $video_url,
@@ -351,38 +382,54 @@ class VideoPlayer extends AbstractBtWidget {
             'poster'     => $poster,
             'autoplay'   => $autoplay,
             'muted'      => $muted,
+            // user_muted = intention explicite de l'utilisateur (pas forcée par autoplay).
+            // Permet au JS de démuter après autoplay si l'user n'a pas demandé le silence.
+            'user_muted' => $s['muted'] === 'yes',
             'loop'       => $loop,
             'lazy'       => $lazy,
             'lazyMargin' => $s['lazy_margin'] ?? '200px',
             'plyr'       => [
                 'controls'     => $s['plyr_controls'] ?? [],
                 'settings'     => ['quality', 'speed'],
+                'autoplay'     => $autoplay, // Plyr passe autoplay=1 aux iframes YouTube/Vimeo
+                'muted'        => $muted,
                 'clickToPlay'  => true,
-                'hideControls' => true,
+                // false = contrôles toujours visibles (meilleur UX mobile)
+                'hideControls' => false,
                 'invertTime'   => false,
+                // Sprite SVG local (évite CORS/CSP du CDN externe)
                 'loadSprite'   => true,
-                'iconUrl'      => self::PLYR_CDN_BASE . '/' . self::PLYR_VERSION . '/plyr.svg',
+                'iconUrl'      => BT_URL . 'elementor/assets/plyr.svg',
+                // YouTube: rel=0 masque suggestions externes, modestbranding réduit le logo
+                'youtube'      => [
+                    'rel'            => $hide_suggestions ? 0 : 1,
+                    'modestbranding' => 1,
+                    'showinfo'       => 0,
+                ],
+                // Vimeo: désactive suggestions, titre, byline, portrait
+                'vimeo'        => [
+                    'dnt'      => $hide_suggestions,
+                    'title'    => !$hide_suggestions,
+                    'byline'   => !$hide_suggestions,
+                    'portrait' => !$hide_suggestions,
+                ],
             ],
         ];
 
         if ($video_type === 'youtube') $config['videoId'] = $this->extract_youtube_id($video_url);
         if ($video_type === 'vimeo')   $config['videoId'] = $this->extract_vimeo_id($video_url);
 
-        $wrap_class = $sizing === 'fixed'
-            ? ' bt-video-player__wrap--fixed'
-            : " bt-video-player__wrap--{$ratio}";
-
         $preload = $lazy ? 'none' : 'metadata';
         ?>
         <div class="bt-video-player" data-bt-video='<?php echo esc_attr(wp_json_encode($config)); ?>'>
-            <div class="bt-video-player__wrap<?php echo esc_attr($wrap_class); ?>">
+            <div class="bt-video-player__wrap">
                 <?php echo $this->build_video_tag($config, $preload); ?>
                 <?php if ($lazy): ?>
                     <div class="bt-video-player__poster<?php echo $poster ? '' : ' bt-video-player__poster--empty'; ?>">
                         <?php if ($poster): ?>
                             <img src="<?php echo esc_url($poster); ?>" alt="<?php echo esc_attr(get_the_title()); ?>" loading="lazy" decoding="async">
                         <?php endif; ?>
-                        <button class="bt-video-player__play" aria-label="<?php esc_attr_e('Lire la video', 'blacktenderscore'); ?>">
+                        <button type="button" class="bt-video-player__play" aria-label="<?php esc_attr_e('Lire la video', 'blacktenderscore'); ?>">
                             <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M8 5v14l11-7z"/></svg>
                         </button>
                     </div>
@@ -401,9 +448,14 @@ class VideoPlayer extends AbstractBtWidget {
             case 'url':  return $s['video_url']['url'] ?? '';
             case 'file': return $s['video_file']['url'] ?? '';
             case 'acf':
-                if (!function_exists('get_field')) return '';
+                if (!function_exists('get_field')) return $s['video_fallback']['url'] ?? '';
                 $v = get_field($s['video_acf_field']);
-                return is_array($v) ? ($v['url'] ?? '') : (is_string($v) ? $v : '');
+                $url = is_array($v) ? ($v['url'] ?? '') : (is_string($v) ? $v : '');
+                // Fallback si ACF vide
+                if (!$url && !empty($s['video_fallback']['url'])) {
+                    return $s['video_fallback']['url'];
+                }
+                return $url;
         }
         return '';
     }
@@ -412,6 +464,7 @@ class VideoPlayer extends AbstractBtWidget {
         switch ($s['poster_source']) {
             case 'featured': return get_the_post_thumbnail_url(get_the_ID(), 'large') ?: '';
             case 'custom':   return $s['poster_image']['url'] ?? '';
+            case 'auto':     return $this->auto_poster($s);
             case 'acf':
                 if (!function_exists('get_field')) return '';
                 $v = get_field($s['poster_acf_field']);
@@ -420,12 +473,61 @@ class VideoPlayer extends AbstractBtWidget {
         return '';
     }
 
+    /**
+     * Résout automatiquement le poster depuis la source vidéo.
+     * - YouTube : téléchargé et caché localement (uploads/bt-video-cache/)
+     * - Vimeo   : téléchargé et caché localement
+     * - Fichier : thumbnail WP généré par FFmpeg à l'upload (_thumbnail_id meta)
+     *
+     * Les thumbnails sont servis depuis le serveur local pour :
+     * - Éviter les requêtes externes au chargement (perf)
+     * - Contrôle total du cache navigateur
+     * - Meilleur SEO (pas de dépendance CDN tiers)
+     */
+    private function auto_poster(array $s): string {
+        $video_url = $this->resolve_video_url($s);
+        if (!$video_url) return '';
+
+        $type = $this->detect_type($video_url);
+
+        if ($type === 'youtube') {
+            $id = $this->extract_youtube_id($video_url);
+            return $id ? VideoThumbnailCache::get_youtube_thumbnail($id) : '';
+        }
+
+        if ($type === 'vimeo') {
+            $id = $this->extract_vimeo_id($video_url);
+            return $id ? VideoThumbnailCache::get_vimeo_thumbnail($id) : '';
+        }
+
+        // Fichier local : cherche le thumbnail WP généré à l'upload (FFmpeg)
+        $att_id = 0;
+        if ($s['video_source'] === 'file') {
+            $att_id = (int) ($s['video_file']['id'] ?? 0);
+        } elseif ($s['video_source'] === 'acf' && function_exists('get_field')) {
+            $v = get_field($s['video_acf_field']);
+            if (is_array($v)) $att_id = (int) ($v['id'] ?? 0);
+        }
+
+        if ($att_id > 0) {
+            $thumb_id = (int) get_post_meta($att_id, '_thumbnail_id', true);
+            if ($thumb_id > 0) {
+                return wp_get_attachment_image_url($thumb_id, 'large') ?: '';
+            }
+        }
+
+        return '';
+    }
+
     private function build_video_tag(array $cfg, string $preload): string {
         if ($cfg['type'] === 'file') {
             $a = sprintf('playsinline crossorigin="anonymous" preload="%s"', esc_attr($preload));
-            if ($cfg['muted']) $a .= ' muted';
-            if ($cfg['loop'])  $a .= ' loop';
-            if ($cfg['poster']) $a .= ' poster="' . esc_attr($cfg['poster']) . '"';
+            if ($cfg['muted'])    $a .= ' muted';
+            if ($cfg['loop'])     $a .= ' loop';
+            // L'attribut HTML autoplay est respecté par iOS/Android (même en Low Power Mode)
+            // pour les vidéos muted+playsinline, contrairement à play() via JS.
+            if ($cfg['autoplay']) $a .= ' autoplay';
+            if ($cfg['poster'])   $a .= ' poster="' . esc_attr($cfg['poster']) . '"';
             return sprintf('<video class="bt-video-player__video" src="%s" %s></video>', esc_attr($cfg['src']), $a);
         }
         if ($cfg['type'] === 'youtube' && !empty($cfg['videoId'])) {
